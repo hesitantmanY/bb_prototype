@@ -6,18 +6,28 @@
 <title>Global Brand Building and Marketing Communication</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;0,900;1,700;1,900&family=Lora:ital,wght@0,400;0,500;1,400&family=JetBrains+Mono:wght@400;500&family=Noto+Serif+SC:wght@400;700;900&family=Noto+Sans+SC:wght@400;500&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;0,900;1,700;1,900&family=Lora:ital,wght@0,400;0,500;0,700;1,400;1,700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
 <style>
 /* ============================================================
    ATELIER DESIGN SYSTEM
    ============================================================ */
+/* 中文字体：正体=寒蝉端黑宋，斜体=叁慕斜宋体（子集 GB2312+Latin，生僻字回退系统宋体）
+   Latin 仍由 Lora / Playfair Display 负责，故字体栈中拉丁字体排在 ChillDuanCN 之前。 */
+@font-face{font-family:'ChillDuanCN';font-weight:400;font-style:normal;font-display:swap;
+  src:url('fonts/web/ChillDuanSong-Regular.woff2') format('woff2');}
+@font-face{font-family:'ChillDuanCN';font-weight:700;font-style:normal;font-display:swap;
+  src:url('fonts/web/ChillDuanSong-Bold.woff2') format('woff2');}
+@font-face{font-family:'ChillDuanCN';font-weight:400;font-style:italic;font-display:swap;
+  src:url('fonts/web/ChillDuanSong-Italic.woff2') format('woff2');}
+@font-face{font-family:'ChillDuanCN';font-weight:700;font-style:italic;font-display:swap;
+  src:url('fonts/web/ChillDuanSong-BoldItalic.woff2') format('woff2');}
 :root{
   --bg:#F2EFE8; --panel:#EDE9E0; --ink:#1A1A1A; --muted:#8A8275;
   --line:#D4CFC4; --maroon:#3A190F; --maroon-soft:#E8DFD8;
   --warn:#8B2500; --placeholder:#B5AFA2;
-  --font-display:'Playfair Display','Noto Serif SC',Georgia,"Songti SC","SimSun",serif;
-  --font-body:'Lora','Noto Serif SC',Georgia,"Songti SC","SimSun",serif;
-  --font-mono:'JetBrains Mono','Noto Sans SC',ui-monospace,"SF Mono","Cascadia Code","Microsoft YaHei",sans-serif;
+  --font-display:'Playfair Display','ChillDuanCN',Georgia,"Songti SC","SimSun",serif;
+  --font-body:'Lora','ChillDuanCN',Georgia,"Songti SC","SimSun",serif;
+  --font-mono:'JetBrains Mono','ChillDuanCN',ui-monospace,"SF Mono","Cascadia Code","Microsoft YaHei",sans-serif;
   /* Strong easings — built-ins are too weak for deliberate UI motion. */
   --ease-out:cubic-bezier(0.23,1,0.32,1);
   --ease-in-out:cubic-bezier(0.77,0,0.175,1);
@@ -28,6 +38,7 @@ body{
   background:var(--bg);color:var(--ink);
   font-family:var(--font-body);font-size:16px;line-height:1.65;
   -webkit-font-smoothing:antialiased;
+  font-synthesis:none;
 }
 h1,h2,h3,h4{font-family:var(--font-display);font-weight:900;line-height:1.2;margin:0}
 h1{font-size:52px;letter-spacing:-.01em}
@@ -227,7 +238,7 @@ main{max-width:1280px;margin:0 auto;padding:32px 32px 80px}
 }
 .step-header{margin-bottom:28px}
 .step-header h2{font-size:40px}
-.step-header p{font-size:17px;line-height:1.5}
+.step-header p{font-size:17px;line-height:1.5;text-align:left}
 /* Demo 模式：隐藏 chip-row 里的「输入后回车添加」添加输入框，避免在演示时出现"添加功能"提示 */
 body.is-demo .chip-row input{display:none}
 /* Demo 模式：隐藏「二级测评点（回车添加...）」的「如何使用」提示（在 demo 里不可编辑） */
@@ -297,6 +308,41 @@ table.data textarea{font-family:var(--font-body);font-style:italic;font-size:13p
 .q-anchor-n{font-family:var(--font-mono);font-size:10px;color:var(--muted);letter-spacing:.1em}
 .q-anchors input{width:100%;font-family:var(--font-mono);font-size:11px;text-align:center;border:1px solid var(--line);background:var(--bg);padding:5px 4px;color:var(--ink)}
 .q-anchors input:focus{outline:none;border-color:var(--ink);background:var(--panel)}
+
+/* work1 additions */
+.notice{border:1px solid var(--line);border-left:3px solid var(--maroon);background:var(--panel);padding:12px 16px;margin:12px 0;font-size:13px;line-height:1.6}
+.notice.disclaimer{font-style:italic;color:var(--ink)}
+/* 业务基本情况 实况/目标/来源 */
+.basics-row{display:grid;grid-template-columns:260px 1fr;gap:12px;align-items:center;margin:8px 0}
+.basics-label{font-family:var(--font-body);font-size:14px;letter-spacing:0;color:var(--ink);font-weight:500}
+.basics-trio{display:grid;grid-template-columns:1fr 1fr 200px;gap:8px}
+.basics-trio input{border:1px solid var(--line);background:var(--bg);padding:7px 9px;font-family:var(--font-mono);font-size:12px}
+.basics-trio input:focus{outline:none;border-color:var(--ink);background:var(--panel)}
+/* 空输入框：对角斜线（从左上到右下）— 用 :placeholder-shown 触发 */
+.basics-trio input:placeholder-shown{
+  background-image:repeating-linear-gradient(45deg, transparent, transparent 6px, rgba(58,25,15,.08) 6px, rgba(58,25,15,.08) 7px);
+  background-color:var(--bg);
+  color:var(--placeholder);
+}
+.competitor-table input:placeholder-shown{
+  background-image:repeating-linear-gradient(45deg, transparent, transparent 6px, rgba(58,25,15,.08) 6px, rgba(58,25,15,.08) 7px);
+  background-color:var(--bg);
+  color:var(--placeholder);
+}
+@media(max-width:760px){.basics-row{grid-template-columns:1fr}.basics-trio{grid-template-columns:1fr}}
+.competitor-table td:first-child input{font-family:var(--font-body);font-style:italic;font-size:14px}
+/* 场景感知价值矩阵 */
+.scenario-list{display:flex;flex-direction:column;gap:14px;margin:12px 0}
+.scenario-card{border:1px solid var(--line);background:var(--bg);padding:16px 18px}
+.scenario-head{display:flex;gap:12px;align-items:center;margin-bottom:10px}
+.scenario-personas{margin-bottom:10px;font-size:13px}
+.scenario-card .grid2 textarea{min-height:64px;font-family:var(--font-body);font-style:italic;font-size:13px}
+/* 指标评分表 */
+.metric-list{display:flex;flex-direction:column;gap:12px}
+.metric-dim .metric-table{margin-top:8px}
+.metric-dim .metric-table td:nth-child(1) input{font-family:var(--font-body);font-style:italic;font-size:14px}
+.metric-summary{margin-top:16px}
+.metric-delta{font-family:var(--font-mono);text-align:center}
 
 .card{
   border:1px solid var(--line);padding:18px;background:var(--bg);
@@ -755,6 +801,159 @@ body[data-w4-entry="greenfield"] .x-entry-heavy { display:block; }
   body{background:#fff}
   .card,.plate{break-inside:avoid}
 }
+
+/* ============================================================
+   SBU 子 tab · Hallmark 化样式（与全局 hallmark 体系协同）
+   ============================================================ */
+.step-header{position:relative}
+.sbu-toolbar{position:absolute;top:0;right:0;display:flex;gap:6px;align-items:center}
+.sbu-toolbar button{
+  font-family:var(--font-mono);font-size:12px;letter-spacing:.18em;
+  text-transform:uppercase;color:var(--ink);
+  background:transparent;border:1px solid var(--ink);
+  padding:10px 18px;cursor:pointer;border-radius:0;
+  transition:all 160ms var(--ease-out);
+}
+.sbu-toolbar button:hover{border-color:var(--maroon);color:var(--maroon);background:transparent}
+.sbu-toolbar button:disabled{opacity:.5;cursor:not-allowed}
+
+/* 12-col magazine grid — SBU 基础字段 */
+.sbu-grid{
+  display:grid;grid-template-columns:repeat(12,1fr);
+  gap:22px 24px;margin:6px 0 32px;
+}
+.sbu-cell-4{grid-column:span 4}
+.sbu-cell-6{grid-column:span 6}
+.sbu-cell-8{grid-column:span 8}
+.sbu-cell-12{grid-column:span 12}
+.sbu-field{display:flex;flex-direction:column;gap:10px;border-top:1px solid var(--line);padding-top:14px}
+.sbu-label{
+  font-family:var(--font-mono);font-size:12px;letter-spacing:.22em;
+  text-transform:uppercase;color:var(--muted);
+}
+.sbu-input,.sbu-select,.sbu-textarea{
+  width:100%;background:transparent;border:none;
+  border-bottom:1px solid var(--line);
+  color:var(--ink);font-family:var(--font-body);
+  font-style:italic;font-size:18px;line-height:1.5;
+  padding:6px 0;outline:none;border-radius:0;
+  transition:border-color 160ms var(--ease-out);
+}
+.sbu-textarea{resize:vertical;min-height:60px;line-height:1.55}
+.sbu-input:focus,.sbu-select:focus,.sbu-textarea:focus{border-bottom-color:var(--maroon)}
+.sbu-input::placeholder,.sbu-textarea::placeholder{color:var(--placeholder);opacity:.6;font-style:italic}
+.sbu-value-echo{
+  font-family:var(--font-mono);font-size:11px;letter-spacing:.16em;
+  text-transform:uppercase;color:var(--maroon);
+  display:flex;gap:8px;align-items:center;margin-top:2px;
+}
+.sbu-value-echo .dot{width:5px;height:5px;background:var(--maroon);border-radius:50%;display:inline-block}
+
+/* Sub-head: STEP 1.1 */
+.sbu-sub-head{
+  display:grid;grid-template-columns:1fr auto;align-items:flex-end;
+  border-top:2px solid var(--ink);padding-top:18px;margin:48px 0 0;gap:24px;
+}
+.sbu-sub-head-left{display:flex;flex-direction:column;gap:6px}
+.sbu-sub-num{
+  font-family:var(--font-mono);font-size:12px;letter-spacing:.22em;
+  color:var(--muted);text-transform:uppercase;
+}
+.sbu-sub-meta{
+  font-family:var(--font-mono);font-size:11px;letter-spacing:.2em;
+  color:var(--muted);text-transform:uppercase;align-self:flex-end;padding-bottom:4px;
+}
+.sbu-sub-lead{
+  color:var(--ink);font-style:italic;font-size:16px;line-height:1.7;
+  margin:14px 0 24px;max-width:780px;opacity:.75;
+}
+
+/* YES/NO pill（替换 checkbox） */
+.yn-pill{
+  display:inline-flex;border:1px solid var(--ink);
+  font-family:var(--font-mono);font-size:11px;letter-spacing:.2em;
+  text-transform:uppercase;overflow:hidden;user-select:none;
+}
+.yn-pill button{
+  border:none;background:transparent;padding:8px 16px;cursor:pointer;
+  color:var(--muted);font:inherit;letter-spacing:inherit;text-transform:inherit;
+  transition:all 160ms var(--ease-out);
+}
+.yn-pill button.active{background:var(--ink);color:var(--bg)}
+.yn-pill button:hover:not(.active){color:var(--ink)}
+.yn-pill button + button{border-left:1px solid var(--ink)}
+
+/* Hallmark item 内嵌 STATUS 行（继承全局 .hallmark-item 三列结构） */
+.sbu-status-line{
+  font-family:var(--font-mono);font-size:11px;letter-spacing:.2em;
+  text-transform:uppercase;margin-top:2px;
+}
+.sbu-status-line.on{color:var(--maroon)}
+.sbu-status-line.off{color:var(--muted)}
+
+/* Verdict 横条 */
+.sbu-verdict{
+  display:grid;grid-template-columns:auto 1fr auto;gap:24px;align-items:center;
+  margin:18px 0 0;padding:20px 24px;
+  border-top:2px solid var(--ink);border-bottom:2px solid var(--ink);
+  background:var(--panel);
+}
+.sbu-verdict .v-label{
+  font-family:var(--font-mono);font-size:11px;letter-spacing:.24em;
+  text-transform:uppercase;color:var(--muted);
+}
+.sbu-verdict .v-text{
+  font-family:var(--font-display);font-style:italic;font-weight:700;
+  font-size:22px;line-height:1.35;color:var(--ink);
+}
+.sbu-verdict .v-pill{
+  font-family:var(--font-mono);font-size:11px;letter-spacing:.2em;
+  text-transform:uppercase;padding:7px 14px;
+  background:var(--maroon);color:var(--bg);
+}
+.sbu-verdict[data-state=extension] .v-pill{background:var(--muted)}
+.sbu-verdict[data-state=extension] .v-text{color:var(--muted)}
+
+/* 边界声明 CALLOUT 扩展（在现有 .callout 基础上） */
+.sbu-callout{padding:22px 26px;margin:36px 0 12px}
+.sbu-callout .c-label{
+  display:block;font-family:var(--font-mono);font-size:10px;letter-spacing:.24em;
+  text-transform:uppercase;color:var(--maroon);margin-bottom:10px;
+}
+.sbu-callout .c-hint{
+  color:#5C4033;font-style:italic;font-size:15px;line-height:1.7;
+  margin:0 0 14px;max-width:780px;
+}
+.sbu-callout textarea{
+  width:100%;background:transparent;border:none;
+  color:var(--ink);font-family:var(--font-body);font-style:italic;
+  font-size:18px;line-height:1.6;padding:4px 0;outline:none;min-height:96px;resize:vertical;
+  border-bottom:1px solid rgba(58,25,15,.18);
+}
+.sbu-callout textarea:focus{border-bottom-color:var(--maroon)}
+
+/* END 行 */
+.sbu-end{
+  font-family:var(--font-mono);font-size:10px;letter-spacing:.24em;
+  text-transform:uppercase;color:var(--muted);text-align:right;margin-top:32px;
+}
+
+/* 国家 chip（用 .sbu-chip 避开全局 .chip） */
+.sbu-chips{display:flex;flex-wrap:wrap;gap:8px;padding:6px 0 2px}
+.sbu-chip{
+  display:inline-block;font-family:var(--font-body);font-size:14px;line-height:1;
+  padding:8px 14px;border:1px solid var(--line);background:var(--bg);
+  color:var(--ink);cursor:pointer;border-radius:0;user-select:none;
+  transition:all 160ms var(--ease-out);
+}
+.sbu-chip:hover{border-color:var(--maroon);color:var(--maroon)}
+.sbu-chip.on{background:var(--maroon);color:var(--bg);border-color:var(--maroon)}
+.sbu-countries-hint{
+  font-family:var(--font-mono);font-size:11px;letter-spacing:.18em;
+  text-transform:uppercase;color:var(--maroon);
+  display:flex;gap:8px;align-items:center;margin-top:6px;
+}
+.sbu-countries-hint .dot{width:5px;height:5px;background:var(--maroon);border-radius:50%;display:inline-block}
 </style>
 </head>
 <body>
@@ -1578,6 +1777,10 @@ const App = {
     showToast('已重置');
   },
   async toggleDemo(){
+    // 1) 先记当前位置（renderAll 末尾会强制 goWork(1) → 走第 0 步，必须自己再跳回来）
+    const keepWork = this.currentWork;
+    const keepStep = this.currentStep;
+    const keepScroll = window.scrollY;
     if(state.meta.isDemo){
       // Exit demo: reload real state from the server — nothing demo-related
       // was ever persisted, so the real data is exactly where we left it.
@@ -1601,6 +1804,23 @@ const App = {
     }
     this.renderAll();
     this.updateSummary();
+    // 2) 直接还原（绕开 goWork 的副作用）：设状态 + 切 active class + 直接渲染该 step
+    this.currentWork = keepWork;
+    this.currentStep = keepStep;
+    // work 区 active
+    $$('.workshop').forEach(s=>s.classList.toggle('active', +s.dataset.workshop===keepWork));
+    $$('.tab').forEach(t=>t.classList.toggle('active', +t.dataset.work===keepWork));
+    // subtab + step active
+    $$(`#subtabs${keepWork} .subtab`).forEach(t=>t.classList.toggle('active', t.dataset.step===String(keepStep)));
+    $$(`#steps${keepWork} .step`).forEach(s=>s.classList.toggle('active', s.dataset.step===String(keepStep)));
+    // 直接渲染该 step 的内容
+    const modMap={1:Work1,2:Work2,3:Work3,4:Work4,5:Work5};
+    const mod=modMap[keepWork];
+    if(mod && mod.renderStep) mod.renderStep(keepStep);
+    // 滚动位置用 rAF 等一帧（DOM 刚渲染完）
+    requestAnimationFrame(()=>{
+      window.scrollTo({top: keepScroll || 0, left: 0, behavior: 'instant'});
+    });
   },
   exportMd(){
     const parts=[

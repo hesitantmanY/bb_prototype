@@ -14,3 +14,8 @@ __pycache__/
 *.pyo
 .venv/
 venv/
+
+# Font source files — only the subset woff2 in docs/fonts/web/ is shipped;
+# full OTF/TTF source dirs are kept locally but not committed (hundreds of MB).
+docs/fonts/ChillDuanHeiSong_v1.2/
+docs/fonts/叁慕斜宋体/

@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>字体预览 · 寒蝉端黑宋 + 叁慕斜宋体</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;0,900;1,700;1,900&family=Lora:ital,wght@0,400;0,500;1,400&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+/* ---------- 本地中文字体（子集 woff2） ---------- */
+@font-face{font-family:'ChillDuanCN';font-weight:400;font-style:normal;font-display:swap;
+  src:url('web/ChillDuanSong-Regular.woff2') format('woff2');}
+@font-face{font-family:'ChillDuanCN';font-weight:700;font-style:normal;font-display:swap;
+  src:url('web/ChillDuanSong-Bold.woff2') format('woff2');}
+@font-face{font-family:'ChillDuanCN';font-weight:400;font-style:italic;font-display:swap;
+  src:url('web/ChillDuanSong-Italic.woff2') format('woff2');}
+@font-face{font-family:'ChillDuanCN';font-weight:700;font-style:italic;font-display:swap;
+  src:url('web/ChillDuanSong-BoldItalic.woff2') format('woff2');}
+
+:root{
+  --bg:#F2EFE8; --panel:#EDE9E0; --ink:#1A1A1A; --muted:#8A8275;
+  --line:#D4CFC4; --maroon:#3A190F; --maroon-soft:#E8DFD8;
+  --font-display:'Playfair Display','ChillDuanCN',Georgia,"Songti SC","SimSun",serif;
+  --font-body:'Lora','ChillDuanCN',Georgia,"Songti SC","SimSun",serif;
+  --font-mono:'JetBrains Mono','ChillDuanCN',ui-monospace,"SF Mono",sans-serif;
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{
+  background:var(--bg);color:var(--ink);
+  font-family:var(--font-body);font-size:16px;line-height:1.65;
+  -webkit-font-smoothing:antialiased;
+  font-synthesis:none; /* 关键：中文 bold/italic 用真实字面，禁止浏览器合成发虚/歪字形 */
+}
+.wrap{max-width:860px;margin:0 auto;padding:64px 32px 96px}
+h1,h2,h3,h4{font-family:var(--font-display);font-weight:900;line-height:1.2;margin:0}
+h1{font-size:52px;letter-spacing:-.01em}
+h2{font-size:34px;margin:48px 0 .4em}
+h3{font-size:22px;font-style:italic;font-weight:700;color:var(--maroon);margin:32px 0 18px}
+h4{font-size:13px;font-family:var(--font-mono);font-weight:500;text-transform:uppercase;letter-spacing:.14em;color:var(--muted);margin:24px 0 10px}
+p{margin:.6em 0}
+em{font-style:italic}
+strong{font-weight:700}
+a{color:var(--maroon);text-decoration:none;border-bottom:1px solid var(--maroon)}
+label{font-family:var(--font-mono);font-size:11px;text-transform:uppercase;letter-spacing:.15em;color:var(--muted);display:block;margin-bottom:8px}
+.mono{font-family:var(--font-mono)}
+.lead{font-size:20px;line-height:1.55}
+hr{border:none;border-top:1px solid var(--line);margin:40px 0}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:0;border:1px solid var(--line)}
+.cell{padding:18px 20px;border-right:1px solid var(--line);border-bottom:1px solid var(--line)}
+.cell:nth-child(2n){border-right:none}
+.cell:nth-last-child(-n+2){border-bottom:none}
+.sw{background:var(--panel);padding:22px 24px;border:1px solid var(--line)}
+.sw p{margin:.3em 0}
+.tag{display:inline-block;font-family:var(--font-mono);font-size:10px;text-transform:uppercase;letter-spacing:.14em;color:var(--maroon);background:var(--maroon-soft);padding:3px 8px;margin-bottom:10px}
+input,textarea{width:100%;background:transparent;border:1px solid var(--line);
+  font-family:var(--font-body);color:var(--ink);padding:10px 12px;font-size:16px;border-radius:0}
+textarea{font-style:italic;line-height:1.6;resize:vertical}
+input:focus,textarea:focus{outline:none;border-color:var(--ink)}
+table{width:100%;border-collapse:collapse;font-size:15px}
+th,td{border:1px solid var(--line);padding:10px 12px;text-align:left}
+th{font-family:var(--font-mono);font-size:10px;text-transform:uppercase;letter-spacing:.13em;color:var(--muted);font-weight:500}
+.note{font-size:13px;color:var(--muted)}
+.mix{font-size:24px;line-height:1.7}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <label>ChillDuan Type · Preview</label>
+  <h1>从一杯茶开始，<br>搭建品牌的<em>价值体系</em></h1>
+  <p class="lead">这是一个中英文混排的预览页：Latin 由 <strong>Lora / Playfair</strong> 负责，中文正体是<strong>寒蝉端黑宋</strong>，中文斜体（如<em>这一句</em>）由<em>叁慕斜宋体</em>接管。下面是 <a href="#">一句带链接的正文</a>，数字 2026 与 12.5% 应落在等宽字体。</p>
+  <p class="mono note">JETBRAINS MONO · 400/500 · 数值 0123456789 · Δ 1.5</p>
+
+  <hr>
+
+  <h2>字面对照（中文）</h2>
+  <div class="grid">
+    <div class="cell"><h4>Regular 400</h4><p style="font-weight:400;font-style:normal">品牌功效与客户感知价值</p></div>
+    <div class="cell"><h4>Bold 700</h4><p style="font-weight:700;font-style:normal">品牌功效与客户感知价值</p></div>
+    <div class="cell"><h4>Italic 400</h4><p style="font-weight:400;font-style:italic">品牌功效与客户感知价值</p></div>
+    <div class="cell"><h4>Bold Italic 700</h4><p style="font-weight:700;font-style:italic">品牌功效与客户感知价值</p></div>
+  </div>
+
+  <h2>常见排版场景</h2>
+
+  <h3>3. 客户洞察与场景</h3>
+  <p>在<em>日常自饮</em>场景中，P1 客户最看重<strong>产地可追溯</strong>与口感稳定性；而在<strong>商务送礼</strong>场景，决策者愿意为<em>品牌形象与包装仪式感</em>支付 30% 溢价。混合一句 English with <em>italic emphasis</em> and <strong>bold weight</strong>，看基线是否协调。</p>
+
+  <h4>指标评分表</h4>
+  <table>
+    <tr><th>二级测评点</th><th>首年预测</th><th>三年目标</th><th>实测</th><th>Δ</th></tr>
+    <tr><td>产地溯源可信度</td><td class="mono">7.0</td><td class="mono">9.0</td><td class="mono">6.2</td><td class="mono" style="color:var(--maroon)">−0.8</td></tr>
+    <tr><td>包装仪式感</td><td class="mono">6.0</td><td class="mono">8.0</td><td class="mono">8.4</td><td class="mono">+2.4</td></tr>
+  </table>
+
+  <h4>输入控件（textarea 为斜体，即现有 field-h 风格）</h4>
+  <label>边界声明</label>
+  <textarea rows="3" placeholder="在此输入：本业务单元以高端原叶茶为核心，不含袋泡与茶饮门店渠道……"></textarea>
+
+  <hr>
+
+  <h2>大字混排测试</h2>
+  <div class="sw">
+    <span class="tag">Display · 900 italic</span>
+    <p class="mix"><em>价值不是<em>你</em>放进去的，<br>而是顾客<em>取走</em>的。</em></p>
+    <p class="note">— 上句 h3/display 级，Playfair 负责拉丁，叁慕斜宋负责中文斜体。</p>
+  </div>
+
+  <hr>
+  <p class="note">子集范围：GB2312 6763 汉字 + Latin/标点，生僻字回退系统宋体。若确认效果，我将把这套 @font-face 与字体栈接入 global-brand-building.html（正体端黑宋，斜体叁慕斜宋，mono 不变）。</p>
+
+</div>
+</body>
+</html>

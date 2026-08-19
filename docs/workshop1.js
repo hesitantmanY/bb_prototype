@@ -14,43 +14,102 @@ Work1.steps = [
 ];
 
 Work1.defaultData = () => ({
-  sbu: { name:'', category:'', stage:'', scope:'', countries:[], summary:'' },
+  // ① SBU（Step 1）
+  sbu: {
+    name:'', category:'', stage:'', scope:'', countries:[], summary:'',
+    threeQuestions: { customer:false, channel:false, brand:false }, // 业务三问：任一为 true → 独立 SBU
+    boundary:''   // 边界声明：与母公司客户/渠道/品牌/损益四维的隔离点与复用资源
+  },
+  // ② 环境（Step 2 业务基本情况 + Step 3 竞争者）
   environment: {
     political:'', economic:'', social:'', technological:'',
-    industry:'', competitors:'', trends:'', swot:{s:[],w:[],o:[],t:[]}
+    industry:'', trends:'',
+    // 业务基本情况：每维 实况/目标/数据来源；最近业绩必含 市场份额/ROI/年增长率
+    basics: {
+      scale:    { actual:'', target:'', source:'' },
+      scope:    { actual:'', target:'', source:'' },
+      products: { actual:'', target:'', source:'' },
+      customers:{ actual:'', target:'', source:'' },
+      supply:   { actual:'', target:'', source:'' },
+      performance: {
+        share:  { actual:'', target:'', source:'' },
+        roi:    { actual:'', target:'', source:'' },
+        growth: { actual:'', target:'', source:'' }
+      }
+    },
+    // 直接竞品对标（5-7 家）
+    competitors: [
+      // { id, name, price, strengths, weaknesses, position }
+    ],
+    // 5 维优劣势 + 微笑曲线收口
+    edges: {
+      manufacturing:'', technology:'', brand:'', channel:'', compliance:'',
+      defensive:'', critical:'', structural:'', smileCurve:''
+    }
   },
+  // ③ 客户画像
   personas: [],   // {id, name, gender, age, occupation, income, region, values, painPoints, channels, quote, traits}
-  metrics: {      // 品牌资产指标体系（CBBE）：一级维度 → 二级指标（问卷题目的来源）
+  // 场景级感知价值矩阵（Step 4：总利益4类 − 总成本4项，按场景）
+  scenarios: [
+    // { id, name, personaIds:[], benefits:{usage,service,staff,image}, costs:{monetary,time,energy,psychic}, anchor, decisiveGap }
+  ],
+  // ④ 品牌资产指标体系（Step 5：CBBE 层级 + 1-10 双列评分）
+  metrics: {
     dimensions: [
-      { id:uid('m'), name:'品牌功效', secondaries:[
-        {id:uid('s'), name:'产品品质'},{id:uid('s'), name:'工艺技术'},{id:uid('s'), name:'销售和售后'}
+      { id:uid('m'), name:'品牌功效·产品', secondaries:[
+        {id:uid('s'), name:'外观与质感', forecast:null, target:null, actual:null, measure:''},
+        {id:uid('s'), name:'功能完整度', forecast:null, target:null, actual:null, measure:''},
+        {id:uid('s'), name:'品控稳定性', forecast:null, target:null, actual:null, measure:''}
       ]},
-      { id:uid('m'), name:'品牌形象', secondaries:[
-        {id:uid('s'), name:'知名度'},{id:uid('s'), name:'竞争地位'},{id:uid('s'), name:'品牌传播'},{id:uid('s'), name:'社会贡献'}
+      { id:uid('m'), name:'品牌功效·技术', secondaries:[
+        {id:uid('s'), name:'核心技术指标', forecast:null, target:null, actual:null, measure:''},
+        {id:uid('s'), name:'智能化与OTA', forecast:null, target:null, actual:null, measure:''},
+        {id:uid('s'), name:'APP/服务体验', forecast:null, target:null, actual:null, measure:''}
+      ]},
+      { id:uid('m'), name:'品牌形象·知名度', secondaries:[
+        {id:uid('s'), name:'主动识别率', forecast:null, target:null, actual:null, measure:''},
+        {id:uid('s'), name:'搜索曝光', forecast:null, target:null, actual:null, measure:''},
+        {id:uid('s'), name:'垂类引用', forecast:null, target:null, actual:null, measure:''}
+      ]},
+      { id:uid('m'), name:'品牌形象·竞争地位', secondaries:[
+        {id:uid('s'), name:'对标优势数', forecast:null, target:null, actual:null, measure:''},
+        {id:uid('s'), name:'心智占位', forecast:null, target:null, actual:null, measure:''},
+        {id:uid('s'), name:'价格合理性', forecast:null, target:null, actual:null, measure:''}
+      ]},
+      { id:uid('m'), name:'品牌形象·品牌传播', secondaries:[
+        {id:uid('s'), name:'UGC数量质量', forecast:null, target:null, actual:null, measure:''},
+        {id:uid('s'), name:'KOL主动推荐', forecast:null, target:null, actual:null, measure:''},
+        {id:uid('s'), name:'危机口碑', forecast:null, target:null, actual:null, measure:''}
       ]}
-    ]
+    ],
+    disclaimerAcknowledged: false
   },
+  // ⑤ 合成调研
   survey: {
-    questions: [],   // {id, type:'likert'|'open'|'single'|'multi', text, options, anchors, sourceIndicatorId}
+    questions: [],   // {id, type:'likert', text, anchors, sourceIndicatorId}
     responses: [],   // {personaId, answers:[{questionId, value, raw}]}
     n: 0,
-    status:'idle',  // idle | running | done | error
+    status:'idle',  // idle | running | paused | aborted | done | error
     mode:'api',
     useFewShot:true, useRag:false, ragContext:'',
     progress:{done:0,total:0},
-    error:null
+    error:null,
+    _doneKeys: []
   },
+  // ⑥ 数据分析
   analysis: {
     likertStats: {},   // questionId -> {mean, sd, dist:[5 counts]}
-    openThemes: [],    // {questionId, themes:[{label,count,quote}]}
-    indicatorMeans: [], // {label, value}
+    openThemes: [],    // {questionId, question, texts, themes, quotes}
+    indicatorMeans: [], // {sourceIndicatorId, mean(1-5), score(1-10)} 用于回填
     insights: ''
   },
+  // ⑦ 价值框架（Sheth 五维，调研后综合）
   values: {
     functional:[], emotional:[], social:[], epistemic:[], conditional:[],
     chosenFunctional:'', chosenEmotional:'', chosenSocial:'',
     rationale:''
   },
+  // ⑧ 改进建议
   recommendations: { short:'', mid:'', long:'', risks:[] }
 });
 
@@ -81,24 +140,38 @@ Work1._renderFull = function(sec, id){
 };
 
 Work1.titles = {
-  sbu:'战略业务单元',
-  environment:'宏观与行业环境',
-  personas:'客户画像',
-  metrics:'品牌资产指标体系',
+  sbu:'战略业务单元（SBU）',
+  environment:'业务基本情况与竞争',
+  personas:'客户画像与价值诉求',
+  metrics:'价值体系（CBBE 指标评分）',
   survey:'合成消费者调研',
-  analysis:'调研数据分析',
+  analysis:'调研数据分析与回填',
   values:'客户价值框架',
   recommendations:'策略建议'
 };
 Work1.subtitles = {
-  sbu:'界定本次工作坊所聚焦的 SBU，它是后续所有分析的边界。',
-  environment:'PEST + 行业 + 竞争者，为后续判断提供事实底色。',
-  personas:'定义 3–6 个典型客户画像，作为合成调研的答题者。',
-  metrics:'基于 CBBE 品牌资产金字塔搭建一级 / 二级指标；问卷题目将由此生成。课程要求至少 5 个一级指标、每个一级指标下至少 3 个测评点。',
-  survey:'让画像作为合成受访者回答结构化问卷；方法依据 AI-Human Hybrids (JM 2025)。',
-  analysis:'分布、均值、主题聚类；自动聚合并呈现在 Atelier 图表中。',
-  values:'从功能 / 情感 / 社会 / 认知 / 条件五个维度提炼价值要素。',
-  recommendations:'把洞察转化为短中长期可执行建议，风险单列。'
+  sbu:'Step 1：用业务三问筛出独立 SBU，写清 SBU 声明与四维边界（客户/渠道/品牌/损益）。',
+  environment:'Step 2-3：PEST 宏观扫描 + 六维业务基本情况（实况/目标）+ 5-7 家竞品对标与微笑曲线。',
+  personas:'Step 4：3-6 个画像，并按场景拆 4×4 感知价值矩阵（总利益 − 总成本），定位决定性短板。',
+  metrics:'Step 5：≥5 个一级指标 × ≥3 测评点，每个测评点 1-10 分（首年预测/三年目标）；调研后回填实测分并算偏差。',
+  survey:'验证层：让画像作为合成受访者回答李克特 5 点问卷（AI-Human Hybrids, JM 2025），实测用于回填上一步。',
+  analysis:'验证层：分布/均值/主题聚类，把李克特 1-5 均值映射为 1-10 回填指标实测分，标出分差 >1.5 的认知断点。',
+  values:'调研后综合：从功能/情感/社会/认知/条件五维提炼客户价值要素。',
+  recommendations:'按"先修最薄弱层、再修分差最大项"输出短中长期建议，风险单列。'
+};
+
+// 李克特 1-5 → 价值评分 1-10（线性映射，仅用于预测 vs 实测对照，不宣称等价）
+Work1.likertToScore = mean => (mean==null||isNaN(mean))?null:clamp(((mean-1)/4)*9+1, 1, 10);
+// 把调研实测分回填到 metrics 二级指标的 actual
+Work1.backfillScores = function(){
+  const m=state.work1.metrics, a=state.work1.analysis, s=state.work1.survey;
+  if(!m||!Array.isArray(m.dimensions)) return;
+  const byId={};
+  (a.indicatorMeans||[]).forEach(x=>{ if(x.sourceIndicatorId) byId[x.sourceIndicatorId]=x; });
+  m.dimensions.forEach(dim=>(dim.secondaries||[]).forEach(s2=>{
+    const im=byId[s2.id];
+    s2.actual = im ? Work1.likertToScore(im.mean) : null;
+  }));
 };
 
 Work1.render = {};
@@ -123,78 +196,335 @@ Work1.render.sbu = function(sec){
   };
   const REGIONS = ['东南亚','东亚（日韩）','南亚（印度等）','中东','欧洲','北美','拉美','非洲','大洋洲','全球'];
 
-  // 是否需要展示「目标国家（可多选）」块：仅当 scope 命中一个真实的地区
-  const scopeHasRegion = !!(d.scope && REGION_COUNTRIES[d.scope] && d.scope !== '全球');
+  // === 工具栏（右上角 · 随机生成示例，写入 step-header） ===
+  // 内置样本：无 API key / manualMode 时也能用
+  const SBU_SAMPLES = [
+    {name:'HOTO 智能电动工具出海品牌', category:'电动工具', stage:'海外扩张期', scope:'北美', countries:['美国','加拿大'],
+     summary:'智能电动工具 × 美国家庭 DIY × 中端品牌定位',
+     boundary:'与集团共享华南工厂与模具开发资源，但客户全部为美国 DTC、独立亚马逊店铺、自有品牌 HOTO；损益独立核算，由海外事业部单列 P&L。'},
+    {name:'CASA 设计师家居出海', category:'家居家具', stage:'成长期', scope:'欧洲', countries:['德国','法国','意大利','荷兰'],
+     summary:'原创设计家居 × 欧洲 25-40 岁中产 × 中高端调性品牌',
+     boundary:'设计端与上海工作室共享，供应链独立委托佛山/越南代工；客户为欧洲独立买手店与自建 DTC 站，渠道与母公司国内业务完全分开；品牌名/VI 独立注册。'},
+    {name:'NUTRI 营养补剂出海', category:'健康保健', stage:'成长期', scope:'东南亚', countries:['新加坡','马来西亚','泰国','印尼','越南'],
+     summary:'植物基营养补剂 × 东南亚 25-40 岁都市女性 × 轻奢健康品牌',
+     boundary:'研发与原料采购复用集团供应链，但配方与剂量按东南亚法规独立备案；客户为本土药店、Shopee/Lazada 旗舰店与自建独立站；品牌 LOGO/包装/VI 全套独立设计；损益由海外事业部单列。'},
+    {name:'LUMI 智能照明出海', category:'智能家居', stage:'转型期', scope:'欧洲', countries:['英国','德国','荷兰'],
+     summary:'智能照明系统 × 欧洲公寓住户 × 中高端设计品牌',
+     boundary:'硬件模组复用集团 IoT 平台，但客户端软件与场景套装欧洲本地化独立开发；客户为欧洲 B2B 公寓开发商 + C 端独立站；品牌完全独立露出。'},
+    {name:'PETPAL 宠物食品出海', category:'宠物用品', stage:'初创期', scope:'北美', countries:['美国','加拿大'],
+     summary:'鲜粮宠物食品 × 北美养宠中产 × 中端天然品牌',
+     boundary:'完全独立创业项目；生产委托集团合作工厂（同等价格、第三方品控），客户全部为 DTC 订阅 + 独立宠物店；与集团其他业务在客户/渠道/品牌/损益四维完全独立。'},
+    {name:'VEDA 印度草本个护', category:'美妆个护', stage:'成长期', scope:'南亚（印度等）', countries:['印度','斯里兰卡','孟加拉国'],
+     summary:'阿育吠陀草本个护 × 印度 25-35 岁都市中产 × 中高端天然品牌',
+     boundary:'原料采购与集团印度合作农场共享，配方独立开发、符合印度 BIS 标准；客户为印度本土连锁药妆店 + 自建 DTC 站 + Nykaa 旗舰店；品牌 LOGO/包装独立设计、含印地语标识；损益由南亚事业部单列。'},
+    {name:'NURT 中东母婴辅食', category:'母婴食品', stage:'成长期', scope:'中东', countries:['阿联酋','沙特阿拉伯','卡塔尔'],
+     summary:'有机婴幼儿辅食 × 中东高净值家庭 × 高端清真品牌',
+     boundary:'原料与集团有机供应链共享，配方与认证按中东 Halal 与 SFDA 法规独立备案；客户为中东高端超市、皇室供应商与自建 DTC；品牌 VI 含阿拉伯语双标；损益由中东事业部单列。'},
+    {name:'KAI 拉美手机配件', category:'消费电子', stage:'初创期', scope:'拉美', countries:['巴西','墨西哥','阿根廷'],
+     summary:'高性价比手机壳膜 × 拉美年轻消费者 × 中端快时尚品牌',
+     boundary:'生产完全委托集团深圳合作工厂，渠道与品牌 100% 独立（拉美本土 KOL + Mercado Libre + 自建站）；与集团其他业务在客户/渠道/品牌/损益四维完全独立。'},
+  ];
 
-  // 输入框加 placeholder，鼠标点进去就能看到该填什么
-  sec.appendChild(UI.field('SBU 名称', el('input',{type:'text',value:d.name,placeholder:'例：海外智能家居品牌 · 面向年轻消费者',oninput:e=>{d.name=e.target.value;autosave();App.updateSummary()}})));
-  sec.appendChild(UI.field('所属品类 / 行业', el('input',{type:'text',value:d.category,placeholder:'例：消费电子 / 智能家居 / 美妆个护',oninput:e=>{d.category=e.target.value;autosave()}})));
-
-  // 国家多选改用 checkbox 列表：每个国家一个 checkbox，单击即切换，
-  // 视觉上就是「多选」而不是「下拉里按住 Ctrl」。整块先放 DOM 里、切地区时只换内容。
-  const countryList = el('div',{class:'country-list', style:{display:'flex','flex-wrap':'wrap',gap:'6px 14px',marginTop:'4px','align-items':'center'}});
-  const countryField = UI.field('目标国家（可多选）', countryList);
-
-  function refreshCountryBlock(){
-    const showCountries = !!(d.scope && REGION_COUNTRIES[d.scope] && d.scope !== '全球');
-    if(!showCountries){
-      countryField.style.display = 'none';
+  function applySBU(s){
+    d.name = s.name; d.category = s.category || ''; d.stage = s.stage || '';
+    d.scope = (REGIONS.includes(s.scope) ? s.scope : '');
+    d.summary = s.summary || ''; d.boundary = s.boundary || '';
+    // 国家：scope 是 真实地区 → 取 s.countries 在该地区内的子集；否则清空
+    if (REGION_COUNTRIES[d.scope] && d.scope !== '全球') {
+      d.countries = (s.countries || []).filter(c => REGION_COUNTRIES[d.scope].includes(c));
+    } else {
       d.countries = [];
-      return;
     }
-    countryField.style.display = '';
-    countryList.innerHTML = '';
-    REGION_COUNTRIES[d.scope].forEach(c=>{
-      const cb = el('input',{type:'checkbox',value:c});
-      cb.checked = d.countries.includes(c);
-      cb.addEventListener('change', ()=>{
-        if(cb.checked){
-          if(!d.countries.includes(c)) d.countries.push(c);
-        }else{
-          d.countries = d.countries.filter(x=>x!==c);
+    // 三问随机化：80% 多数 yes，20% 大多 no（更像真业务）
+    const r = Math.random();
+    const yesCount = r < 0.5 ? 3 : r < 0.8 ? 2 : r < 0.95 ? 1 : 0;
+    const qsArr = Object.keys(d.threeQuestions);
+    for (let i = qsArr.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [qsArr[i], qsArr[j]] = [qsArr[j], qsArr[i]];
+    }
+    qsArr.forEach((k, i) => { d.threeQuestions[k] = (i < yesCount); });
+  }
+
+  const headerEl = sec.querySelector('.step-header');
+  if (headerEl && !headerEl.querySelector('.sbu-toolbar')) {
+    const toolbar = el('div', {class:'sbu-toolbar'});
+    const aiBox = el('div', {style:'position:static;margin:0'});
+    const exBtn = el('button', {type:'button'}, '随机生成示例');
+    toolbar.appendChild(exBtn);
+    headerEl.appendChild(toolbar);
+    exBtn.addEventListener('click', () => {
+      if (d.name && !confirm('这会覆盖当前 SBU 信息，继续？')) return;
+      // 判断是否有 API key + 是否在 manualMode
+      const apiKey = (typeof API.config === 'function') ? API.config().apiKey : '';
+      const useManual = (state.settings && state.settings.manualMode) || !apiKey;
+      if (useManual) {
+        // 手动模式 / 无 API key：直接用内置样本（防连点）
+        const pool = SBU_SAMPLES;
+        let idx = Math.floor(Math.random() * pool.length);
+        if (pool.length > 1 && idx === exBtn._lastSampleIdx) idx = (idx + 1) % pool.length;
+        exBtn._lastSampleIdx = idx;
+        applySBU(pool[idx]);
+        autosave(); App.updateSummary(); Work1.rerender('sbu');
+        showToast('已填入示例（手动模式，可在 AI 设置里配 API key 走 AI 生成）');
+        return;
+      }
+      // API 模式：调 AI
+      API.aiButton({
+        button: exBtn, container: aiBox,
+        buildPrompt: () => [{role:'system', content:'你是品牌国际化课程设计师。生成一个适合练习的虚构战略业务单元（SBU），适合出海/OBM 转型。输出 JSON：{"name":"","category":"","stage":"初创期|成长期|成熟期|转型期|海外扩张期","scope":"东南亚|东亚（日韩）|南亚（印度等）|中东|欧洲|北美|拉美|非洲|大洋洲|全球","summary":"一句话：产品 × 市场 × 定位","boundary":"与母公司四维隔离与复用的边界声明"}'},
+          {role:'user', content:'请生成一个虚构 SBU 示例。'}],
+        onResult: r => {
+          if (!r || !r.name) { showToast('生成失败'); return; }
+          applySBU({
+            name: r.name, category: r.category, stage: r.stage, scope: r.scope,
+            summary: r.summary, boundary: r.boundary,
+            countries: r.countries || []
+          });
+          autosave(); App.updateSummary(); Work1.rerender('sbu');
         }
-        autosave();
       });
-      const lab = el('label',{style:{display:'inline-flex','align-items':'center',gap:'4px',cursor:'pointer','font-size':'14px','white-space':'nowrap'}},
-        cb, document.createTextNode(c)
-      );
-      countryList.appendChild(lab);
     });
   }
 
-  // 切换「地理范围」：只更新数据 + 局部刷新国家块，不重渲染整个 SBU。
-  const scopeSelect = el('select',{onchange:e=>{
+  // === 12-col magazine grid · SBU 基础字段 ===
+  const grid = el('div', {class:'sbu-grid'});
+
+  // SBU 名称（8 列 · 必填 echo）
+  const nameField = el('div', {class:'sbu-cell-8 sbu-field'},
+    el('span', {class:'sbu-label'}, 'SBU 名称'),
+    el('input', {class:'sbu-input', type:'text', value: d.name, placeholder:'例：海外智能家居品牌 · 面向年轻消费者',
+      oninput: e => { d.name = e.target.value; autosave(); App.updateSummary(); }}),
+    el('div', {class:'sbu-value-echo'},
+      el('span', {class:'dot'}),
+      '必填 · 1 行'
+    )
+  );
+  grid.appendChild(nameField);
+
+  // 品类（4 列）
+  grid.appendChild(el('div', {class:'sbu-cell-4 sbu-field'},
+    el('span', {class:'sbu-label'}, '所属品类 / 行业'),
+    el('input', {class:'sbu-input', type:'text', value: d.category, placeholder:'例：消费电子 / 智能家居 / 美妆个护',
+      oninput: e => { d.category = e.target.value; autosave(); }})
+  ));
+
+  // 阶段（4 列） + 地理范围（8 列，含 scopeSelect）
+  const stageSelect = el('select', {class:'sbu-select', onchange: e => { d.stage = e.target.value; autosave(); }},
+    ...['','初创期','成长期','成熟期','转型期','海外扩张期'].map(o => {
+      const text = o === '' ? '请选择阶段' : o;
+      const opt = el('option', {value:o}, text); if (o === d.stage) opt.selected = true; return opt;
+    })
+  );
+  grid.appendChild(el('div', {class:'sbu-cell-4 sbu-field'},
+    el('span', {class:'sbu-label'}, '所处阶段'),
+    stageSelect
+  ));
+
+  const scopeSelect = el('select', {class:'sbu-select', onchange: e => {
     d.scope = e.target.value;
     refreshCountryBlock();
     autosave();
-  }}, ...[''].concat(REGIONS).map(o=>{
-    // value 保持空字符串（state 里是 ''），但显示成「请选择地区」
+  }}, ...[''].concat(REGIONS).map(o => {
     const text = o === '' ? '请选择地区' : o;
-    const opt=el('option',{value:o},text); if(o===d.scope)opt.selected=true; return opt;
+    const opt = el('option', {value:o}, text); if (o === d.scope) opt.selected = true; return opt;
   }));
+  grid.appendChild(el('div', {class:'sbu-cell-8 sbu-field'},
+    el('span', {class:'sbu-label'}, '地理范围'),
+    scopeSelect
+  ));
 
-  const grid=el('div',{class:'grid2'},
-    UI.field('所处阶段', el('select',{onchange:e=>{d.stage=e.target.value;autosave()}},
-      ...['','初创期','成长期','成熟期','转型期','海外扩张期'].map(o=>{
-        // value 保持空字符串（state 里是 ''），但显示成「请选择阶段」
-        const text = o === '' ? '请选择阶段' : o;
-        const opt=el('option',{value:o},text); if(o===d.stage)opt.selected=true; return opt;
-      }))),
-    UI.field('地理范围', scopeSelect)
+  // 国家多选 chip 块（始终在 DOM，避免布局抖动；按 scope 显示）
+  const countriesChips = el('div', {class:'sbu-chips'});
+  const countriesHint = el('div', {class:'sbu-countries-hint'});
+  const countriesField = el('div', {class:'sbu-cell-12 sbu-field', style:'display:none'},
+    el('span', {class:'sbu-label'}, '具体国家 ',
+      el('span', {class:'muted', style:'text-transform:none;letter-spacing:0;font-style:italic;font-size:11px'}, '— 多选')),
+    countriesChips,
+    countriesHint
   );
+  grid.appendChild(countriesField);
+
+  // 一句话业务概述（12 列全宽）
+  grid.appendChild(el('div', {class:'sbu-cell-12 sbu-field'},
+    el('span', {class:'sbu-label'}, '一句话业务概述（SBU 声明）'),
+    el('textarea', {class:'sbu-textarea', rows:2,
+      placeholder:'用一句话讲清「为谁、解决什么问题、和竞品有何不同」。如：智能温控器 × 美国 C 端 × 中高端品牌',
+      oninput: e => { d.summary = e.target.value; autosave(); }}, d.summary || '')
+  ));
+
+  function refreshHint(){
+    const on = Array.from(countriesChips.querySelectorAll('.sbu-chip.on')).map(c => c.dataset.country);
+    if (on.length === 0) {
+      countriesHint.innerHTML = '<span class="dot"></span>未选 — 点击上面 chip 切换';
+    } else {
+      countriesHint.innerHTML = '<span class="dot"></span>已选 ' + on.length + ' 国 · ' + on.join('、');
+    }
+  }
+  function refreshCountryBlock(){
+    const showCountries = !!(d.scope && REGION_COUNTRIES[d.scope] && d.scope !== '全球');
+    if (!showCountries) {
+      countriesField.style.display = 'none';
+      d.countries = [];
+      return;
+    }
+    countriesField.style.display = '';
+    countriesChips.innerHTML = '';
+    REGION_COUNTRIES[d.scope].forEach(c => {
+      const chip = el('span', {class:'sbu-chip' + (d.countries.includes(c) ? ' on' : ''), 'data-country': c}, c);
+      chip.addEventListener('click', () => {
+        const idx = d.countries.indexOf(c);
+        if (idx >= 0) d.countries.splice(idx, 1);
+        else d.countries.push(c);
+        chip.classList.toggle('on');
+        refreshHint();
+        autosave();
+      });
+      countriesChips.appendChild(chip);
+    });
+    refreshHint();
+  }
+  refreshCountryBlock();
   sec.appendChild(grid);
 
-  // 国家块始终在 DOM 里（避免布局抖动 / 焦点丢失），但默认隐藏
-  sec.appendChild(countryField);
-  refreshCountryBlock();
+  // === Sub-head: STEP 1.1 · 业务三问 ===
+  sec.appendChild(el('div', {class:'sbu-sub-head'},
+    el('div', {class:'sbu-sub-head-left'},
+      el('span', {class:'sbu-sub-num'}, 'STEP 1.1'),
+      el('h3', {}, '业务三问（独立 SBU 自检）')
+    ),
+    el('span', {class:'sbu-sub-meta'}, '3 QUESTIONS · 任一为"是"即独立')
+  ));
+  sec.appendChild(el('p', {class:'sbu-sub-lead'},
+    '三问中任一答"是"，即构成独立 SBU，须在客户/渠道/品牌/损益四维至少一项独立核算。'));
 
-  sec.appendChild(UI.field('一句话业务概述', el('textarea',{rows:3,placeholder:'用一句话讲清「为谁、解决什么问题、和竞品有何不同」',oninput:e=>{d.summary=e.target.value;autosave()}},d.summary)));
+  // === Hallmark 3-col 卡片（沿用全局 .hallmark-item 3 列 grid） ===
+  if (!d.threeQuestions || typeof d.threeQuestions !== 'object') d.threeQuestions = {customer:false, channel:false, brand:false};
+  const tq = d.threeQuestions;
+  const DIM_LABEL = {customer:'客户', channel:'渠道', brand:'品牌'};
+  const qs = [
+    ['customer', '客户是否不同？', 'B 端 / C 端、整机厂 / 经销商、自有用户 / 客户配套……'],
+    ['channel', '渠道是否不同？', 'ODM 配套 / Amazon 零售 / 经销批销 / 自建 DTC……'],
+    ['brand', '品牌是否独立露出？', '贴客户 logo / 自有 logo、母品牌子品牌关系……']
+  ];
+  const list = el('div', {class:'hallmark-list'});
+  qs.forEach((pair, i) => {
+    const [k, head, hint] = pair;
+    const dim = DIM_LABEL[k];
+    const yes = !!tq[k];
+    const item = el('article', {class:'hallmark-item', 'data-q':k, 'data-dim':dim});
+    item.appendChild(el('div', {class:'hallmark-num'}, String(i+1).padStart(2,'0')));
+    item.appendChild(el('div', {class:'hallmark-mid'},
+      el('h4', {class:'hallmark-headline'}, head),
+      el('p', {class:'hallmark-hint'}, hint)
+    ));
+    // 右列：pill + STATUS
+    const pill = el('div', {class:'yn-pill', role:'group', 'aria-label': head},
+      el('button', {type:'button', 'data-val':'no', class: yes ? '' : 'active'}, 'No'),
+      el('button', {type:'button', 'data-val':'yes', class: yes ? 'active' : ''}, 'Yes')
+    );
+    const statusBox = el('div');
+    statusBox.appendChild(el('span', {class:'hallmark-label'}, 'STATUS'));
+    const statusLine = el('div', {class:'sbu-status-line ' + (yes ? 'on' : 'off'), 'data-default':'不独立'},
+      yes ? '独立 · ' + dim : '不独立'
+    );
+    statusBox.appendChild(statusLine);
+    const right = el('div', {class:'hallmark-right'}, pill, statusBox);
+    item.appendChild(right);
+    list.appendChild(item);
+
+    pill.addEventListener('click', e => {
+      const btn = e.target.closest('button');
+      if (!btn) return;
+      pill.querySelectorAll('button').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      const isYes = (btn.dataset.val === 'yes');
+      tq[k] = isYes;
+      if (isYes) {
+        statusLine.classList.remove('off');
+        statusLine.classList.add('on');
+        statusLine.textContent = '独立 · ' + dim;
+      } else {
+        statusLine.classList.remove('on');
+        statusLine.classList.add('off');
+        statusLine.textContent = statusLine.dataset.default;
+      }
+      updateVerdict();
+      autosave();
+    });
+  });
+  sec.appendChild(list);
+
+  // === Verdict 横条 ===
+  const anyIndependent = !!(tq.customer || tq.channel || tq.brand);
+  const verdict = el('div', {class:'sbu-verdict', 'data-state': anyIndependent ? 'independent' : 'extension'},
+    el('span', {class:'v-label'}, '→ Verdict'),
+    el('span', {class:'v-text'}, anyIndependent ? '独立 SBU · 需在四维（客户/渠道/品牌/损益）至少一项独立核算' : '可能只是现有业务延伸（三问皆否）'),
+    el('span', {class:'v-pill'}, anyIndependent ? 'Independent' : 'Extension')
+  );
+  sec.appendChild(verdict);
+
+  function updateVerdict(){
+    const any = !!(tq.customer || tq.channel || tq.brand);
+    const dims = [];
+    if (tq.customer) dims.push('客户');
+    if (tq.channel) dims.push('渠道');
+    if (tq.brand) dims.push('品牌');
+    if (any) {
+      verdict.dataset.state = 'independent';
+      verdict.querySelector('.v-pill').textContent = 'Independent';
+      verdict.querySelector('.v-text').textContent = '独立 SBU · 需在四维（客户/渠道/品牌/损益）至少一项独立核算（' + dims.join(' / ') + '）';
+    } else {
+      verdict.dataset.state = 'extension';
+      verdict.querySelector('.v-pill').textContent = 'Extension';
+      verdict.querySelector('.v-text').textContent = '可能只是现有业务延伸（三问皆否）';
+    }
+  }
+
+  // === 边界声明 CALLOUT（沿用全局 .callout，新增 .sbu-callout 修饰） ===
+  const callout = el('div', {class:'callout sbu-callout'},
+    el('span', {class:'c-label'}, '▎ 边界声明'),
+    el('p', {class:'c-hint'}, '说明与母公司其他业务在客户、渠道、品牌、损益四维上的隔离点，以及复用/共享的资源（供应链、研发、资质等）。'),
+    el('textarea', {
+      placeholder:'例：与集团共享华南工厂与模具开发资源，但客户全部为美国 DTC、独立亚马逊店铺、自有品牌 HOTO；损益独立核算，由海外事业部单列 P&L。',
+      oninput: e => { d.boundary = e.target.value; autosave(); }
+    }, d.boundary || '')
+  );
+  sec.appendChild(callout);
+
+  // === END 行 ===
+  sec.appendChild(el('p', {class:'sbu-end'}, 'END · STEP 1'));
 };
 
 /* ---------- STEP 2: ENVIRONMENT ---------- */
 Work1.render.environment = function(sec){
   const d=state.work1.environment;
-  // PEST 1×4 editorial grid — big italic serif letter + monospace label + textarea
+
+  // migrate legacy string competitors → drop into a fresh array
+  if(typeof d.competitors==='string'){ d._legacyCompetitors=d.competitors; d.competitors=[]; }
+  if(!Array.isArray(d.competitors)) d.competitors=[];
+  if(!d.basics || typeof d.basics!=='object') d.basics=Work1.defaultData().environment.basics;
+  ['scale','scope','products','customers','supply'].forEach(k=>{ if(!d.basics[k]) d.basics[k]={actual:'',target:'',source:''}; });
+  if(!d.basics.performance) d.basics.performance={share:{},roi:{},growth:{}};
+  ['share','roi','growth'].forEach(k=>{ if(!d.basics.performance[k]) d.basics.performance[k]={actual:'',target:'',source:''}; });
+  if(!d.edges || typeof d.edges!=='object') d.edges={manufacturing:'',technology:'',brand:'',channel:'',compliance:'',defensive:'',critical:'',structural:'',smileCurve:''};
+  // 把旧的 10 个分散字段合并到单一文本框 d.edgesText（首次渲染时迁移一次）
+  if(typeof d.edgesText !== 'string'){
+    const parts=[];
+    const pushPair=(label,val)=>{ if(val) parts.push(`【${label}】${val}`); };
+    pushPair('制造', d.edges.manufacturing);
+    pushPair('技术', d.edges.technology);
+    pushPair('品牌', d.edges.brand);
+    pushPair('渠道', d.edges.channel);
+    pushPair('合规', d.edges.compliance);
+    if(d.edges.defensive) parts.push(`【防御性优势】${d.edges.defensive}`);
+    if(d.edges.critical) parts.push(`【关键劣势】${d.edges.critical}`);
+    if(d.edges.structural) parts.push(`【结构性劣势】${d.edges.structural}`);
+    if(d.edges.smileCurve) parts.push(`【微笑曲线收口】${d.edges.smileCurve}`);
+    d.edgesText = parts.join('\n\n');
+  }
+
+  // —— PEST ——
   const pest=[
     ['political',  'P', '政治 / 政策 / 法规'],
     ['economic',   'E', '经济 / 汇率 / 购买力'],
@@ -212,28 +542,77 @@ Work1.render.environment = function(sec){
     const item=el('div',{class:'pest-item'});
     item.appendChild(el('div',{class:'pest-letter'}, letter));
     item.appendChild(el('span',{class:'pest-label'}, label));
-    item.appendChild(el('textarea',{
-      rows:5,
-      placeholder: placeholders[k] || '',
-      oninput:e=>{d[k]=e.target.value;autosave()}
-    }, d[k] || ''));
+    item.appendChild(el('textarea',{rows:5,placeholder:placeholders[k]||'',
+      oninput:e=>{d[k]=e.target.value;autosave()}}, d[k]||''));
     grid.appendChild(item);
   });
+  sec.appendChild(el('h3',{},'PEST 宏观扫描'));
   sec.appendChild(grid);
   sec.appendChild(el('hr',{class:'rule'}));
 
-  // Three narrative fields — use .field-h so labels render as big italic serif
-  // (matching the PEST 1×4 grid and the usehallmark reference).
-  const mkField = (label, value, onInput, rows, ph) =>
-    el('div',{class:'field field-h'},
-      el('label',{}, label),
-      el('textarea',{rows, placeholder:ph||'', oninput:onInput}, value||'')
-    );
-  sec.appendChild(mkField('行业与竞争格局', d.industry, e=>{d.industry=e.target.value;autosave()}, 3, '例：高端百货专柜 + 年轻拼配 + 本地老字号 + 进口快消化品牌…'));
-  sec.appendChild(mkField('主要竞争对手',   d.competitors, e=>{d.competitors=e.target.value;autosave()}, 2, '例：TWG Tea（高端百货）、TEAMan（年轻拼配）、本地老字号茶庄、ITO EN（日系瓶装）'));
-  sec.appendChild(mkField('关键趋势',       d.trends, e=>{d.trends=e.target.value;autosave()}, 2, '例：节气营销、可追溯供应链、茶具订阅礼盒、KOC 内容种草…'));
+  // —— 业务基本情况（Step 2：六维实况/目标/来源）——
+  sec.appendChild(el('h3',{},'业务基本情况（实况 / 目标 / 数据来源）'));
+  sec.appendChild(el('p',{class:'sbu-sub-lead'},'用六维表把业务现状结构化：规模与员工 / 业务范围 / 产品线 / 客户 / 供应链 / 最近业绩。每一维同时填实况（历史或当下数据）与目标（3-5 年期望值），概念阶段业务允许实况为空但目标必填并附推导依据。'));
+  const b=d.basics;
+  const trio=(obj,phActual,phTarget)=>el('div',{class:'basics-trio'},
+    el('input',{type:'text',value:obj.actual||'',placeholder:phActual||'实况',oninput:e=>{obj.actual=e.target.value;autosave()}}),
+    el('input',{type:'text',value:obj.target||'',placeholder:phTarget||'目标',oninput:e=>{obj.target=e.target.value;autosave()}}),
+    el('input',{type:'text',value:obj.source||'',placeholder:'数据来源',oninput:e=>{obj.source=e.target.value;autosave()}}));
+  const basicsRow=(title,obj,phA,phT)=>el('div',{class:'basics-row'},
+    el('span',{class:'basics-label'},title), trio(obj,phA,phT));
+  sec.appendChild(basicsRow('规模与员工（成立时间/面积/人数/资质）', b.scale));
+  sec.appendChild(basicsRow('业务范围（做什么 / 不做什么，排除项必写）', b.scope));
+  sec.appendChild(basicsRow('产品 / 业务线（SKU × 定价 × 场景 × 销量占比）', b.products));
+  sec.appendChild(basicsRow('客户（直接客户/渠道/与母公司差异）', b.customers));
+  sec.appendChild(basicsRow('供应链（来源/复用vs新增/瓶颈）', b.supply));
+  sec.appendChild(el('div',{class:'basics-row'},
+    el('span',{class:'basics-label'},'最近业绩 · 市场份额'), trio(b.performance.share)));
+  sec.appendChild(el('div',{class:'basics-row'},
+    el('span',{class:'basics-label'},'最近业绩 · ROI'), trio(b.performance.roi)));
+  sec.appendChild(el('div',{class:'basics-row'},
+    el('span',{class:'basics-label'},'最近业绩 · 年增长率'), trio(b.performance.growth)));
+  sec.appendChild(el('hr',{class:'rule'}));
 
-  // AI action — step-1 上下结构：上 = meta+title+hint，下 = 按钮靠右
+  // —— 竞争者（Step 3）——
+  sec.appendChild(el('h3',{},'竞争者对标（建议 5-7 家）'));
+  const mkField=(label,value,onInput,rows,ph)=>el('div',{class:'field field-h'},
+    el('label',{},label), el('textarea',{rows,placeholder:ph||'',oninput:onInput},value||''));
+  sec.appendChild(mkField('市场格局摘要', d.industry, e=>{d.industry=e.target.value;autosave()}, 4,
+    '用 3-5 句话回答：这个市场由谁主导（活跃品牌数 / Top 玩家）？渗透到什么程度（增量 vs 替换）？区域与价格带怎么分布？是否存在未被占领的垂直定位空白？这一段为后续定位陈述与差异化提供事实基础。'));
+
+  // competitor table
+  const tbl=el('table',{class:'data competitor-table'});
+  tbl.appendChild(el('thead',{}, el('tr',{}, ...['竞品','价位','优势','劣势','我们的相对位置',''].map(h=>el('th',{},h)))));
+  const tbody=el('tbody');
+  d.competitors.forEach((c,i)=>{
+    const inp=(key,ph)=>el('input',{type:'text',value:c[key]||'',placeholder:ph,
+      oninput:e=>{c[key]=e.target.value;autosave()}});
+    const tr=el('tr',{},
+      el('td',{}, inp('name','竞品名称')),
+      el('td',{}, inp('price','价位')),
+      el('td',{}, inp('strengths','优势')),
+      el('td',{}, inp('weaknesses','劣势')),
+      el('td',{}, inp('position','相对位置')),
+      el('td',{}, el('button',{class:'ghost small',onclick:()=>{d.competitors.splice(i,1);autosave();Work1.rerender('environment')}},'×'))
+    );
+    tbody.appendChild(tr);
+  });
+  tbl.appendChild(tbody);
+  sec.appendChild(tbl);
+  sec.appendChild(el('button',{class:'ghost',style:'margin:8px 0',onclick:()=>{
+    d.competitors.push({id:uid('c'),name:'',price:'',strengths:'',weaknesses:'',position:''});
+    autosave(); Work1.rerender('environment');
+  }},'+ 添加竞品'));
+
+  // 5-dim edges + smile curve + trends（合并为单一文本框 · 与"市场格局摘要"同款）
+  sec.appendChild(el('h4',{},'五维优劣势判断'));
+  sec.appendChild(el('p',{class:'sbu-sub-lead'},
+    '用 5 个维度（制造 / 技术 / 品牌 / 渠道 / 合规）逐一回答优劣势，再分别用 3 段总结防御性优势、关键劣势、结构性劣势，最后落到微笑曲线收口。'));
+  sec.appendChild(mkField('五维优劣势 · 防御收口 · 关键趋势',
+    d.edgesText, e => { d.edgesText = e.target.value; autosave(); }, 12,
+    '【制造】我们的制造能力如何（成本 / 工艺 / 产能 / 复用 vs 新建）\n【技术】技术壁垒与代差\n【品牌】品牌资产 / 知名度 / 溢价能力\n【渠道】渠道深度与广度\n【合规】监管 / 资质 / 准入门槛\n\n【防御性优势】对手短期难复制的 1-2 点（最值钱）\n【关键劣势】必须补、客户直接感知的致命短板\n【结构性劣势】受资源 / 位置限制、宜绕开而非硬拼的劣势\n\n【微笑曲线收口】优势落在价值链哪一端（研发 / 品牌 / 渠道）？劣势落在哪一端？这决定后续定位方向。\n\n【关键趋势】3 个值得追踪的方向（例：节气营销、可追溯供应链、KOC 内容种草、私域订阅…）'));
+
+  // —— AI ——
   const ai=el('div',{class:'ai-box ai-box-step1'});
   const top=el('div',{class:'ai-box-top'});
   const meta=el('div',{class:'ai-box-meta'});
@@ -242,24 +621,21 @@ Work1.render.environment = function(sec){
   meta.appendChild(el('span',{class:'ai-box-meta-sep'},'·'));
   meta.appendChild(el('span',{class:'ai-box-meta-draft'},'DRAFT WITH AI'));
   top.appendChild(meta);
-  top.appendChild(el('h4',{class:'ai-box-headline'},'用 AI 起草环境分析'));
-  top.appendChild(el('p',{class:'ai-box-hint'},'基于已填的 SBU 信息，一键生成结构化 PEST + 行业格局 + 关键趋势，覆盖上方六个文本框。'));
+  top.appendChild(el('h4',{class:'ai-box-headline'},'用 AI 起草环境与竞争分析'));
+  top.appendChild(el('p',{class:'ai-box-hint'},'基于 SBU，生成 PEST、行业格局、5-7 家竞品对标行、五维优劣势与微笑曲线结论。'));
   ai.appendChild(top);
   const action=el('div',{class:'ai-box-action'});
   const btn=el('button',{class:'primary',onclick:()=>{
     API.aiButton({
       button:btn, container:ai,
-      buildPrompt:()=>[{role:'system',content:'你是全球品牌战略顾问。基于给定的 SBU 信息，生成结构化 PEST、行业格局与三个关键趋势。输出 JSON：{"political":"","economic":"","social":"","technological":"","industry":"","competitors":"","trends":""}'},
+      buildPrompt:()=>[{role:'system',content:'你是全球品牌战略顾问。基于 SBU 生成结构化市场分析。输出 JSON：{"political":"","economic":"","social":"","technological":"","industry":"市场格局摘要（活跃品牌/渗透率/价格带/垂直空白）","trends":"三个关键趋势","competitors":[{"name":"","price":"","strengths":"","weaknesses":"","position":""}],"edges":{"manufacturing":"","technology":"","brand":"","channel":"","compliance":"","defensive":"","critical":"","structural":"","smileCurve":""}}。competitors 给 5-7 家同价位同场景直接竞品。'},
         {role:'user',content:`SBU: ${state.work1.sbu.name}\n品类: ${state.work1.sbu.category}\n阶段: ${state.work1.sbu.stage}\n范围: ${state.work1.sbu.scope}\n概述: ${state.work1.sbu.summary}`}],
       onResult:r=>{
         if(!r){ showToast('解析失败'); return; }
-        Object.assign(d, {
-          political:r.political||d.political, economic:r.economic||d.economic,
-          social:r.social||d.social, technological:r.technological||d.technological,
-          industry:r.industry||d.industry, competitors:r.competitors||d.competitors,
-          trends:r.trends||d.trends
-        });
-        autosave(); Work1.renderStep('environment');
+        ['political','economic','social','technological','industry','trends'].forEach(k=>{ if(r[k]) d[k]=r[k]; });
+        if(Array.isArray(r.competitors)) d.competitors=r.competitors.map(c=>({id:uid('c'),name:c.name||'',price:c.price||'',strengths:c.strengths||'',weaknesses:c.weaknesses||'',position:c.position||''}));
+        if(r.edges) Object.keys(r.edges).forEach(k=>{ if(r.edges[k]!=null) d.edges[k]=r.edges[k]; });
+        autosave(); Work1.rerender('environment');
       }
     });
   }},'开始生成');
@@ -270,6 +646,76 @@ Work1.render.environment = function(sec){
 
 /* ---------- STEP 3: PERSONAS ---------- */
 Work1.render.personas = function(sec){
+  // —— Step 4：场景级感知价值矩阵（4×4）——
+  if(!Array.isArray(state.work1.scenarios)) state.work1.scenarios=[];
+  const sc=state.work1.scenarios;
+  sec.appendChild(el('h3',{},'场景级客户感知价值矩阵'));
+  sec.appendChild(el('p',{class:'muted italic',style:'font-size:13px'},
+    '客户感知价值 = 总利益（使用/服务/人员/形象）− 总成本（货币/时间/精力/心理）。按场景拆分（建议 2-4 个），每张矩阵勾选关联画像，并定位决定性短板（信任 / 易用 / 规模化成本）。'));
+
+  const scList=el('div',{class:'scenario-list'});
+  sc.forEach((s,i)=>{
+    if(!s.benefits) s.benefits={usage:'',service:'',staff:'',image:''};
+    if(!s.costs) s.costs={monetary:'',time:'',energy:'',psychic:''};
+    if(!Array.isArray(s.personaIds)) s.personaIds=[];
+    const card=el('article',{class:'scenario-card'});
+    const head=el('div',{class:'scenario-head'},
+      el('input',{type:'text',value:s.name||'',placeholder:'场景名（如：自用购买 / 送礼 / 复购）',
+        style:{flex:'1',fontFamily:'var(--font-body)',fontSize:'18px',fontStyle:'italic',border:'none',borderBottom:'1px solid var(--line)',background:'transparent'},
+        oninput:e=>{s.name=e.target.value;autosave();}}),
+      el('button',{class:'ghost small',onclick:()=>{sc.splice(i,1);autosave();Work1.rerender('personas')}},'删除场景'));
+    card.appendChild(head);
+    // persona association
+    if(state.work1.personas.length){
+      const pw=el('div',{class:'scenario-personas'}, el('span',{class:'mono',style:'font-size:11px;margin-right:8px'},'关联画像'));
+      state.work1.personas.forEach(p=>{
+        const cb=el('input',{type:'checkbox',checked:s.personaIds.includes(p.id),
+          onchange:e=>{ if(e.target.checked){ if(!s.personaIds.includes(p.id)) s.personaIds.push(p.id); }else{ s.personaIds=s.personaIds.filter(x=>x!==p.id); } autosave(); }});
+        pw.appendChild(el('label',{style:'display:inline-flex;gap:3px;align-items:center;margin-right:10px;font-size:13px;cursor:pointer'},cb, document.createTextNode(p.name)));
+      });
+      card.appendChild(pw);
+    }
+    const cell=(obj,key,ph)=>el('textarea',{rows:2,placeholder:ph,oninput:e=>{obj[key]=e.target.value;autosave()}},obj[key]||'');
+    const grid=el('div',{class:'grid2'});
+    const ben=el('div',{}, el('h4',{class:'mono',style:'font-size:11px;letter-spacing:.1em;margin:4px 0'},'总利益'),
+      ...[['usage','使用价值：功能/性能/解决的问题'],['service','服务价值：售后/咨询/配送/维修'],['staff','人员价值：服务人员专业度与态度'],['image','形象价值：身份认同/心理满足']]
+        .map(([k,ph])=>cell(s.benefits,k,ph)));
+    const cst=el('div',{}, el('h4',{class:'mono',style:'font-size:11px;letter-spacing:.1em;margin:4px 0'},'总成本'),
+      ...[['monetary','货币成本：直接花费'],['time','时间成本：选购/等待/学习'],['energy','精力成本：挑选/对比/手续'],['psychic','心理成本：担心/焦虑/顾虑']]
+        .map(([k,ph])=>cell(s.costs,k,ph)));
+    grid.appendChild(ben); grid.appendChild(cst);
+    card.appendChild(grid);
+    card.appendChild(UI.field('顾客价值锚点（客户真正用什么标尺评判，不是企业自评）',
+      el('input',{type:'text',value:s.anchor||'',placeholder:'如：送礼是否有面子、产地是否可信',oninput:e=>{s.anchor=e.target.value;autosave()}})));
+    card.appendChild(UI.field('决定性短板（信任 / 易用 / 规模化成本 中是哪个，一句话说明）',
+      el('input',{type:'text',value:s.decisiveGap||'',placeholder:'如：信任——客户无法验证产地真伪',oninput:e=>{s.decisiveGap=e.target.value;autosave()}})));
+    scList.appendChild(card);
+  });
+  sec.appendChild(scList);
+  const scActions=el('div',{class:'ai-actions'},
+    el('button',{class:'ghost',onclick:()=>{sc.push({id:uid('sc'),name:'',personaIds:[],benefits:{},costs:{},anchor:'',decisiveGap:''});autosave();Work1.rerender('personas')}},'+ 添加场景'));
+  if(state.work1.personas.length){
+    const ai=el('div',{class:'ai-box'});
+    const aiBtn=el('button',{class:'primary',onclick:()=>{
+      API.aiButton({button:aiBtn,container:ai,
+        buildPrompt:()=>[{role:'system',content:'你是用户研究专家。基于 SBU 与画像，输出 2-4 个客户场景的感知价值矩阵。JSON: {"scenarios":[{"name":"场景名","personaNames":["画像编号如P1"],"benefits":{"usage":"使用价值","service":"服务价值","staff":"人员价值","image":"形象价值"},"costs":{"monetary":"货币成本","time":"时间成本","energy":"精力成本","psychic":"心理成本"},"anchor":"顾客价值锚点","decisiveGap":"决定性短板：信任/易用/规模化成本中哪个 + 一句说明"}]}'},
+          {role:'user',content:`SBU:${state.work1.sbu.name}\n品类:${state.work1.sbu.category}\n概述:${state.work1.sbu.summary}\n画像:\n${state.work1.personas.map(p=>`${p.name}: 痛点=${p.painPoints}; 价值观=${(p.values||[]).join('/')}; 渠道=${(p.channels||[]).join('/')}`).join('\n')}`}],
+        onResult:r=>{
+          if(!r||!Array.isArray(r.scenarios)){showToast('生成失败');return;}
+          state.work1.scenarios=r.scenarios.map(x=>{
+            const ids=state.work1.personas.filter(p=>(x.personaNames||[]).includes(p.name)).map(p=>p.id);
+            return {id:uid('sc'),name:x.name||'',personaIds:ids,benefits:x.benefits||{},costs:x.costs||{},anchor:x.anchor||'',decisiveGap:x.decisiveGap||''};
+          });
+          autosave(); Work1.rerender('personas');
+        }});
+    }},'用 AI 预填场景矩阵');
+    ai.appendChild(aiBtn); scActions.appendChild(ai);
+  }
+  sec.appendChild(scActions);
+  sec.appendChild(el('hr',{class:'rule'}));
+
+  // —— 画像卡片（沿用现有模式，不动）——
+  sec.appendChild(el('h3',{},'客户画像'));
   const d=state.work1.personas;
   const list=el('div',{id:'personaList'});
   d.forEach((p,i)=>list.appendChild(Work1.personaCard(p, i)));
@@ -394,99 +840,143 @@ Work1.render.metrics = function(sec){
   const m=state.work1.metrics;
   if(!Array.isArray(m.dimensions)) m.dimensions=[];
 
-  const list=el('div',{class:'hallmark-list'});
+  // 评分性质声明（5.4.4 必加）
+  sec.appendChild(el('div',{class:'notice disclaimer'},
+    '评分性质说明：以下「首年预测分」「三年目标分」均为预测/目标值，非真实市场调研。完成 ⑤ 合成调研或导入真实问卷后，系统会用李克特 1-5 均值映射成 1-10 回填「实测分」，并保留预测值以对照偏差。'));
+
+  // 评分表头
+  const list=el('div',{class:'metric-list'});
   m.dimensions.forEach((dim,i)=>{
     if(!Array.isArray(dim.secondaries)) dim.secondaries=[];
-    const num=String(i+1).padStart(2,'0');
-    const item=el('article',{class:'hallmark-item'});
+    // 旧数据：二级可能是纯名字符串/无评分字段 → 补成对象
+    dim.secondaries=dim.secondaries.map(s=>{
+      if(s && typeof s==='object') return {forecast:null,target:null,actual:null,measure:'',...s};
+      return {id:uid('s'), name:String(s), forecast:null,target:null,actual:null,measure:''};
+    });
 
-    item.appendChild(el('div',{class:'hallmark-num'}, num));
+    const item=el('article',{class:'hallmark-item metric-dim'});
+    item.appendChild(el('div',{class:'hallmark-num'}, String(i+1).padStart(2,'0')));
 
     const mid=el('div',{class:'hallmark-mid'});
-    const nameInput=el('input',{type:'text',value:dim.name||'',
-      placeholder:'一级指标名称（如：品牌功效）',
+    const nameInput=el('input',{type:'text',value:dim.name||'',placeholder:'一级指标名称（如：品牌功效·产品）',
       oninput:e=>{dim.name=e.target.value;autosave();}});
-    nameInput.style.fontFamily='var(--font-body)';
-    nameInput.style.fontSize='20px';
-    nameInput.style.fontStyle='italic';
-    nameInput.style.width='100%';
-    nameInput.style.border='none';
-    nameInput.style.borderBottom='1px solid var(--line)';
-    nameInput.style.background='transparent';
-    nameInput.style.padding='4px 0';
+    Object.assign(nameInput.style,{fontFamily:'var(--font-body)',fontSize:'20px',fontStyle:'italic',width:'100%',border:'none',borderBottom:'1px solid var(--line)',background:'transparent',padding:'4px 0'});
     mid.appendChild(nameInput);
-    mid.appendChild(el('p',{class:'hallmark-hint edit-hint'},'二级测评点（回车添加，问卷题目将由这些指标生成）'));
 
-    const ti=UI.tagsInput((dim.secondaries||[]).map(s=>s.name), '输入二级指标后回车');
-    const syncTags=()=>{
-      const names=ti.get();
-      // preserve existing ids by name order; new ones get ids
-      const oldById={}; (dim.secondaries||[]).forEach(s=>{oldById[s.id]=s;});
-      const used=new Set();
-      dim.secondaries=names.map(nm=>{
-        const found=(dim.secondaries||[]).find(s=>s.name===nm && !used.has(s.id));
-        if(found){used.add(found.id); return found;}
-        return {id:uid('s'), name:nm};
-      });
-      // update counter
-      const c=item.querySelector('.hallmark-count-num');
-      if(c) c.textContent=names.length;
-      autosave();
+    // secondary scoring rows
+    const tbl=el('table',{class:'data metric-table'});
+    const thead=el('tr',{}, ...['二级测评点','量化口径（怎么衡量/什么算高分）','首年预测','三年目标','实测','Δ'].map(h=>el('th',{},h)));
+    tbl.appendChild(el('thead',{},thead));
+    const tbody=el('tbody');
+    const numIn=(s2,key,oninput)=>{
+      const inp=el('input',{type:'number',min:1,max:10,step:1,value:s2[key]==null?'':s2[key],style:{width:'58px',textAlign:'center'},
+        oninput:e=>{ const v=e.target.value===''?null:clamp(parseInt(e.target.value),1,10); s2[key]=v; e.target.value=v==null?'':v; oninput&&oninput(); autosave(); Work1.updateMetricSummary(); }});
+      return inp;
     };
-    ti.el.querySelector('input').addEventListener('blur',syncTags);
-    ti.el.addEventListener('click',e=>{ if(e.target.tagName==='BUTTON') setTimeout(syncTags,0); });
-    ti.el.querySelector('input').addEventListener('keydown',e=>{
-      if(e.key==='Enter') setTimeout(syncTags,0);
+    dim.secondaries.forEach((s2,j)=>{
+      const delta = (s2.actual!=null && s2.forecast!=null) ? (s2.actual - s2.forecast) : null;
+      const deltaCell=el('td',{class:'metric-delta'}, delta==null?'—':(delta>0?'+':'')+delta.toFixed(1));
+      if(delta!=null && Math.abs(delta)>1.5) deltaCell.style.color='var(--maroon)';
+      const tr=el('tr',{},
+        el('td',{}, el('input',{type:'text',value:s2.name||'',placeholder:'测评点名称',
+          oninput:e=>{s2.name=e.target.value;autosave()}})),
+        el('td',{}, el('input',{type:'text',value:s2.measure||'',placeholder:'如：NPS / 复购率 / 5分占比',
+          oninput:e=>{s2.measure=e.target.value;autosave()}})),
+        el('td',{}, numIn(s2,'forecast')),
+        el('td',{}, numIn(s2,'target')),
+        el('td',{}, el('span',{class:'mono'}, s2.actual!=null?s2.actual.toFixed(1):'—')),
+        deltaCell,
+        el('td',{}, el('button',{class:'ghost small',onclick:()=>{dim.secondaries.splice(j,1);autosave();Work1.rerender('metrics')}},'×'))
+      );
+      tbody.appendChild(tr);
     });
-    mid.appendChild(ti.el);
+    tbl.appendChild(tbody);
+    mid.appendChild(tbl);
+    mid.appendChild(el('button',{class:'ghost small',style:'margin-top:6px',onclick:()=>{
+      dim.secondaries.push({id:uid('s'),name:'',forecast:null,target:null,actual:null,measure:''});
+      autosave(); Work1.rerender('metrics');
+    }},'+ 添加测评点'));
     item.appendChild(mid);
 
     const right=el('div',{class:'hallmark-right'});
     right.appendChild(el('span',{class:'hallmark-label'},'测评点'));
-    right.appendChild(el('div',{class:'hallmark-count'},
-      el('span',{class:'hallmark-count-num'}, dim.secondaries.length),
-      document.createTextNode(' items')
-    ));
-    const del=el('button',{class:'ghost small',style:'margin-top:8px',
-      onclick:()=>{ if(confirm('删除一级指标「'+(dim.name||'')+'」及其二级指标？')){
-        m.dimensions.splice(i,1); autosave(); Work1.rerender('metrics'); }}},'删除');
-    right.appendChild(del);
+    right.appendChild(el('div',{class:'hallmark-count'}, el('span',{class:'hallmark-count-num'},dim.secondaries.length), document.createTextNode(' items')));
+    right.appendChild(el('button',{class:'ghost small',style:'margin-top:8px',
+      onclick:()=>{ if(confirm('删除一级指标「'+(dim.name||'')+'」及其测评点？')){ m.dimensions.splice(i,1); autosave(); Work1.rerender('metrics'); }}},'删除'));
     item.appendChild(right);
-
     list.appendChild(item);
   });
   sec.appendChild(list);
 
-  // soft validation hint
+  // 软校验
   const lowDim=m.dimensions.length<5;
   const lowSec=m.dimensions.some(d=>(d.secondaries||[]).length<3);
   if(lowDim || lowSec){
     sec.appendChild(el('p',{class:'muted italic',style:'font-size:13px;margin-top:8px'},
-      '课程要求：至少 5 个一级指标，每个一级指标下至少 3 个测评点。当前 '
-      + (lowDim?'一级指标不足（'+m.dimensions.length+'/5）':'')
-      + (lowDim&&lowSec?'；':'')
-      + (lowSec?'部分一级指标测评点不足 3 个':'') + '。'));
+      '硬性要求：≥5 个一级指标，每个 ≥3 个测评点。当前 '
+      + (lowDim?'一级 '+m.dimensions.length+'/5；':'')
+      + (lowSec?'有一级指标测评点 <3':'')));
   }
 
+  // 整组 vs 单项汇总
+  const sum=el('div',{class:'metric-summary'});
+  sec.appendChild(sum);
+  sec._summaryEl=sum;
+  Work1.renderMetricSummary(sum);
+
   const actions=el('div',{class:'ai-actions'},
-    el('button',{class:'ghost',onclick:()=>{
-      m.dimensions.push({id:uid('m'),name:'',secondaries:[]});
-      autosave(); Work1.rerender('metrics');
-    }},'+ 添加一级指标'),
+    el('button',{class:'ghost',onclick:()=>{m.dimensions.push({id:uid('m'),name:'',secondaries:[]});autosave();Work1.rerender('metrics')}},'+ 添加一级指标'),
     (()=>{ const btn=el('button',{class:'primary',onclick:()=>{
       API.aiButton({button:btn, container:sec,
-        buildPrompt:()=>[{role:'system',content:'你是品牌资产管理专家，基于 CBBE 品牌资产金字塔（显著性/功效/形象/判断/感受/共鸣）为指定业务设计品牌资产指标体系。输出 JSON: {"dimensions":[{"name":"一级指标名","secondaries":["二级指标1","二级指标2","二级指标3"]}]}，至少 5 个一级指标，每个一级指标至少 3 个二级指标。'},
-          {role:'user',content:`SBU:${state.work1.sbu.name}\n品类:${state.work1.sbu.category}\n概述:${state.work1.sbu.summary}\n画像痛点:\n${state.work1.personas.map(p=>p.name+':'+p.painPoints).join('\n')}`}],
+        buildPrompt:()=>[{role:'system',content:'你是品牌资产管理专家。基于 CBBE ，设计 ≥5 个一级指标、每个 ≥3 测评点的价值体系，并为每个测评点给首年预测分与三年目标分（1-10，中高端定位目标应更高）与量化口径。必须同时覆盖「品牌功效」（产品/技术/体验）与「品牌形象」（知名度/竞争地位/传播）。输出 JSON: {"dimensions":[{"name":"一级指标名","secondaries":[{"name":"测评点","measure":"量化口径","forecast":6,"target":8}]}]}'},
+          {role:'user',content:`SBU:${state.work1.sbu.name}\n品类:${state.work1.sbu.category}\n概述:${state.work1.sbu.summary}\n场景短板:\n${(state.work1.scenarios||[]).map(s=>s.name+': '+(s.decisiveGap||'')).join('\n')}\n画像痛点:\n${state.work1.personas.map(p=>p.name+':'+p.painPoints).join('\n')}`}],
         onResult:r=>{
           if(!r||!Array.isArray(r.dimensions)){showToast('生成失败');return;}
           m.dimensions=r.dimensions.map(d=>({id:uid('m'),name:d.name||'',
-            secondaries:(d.secondaries||[]).map(s=>({id:uid('s'),name:String(s)}))}));
+            secondaries:(d.secondaries||[]).map(s=>({id:uid('s'),name:String(s.name||''),measure:s.measure||'',forecast:s.forecast!=null?clamp(+s.forecast,1,10):null,target:s.target!=null?clamp(+s.target,1,10):null,actual:null}))}));
           autosave(); Work1.rerender('metrics');
         }});
     }},'用 AI 起草指标体系'); return btn; })()
   );
   sec.appendChild(el('hr',{class:'rule'}));
   sec.appendChild(actions);
+};
+
+// 汇总：按一级算整组均分 + 列单项偏差 extremes（避免单项拉高整组）
+Work1.renderMetricSummary = function(box){
+  if(!box) return;
+  box.innerHTML='';
+  const m=state.work1.metrics; if(!m||!Array.isArray(m.dimensions)) return;
+  const all=[];
+  const rows=[];
+  m.dimensions.forEach(dim=>{
+    const fc=(dim.secondaries||[]).filter(s=>s.forecast!=null).map(s=>s.forecast);
+    const avg=fc.length? fc.reduce((a,b)=>a+b,0)/fc.length : null;
+    rows.push({name:dim.name||'(未命名)', avg, n:fc.length});
+    (dim.secondaries||[]).forEach(s=>{ if(s.forecast!=null) all.push(s); });
+  });
+  box.appendChild(el('h4',{},'汇总（整组均分 vs 单项）'));
+  const grid=el('div',{class:'grid3'});
+  rows.forEach(r=>{
+    grid.appendChild(el('div',{class:'plate',style:{padding:'10px 12px'}},
+      el('div',{class:'mono',style:'font-size:11px;color:var(--muted)'},r.name),
+      el('div',{style:'font-size:22px;font-family:var(--font-body);font-style:italic'},r.avg!=null?r.avg.toFixed(1):'—'),
+      el('div',{class:'mono',style:'font-size:10px;color:var(--muted)'},r.n+' 个预测分')));
+  });
+  box.appendChild(grid);
+  const withDelta=all.filter(s=>s.actual!=null);
+  if(withDelta.length){
+    withDelta.sort((a,b)=>(b.actual-b.forecast)-(a.actual-a.forecast));
+    const best=withDelta[0], worst=withDelta[withDelta.length-1];
+    box.appendChild(el('p',{class:'muted',style:'font-size:13px;margin-top:8px'},
+      '实测偏差最大：'+(worst.actual-worst.forecast>0?'':'')+(worst.actual-worst.forecast).toFixed(1)+'（'+worst.name+'）；表现最好：+'+(best.actual-best.forecast).toFixed(1)+'（'+best.name+'）。|Δ|>1.5 为认知断点。'));
+  }else{
+    box.appendChild(el('p',{class:'muted italic',style:'font-size:13px;margin-top:8px'},'尚无实测分——运行 ⑤ 合成调研并完成 ⑥ 分析后，这里会显示回填偏差。'));
+  }
+};
+Work1.updateMetricSummary = function(){
+  const box=document.querySelector('#steps1 .step[data-step="metrics"] .metric-summary');
+  if(box) Work1.renderMetricSummary(box);
 };
 
 /* ---------- STEP 5: SURVEY ---------- */
@@ -715,8 +1205,9 @@ Work1.analyzeResponses = function(){
         const an=r.answers.find(x=>x.questionId===q.id);
         const v=parseInt(an?.value); if(!isNaN(v)&&v>=1&&v<=5){vals.push(v);dist[v-1]++;}
       });
-      a.likertStats[q.id]={mean:mean(vals),sd:sd(vals),dist,n:vals.length};
-      a.indicatorMeans.push({label:q.text.length>22?q.text.slice(0,22)+'…':q.text, value:mean(vals)});
+      const m=mean(vals);
+      a.likertStats[q.id]={mean:m,sd:sd(vals),dist,n:vals.length};
+      a.indicatorMeans.push({label:q.text.length>22?q.text.slice(0,22)+'…':q.text, value:m, mean:m, sourceIndicatorId:q.sourceIndicatorId||null});
     } else if(q.type==='open'){
       const texts=[];
       s.responses.forEach(r=>{
@@ -726,6 +1217,8 @@ Work1.analyzeResponses = function(){
       a.openThemes.push({questionId:q.id, question:q.text, texts});
     }
   });
+  // 回填指标实测分（李克特 1-5 → 1-10）并重算 Δ
+  Work1.backfillScores();
   autosave();
 };
 
@@ -760,8 +1253,31 @@ Work1.render.analysis = function(sec){
   sec.appendChild(el('h3',{},'指标均值排名'));
   const barPlate=el('section',{class:'plate'}, el('span',{class:'plate-label'},'F5 · TICK ROWS · 指标均值'));
   const barC=el('div');
-  renderBarChart(barC, a.indicatorMeans.sort((x,y)=>y.value-x.value), {unit:''});
+  renderBarChart(barC, a.indicatorMeans.slice().sort((x,y)=>y.value-x.value), {unit:''});
   barPlate.appendChild(barC); sec.appendChild(barPlate);
+
+  // 预测 vs 实测对照（Step 5 双列评分 + 回填偏差）
+  const scored=[];
+  (state.work1.metrics.dimensions||[]).forEach(dim=>(dim.secondaries||[]).forEach(s2=>{
+    if(s2.forecast!=null || s2.actual!=null) scored.push({dim:dim.name, ...s2});
+  }));
+  if(scored.length){
+    sec.appendChild(el('h3',{},'预测 vs 实测回填'));
+    const tbl=el('table',{class:'data'});
+    tbl.appendChild(el('thead',{}, el('tr',{}, ...['一级指标','测评点','首年预测','三年目标','实测(1-10)','Δ(实测−预测)'].map(h=>el('th',{},h)))));
+    const tb=el('tbody');
+    scored.forEach(s2=>{
+      const delta=s2.actual!=null&&s2.forecast!=null?(s2.actual-s2.forecast):null;
+      const dc=el('td',{}, delta==null?'—':(delta>0?'+':'')+delta.toFixed(1));
+      if(delta!=null&&Math.abs(delta)>1.5) dc.style.color='var(--maroon)';
+      tb.appendChild(el('tr',{},
+        el('td',{},s2.dim||''), el('td',{},s2.name||''),
+        el('td',{class:'mono'},s2.forecast??'—'), el('td',{class:'mono'},s2.target??'—'),
+        el('td',{class:'mono'},s2.actual!=null?s2.actual.toFixed(1):'—'), dc));
+    });
+    tbl.appendChild(tb); sec.appendChild(el('section',{class:'plate'},
+      el('span',{class:'plate-label'},'BACKFILL · 李克特 1-5 映射为 1-10'), tbl));
+  }
 
   // open-ended with AI theme extraction (work1 默认全李克特，仅当存在开放题时显示)
   if(a.openThemes && a.openThemes.length){
@@ -1012,20 +1528,57 @@ Work1.refreshDynamic = function(id){
     const sl=document.querySelector('#steps1 .step[data-step="survey"] p.mono');
     if(sl) sl.textContent=Work1.surveyStatus();
   }
+  // 调研回填后刷新指标评分表（展示实测/Δ），无在途编辑可放心整体重建
+  if(id==='metrics'){ Work1.rerender('metrics'); }
 };
 
 /* ---------- EXPORT ---------- */
 Work1.exportMd = function(){
   const d=state.work1;
-  let out=`## I. 业务价值体系\n\n### 1. SBU\n- **名称**：${d.sbu.name}\n- **品类**：${d.sbu.category}\n- **阶段**：${d.sbu.stage}\n- **范围**：${d.sbu.scope}\n\n> ${d.sbu.summary}\n\n`;
-  out+=`### 2. 环境\n- **P**：${d.environment.political}\n- **E**：${d.environment.economic}\n- **S**：${d.environment.social}\n- **T**：${d.environment.technological}\n\n**行业**：${d.environment.industry}\n\n**竞争**：${d.environment.competitors}\n\n**趋势**：${d.environment.trends}\n\n`;
-  out+=`### 3. 客户画像\n`;
+  const tq=d.sbu.threeQuestions||{};
+  let out=`## I. 业务价值体系\n\n### 1. SBU\n- **名称**：${d.sbu.name}\n- **品类**：${d.sbu.category}\n- **阶段**：${d.sbu.stage}\n- **范围**：${d.sbu.scope}\n- **业务三问**：客户不同=${tq.customer?'是':'否'}；渠道不同=${tq.channel?'是':'否'}；品牌独立露出=${tq.brand?'是':'否'}\n\n> ${d.sbu.summary}\n\n**边界声明**：${d.sbu.boundary||''}\n\n`;
+
+  out+=`### 2. 业务基本情况与竞争\n`;
+  out+=`**PEST**\n- P：${d.environment.political}\n- E：${d.environment.economic}\n- S：${d.environment.social}\n- T：${d.environment.technological}\n\n`;
+  const b=d.environment.basics||{};
+  const trio=(label,o)=>o?`- **${label}**：实况 ${o.actual||'—'} / 目标 ${o.target||'—'}（来源：${o.source||'—'}）\n`:'';
+  out+=`**业务基本情况**\n${trio('规模与员工',b.scale)}${trio('业务范围',b.scope)}${trio('产品/业务线',b.products)}${trio('客户',b.customers)}${trio('供应链',b.supply)}`;
+  if(b.performance){ out+=`${trio('市场份额',b.performance.share)}${trio('ROI',b.performance.roi)}${trio('年增长率',b.performance.growth)}`; }
+  out+=`\n**市场格局**：${d.environment.industry||''}\n\n`;
+  if(Array.isArray(d.environment.competitors) && d.environment.competitors.length){
+    out+=`**竞品对标**\n\n| 竞品 | 价位 | 优势 | 劣势 | 相对位置 |\n|---|---|---|---|---|\n`;
+    d.environment.competitors.forEach(c=>{ out+=`| ${c.name} | ${c.price} | ${c.strengths} | ${c.weaknesses} | ${c.position} |\n`; });
+    out+='\n';
+  }
+  const e=d.environment.edges||{};
+  const edgesText = d.environment.edgesText || '';
+  if (edgesText) {
+    out += `**五维优劣势与收口**\n\n${edgesText}\n\n`;
+  } else {
+    // 兼容老数据（10 字段散落）
+    out += `**五维优劣势**：制造 ${e.manufacturing||'—'}；技术 ${e.technology||'—'}；品牌 ${e.brand||'—'}；渠道 ${e.channel||'—'}；合规 ${e.compliance||'—'}\n- 防御性优势：${e.defensive||'—'}\n- 关键劣势：${e.critical||'—'}\n- 结构性劣势：${e.structural||'—'}\n- 微笑曲线：${e.smileCurve||'—'}\n\n**关键趋势**：${d.environment.trends||''}\n\n`;
+  }
+
+  out+=`### 3. 客户画像与价值诉求\n`;
   d.personas.forEach(p=>{
-    out+=`- **${p.name}** (${p.age}, ${p.occupation}, ${p.region}) — ${p.painPoints}\n  - 价值观：${(p.values||[]).join('、')}\n  - 语录：*${p.quote}*\n`;
+    out+=`- **${p.name}** (${p.age}, ${p.occupation}, ${p.region}) — ${p.painPoints}\n  - 价值观：${(p.values||[]).join('、')}\n  - 渠道：${(p.channels||[]).join('、')}\n  - 语录：*${p.quote}*\n`;
   });
-  out+=`\n### 4. 合成调研\n- 样本数：${d.survey.responses.length}（每位画像 ${d.survey.n} 份）\n- 题数：${d.survey.questions.length}\n\n`;
-  out+=`### 5. 分析洞察\n${d.analysis.insights}\n\n`;
-  out+=`### 6. 价值框架\n- 功能：${d.values.chosenFunctional}\n- 情感：${d.values.chosenEmotional}\n- 社会：${d.values.chosenSocial}\n\n> ${d.values.rationale}\n\n`;
-  out+=`### 7. 建议\n- 短期：${d.recommendations.short}\n- 中期：${d.recommendations.mid}\n- 长期：${d.recommendations.long}\n- 风险：${(d.recommendations.risks||[]).join('；')}\n`;
+  (d.scenarios||[]).forEach(s=>{
+    out+=`\n**场景：${s.name}**（关联画像：${(s.personaIds||[]).map(id=>(d.personas.find(p=>p.id===id)||{}).name).filter(Boolean).join('、')||'—'}）\n`;
+    out+=`- 利益：使用 ${s.benefits?.usage||'—'}；服务 ${s.benefits?.service||'—'}；人员 ${s.benefits?.staff||'—'}；形象 ${s.benefits?.image||'—'}\n`;
+    out+=`- 成本：货币 ${s.costs?.monetary||'—'}；时间 ${s.costs?.time||'—'}；精力 ${s.costs?.energy||'—'}；心理 ${s.costs?.psychic||'—'}\n`;
+    out+=`- 价值锚点：${s.anchor||'—'}\n- 决定性短板：${s.decisiveGap||'—'}\n`;
+  });
+
+  out+=`\n### 4. 价值体系评分（1-10）\n\n| 一级指标 | 测评点 | 量化口径 | 首年预测 | 三年目标 | 实测 | Δ |\n|---|---|---|---|---|---|---|\n`;
+  (d.metrics.dimensions||[]).forEach(dim=>(dim.secondaries||[]).forEach(s2=>{
+    const delta=s2.actual!=null&&s2.forecast!=null?(s2.actual-s2.forecast):null;
+    out+=`| ${dim.name} | ${s2.name} | ${s2.measure||''} | ${s2.forecast??'—'} | ${s2.target??'—'} | ${s2.actual!=null?s2.actual.toFixed(1):'—'} | ${delta!=null?(delta>0?'+':'')+delta.toFixed(1):'—'} |\n`;
+  }));
+
+  out+=`\n### 5. 合成调研\n- 样本数：${d.survey.responses.length}（每位画像 ${d.survey.n} 份）\n- 题数：${d.survey.questions.length}\n\n`;
+  out+=`### 6. 分析洞察\n${d.analysis.insights}\n\n`;
+  out+=`### 7. 价值框架\n- 功能：${d.values.chosenFunctional}\n- 情感：${d.values.chosenEmotional}\n- 社会：${d.values.chosenSocial}\n\n> ${d.values.rationale}\n\n`;
+  out+=`### 8. 建议\n- 短期：${d.recommendations.short}\n- 中期：${d.recommendations.mid}\n- 长期：${d.recommendations.long}\n- 风险：${(d.recommendations.risks||[]).join('；')}\n`;
   return out;
 };

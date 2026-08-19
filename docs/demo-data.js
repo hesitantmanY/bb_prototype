@@ -11,16 +11,47 @@ const DemoData = {
         stage:'海外扩张期',
         scope:'东南亚',
         countries:['新加坡'],
-        summary:'以可持续产地直采、节气茶单和陶瓷茶具订阅，服务 25–40 岁东南亚城市华人与文化爱好者。'
+        summary:'以可持续产地直采、节气茶单和陶瓷茶具订阅，服务 25–40 岁东南亚城市华人与文化爱好者。',
+        threeQuestions:{customer:true, channel:true, brand:true},
+        boundary:'客户：与母公司国内大宗茶业务的经销商客群完全区隔，面向东南亚 C 端文化人群；渠道：母公司 B2B 经销网络不共享，自建 Shopee/独立站与海外专柜；品牌：山木茶事为独立出海品牌，不出现母品牌 logo；损益：海外团队独立核算。仅复用母公司的产地供应链与制茶资质。'
       },
       environment: {
         political:'东南亚华人圈对中国传统文化接受度高；新加坡、马来西亚均有成熟食品进口合规框架；印尼需清真认证。',
         economic:'新马人均 GDP 高，新加坡 2023 年约 USD 84,000；精品茶年增速 12-18%，高于传统茶。',
         social:'华人 25–40 岁群体对节气、慢生活、正念饮茶的兴趣上升；KOL 文化推动送礼场景。',
         technological:'Shopee、Lazada、TikTok Shop 渗透率高；小程序+独立站跨境电商成熟；冷链已覆盖一线城市。',
-        industry:'竞争分散：TWG 主打奢华英式调香，TEAMan 主打年轻人拼配，本地茶庄依赖线下。无品牌同时占据"产地溯源+节气+订阅"。',
-        competitors:'TWG Tea（高端百货）、TEAMan（年轻拼配）、本地老字号茶庄、ITO EN（日系瓶装）',
-        trends:'节气营销、可追溯供应链、茶具订阅礼盒、KOC 内容种草、正念/慢生活运动'
+        industry:'活跃品牌数十个，Top 为 TWG/ITO EN/TEAMan；精品茶渗透率仍低（增量市场）；价格带分超高端百货、年轻拼配、本地老字号三段；"产地溯源+节气+订阅"垂直定位空白。',
+        trends:'节气营销、可追溯供应链、茶具订阅礼盒、KOC 内容种草、正念/慢生活运动',
+        basics:{
+          scale:{actual:'团队 12 人，深圳+新加坡各一办公室',target:'海外团队 25 人（含本地茶师 3 位）',source:'内部台账'},
+          scope:{actual:'原叶茶 + 茶具订阅，不做瓶装茶饮',target:'增加商务定制线，不进入商超袋泡茶',source:'战略规划'},
+          products:{actual:'节气订阅 8 期/年，30g/期',target:'+ 商务礼盒 + 陶瓷联名茶具',source:'产品路线图'},
+          customers:{actual:'国内茶友社群为主',target:'东南亚 25-40 岁城市文化人群，女性占 60%',source:'用户调研'},
+          supply:{actual:'复用母公司 12 位签约茶师',target:'新增东南亚本地陶艺师 5 位',source:'供应链'},
+          performance:{
+            share:{actual:'0（新进入）',target:'新加坡精品原叶茶 3%',source:'目标推导'},
+            roi:{actual:'-',target:'首年 ROI 0.8，第三年 1.6',source:'财务模型'},
+            growth:{actual:'-',target:'年增长 40%',source:'行业基准 12-18% × 差异化溢价'}
+          }
+        },
+        competitors:[
+          {id:'c1',name:'TWG Tea',price:'SGD 55-120/100g（超高端）',strengths:'百货专柜、奢华品牌认知、调香 SKU 丰富',weaknesses:'过度香水化、原叶纯度受质疑、年轻客群觉老气',position:'在文化叙事与原叶纯度上差异化，价格略低'},
+          {id:'c2',name:'TEAMan',price:'SGD 28/80g（年轻拼配）',strengths:'社交媒体强、年轻客群、拼配创新',weaknesses:'缺乏产地深度、礼盒感弱',position:'以节气产地和茶具礼盒错位'},
+          {id:'c3',name:'本地老字号茶庄',price:'中端散茶',strengths:'本地信任、价格亲民、线下客流',weaknesses:'无品牌叙事、包装陈旧、不懂数字营销',position:'用现代设计与订阅体验升级'},
+          {id:'c4',name:'ITO EN',price:'瓶装茶 SGD 2-4',strengths:'渠道渗透、即饮便利',weaknesses:'非原叶体验、无文化溢价',position:'不直接竞争（不同场景）'},
+          {id:'c5',name:'Aesthetic Tea Co.',price:'SGD 40-70/罐',strengths:'设计驱动、独立站成熟',weaknesses:'产地不透明、SKU 少',position:'以茶师溯源 AR 建立信任'}
+        ],
+        edges:{
+          manufacturing:'复用母公司供应链，工艺稳定但海外小批量灵活度待提升',
+          technology:'AR 溯源小程序与可跳过订阅系统为技术长板',
+          brand:'海外知名度为零，但中文文化叙事独特',
+          channel:'国内私域成熟，海外渠道从零建设',
+          compliance:'新加坡食品进口合规清晰，印尼清真认证待办',
+          defensive:'12 位茶师 3 年独家 + 节气内容 IP',
+          critical:'海外品牌零知名度，首单获客成本高',
+          structural:'海外重资产开柜成本高，宜以快闪+线上规避',
+          smileCurve:'优势在研发/内容（茶师+节气 IP）与品牌端，劣势在渠道/零售终端——定位为"内容与品牌驱动的订阅"，不在门店密度上硬拼。'
+        }
       },
       personas: [
         {id:'p1',name:'林慧怡',gender:'女',age:'28',occupation:'品牌经理',income:'SGD 75k/年',region:'新加坡',
@@ -33,33 +64,48 @@ const DemoData = {
          values:['审美','故事','社区'],painPoints:'对中国茶好奇但不懂门道、怕被收"游客价"',
          channels:['TikTok','Tokopedia','本地茶会'],quote:'我想从一个有美感的盒子开始学茶。'}
       ],
+      scenarios: [
+        {id:'sc1',name:'日常自饮', personaIds:['p1'],
+         benefits:{usage:'节气原叶品质稳定、冲泡简单',service:'订阅可跳过、茶师在线答疑',staff:'茶师专业、不推销',image:'懂茶、有生活审美的自我形象'},
+         costs:{monetary:'单期 SGD 48，高于袋泡茶',time:'需要等待冲泡、学习水温',energy:'挑选山头有学习门槛',psychic:'担心买错口味、浪费订阅'},
+         anchor:'稳定的品质 + 不费力的仪式感', decisiveGap:'易用——山头与冲泡门槛把新人挡在门外，需教学卡降低'},
+        {id:'sc2',name:'商务/节庆送礼', personaIds:['p2'],
+         benefits:{usage:'茶品体面、可定制刻字',service:'企业阶梯价、准时送达',staff:'专属定制对接',image:'有文化品位、不撞款的赠礼形象'},
+         costs:{monetary:'礼盒 SGD 188 起，单价高',time:'需提前定制、等待周期',energy:'挑选款式与预算的精力',psychic:'担心对方不喜欢、不够体面'},
+         anchor:'得体、有说法、不撞款', decisiveGap:'信任——收礼人是否认这个品牌，取决于品牌知名度（当前为零）'},
+        {id:'sc3',name:'文化入门好奇', personaIds:['p3'],
+         benefits:{usage:'从美感盒子入门、低门槛尝试',service:'茶会/社群陪伴学习',staff:'同好友善、不端着',image:'审美与文化身份的表达'},
+         costs:{monetary:'入门款可接受',time:'学习茶知识的时间',energy:'信息过载、怕被收游客价',psychic:'不懂门道的尴尬'},
+         anchor:'被美感和故事吸引，再慢慢懂茶', decisiveGap:'信任——怕被当作"游客"收溢价，需透明价格与产地'}
+      ],
       metrics: {
+        disclaimerAcknowledged:true,
         dimensions: [
-          {id:'dm1',name:'品牌功效',secondaries:[
-            {id:'ds1',name:'产品品质与产地溯源'},
-            {id:'ds2',name:'节气与产品创新'},
-            {id:'ds3',name:'订阅与配送服务'}
+          {id:'dm1',name:'品牌功效·产品',secondaries:[
+            {id:'ds1',name:'产品品质与产地溯源',measure:'5分占比 / 溯源扫码完成率',forecast:6,target:9},
+            {id:'ds2',name:'节气与产品创新',measure:'节气新品售罄率',forecast:6,target:8},
+            {id:'ds3',name:'订阅与配送服务',measure:'准时送达率 / NPS',forecast:7,target:9}
           ]},
-          {id:'dm2',name:'品牌形象',secondaries:[
-            {id:'ds4',name:'知名度'},
-            {id:'ds5',name:'差异化竞争地位'},
-            {id:'ds6',name:'品牌传播与口碑'},
-            {id:'ds7',name:'东方美学文化价值'}
+          {id:'dm2',name:'品牌形象·知名度',secondaries:[
+            {id:'ds4',name:'知名度',measure:'无提示提及率（目标客群%）',forecast:3,target:7},
+            {id:'ds5',name:'差异化竞争地位',measure:'能说出差异化的受访者%',forecast:6,target:8},
+            {id:'ds6',name:'品牌传播与口碑',measure:'正面 UGC 篇数/月',forecast:5,target:8}
           ]},
-          {id:'dm3',name:'品牌判断',secondaries:[
-            {id:'ds8',name:'品质可信性'},
-            {id:'ds9',name:'性价比与溢价接受度'},
-            {id:'ds10',name:'品牌专业性'}
+          {id:'dm3',name:'品牌形象·判断',secondaries:[
+            {id:'ds7',name:'东方美学文化价值',measure:'设计/文化相关好评占比',forecast:7,target:9},
+            {id:'ds8',name:'品质可信性',measure:'品质信任题均分',forecast:7,target:9},
+            {id:'ds9',name:'性价比与溢价接受度',measure:'愿意溢价 ≥20% 的受访者%',forecast:5,target:7}
           ]},
-          {id:'dm4',name:'品牌感受',secondaries:[
-            {id:'ds11',name:'仪式感与情绪价值'},
-            {id:'ds12',name:'社交送礼得体性'},
-            {id:'ds13',name:'社群归属感'}
+          {id:'dm4',name:'品牌形象·感受',secondaries:[
+            {id:'ds10',name:'品牌专业性',measure:'选茶/制茶专业度评分',forecast:6,target:8},
+            {id:'ds11',name:'仪式感与情绪价值',measure:'情绪价值题均分',forecast:7,target:9},
+            {id:'ds12',name:'社交送礼得体性',measure:'送礼意愿题均分',forecast:7,target:9}
           ]},
           {id:'dm5',name:'品牌共鸣',secondaries:[
-            {id:'ds14',name:'行为忠诚与复购'},
-            {id:'ds15',name:'主动推荐意愿'},
-            {id:'ds16',name:'品牌参与度'}
+            {id:'ds13',name:'社群归属感',measure:'社群活跃 / 加入意愿',forecast:5,target:8},
+            {id:'ds14',name:'行为忠诚与复购',measure:'年复购率',forecast:6,target:8},
+            {id:'ds15',name:'主动推荐意愿',measure:'NPS',forecast:6,target:9},
+            {id:'ds16',name:'品牌参与度',measure:'活动参与率/UGC贡献',forecast:5,target:8}
           ]}
         ]
       },
@@ -110,7 +156,7 @@ const DemoData = {
           responses.forEach(r=>{ const an=r.answers.find(x=>x.questionId===q.id); const v=parseInt(an?.value); if(!isNaN(v)&&v>=1&&v<=5){vals.push(v);dist[v-1]++;} });
           likertStats[q.id]={mean:+mean(vals).toFixed(2),sd:+sd(vals).toFixed(2),dist,n:vals.length};
         });
-        const indicatorMeans=qs.map(q=>({label:q.text.length>18?q.text.slice(0,18)+'…':q.text, value:likertStats[q.id].mean}));
+        const indicatorMeans=qs.map(q=>({label:q.text.length>18?q.text.slice(0,18)+'…':q.text, value:likertStats[q.id].mean, mean:likertStats[q.id].mean, sourceIndicatorId:q.sourceIndicatorId||null}));
         // 暴露给同级 analysis 字段
         s.__demoAnalysis={likertStats, indicatorMeans};
         return {questions:qs, responses, n:3, status:'done', progress:{done:9,total:9}, error:null, mode:'demo', useFewShot:true, useRag:false, ragContext:''};
@@ -135,6 +181,8 @@ const DemoData = {
       }
     };
     delete s.__demoAnalysis;
+    // 回填指标实测分（李克特 1-5 → 1-10），让 ④⑥ 展示预测 vs 实测偏差
+    if(typeof Work1!=='undefined' && Work1.backfillScores) Work1.backfillScores();
 
     s.work2 = {
       scope: {
@@ -384,5 +432,27 @@ const DemoData = {
         {authors:'',title:'Singapore Tea Market Report 2024',year:'2024',url:''}
       ]
     };
+
+    // —— 用每个 Work 的 defaultData 兜底缺失字段 ——
+    // 之前手写的 demo 数据只覆盖部分字段（如 work4 漏了 route），导致
+    // renderAll 调用 Work4.renderStep('route') 时读 undefined 字段崩溃，
+    // 整个 renderAll 中断、my-toggleDemo 还原代码未跑、页面卡在 sbu。
+    // 兜底后任何被遗漏的字段都有合理默认值。
+    const mergeDefaults = (workKey, mod) => {
+      if(!mod || typeof mod.defaultData !== 'function') return;
+      const def = mod.defaultData();
+      s[workKey] = { ...def, ...(s[workKey]||{}) };
+      // 一层字段各自再合并（route/product/...）— demo 数据提供的就是覆盖子集
+      Object.keys(def).forEach(k=>{
+        if(s[workKey][k] && typeof def[k]==='object' && !Array.isArray(def[k]) && def[k]!==null){
+          s[workKey][k] = { ...def[k], ...s[workKey][k] };
+        }
+      });
+    };
+    mergeDefaults('work1', typeof Work1!=='undefined' ? Work1 : null);
+    mergeDefaults('work2', typeof Work2!=='undefined' ? Work2 : null);
+    mergeDefaults('work3', typeof Work3!=='undefined' ? Work3 : null);
+    mergeDefaults('work4', typeof Work4!=='undefined' ? Work4 : null);
+    mergeDefaults('work5', typeof Work5!=='undefined' ? Work5 : null);
   }
 };
