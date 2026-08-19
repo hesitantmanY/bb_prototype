@@ -1,0 +1,406 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>工作坊任务2｜海外目标市场选择工具</title>
+<style>
+:root{
+  --bg:#f6f7fb; --card:#ffffff; --text:#172033; --muted:#6b7280; --border:#d9dee8;
+  --accent:#2457d6; --accent2:#7c3aed; --green:#15803d; --orange:#d97706; --red:#b91c1c; --gray:#64748b;
+  --soft:#eef4ff; --chip:#f1f5f9;
+}
+*{box-sizing:border-box}
+body{margin:0;font-family:Inter,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif;background:var(--bg);color:var(--text)}
+.container{max-width:1220px;margin:auto;padding:24px}
+h1,h2,h3,p{margin-top:0}
+.topbar{display:flex;justify-content:space-between;gap:18px;align-items:flex-end;margin-bottom:18px;flex-wrap:wrap}
+.title h1{font-size:28px;margin-bottom:6px}
+.subtitle{color:var(--muted);font-size:14px}
+.metrics{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:18px}
+.card{background:var(--card);border:1px solid var(--border);border-radius:18px;padding:16px;box-shadow:0 4px 20px rgba(19,33,68,.04)}
+.metric-label{font-size:13px;color:var(--muted)}
+.metric-value{font-size:30px;font-weight:800;margin:4px 0}
+.btn{border:1px solid var(--border);background:var(--card);padding:9px 13px;border-radius:12px;cursor:pointer;color:var(--text)}
+.btn:hover{border-color:var(--accent)}
+.btn.primary{background:var(--accent);border-color:var(--accent);color:#fff}
+.tabs{display:grid;grid-template-columns:repeat(5,1fr);gap:8px;margin-bottom:18px}
+.tab{padding:10px;border-radius:12px;border:1px solid var(--border);background:var(--card);cursor:pointer}
+.tab.active{background:var(--accent);color:#fff;border-color:var(--accent)}
+.panel{display:none}.panel.active{display:block}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:18px}
+.grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
+input,textarea,select{width:100%;border:1px solid var(--border);border-radius:10px;padding:9px 10px;background:#fff;color:var(--text);font:inherit}
+label{display:block;font-size:13px;margin-bottom:12px}
+label span{display:block;margin-bottom:5px}
+.callout{background:var(--soft);border:1px solid #c7d6ff;border-radius:16px;padding:16px}
+.flow{display:grid;grid-template-columns:1fr auto 1fr auto 1fr;gap:8px;align-items:center}
+.node{border:1px solid var(--border);border-radius:14px;padding:12px;background:var(--card)}
+.arrow{font-size:22px;color:var(--accent)}
+.market-card,.indicator-row,.score-market{border:1px solid var(--border);border-radius:15px;background:#fff;padding:14px}
+.flex{display:flex;gap:10px;align-items:center}
+.space-between{justify-content:space-between}
+.wrap{flex-wrap:wrap}
+.badge{display:inline-flex;align-items:center;border-radius:999px;background:var(--chip);padding:5px 9px;font-size:12px}
+.small{font-size:13px;color:var(--muted)}
+.weightbar{height:8px;background:var(--chip);border-radius:999px;overflow:hidden;margin-top:8px}
+.weightfill{height:100%;background:var(--accent);border-radius:999px}
+.score-grid{display:grid;grid-template-columns:minmax(180px,1.2fr) 86px minmax(160px,1fr) 80px;gap:8px;align-items:center;margin-top:8px}
+.score-head{font-size:12px;color:var(--muted)}
+.quad{border:1px solid var(--border);border-left:5px solid var(--gray);border-radius:14px;padding:12px;background:#fff}
+.q1{border-left-color:var(--orange)} .q2{border-left-color:var(--green)} .q3{border-left-color:var(--accent2)} .q4{border-left-color:var(--red)}
+#matrixSvg{width:100%;height:auto;display:block;background:#fff;border-radius:18px;border:1px solid var(--border)}
+.rank-row{display:grid;grid-template-columns:34px 1fr 90px 90px;gap:8px;align-items:center;padding:9px 0;border-bottom:1px solid var(--border)}
+.rank-row:last-child{border-bottom:0}
+.rank-num{width:28px;height:28px;border-radius:50%;background:var(--chip);display:grid;place-items:center;font-weight:700}
+.presentation-hero{background:linear-gradient(135deg,#eef4ff,#f6f2ff);border:1px solid #d7ddf6;border-radius:18px;padding:18px}
+.section-title{display:flex;justify-content:space-between;gap:12px;align-items:center;margin-bottom:12px;flex-wrap:wrap}
+.note{font-size:12px;color:var(--muted)}
+.warning{border:1px solid #f2c38a;background:#fff7ed;color:#7c2d12;border-radius:14px;padding:12px}
+hr{border:0;border-top:1px solid var(--border);margin:18px 0}
+@media(max-width:850px){
+  .metrics,.tabs,.grid2,.grid3{grid-template-columns:1fr}
+  .flow{grid-template-columns:1fr}.arrow{transform:rotate(90deg);text-align:center}
+  .score-grid{grid-template-columns:1fr 80px}.score-grid .evidence,.score-grid .contrib{grid-column:1/-1}
+}
+@media print{
+  body{background:#fff}.tabs,.topbar .actions,.no-print{display:none!important}
+  .panel{display:block!important}.container{max-width:none;padding:0}.card{box-shadow:none}
+}
+</style>
+</head>
+<body>
+<div class="container">
+  <div class="topbar">
+    <div class="title">
+      <h1>工作坊任务2｜海外目标市场选择工具</h1>
+      <div class="subtitle">指标体系 → 权重 → 0–10评分 → 加权汇总 → 市场吸引力×业务竞争力矩阵 → 3分钟汇报</div>
+    </div>
+    <div class="actions flex wrap">
+      <button class="btn" onclick="window.print()">打印 / 导出PDF</button>
+      <button class="btn" id="saveBtn">保存到浏览器</button>
+      <button class="btn" id="resetBtn">重置</button>
+    </div>
+  </div>
+
+  <div class="metrics">
+    <div class="card"><div class="metric-label">工作时间</div><div id="timerValue" class="metric-value">30:00</div><button class="btn" id="timerBtn">开始计时</button></div>
+    <div class="card"><div class="metric-label">备选市场</div><div id="marketCount" class="metric-value">3</div><div class="small">可增删</div></div>
+    <div class="card"><div class="metric-label">评估维度</div><div class="metric-value">2</div><div class="small">吸引力 × 竞争力</div></div>
+    <div class="card"><div class="metric-label">最终输出</div><div class="metric-value">4象限</div><div class="small">对应战略动作</div></div>
+  </div>
+
+  <div class="tabs no-print">
+    <button class="tab active" data-tab="setup">① 业务与市场</button>
+    <button class="tab" data-tab="indicators">② 指标与权重</button>
+    <button class="tab" data-tab="score">③ 评分测算</button>
+    <button class="tab" data-tab="matrix">④ 目标市场矩阵</button>
+    <button class="tab" data-tab="present">⑤ 3分钟汇报</button>
+  </div>
+
+  <section id="setup" class="panel active">
+    <div class="grid2">
+      <div class="card">
+        <h2>任务1成果接入</h2>
+        <p class="small">把任务1选定的业务单元（SBU）放进来。</p>
+        <label><span>业务单元 / SBU名称</span><input id="sbuName" value="我们的业务单元"></label>
+        <label><span>一句话业务说明</span><textarea id="sbuDesc" rows="3">填写产品/服务、核心客户与业务范围。</textarea></label>
+      </div>
+      <div class="callout">
+        <h3>任务2的三步逻辑</h3>
+        <div class="flow">
+          <div class="node"><strong>1. 构建体系</strong><div class="small">市场吸引力 + 业务竞争力</div></div>
+          <div class="arrow">→</div>
+          <div class="node"><strong>2. 量化评估</strong><div class="small">0–10评分 + 加权</div></div>
+          <div class="arrow">→</div>
+          <div class="node"><strong>3. 选择市场</strong><div class="small">四象限矩阵</div></div>
+        </div>
+        <p style="margin-top:12px"><strong>关键：</strong>不是选“最大的市场”，而是同时回答“这个市场值不值得去？”和“我们在那里有没有竞争力？”</p>
+      </div>
+    </div>
+
+    <div style="margin-top:18px">
+      <div class="section-title">
+        <div><h2 style="margin-bottom:3px">备选区域 / 国家 / 市场</h2><div class="small">由小组共同商定。默认名称只是占位符。</div></div>
+        <button class="btn" id="addMarket">＋ 添加市场</button>
+      </div>
+      <div id="marketCards" class="grid3"></div>
+    </div>
+  </section>
+
+  <section id="indicators" class="panel">
+    <div class="callout">
+      <strong>指标解决“看什么”；权重解决“谁更重要”。</strong>
+      <p class="small" style="margin-top:8px">预置课件示例：市场吸引力=需求采购50%、规模成长30%、行业趋势20%；业务竞争力=竞争优势60%、能力资源20%、产业链关系20%。可全部修改。</p>
+    </div>
+    <div class="grid2" style="margin-top:18px">
+      <div>
+        <div class="section-title"><div><h2>市场吸引力</h2><div class="small">外部：这个市场本身值不值得进入</div></div><span id="attrWeightStatus" class="badge">100%</span></div>
+        <div id="attrIndicators"></div>
+        <div class="flex wrap" style="margin-top:10px"><button class="btn addIndicator" data-kind="attr">＋ 添加指标</button><button class="btn normalize" data-kind="attr">权重归一化</button></div>
+      </div>
+      <div>
+        <div class="section-title"><div><h2>业务竞争力</h2><div class="small">内部：我们的业务在该市场能不能打</div></div><span id="compWeightStatus" class="badge">100%</span></div>
+        <div id="compIndicators"></div>
+        <div class="flex wrap" style="margin-top:10px"><button class="btn addIndicator" data-kind="comp">＋ 添加指标</button><button class="btn normalize" data-kind="comp">权重归一化</button></div>
+      </div>
+    </div>
+  </section>
+
+  <section id="score" class="panel">
+    <div class="section-title">
+      <div><h2>0–10分量化评估</h2><div class="small">总分 = Σ（指标评分 × 指标权重）</div></div>
+      <div class="flex wrap"><button class="btn" id="fillDemo">填入演示分数</button><button class="btn" id="clearScores">清空评分</button></div>
+    </div>
+    <div id="scoreWarnings" class="warning" style="display:none"></div>
+    <div id="scoreArea"></div>
+    <div class="callout" style="margin-top:16px"><strong>建议：</strong><span class="small">每个分数最好写出数据、行业报告、访谈或企业经验依据，避免变成“凭感觉打分”。</span></div>
+  </section>
+
+  <section id="matrix" class="panel">
+    <div class="grid2">
+      <div>
+        <div class="card">
+          <h2>四象限决策</h2>
+          <p class="small">课件给出四象限逻辑，但没有规定0–10体系的固定切分值。这里默认5分，可自行调整。</p>
+          <label><span>业务竞争力切分线：<strong id="xCutText">5.0</strong></span><input id="xCut" type="range" min="0" max="10" step="0.1" value="5"></label>
+          <label><span>市场吸引力切分线：<strong id="yCutText">5.0</strong></span><input id="yCut" type="range" min="0" max="10" step="0.1" value="5"></label>
+          <div id="bestMarket"></div>
+        </div>
+        <div style="margin-top:12px;display:grid;gap:8px">
+          <div class="quad q2"><strong>优质市场</strong><br>高吸引力 × 高竞争力 → 进入 / 大力投入</div>
+          <div class="quad q1"><strong>新兴市场</strong><br>高吸引力 × 低竞争力 → 进一步分析 / 考虑进入</div>
+          <div class="quad q3"><strong>成熟市场</strong><br>低吸引力 × 高竞争力 → 保持</div>
+          <div class="quad q4"><strong>不良市场</strong><br>低吸引力 × 低竞争力 → 放弃</div>
+        </div>
+      </div>
+      <div>
+        <svg id="matrixSvg" viewBox="0 0 720 520"></svg>
+        <div id="matrixTable" class="card" style="margin-top:14px"></div>
+      </div>
+    </div>
+  </section>
+
+  <section id="present" class="panel">
+    <div class="section-title">
+      <div><h2>3分钟小组汇报模式</h2><div class="small">自动汇总当前输入结果。</div></div>
+      <button class="btn" id="refreshPresentation">刷新汇报页</button>
+    </div>
+    <div id="presentation"></div>
+    <div class="card" style="margin-top:16px">
+      <h3>推荐口头结构</h3>
+      <div class="grid3">
+        <div class="node"><strong>0:00–0:45</strong><div class="small">业务是什么、有哪些备选市场、为什么这样选指标。</div></div>
+        <div class="node"><strong>0:45–1:45</strong><div class="small">展示权重和关键评分，说明依据。</div></div>
+        <div class="node"><strong>1:45–3:00</strong><div class="small">展示矩阵，说明最终目标市场和战略动作。</div></div>
+      </div>
+    </div>
+  </section>
+</div>
+
+<script>
+const $ = s => document.querySelector(s);
+const $$ = s => [...document.querySelectorAll(s)];
+let markets = [
+  {id:1,name:'备选市场A',note:'区域/国家/细分市场',scores:{}},
+  {id:2,name:'备选市场B',note:'区域/国家/细分市场',scores:{}},
+  {id:3,name:'备选市场C',note:'区域/国家/细分市场',scores:{}}
+];
+let nextMarketId=4, nextIndicator=10;
+let indicators={
+  attr:[
+    {id:'a1',name:'市场需求和采购行为',weight:50},
+    {id:'a2',name:'市场规模和成长速度',weight:30},
+    {id:'a3',name:'行业和技术趋势',weight:20}
+  ],
+  comp:[
+    {id:'c1',name:'竞争优势',weight:60},
+    {id:'c2',name:'能力和资源',weight:20},
+    {id:'c3',name:'产业链关系',weight:20}
+  ]
+};
+let timerSeconds=1800,timer=null;
+
+function escapeHtml(s){return String(s??'').replace(/[&<>'"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[c]))}
+function setTab(id){
+  $$('.panel').forEach(p=>p.classList.toggle('active',p.id===id));
+  $$('.tab').forEach(b=>b.classList.toggle('active',b.dataset.tab===id));
+  if(id==='score')renderScores();
+  if(id==='matrix')renderMatrix();
+  if(id==='present')renderPresentation();
+}
+$$('.tab').forEach(b=>b.onclick=()=>setTab(b.dataset.tab));
+
+function renderTimer(){
+  const m=String(Math.floor(timerSeconds/60)).padStart(2,'0');
+  const s=String(timerSeconds%60).padStart(2,'0');
+  $('#timerValue').textContent=`${m}:${s}`;
+}
+$('#timerBtn').onclick=()=>{
+  if(timer){clearInterval(timer);timer=null;$('#timerBtn').textContent='继续计时';return}
+  $('#timerBtn').textContent='暂停';
+  timer=setInterval(()=>{if(timerSeconds>0){timerSeconds--;renderTimer()}else{clearInterval(timer);timer=null;$('#timerBtn').textContent='时间到'}},1000);
+};
+
+function renderMarkets(){
+  $('#marketCount').textContent=markets.length;
+  $('#marketCards').innerHTML='';
+  markets.forEach((m,i)=>{
+    const d=document.createElement('div'); d.className='market-card';
+    d.innerHTML=`<div class="flex space-between"><span class="badge">候选 ${i+1}</span>${markets.length>2?'<button class="btn remove">删除</button>':''}</div>
+      <label style="margin-top:10px"><span>市场名称</span><input class="mname" value="${escapeHtml(m.name)}"></label>
+      <label><span>范围 / 备注</span><input class="mnote" value="${escapeHtml(m.note)}"></label>`;
+    d.querySelector('.mname').oninput=e=>m.name=e.target.value;
+    d.querySelector('.mnote').oninput=e=>m.note=e.target.value;
+    d.querySelector('.remove')?.addEventListener('click',()=>{markets=markets.filter(x=>x.id!==m.id);renderMarkets()});
+    $('#marketCards').appendChild(d);
+  });
+}
+$('#addMarket').onclick=()=>{
+  if(markets.length>=8)return alert('最多支持8个候选市场');
+  markets.push({id:nextMarketId++,name:`备选市场${String.fromCharCode(65+markets.length)}`,note:'区域/国家/细分市场',scores:{}});
+  renderMarkets();
+};
+renderMarkets();
+
+function weightSum(kind){return indicators[kind].reduce((s,i)=>s+Number(i.weight||0),0)}
+function renderIndicators(kind){
+  const box=$(kind==='attr'?'#attrIndicators':'#compIndicators'); box.innerHTML='';
+  indicators[kind].forEach((ind,i)=>{
+    const row=document.createElement('div'); row.className='indicator-row'; row.style.marginBottom='10px';
+    row.innerHTML=`<div class="grid2" style="grid-template-columns:1fr 120px">
+      <label><span>指标 ${i+1}</span><input class="iname" value="${escapeHtml(ind.name)}"></label>
+      <label><span>权重 %</span><input class="iweight" type="number" min="0" max="100" value="${ind.weight}"></label>
+    </div>
+    <div class="flex space-between"><div style="flex:1" class="weightbar"><div class="weightfill" style="width:${Math.max(0,Math.min(100,ind.weight))}%"></div></div>
+    <button class="btn removeInd" ${indicators[kind].length<=2?'disabled':''}>删除</button></div>`;
+    row.querySelector('.iname').oninput=e=>ind.name=e.target.value;
+    row.querySelector('.iweight').onchange=e=>{ind.weight=Number(e.target.value)||0;renderIndicators(kind)};
+    row.querySelector('.removeInd').onclick=()=>{if(indicators[kind].length<=2)return;indicators[kind]=indicators[kind].filter(x=>x.id!==ind.id);markets.forEach(m=>delete m.scores[ind.id]);renderIndicators(kind)};
+    box.appendChild(row);
+  });
+  const sum=weightSum(kind);
+  $(kind==='attr'?'#attrWeightStatus':'#compWeightStatus').textContent=sum.toFixed(1)+'%';
+}
+$$('.addIndicator').forEach(b=>b.onclick=()=>{const k=b.dataset.kind;indicators[k].push({id:`${k}_${nextIndicator++}`,name:'新指标',weight:0});renderIndicators(k)});
+$$('.normalize').forEach(b=>b.onclick=()=>{
+  const k=b.dataset.kind,sum=weightSum(k); if(sum<=0)return;
+  indicators[k].forEach(i=>i.weight=+(i.weight/sum*100).toFixed(1));
+  const fix=100-weightSum(k); indicators[k][0].weight=+(indicators[k][0].weight+fix).toFixed(1);
+  renderIndicators(k);
+});
+renderIndicators('attr');renderIndicators('comp');
+
+function scoreOf(m,kind){return indicators[kind].reduce((s,i)=>s+(Number(m.scores[i.id])||0)*i.weight/100,0)}
+function scoreGroup(m,kind,title){
+  return `<div style="margin-top:14px"><strong>${title}</strong>
+    <div class="score-grid score-head"><span>指标</span><span>评分</span><span class="evidence">评分依据</span><span class="contrib">加权分</span></div>
+    ${indicators[kind].map(ind=>{
+      const v=m.scores[ind.id]??0;
+      return `<div class="score-grid">
+        <div>${escapeHtml(ind.name)}<div class="small">权重 ${ind.weight}%</div></div>
+        <input class="scoreInput" data-kind="${kind}" data-id="${ind.id}" type="number" min="0" max="10" step="0.1" value="${v}">
+        <input class="evidence evidenceInput" data-id="${ind.id}" placeholder="数据/事实依据" value="${escapeHtml(m.scores['e_'+ind.id]||'')}">
+        <strong class="contrib" data-contrib="${ind.id}">${(Number(v)*ind.weight/100).toFixed(2)}</strong>
+      </div>`}).join('')}
+  </div>`;
+}
+function renderScores(){
+  const warnings=[];
+  if(Math.abs(weightSum('attr')-100)>.01)warnings.push(`市场吸引力权重=${weightSum('attr').toFixed(1)}%，建议归一化到100%。`);
+  if(Math.abs(weightSum('comp')-100)>.01)warnings.push(`业务竞争力权重=${weightSum('comp').toFixed(1)}%，建议归一化到100%。`);
+  $('#scoreWarnings').style.display=warnings.length?'block':'none'; $('#scoreWarnings').innerHTML=warnings.join('<br>');
+  $('#scoreArea').innerHTML='';
+  markets.forEach(m=>{
+    const block=document.createElement('div');block.className='score-market';block.style.marginBottom='14px';
+    block.innerHTML=`<div class="flex space-between wrap"><div><strong style="font-size:18px">${escapeHtml(m.name)}</strong><div class="small">${escapeHtml(m.note)}</div></div>
+      <div class="flex"><span class="badge attrTotal">吸引力 ${scoreOf(m,'attr').toFixed(2)}</span><span class="badge compTotal">竞争力 ${scoreOf(m,'comp').toFixed(2)}</span></div></div>
+      ${scoreGroup(m,'attr','市场吸引力')}${scoreGroup(m,'comp','业务竞争力')}`;
+    block.querySelectorAll('.scoreInput').forEach(inp=>inp.oninput=e=>{
+      const id=e.target.dataset.id,k=e.target.dataset.kind;m.scores[id]=Number(e.target.value)||0;
+      const ind=indicators[k].find(x=>x.id===id);
+      block.querySelector(`[data-contrib="${id}"]`).textContent=((Number(e.target.value)||0)*ind.weight/100).toFixed(2);
+      block.querySelector('.attrTotal').textContent=`吸引力 ${scoreOf(m,'attr').toFixed(2)}`;
+      block.querySelector('.compTotal').textContent=`竞争力 ${scoreOf(m,'comp').toFixed(2)}`;
+    });
+    block.querySelectorAll('.evidenceInput').forEach(inp=>inp.oninput=e=>m.scores['e_'+e.target.dataset.id]=e.target.value);
+    $('#scoreArea').appendChild(block);
+  });
+}
+$('#fillDemo').onclick=()=>{
+  const presets=[[9,8,8,8,8,7],[7,9,8,5,6,5],[6,6,7,8,6,7]];
+  markets.forEach((m,mi)=>[...indicators.attr,...indicators.comp].forEach((ind,ii)=>m.scores[ind.id]=presets[mi%presets.length][ii%6]));
+  renderScores();
+};
+$('#clearScores').onclick=()=>{markets.forEach(m=>m.scores={});renderScores()};
+
+function classification(m,xCut,yCut){
+  const a=scoreOf(m,'attr'),c=scoreOf(m,'comp');
+  if(a>=yCut&&c>=xCut)return['优质市场','进入 / 大力投入','q2'];
+  if(a>=yCut&&c<xCut)return['新兴市场','进一步分析 / 考虑进入','q1'];
+  if(a<yCut&&c>=xCut)return['成熟市场','保持','q3'];
+  return['不良市场','放弃','q4'];
+}
+function renderMatrix(){
+  const xCut=+$('#xCut').value,yCut=+$('#yCut').value;
+  $('#xCutText').textContent=xCut.toFixed(1);$('#yCutText').textContent=yCut.toFixed(1);
+  const svg=$('#matrixSvg'),W=720,H=520,L=72,R=25,T=25,B=60,pw=W-L-R,ph=H-T-B;
+  const x=v=>L+v/10*pw,y=v=>T+(10-v)/10*ph,xc=x(xCut),yc=y(yCut);
+  let out=`<rect x="${L}" y="${T}" width="${pw}" height="${ph}" rx="16" fill="#fff" stroke="#d9dee8"/>
+  <rect x="${L}" y="${T}" width="${xc-L}" height="${yc-T}" fill="#d97706" opacity=".07"/>
+  <rect x="${xc}" y="${T}" width="${L+pw-xc}" height="${yc-T}" fill="#15803d" opacity=".07"/>
+  <rect x="${xc}" y="${yc}" width="${L+pw-xc}" height="${T+ph-yc}" fill="#7c3aed" opacity=".07"/>
+  <rect x="${L}" y="${yc}" width="${xc-L}" height="${T+ph-yc}" fill="#b91c1c" opacity=".07"/>
+  <line x1="${xc}" y1="${T}" x2="${xc}" y2="${T+ph}" stroke="#94a3b8" stroke-width="2" stroke-dasharray="6 5"/>
+  <line x1="${L}" y1="${yc}" x2="${L+pw}" y2="${yc}" stroke="#94a3b8" stroke-width="2" stroke-dasharray="6 5"/>
+  <text x="${L+pw/2}" y="${H-16}" text-anchor="middle" fill="#172033" font-size="15">业务竞争力 →</text>
+  <text x="20" y="${T+ph/2}" transform="rotate(-90 20 ${T+ph/2})" text-anchor="middle" fill="#172033" font-size="15">市场吸引力 →</text>
+  <text x="${L+8}" y="${T+18}" fill="#6b7280" font-size="13">新兴市场</text>
+  <text x="${L+pw-8}" y="${T+18}" text-anchor="end" fill="#6b7280" font-size="13">优质市场</text>
+  <text x="${L+8}" y="${T+ph-10}" fill="#6b7280" font-size="13">不良市场</text>
+  <text x="${L+pw-8}" y="${T+ph-10}" text-anchor="end" fill="#6b7280" font-size="13">成熟市场</text>`;
+  [0,2,4,6,8,10].forEach(v=>{
+    out+=`<text x="${x(v)}" y="${T+ph+22}" text-anchor="middle" fill="#6b7280" font-size="11">${v}</text>
+    <text x="${L-10}" y="${y(v)+4}" text-anchor="end" fill="#6b7280" font-size="11">${v}</text>`;
+  });
+  const colors={q1:'#d97706',q2:'#15803d',q3:'#7c3aed',q4:'#b91c1c'};
+  markets.forEach(m=>{
+    const a=scoreOf(m,'attr'),c=scoreOf(m,'comp'),cl=classification(m,xCut,yCut);
+    out+=`<circle cx="${x(c)}" cy="${y(a)}" r="7" fill="${colors[cl[2]]}"><title>${escapeHtml(m.name)}｜吸引力 ${a.toFixed(2)}｜竞争力 ${c.toFixed(2)}</title></circle>
+    <text x="${x(c)+10}" y="${y(a)-9}" fill="#172033" font-size="12">${escapeHtml(m.name.length>10?m.name.slice(0,10)+'…':m.name)}</text>`;
+  });
+  svg.innerHTML=out;
+  const ranked=[...markets].sort((a,b)=>(scoreOf(b,'attr')+scoreOf(b,'comp'))-(scoreOf(a,'attr')+scoreOf(a,'comp')));
+  const best=ranked[0];
+  if(best){const cl=classification(best,xCut,yCut);$('#bestMarket').innerHTML=`<div class="small">当前综合位置最靠前</div><div style="font-size:18px;font-weight:700">${escapeHtml(best.name)}</div><div style="margin-top:8px"><span class="badge">${cl[0]} · ${cl[1]}</span></div>`}
+  $('#matrixTable').innerHTML=`<h3>候选市场结果</h3>${ranked.map((m,i)=>{const cl=classification(m,xCut,yCut);return `<div class="rank-row"><span class="rank-num">${i+1}</span><span><strong>${escapeHtml(m.name)}</strong><br><span class="small">${cl[0]} · ${cl[1]}</span></span><span class="small">吸引 ${scoreOf(m,'attr').toFixed(2)}</span><span class="small">竞争 ${scoreOf(m,'comp').toFixed(2)}</span></div>`}).join('')}`;
+}
+$('#xCut').oninput=renderMatrix;$('#yCut').oninput=renderMatrix;
+
+function renderPresentation(){
+  const sbu=$('#sbuName').value||'未命名业务',desc=$('#sbuDesc').value||'';
+  const xCut=+$('#xCut').value,yCut=+$('#yCut').value;
+  const ranked=[...markets].sort((a,b)=>(scoreOf(b,'attr')+scoreOf(b,'comp'))-(scoreOf(a,'attr')+scoreOf(a,'comp')));
+  const best=ranked[0],cl=best?classification(best,xCut,yCut):['—','—'];
+  $('#presentation').innerHTML=`<div class="presentation-hero"><div class="small">工作坊任务2｜目标市场选择</div><h2 style="margin:5px 0">${escapeHtml(sbu)}</h2><p>${escapeHtml(desc)}</p>${best?`<span class="badge">建议优先：${escapeHtml(best.name)}</span>`:''}</div>
+  <div class="grid3" style="margin-top:14px">
+    <div class="node"><strong>① 评估体系</strong><div class="small" style="margin-top:8px">吸引力：${indicators.attr.map(i=>`${escapeHtml(i.name)} ${i.weight}%`).join('；')}</div><div class="small" style="margin-top:8px">竞争力：${indicators.comp.map(i=>`${escapeHtml(i.name)} ${i.weight}%`).join('；')}</div></div>
+    <div class="node"><strong>② 量化结果</strong><div class="small" style="margin-top:8px">${ranked.map(m=>`${escapeHtml(m.name)}：吸引 ${scoreOf(m,'attr').toFixed(2)} / 竞争 ${scoreOf(m,'comp').toFixed(2)}`).join('<br>')}</div></div>
+    <div class="node"><strong>③ 目标市场选择</strong><div class="small" style="margin-top:8px">${best?`${escapeHtml(best.name)} → ${cl[0]} → ${cl[1]}`:'尚未评分'}</div></div>
+  </div>
+  <div class="card" style="margin-top:14px"><strong>一句话结论</strong><p style="margin-top:8px">${best?`基于“市场吸引力—业务竞争力”评估，我们对 ${markets.length} 个备选市场进行了加权评分。${escapeHtml(best.name)} 的市场吸引力为 ${scoreOf(best,'attr').toFixed(2)}、业务竞争力为 ${scoreOf(best,'comp').toFixed(2)}，在当前切分标准下属于“${cl[0]}”，因此建议“${cl[1]}”。`:'请先完成各市场评分。'}</p></div>`;
+}
+$('#refreshPresentation').onclick=renderPresentation;
+
+function getState(){return {markets,indicators,sbuName:$('#sbuName').value,sbuDesc:$('#sbuDesc').value,xCut:$('#xCut').value,yCut:$('#yCut').value}}
+function applyState(s){
+  if(!s)return; markets=s.markets||markets; indicators=s.indicators||indicators;
+  $('#sbuName').value=s.sbuName||'';$('#sbuDesc').value=s.sbuDesc||'';$('#xCut').value=s.xCut??5;$('#yCut').value=s.yCut??5;
+  renderMarkets();renderIndicators('attr');renderIndicators('comp');
+}
+$('#saveBtn').onclick=()=>{localStorage.setItem('workshop2_state',JSON.stringify(getState()));alert('已保存到当前浏览器。')};
+$('#resetBtn').onclick=()=>{if(confirm('确定重置全部内容？')){localStorage.removeItem('workshop2_state');location.reload()}};
+const saved=localStorage.getItem('workshop2_state');if(saved){try{applyState(JSON.parse(saved))}catch(e){}}
+</script>
+</body>
+</html>

@@ -1,0 +1,1948 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Global Brand Building and Marketing Communication</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;0,900;1,700;1,900&family=Lora:ital,wght@0,400;0,500;1,400&family=JetBrains+Mono:wght@400;500&family=Noto+Serif+SC:wght@400;700;900&family=Noto+Sans+SC:wght@400;500&display=swap" rel="stylesheet">
+<style>
+/* ============================================================
+   ATELIER DESIGN SYSTEM
+   ============================================================ */
+:root{
+  --bg:#F2EFE8; --panel:#EDE9E0; --ink:#1A1A1A; --muted:#8A8275;
+  --line:#D4CFC4; --maroon:#3A190F; --maroon-soft:#E8DFD8;
+  --warn:#8B2500; --placeholder:#B5AFA2;
+  --font-display:'Playfair Display','Noto Serif SC',Georgia,"Songti SC","SimSun",serif;
+  --font-body:'Lora','Noto Serif SC',Georgia,"Songti SC","SimSun",serif;
+  --font-mono:'JetBrains Mono','Noto Sans SC',ui-monospace,"SF Mono","Cascadia Code","Microsoft YaHei",sans-serif;
+  /* Strong easings — built-ins are too weak for deliberate UI motion. */
+  --ease-out:cubic-bezier(0.23,1,0.32,1);
+  --ease-in-out:cubic-bezier(0.77,0,0.175,1);
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{
+  background:var(--bg);color:var(--ink);
+  font-family:var(--font-body);font-size:16px;line-height:1.65;
+  -webkit-font-smoothing:antialiased;
+}
+h1,h2,h3,h4{font-family:var(--font-display);font-weight:900;line-height:1.2;margin:0}
+h1{font-size:52px;letter-spacing:-.01em}
+h2{font-size:40px;margin-bottom:.4em}
+h3{font-size:22px;font-style:italic;font-weight:700;color:var(--maroon);margin:32px 0 18px}
+h4{font-size:17px;font-family:var(--font-mono);font-weight:500;text-transform:uppercase;letter-spacing:.12em;color:var(--muted)}
+p{margin:.6em 0}
+em,.italic{font-style:italic}
+a{color:var(--maroon);text-decoration:none;border-bottom:1px solid var(--maroon)}
+label{font-family:var(--font-mono);font-size:13px;text-transform:uppercase;letter-spacing:.15em;color:var(--muted);display:block;margin-bottom:8px}
+.field-h label{
+  font-family:var(--font-display);
+  font-style:italic;font-weight:700;
+  font-size:22px;line-height:1.2;color:var(--ink);
+  text-transform:none;letter-spacing:-.005em;
+  margin-bottom:12px;
+}
+.field-h .hint{font-size:11px;color:var(--muted);margin-top:-4px;margin-bottom:8px;letter-spacing:.06em;text-transform:uppercase;font-family:var(--font-mono)}
+input,textarea,select{
+  width:100%;background:transparent;border:none;border-bottom:1px solid var(--line);
+  color:var(--ink);font-family:var(--font-mono);font-size:16px;padding:6px 0;
+  border-radius:0;outline:none;line-height:1.4;
+}
+input:focus,textarea:focus,select:focus{border-bottom-color:var(--maroon)}
+textarea{resize:vertical;min-height:0;field-sizing:content;font-family:var(--font-body);font-style:italic;line-height:1.6}
+input[type=number],input[type=range]{font-family:var(--font-mono)}
+input[type=file]{padding:6px 0;font-family:var(--font-mono);font-size:12px}
+button{
+  font-family:var(--font-mono);font-size:11px;text-transform:uppercase;letter-spacing:.15em;
+  background:transparent;color:var(--ink);border:1px solid var(--ink);padding:9px 16px;
+  cursor:pointer;border-radius:0;
+  transition:transform 120ms var(--ease-out),background 120ms var(--ease-out),color 120ms var(--ease-out),border-color 120ms var(--ease-out);
+}
+/* Feedback lives on pointer-down — instant press, not on click/release. */
+button:active{transform:scale(.97)}
+button:hover{background:var(--ink);color:var(--bg)}
+button.primary{background:var(--maroon);border-color:var(--maroon);color:var(--bg)}
+button.primary:hover{background:var(--ink);border-color:var(--ink)}
+button.ghost{border-color:var(--line);color:var(--muted)}
+button.ghost:hover{border-color:var(--ink);color:var(--ink);background:transparent}
+button:disabled{opacity:.4;cursor:not-allowed;transform:none}
+button.small{padding:5px 10px;font-size:10px}
+button.icon-btn{padding:9px 12px}
+/* Top-bar API/Manual mode segmented switch */
+.mode-switch{display:inline-flex;border:1px solid var(--ink)}
+.mode-switch button{border:none;border-right:1px solid var(--ink);padding:9px 14px;color:var(--muted);background:transparent}
+.mode-switch button:last-child{border-right:none}
+.mode-switch button:hover{color:var(--ink);background:transparent}
+.mode-switch button.active{background:var(--maroon);color:var(--bg)}
+.mode-switch button:disabled{opacity:.4;cursor:not-allowed}
+/* AI run controls: state button + abort × */
+.ai-run-controls{display:inline-flex;gap:6px;align-items:center}
+button.abort-btn{border-color:var(--line);color:var(--muted);padding:9px 12px}
+button.abort-btn:hover{border-color:var(--maroon);color:var(--maroon);background:transparent}
+.tag{
+  display:inline-block;font-family:var(--font-mono);font-size:10px;
+  text-transform:uppercase;letter-spacing:.12em;padding:3px 8px;
+  border:1px solid var(--line);color:var(--muted);background:var(--bg);
+}
+.tag.maroon{background:var(--maroon);color:var(--bg);border-color:var(--maroon)}
+.tag.soft{background:var(--maroon-soft);border-color:var(--maroon-soft);color:var(--maroon)}
+.badge{font-family:var(--font-mono);font-size:10px;text-transform:uppercase;letter-spacing:.12em;color:var(--muted)}
+.rule{height:1px;background:var(--line);border:none;margin:24px 0}
+.rule-thick{height:2px;background:var(--ink);border:none;margin:0 0 24px 0}
+.mono{font-family:var(--font-mono)}
+.muted{color:var(--muted)}
+.maroon{color:var(--maroon)}
+.center{text-align:center}
+.right{text-align:right}
+.row{display:flex;gap:16px}
+.row>*{flex:1;min-width:0}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:24px}
+.grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}
+.grid4{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}
+.grid5{display:grid;grid-template-columns:repeat(5,1fr);gap:12px}
+@media(max-width:900px){.grid2,.grid3,.grid4,.grid5{grid-template-columns:1fr}.row{flex-direction:column}}
+
+/* ============================================================
+   PEST GRID — 1×4 editorial layout for STEP 1 PEST quadrants.
+   Big italic serif letter (P/E/S/T) + small monospace label +
+   textarea. Vertical hairline dividers between cards, hairline
+   rules top & bottom of the whole grid.
+   ============================================================ */
+.pest-grid{
+  display:grid;
+  grid-template-columns:repeat(4, 1fr);
+  border-top:1px solid var(--line);
+  border-bottom:1px solid var(--line);
+  margin:18px 0 24px;
+}
+.pest-item{
+  padding:28px 24px 24px;
+  border-right:1px solid var(--line);
+  display:flex;flex-direction:column;
+  min-width:0;
+}
+.pest-item:last-child{border-right:none}
+.pest-letter{
+  font-family:var(--font-display);
+  font-style:italic;font-weight:500;
+  font-size:64px;line-height:1;color:var(--ink);
+  margin:0 0 14px;letter-spacing:-.01em;
+}
+.pest-label{
+  font-family:var(--font-display);
+  font-style:italic;font-weight:700;
+  font-size:22px;line-height:1.2;color:var(--ink);
+  margin-bottom:18px;display:block;
+  letter-spacing:-.005em;
+}
+.pest-item textarea{
+  flex:1;
+  font-size:14px;line-height:1.65;
+  min-height:140px;
+  border-bottom:1px solid transparent;
+  padding:4px 0;
+  background:transparent;
+}
+.pest-item textarea:focus{border-bottom-color:var(--maroon)}
+.pest-item textarea::placeholder{color:var(--placeholder);font-style:italic}
+@media(max-width:900px){
+  .pest-grid{grid-template-columns:1fr 1fr}
+  .pest-item:nth-child(2n){border-right:none}
+  .pest-item:nth-child(-n+2){border-bottom:1px solid var(--line)}
+  .pest-item:last-child{border-bottom:none}
+}
+@media(max-width:560px){
+  .pest-grid{grid-template-columns:1fr}
+  .pest-item{border-right:none;border-bottom:1px solid var(--line)}
+  .pest-item:last-child{border-bottom:none}
+}
+
+/* ============================================================
+   MASTHEAD
+   ============================================================ */
+.masthead{
+  border-bottom:2px solid var(--ink);padding:18px 32px 14px;
+  background:var(--bg);position:sticky;top:0;z-index:100;
+}
+.masthead-top{display:flex;justify-content:space-between;align-items:flex-end;gap:16px;flex-wrap:wrap}
+.slash{font-family:var(--font-mono);font-size:12px;letter-spacing:.08em;color:var(--muted);text-transform:lowercase}
+.masthead h1{font-size:26px;font-weight:900}
+.masthead-actions{display:flex;gap:8px;flex-wrap:wrap}
+.summary-bar{
+  margin-top:10px;padding-top:10px;border-top:1px solid var(--line);
+  display:flex;gap:24px;flex-wrap:wrap;font-family:var(--font-mono);font-size:11px;
+  text-transform:uppercase;letter-spacing:.12em;color:var(--muted);
+}
+.summary-bar span.clickable{cursor:pointer;border-bottom:1px dotted var(--muted)}
+.summary-bar span.clickable:hover{color:var(--maroon);border-color:var(--maroon)}
+.summary-bar strong{color:var(--ink);font-weight:500;text-transform:none;letter-spacing:0}
+
+/* ============================================================
+   TABS
+   ============================================================ */
+.tabs{
+  display:grid;grid-template-columns:repeat(5,1fr);
+  border-bottom:1px solid var(--line);background:var(--bg);
+  position:sticky;top:90px;z-index:90;
+}
+.tab{
+  font-family:var(--font-mono);font-size:11px;text-transform:uppercase;letter-spacing:.15em;
+  padding:14px 12px;text-align:center;cursor:pointer;border:none;border-right:1px solid var(--line);
+  background:transparent;color:var(--muted);border-bottom:2px solid transparent;
+}
+.tab:last-child{border-right:none}
+.tab:hover{color:var(--ink);background:var(--panel)}
+.tab.active{color:var(--maroon);border-bottom-color:var(--maroon);background:var(--bg)}
+.tab-num{display:block;font-size:18px;font-family:var(--font-display);font-style:italic;color:var(--ink);margin-bottom:2px}
+
+.subtabs{display:flex;gap:0;border-bottom:1px solid var(--line);margin-bottom:28px;overflow-x:auto}
+.subtab{
+  font-family:var(--font-mono);font-size:13px;text-transform:uppercase;letter-spacing:.12em;
+  padding:14px 18px;cursor:pointer;color:var(--muted);white-space:nowrap;
+  border-bottom:2px solid transparent;background:transparent;border-top:none;border-left:none;border-right:none;
+}
+.subtab:hover{color:var(--ink);background:var(--panel)}
+.subtab.active{color:var(--maroon);border-bottom-color:var(--maroon);background:transparent}
+.subtab.active:hover{color:var(--maroon);background:var(--maroon-soft)}
+
+/* ============================================================
+   LAYOUT
+   ============================================================ */
+main{max-width:1280px;margin:0 auto;padding:32px 32px 80px}
+.workshop{display:none}
+.workshop.active{display:block}
+.step{display:none}
+.step.active{
+  display:block;
+  opacity:1;
+  transition:opacity 120ms var(--ease-out) allow-discrete;
+}
+@starting-style{
+  /* Subtle fade on step enter only — subtab is a high-frequency control,
+     so no transform/stagger. Exit is instant (display:none). */
+  .step.active{opacity:0}
+}
+.step-header{margin-bottom:28px}
+.step-header h2{font-size:40px}
+.step-header p{font-size:17px;line-height:1.5}
+/* Demo 模式：隐藏 chip-row 里的「输入后回车添加」添加输入框，避免在演示时出现"添加功能"提示 */
+body.is-demo .chip-row input{display:none}
+/* Demo 模式：隐藏「二级测评点（回车添加...）」的「如何使用」提示（在 demo 里不可编辑） */
+body.is-demo .edit-hint{display:none}
+/* Demo 模式：所有 step 内按钮变 disabled 视觉（inert 已禁用交互，这里只补视觉提示）
+   风格对齐 button:disabled：opacity 0.4 + cursor not-allowed + 禁用 hover/active */
+body.is-demo #steps1 button,
+body.is-demo #steps2 button,
+body.is-demo #steps3 button,
+body.is-demo #steps4 button,
+body.is-demo #steps5 button{
+  opacity:.4;cursor:not-allowed;pointer-events:none;transform:none;
+}
+.step-number{
+  font-family:var(--font-mono);font-size:12px;letter-spacing:.2em;color:var(--muted);
+  text-transform:uppercase;margin-bottom:8px;display:block;
+}
+.plate{
+  border:1px solid var(--line);background:var(--bg);padding:20px;margin:18px 0;
+}
+.plate-label{
+  font-family:var(--font-mono);font-size:10px;letter-spacing:.18em;color:var(--muted);
+  text-transform:uppercase;margin-bottom:10px;display:block;
+}
+.callout{
+  border-left:3px solid var(--maroon);background:var(--maroon-soft);
+  padding:14px 18px;margin:18px 0;font-style:italic;
+}
+.callout-title{font-family:var(--font-mono);font-style:normal;font-size:10px;letter-spacing:.15em;text-transform:uppercase;color:var(--maroon);display:block;margin-bottom:6px}
+.warning{border-left:3px solid var(--warn);background:rgba(139,37,0,.06);padding:14px 18px;margin:18px 0}
+
+.field{margin-bottom:18px}
+.hint{font-family:var(--font-mono);font-size:10px;color:var(--muted);letter-spacing:.08em;margin-top:4px;text-transform:uppercase}
+.table-wrap{overflow-x:auto;border:1px solid var(--line);margin:14px 0}
+table.data{width:100%;border-collapse:collapse;font-family:var(--font-mono);font-size:12px}
+table.data th,table.data td{border-bottom:1px solid var(--line);border-right:1px solid var(--line);padding:9px 11px;text-align:left;vertical-align:top}
+table.data th{background:var(--panel);font-weight:500;text-transform:uppercase;letter-spacing:.1em;font-size:10px;color:var(--muted)}
+table.data tr:last-child td{border-bottom:none}
+table.data td:last-child,table.data th:last-child{border-right:none}
+table.data input,table.data textarea,table.data select{font-family:var(--font-mono);font-size:12px;border:1px solid transparent;background:transparent;padding:5px 7px}
+table.data input:focus,table.data textarea:focus,table.data select:focus{border-color:var(--line);background:var(--bg)}
+table.data input[type=number]{text-align:right;width:70px}
+table.data textarea{font-family:var(--font-body);font-style:italic;font-size:13px;min-height:50px}
+
+.chip-row{display:flex;flex-wrap:wrap;gap:6px;margin:6px 0}
+.chip{
+  display:inline-flex;align-items:center;gap:6px;font-family:var(--font-mono);font-size:13px;
+  padding:5px 10px;background:var(--panel);border:1px solid var(--line);
+}
+.chip button{border:none;background:transparent;color:var(--muted);cursor:pointer;padding:0;font-size:14px;line-height:1}
+.chip button:hover{color:var(--warn);background:transparent}
+
+/* question designer cards (workshop1 survey) */
+.q-card-list{display:flex;flex-direction:column;gap:12px;margin:14px 0}
+.q-card{border:1px solid var(--line);background:var(--bg);padding:16px 18px;cursor:grab}
+.q-card:hover{border-color:var(--ink)}
+.q-card.dragging{opacity:.45}
+.q-card>header{display:flex;align-items:center;gap:12px;margin-bottom:12px}
+.q-num{font-family:var(--font-mono);font-size:11px;letter-spacing:.15em;color:var(--maroon);min-width:30px}
+.q-type-tag{font-family:var(--font-mono);font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:var(--maroon);border:1px solid var(--line);padding:5px 10px;background:var(--panel)}
+.q-del{margin-left:auto}
+.q-text{width:100%;background:transparent;border:none;border-bottom:1px solid var(--line);font-family:var(--font-body);font-size:18px;color:var(--ink);padding:6px 0;margin-bottom:14px}
+.q-text::placeholder{color:var(--muted);font-style:italic}
+.q-text:focus{outline:none;border-bottom-color:var(--ink)}
+.q-anchors{display:grid;grid-template-columns:repeat(5,1fr);gap:8px}
+.q-anchor{display:flex;flex-direction:column;align-items:center;gap:4px}
+.q-anchor-n{font-family:var(--font-mono);font-size:10px;color:var(--muted);letter-spacing:.1em}
+.q-anchors input{width:100%;font-family:var(--font-mono);font-size:11px;text-align:center;border:1px solid var(--line);background:var(--bg);padding:5px 4px;color:var(--ink)}
+.q-anchors input:focus{outline:none;border-color:var(--ink);background:var(--panel)}
+
+.card{
+  border:1px solid var(--line);padding:18px;background:var(--bg);
+}
+.card h3{margin-top:0}
+.card.selected{border-color:var(--maroon);background:var(--maroon-soft)}
+.card-actions{margin-top:14px;display:flex;gap:8px;flex-wrap:wrap}
+
+.ai-box{
+  display:flex;align-items:flex-start;gap:24px;
+  padding:24px 0 20px;
+  border-top:1px solid var(--line);
+  margin:18px 0;
+  background:transparent;
+}
+.ai-box>.ai-box-mid{flex:1;min-width:0}
+.ai-box-num{
+  font-family:var(--font-display);
+  font-style:italic;font-weight:500;
+  font-size:56px;line-height:1;color:var(--ink);
+  letter-spacing:-.02em;padding-top:0;
+}
+/* Step-1 AI box: 上下结构 — 上 = meta+title+hint，下 = 按钮靠右 */
+.ai-box.ai-box-step1{
+  border-bottom:none;
+  flex-direction:column;align-items:stretch;gap:14px;
+}
+.ai-box.ai-box-step1 .ai-box-top{
+  display:flex;flex-direction:column;gap:8px;
+}
+.ai-box.ai-box-step1 .ai-box-meta{
+  display:flex;align-items:baseline;gap:10px;flex-wrap:wrap;
+}
+.ai-box.ai-box-step1 .ai-box-meta-tip{
+  font-family:var(--font-mono);font-size:14px;letter-spacing:.22em;
+  text-transform:uppercase;color:var(--maroon);font-weight:700;
+}
+.ai-box.ai-box-step1 .ai-box-meta-text{
+  font-family:var(--font-body);font-size:13px;line-height:1.45;
+  color:var(--muted);font-style:italic;
+}
+.ai-box.ai-box-step1 .ai-box-meta-sep{color:var(--line);font-size:13px}
+.ai-box.ai-box-step1 .ai-box-meta-draft{
+  font-family:var(--font-mono);font-size:12px;letter-spacing:.22em;
+  text-transform:uppercase;color:var(--muted);
+}
+.ai-box.ai-box-step1 .ai-box-hint{
+  font-size:16px;line-height:1.5;
+  max-width:100%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+}
+.ai-box-mid{display:flex;flex-direction:column;gap:10px;min-width:0}
+.ai-box-label{
+  font-family:var(--font-mono);font-size:10px;letter-spacing:.22em;
+  text-transform:uppercase;color:var(--muted);
+}
+.ai-box-headline{
+  font-family:var(--font-display);font-style:italic;font-weight:500;
+  font-size:22px;line-height:1.3;color:var(--ink);
+  margin:0;letter-spacing:-.005em;
+}
+.ai-box.ai-box-step1 .ai-box-headline{font-size:24px}
+.ai-box-hint{
+  font-size:13px;line-height:1.6;color:var(--muted);font-style:italic;
+  max-width:60ch;
+}
+.ai-box-action{padding-top:6px;flex-shrink:0;margin-left:auto}
+.ai-box.ai-box-step1 .ai-box-action{display:flex;justify-content:flex-start;padding-top:0;margin-left:0}
+.ai-box .prompt-box{
+  grid-column:1 / -1;
+  background:var(--panel);padding:12px;font-family:var(--font-mono);font-size:11px;
+  white-space:pre-wrap;max-height:200px;overflow:auto;margin:8px 0 0;line-height:1.5;
+}
+/* Step-1 button: 白底 + 金褐调流动渐变字（永远流动） */
+.ai-box.ai-box-step1 button.primary{
+  background:var(--bg);
+  border:1px solid var(--line);
+  color:transparent;
+  background-image:linear-gradient(92deg,#8B5A2B 0%,#5A1F1F 22%,#3A190F 48%,#5A1F1F 72%,#8B5A2B 100%);
+  background-size:220% 100%;
+  background-clip:text;
+  -webkit-background-clip:text;
+  -webkit-text-fill-color:transparent;
+  padding:14px 24px;font-size:15px;white-space:nowrap;
+  font-family:var(--font-display);font-style:italic;font-weight:500;
+  text-transform:none;letter-spacing:0;
+  animation:gold-flow 5s linear infinite;
+}
+.ai-box.ai-box-step1 button.primary:hover{
+  border-color:var(--maroon);
+  background-color:var(--maroon-soft);
+  animation:gold-flow 2.5s linear infinite;
+}
+@keyframes gold-flow{
+  0%{background-position:0% 50%}
+  100%{background-position:200% 50%}
+}
+@media (prefers-reduced-motion:reduce){
+  .ai-box.ai-box-step1 button.primary{animation:none}
+}
+/* Step 3 (personas) primary button hover — 白底黑字，override 全局 ink 反白 */
+.step[data-step="personas"] button.primary:hover{background:var(--bg);color:var(--ink);border-color:var(--ink)}
+.ai-actions{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:10px}
+.progress-bar{height:2px;background:var(--line);overflow:hidden;margin:10px 0}
+/* GPU-only: scaleX from the left instead of animating width (which forces layout). */
+.progress-bar>div{height:100%;width:100%;background:var(--maroon);
+  transform:scaleX(0);transform-origin:left;
+  transition:transform 280ms var(--ease-out);will-change:transform}
+
+/* Bar-chart rows — fill grows from 0 on first reveal (see renderBarChart).
+   Non-reveal rows render at target instantly (re-renders on data change).
+   Stagger caps at 175ms so long lists don't drag. */
+.bar-row{margin-bottom:8px}
+.bar-row .bar-track{height:14px;background:var(--maroon-soft)}
+.bar-row .bar-fill{height:100%;width:100%;background:var(--maroon);transform-origin:left}
+.bar-row.anim .bar-fill{transition:transform 500ms var(--ease-out)}
+.bar-row:nth-child(2).anim .bar-fill{transition-delay:35ms}
+.bar-row:nth-child(3).anim .bar-fill{transition-delay:70ms}
+.bar-row:nth-child(4).anim .bar-fill{transition-delay:105ms}
+.bar-row:nth-child(5).anim .bar-fill{transition-delay:140ms}
+.bar-row:nth-child(n+6).anim .bar-fill{transition-delay:175ms}
+
+.persona-card{border:1px solid var(--line);padding:14px;margin-bottom:10px;background:var(--bg)}
+.persona-card .name{font-family:var(--font-display);font-size:20px;font-style:italic;color:var(--maroon)}
+.persona-card .meta{font-family:var(--font-mono);font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.12em;margin:4px 0 10px}
+.quote{font-style:italic;border-left:2px solid var(--maroon);padding-left:12px;margin:10px 0;color:var(--muted)}
+
+/* ============================================================
+   HALLMARK-LIST — editorial 3-column layout for open question
+   themes (Step 4 · 调研数据分析). Inspired by usehallmark.com
+   — number · italic serif headline · HALLMARK label + theme rows,
+   hairline rules between items.
+   ============================================================ */
+.hallmark-list{margin:14px 0 28px}
+.hallmark-item{
+  display:grid;
+  grid-template-columns:56px 1fr 260px;
+  gap:28px;
+  padding:18px 0 16px;
+  border-top:1px solid var(--line);
+  align-items:start;
+}
+.hallmark-item:last-child{border-bottom:1px solid var(--line)}
+.hallmark-num{
+  font-family:var(--font-mono);
+  font-size:11px;letter-spacing:.18em;
+  color:var(--muted);text-transform:uppercase;
+  padding-top:8px;
+}
+.hallmark-headline{
+  font-family:var(--font-display);
+  font-style:italic;font-weight:500;
+  font-size:24px;line-height:1.3;color:var(--ink);
+  margin:0 0 14px;letter-spacing:-.005em;
+}
+.hallmark-quote{
+  display:block;margin:6px 0;
+  padding:4px 0 4px 14px;
+  border-left:2px solid var(--maroon);
+  font-style:italic;color:var(--ink);
+  font-size:14px;line-height:1.65;
+  opacity:.78;
+}
+.hallmark-quote::before{content:'“';margin-right:2px;color:var(--maroon);font-style:normal}
+.hallmark-quote::after{content:'”';margin-left:2px;color:var(--maroon);font-style:normal}
+.hallmark-right .hallmark-label{
+  display:block;
+  font-family:var(--font-mono);
+  font-size:10px;letter-spacing:.22em;
+  text-transform:uppercase;
+  color:var(--muted);
+  margin-bottom:12px;
+}
+.hallmark-themes{
+  display:flex;flex-direction:column;gap:6px;
+  font-size:14px;color:var(--ink);
+}
+.hallmark-theme-row{
+  display:flex;align-items:baseline;gap:10px;
+  padding-bottom:6px;border-bottom:1px dotted var(--line);
+}
+.hallmark-theme-row:last-child{border-bottom:none;padding-bottom:0}
+.hallmark-theme-label{flex:1;min-width:0}
+.hallmark-theme-count{
+  font-family:var(--font-mono);
+  font-size:11px;color:var(--maroon);
+  min-width:28px;text-align:right;
+  letter-spacing:.04em;
+}
+.hallmark-empty{
+  font-style:italic;color:var(--muted);font-size:13px;line-height:1.6;
+}
+.hallmark-hint{
+  font-size:13px;line-height:1.5;color:var(--muted);
+  margin:0 0 12px;font-style:italic;
+}
+.hallmark-tags{margin-top:6px}
+.hallmark-count{
+  font-family:var(--font-display);
+  font-style:italic;font-weight:500;
+  font-size:32px;line-height:1;color:var(--ink);
+  margin-top:4px;
+}
+.hallmark-count-num{font-variant-numeric:tabular-nums}
+.hallmark-value-list .hallmark-item{align-items:start;padding:18px 0 16px}
+.hallmark-value-list .hallmark-mid{min-width:0}
+.hallmark-value-list .chip-row{background:transparent;padding:0}
+.hallmark-value-list .hallmark-headline{margin-bottom:6px}
+
+/* ============================================================
+   PERSONA CARDS — hallmark + big pull-quote at top
+   ============================================================ */
+.hallmark-list .hallmark-persona{align-items:start;padding:18px 0 16px}
+.hallmark-persona .persona-quote-wrap{margin-bottom:18px}
+.hallmark-persona .persona-quote{
+  display:block;width:100%;
+  font-family:var(--font-display);font-style:italic;font-weight:500;
+  font-size:22px;line-height:1.35;color:var(--ink);
+  background:transparent;border:none;border-bottom:1px solid var(--line);
+  padding:6px 0 12px;letter-spacing:-.005em;resize:vertical;
+  /* 自适应：textarea 高度跟随内容（Chrome 123+/FF 122+/Safari 17.4+），老浏览器回落为 rows:2 初始高 + 可手动 resize */
+  field-sizing:content;min-height:0;
+}
+.hallmark-persona .persona-quote:focus{border-bottom-color:var(--maroon);outline:none}
+.hallmark-persona .persona-quote::placeholder{color:var(--placeholder);font-style:italic}
+.hallmark-persona .persona-name-row{
+  display:flex;align-items:center;gap:12px;margin-bottom:14px;flex-wrap:wrap;
+}
+.hallmark-persona .persona-name-input{
+  font-family:var(--font-display);font-style:italic;font-weight:500;
+  font-size:24px;line-height:1.2;color:var(--ink);
+  background:transparent;border:none;border-bottom:1px solid transparent;
+  padding:2px 0;letter-spacing:-.005em;min-width:200px;flex:1;min-width:0;
+}
+.hallmark-persona .persona-name-input:focus{border-bottom-color:var(--maroon);outline:none}
+/* 1.1c: 替代 name input 的静态大字号标签，纯展示不可编辑 */
+.hallmark-persona .persona-name-label{
+  font-family:var(--font-display);font-style:italic;font-weight:500;
+  font-size:24px;line-height:1.2;color:var(--ink);
+  letter-spacing:-.005em;flex:1;min-width:0;
+  padding:2px 0;
+}
+.hallmark-persona .persona-id{
+  font-family:var(--font-mono);font-size:10px;letter-spacing:.18em;
+  color:var(--muted);text-transform:uppercase;
+}
+.hallmark-persona .persona-del{margin-left:auto}
+.hallmark-persona .persona-grid{margin-bottom:14px}
+.hallmark-persona .persona-grid input,
+.hallmark-persona .persona-grid select{
+  font-size:14px;padding:4px 0;
+}
+.hallmark-persona .persona-row-label{
+  display:block;
+  font-family:var(--font-mono);font-size:11px;letter-spacing:.18em;
+  text-transform:uppercase;color:var(--muted);
+  margin:8px 0 4px;
+}
+.hallmark-persona textarea{
+  font-size:15px;line-height:1.5;
+  min-height:48px;border-bottom:1px solid var(--line);
+  padding:4px 0;background:transparent;
+}
+.hallmark-persona textarea:focus{border-bottom-color:var(--maroon)}
+.hallmark-persona .chip-row{background:transparent;padding:4px 0}
+.hallmark-persona .persona-summary{
+  font-family:var(--font-display);font-style:italic;font-weight:500;
+  font-size:15px;line-height:1.7;color:var(--ink);margin-top:6px;
+}
+.hallmark-persona .persona-summary div{margin-bottom:2px}
+
+/* ============================================================
+   PERSONA REDESIGN — 拆成 2 个 hallmark item
+     Item 1 (quote) : 全宽, 无 number, 大引言作为画像"声音"
+     Item 2 (main)  : 3-col 标准结构 (01 | 中段 | KEY POINTS)
+   ============================================================ */
+.persona-block{ /* wrapper, no specific styles */ }
+
+/* Item 1: 全宽引言（覆盖 .hallmark-item 的 3-col grid） */
+.hallmark-persona-quote{
+  display:block;
+  padding:18px 0 16px;
+}
+.hallmark-persona-quote .persona-row-label{
+  margin-top:0;
+}
+.hallmark-persona-quote .persona-quote{
+  border-bottom-color:transparent;  /* hairline 由下一个 item 的 border-top 提供，避免双线 */
+  margin-top:4px;
+}
+.hallmark-persona-quote .persona-quote:focus{
+  border-bottom-color:var(--maroon);
+  outline:none;
+}
+
+/* Item 2: 3-col 主体 — 继承 .hallmark-item 默认样式（3-col grid + 56px 1fr 260px） */
+
+/* 防止 persona-block 之间出现双 hairline：
+   - 每个 .hallmark-item 默认有 border-top
+   - .hallmark-item:last-child 默认有 border-bottom
+   - 相邻 persona-block 的 body 下边线 + 下个 quote 上边线 = 双线
+   - 解决：去掉所有 persona-block 内 body 的 border-bottom，最后一个 persona-block 单独补回 */
+.persona-block > .hallmark-item:last-child{
+  border-bottom:none;
+}
+#personaList > .persona-block:last-child > .hallmark-item:last-child{
+  border-bottom:1px solid var(--line);
+}
+
+/* ============================================================
+   RECOMMENDATIONS — hallmark layout BUT no hairlines between
+   items, no font-color change (per user spec).
+   ============================================================ */
+.rec-list{margin:14px 0 18px}
+.rec-list .rec-item{
+  display:grid;grid-template-columns:56px 1fr;
+  gap:28px;padding:22px 0 22px;align-items:start;
+  /* override hallmark hairlines */
+  border-top:none !important;border-bottom:none !important;
+}
+.rec-list .rec-item+.rec-item{padding-top:0}
+.rec-list .hallmark-num{padding-top:6px}
+.rec-list .hallmark-right{display:none} /* no right column in recs */
+.rec-head{
+  display:flex;align-items:baseline;gap:14px;flex-wrap:wrap;
+  margin-bottom:10px;
+}
+.rec-time{
+  font-family:var(--font-mono);font-size:10px;letter-spacing:.18em;
+  text-transform:uppercase;color:var(--muted);
+}
+.rec-title{
+  font-family:var(--font-mono);font-size:11px;letter-spacing:.18em;
+  text-transform:uppercase;color:var(--ink); /* ink not maroon */
+  font-weight:600;
+}
+.rec-list textarea{
+  font-size:14px;line-height:1.6;min-height:100px;
+  border-bottom:1px solid var(--line);padding:4px 0;background:transparent;
+}
+.rec-list textarea:focus{border-bottom-color:var(--maroon)}
+.rec-list .chip-row{background:transparent;padding:4px 0}
+.hallmark-action{margin-top:14px}
+
+.expert-avatar{
+  width:44px;height:44px;display:grid;place-items:center;
+  background:var(--panel);font-family:var(--font-display);font-style:italic;font-size:22px;color:var(--muted);
+  border:1px solid var(--line);
+}
+.expert-avatar.done{background:var(--maroon);color:var(--bg);border-color:var(--maroon)}
+.expert-avatar.thinking{background:var(--maroon-soft);color:var(--maroon);border-color:var(--maroon);animation:pulse 1.4s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.5}}
+.expert-row{display:flex;gap:14px;align-items:center;padding:10px;border-bottom:1px solid var(--line)}
+.expert-row:last-child{border-bottom:none}
+
+svg.chart{display:block;width:100%;height:auto;background:var(--bg)}
+.tooltip{
+  position:absolute;background:var(--ink);color:var(--bg);padding:6px 10px;
+  font-family:var(--font-mono);font-size:11px;pointer-events:none;display:none;z-index:200;
+  white-space:nowrap;
+}
+
+.score-cell{position:relative}
+.ai-mark{
+  position:absolute;top:-4px;right:-4px;width:6px;height:6px;background:var(--maroon);border-radius:50%;
+}
+
+.modal-backdrop{
+  position:fixed;inset:0;background:rgba(26,26,26,.5);z-index:1000;
+  display:none;align-items:center;justify-content:center;
+  opacity:0;
+  transition:opacity 220ms var(--ease-out) allow-discrete;
+}
+.modal-backdrop.open{display:flex;opacity:1}
+/* @starting-style supplies the pre-render frame for the enter transition
+   (no JS needed). The closed-state starting style + allow-discrete gives
+   a fade-out on exit too. Modals are exempt from origin rules — centered. */
+@starting-style{
+  .modal-backdrop.open{opacity:0}
+  .modal-backdrop.open .modal{opacity:0;transform:scale(.96)}
+}
+.modal{
+  background:var(--bg);border:1px solid var(--ink);
+  max-width:640px;width:92%;max-height:86vh;overflow:auto;padding:28px;
+  transform-origin:center;transform:scale(.96);opacity:0;
+  transition:transform 260ms var(--ease-out),opacity 260ms var(--ease-out);
+  will-change:transform,opacity;
+}
+.modal-backdrop.open .modal{transform:scale(1);opacity:1}
+.modal h2{font-size:26px;margin-bottom:16px}
+.modal-close{float:right;background:none;border:none;font-size:30px;line-height:1;cursor:pointer;color:var(--muted);padding:6px 10px}
+.modal-close:hover{color:var(--ink);background:none}
+
+.toast{
+  position:fixed;bottom:32px;left:50%;transform:translateX(-50%) translateY(8px);
+  background:var(--ink);color:var(--bg);padding:10px 20px;font-family:var(--font-mono);
+  font-size:12px;letter-spacing:.1em;text-transform:uppercase;z-index:2000;opacity:0;
+  transition:opacity 200ms var(--ease-out),transform 200ms var(--ease-out);
+  pointer-events:none;will-change:opacity,transform;
+}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+
+.demo-banner{
+  background:var(--maroon);color:var(--bg);padding:8px 32px;font-family:var(--font-mono);
+  font-size:11px;letter-spacing:.12em;text-transform:uppercase;display:none;
+}
+.demo-banner.show{display:block}
+/* Demo read-only mode: step panels are made inert by App.renderAll */
+[id^="steps"][inert]{position:relative}
+[id^="steps"][inert]::after{content:"";position:absolute;inset:0;background:transparent;z-index:50;cursor:not-allowed}
+[id^="steps"][inert] input,[id^="steps"][inert] textarea,[id^="steps"][inert] select{color:var(--ink);-webkit-text-fill-color:var(--ink);opacity:.85;cursor:default}
+[id^="steps"][inert] button{cursor:default!important}
+
+.footer-colophon{
+  border-top:1px solid var(--line);padding:24px 32px;font-family:var(--font-mono);
+  font-size:10px;color:var(--muted);letter-spacing:.12em;text-transform:uppercase;
+  display:flex;justify-content:space-between;flex-wrap:wrap;gap:12px;
+}
+
+/* ============================================================
+   WORKSHOP 4 — CONDITIONAL FIELDS
+   Driven by body[data-w4-scope|biz|oem|entry] (see Work4.syncBodyAttrs)
+   ============================================================ */
+.x-culture, .x-service, .x-entry-heavy { display:none; }
+body[data-w4-scope="global"] .x-culture { display:block; }
+body[data-w4-biz="service"] .x-service,
+body[data-w4-biz="hybrid"] .x-service { display:block; }
+body[data-w4-entry="jv"] .x-entry-heavy,
+body[data-w4-entry="acquisition"] .x-entry-heavy,
+body[data-w4-entry="greenfield"] .x-entry-heavy { display:block; }
+
+/* ============================================================
+   ACCESSIBILITY — gentler, not zero
+   ============================================================ */
+@media (prefers-reduced-motion: reduce){
+  /* Keep opacity/color cross-fades (they aid comprehension); drop movement. */
+  *,*::before,*::after{
+    animation-duration:.01ms !important;
+    animation-iteration-count:1 !important;
+    transition-duration:.01ms !important;
+    scroll-behavior:auto !important;
+  }
+  .progress-bar>div{transition:none}
+  .expert-avatar.thinking{animation:none;opacity:.75}
+}
+/* Gate hover-driven visual changes behind a real pointer — touch fires false hovers.
+   (Press feedback on :active still applies on touch.) */
+@media (hover: none){
+  button:hover{background:transparent;color:var(--ink)}
+  button.primary:hover{background:var(--maroon);color:var(--bg)}
+}
+
+@media print{
+  .masthead,.tabs,.subtabs,.no-print,.modal-backdrop,.toast,.demo-banner{display:none!important}
+  .workshop,.step{display:block!important}
+  main{padding:0;max-width:none}
+  body{background:#fff}
+  .card,.plate{break-inside:avoid}
+}
+</style>
+</head>
+<body>
+
+<div class="demo-banner" id="demoBanner">— DEMO 演示数据 · 只读预览，不可修改 · 再次点击「查看演示」回到你的数据 —</div>
+
+<header class="masthead no-print">
+  <div class="masthead-top">
+    <div>
+      <h1>Global Brand Building</h1>
+      <span class="slash">and marketing communication</span>
+    </div>
+    <div class="masthead-actions">
+      <button class="ghost" onclick="App.toggleDemo()" id="demoBtn">查看演示</button>
+      <button class="ghost" onclick="App.importMd()">导入 .md</button>
+      <button class="ghost" onclick="App.exportMd()">导出 MD</button>
+      <button class="ghost" onclick="History.open()">历史记录</button>
+      <button class="ghost" onclick="window.print()">打印 / PDF</button>
+      <button class="ghost" onclick="App.save(true)">保存</button>
+      <button class="ghost" onclick="App.reset()">重置</button>
+      <div class="mode-switch" id="modeSwitch" title="切换 AI 调用模式">
+        <button type="button" data-mode="api" onclick="Settings.setMode('api')">API 自动</button>
+        <button type="button" data-mode="manual" onclick="Settings.setMode('manual')">手动模式</button>
+      </div>
+      <button class="ghost icon-btn" id="settingsGear" onclick="Settings.open()" title="API 设定">⚙</button>
+    </div>
+  </div>
+  <div class="summary-bar" id="summaryBar">
+    <span>SBU: <strong id="sumSbu">— 未填写</strong></span>
+    <span class="clickable" onclick="App.goWork(2)">目标市场: <strong id="sumMarket">— 未填写</strong></span>
+    <span class="clickable" onclick="App.goWork(3)">价值主张: <strong id="sumValue">— 未填写</strong></span>
+    <span id="saveStatus" style="margin-left:auto">— 未保存</span>
+    <span>本地服务: <strong id="sumBackend" style="color:var(--warn)">未连接</strong></span>
+  </div>
+</header>
+
+<nav class="tabs no-print">
+  <button class="tab active" data-work="1" onclick="App.goWork(1)"><span class="tab-num">I.</span>业务价值体系</button>
+  <button class="tab" data-work="2" onclick="App.goWork(2)"><span class="tab-num">II.</span>目标市场</button>
+  <button class="tab" data-work="3" onclick="App.goWork(3)"><span class="tab-num">III.</span>价值主张</button>
+  <button class="tab" data-work="4" onclick="App.goWork(4)"><span class="tab-num">IV.</span>营销组合</button>
+  <button class="tab" data-work="5" onclick="App.goWork(5)"><span class="tab-num">V.</span>策划书</button>
+</nav>
+
+<main id="workArea">
+<section class="workshop active" data-workshop="1" id="work1">
+  <nav class="subtabs no-print" id="subtabs1"></nav>
+  <div id="steps1"></div>
+</section>
+<section class="workshop" data-workshop="2" id="work2">
+  <nav class="subtabs no-print" id="subtabs2"></nav>
+  <div id="steps2"></div>
+</section>
+<section class="workshop" data-workshop="3" id="work3">
+  <nav class="subtabs no-print" id="subtabs3"></nav>
+  <div id="steps3"></div>
+</section>
+<section class="workshop" data-workshop="4" id="work4">
+  <nav class="subtabs no-print" id="subtabs4"></nav>
+  <div id="steps4"></div>
+</section>
+<section class="workshop" data-workshop="5" id="work5">
+  <nav class="subtabs no-print" id="subtabs5"></nav>
+  <div id="steps5"></div>
+</section>
+</main>
+
+<!-- Settings modal -->
+<div class="modal-backdrop" id="settingsModal">
+  <div class="modal">
+    <button class="modal-close" onclick="Settings.close()">×</button>
+    <h2>API 设定.</h2>
+    <p class="muted italic">配置 LLM 提供商。配置保存在项目 server/config.yaml 与 server/.env，API Key 不会离开本机。</p>
+    <div class="field">
+      <label>提供商</label>
+      <select id="setProvider" onchange="Settings.onProviderChange()">
+        <option value="deepseek">DeepSeek</option>
+        <option value="openai">ChatGPT (OpenAI)</option>
+        <option value="gemini">Gemini</option>
+        <option value="custom">其他 (OpenAI 兼容)</option>
+      </select>
+    </div>
+    <div class="field">
+      <label>Base URL</label>
+      <input type="text" id="setBaseUrl">
+    </div>
+    <div class="field">
+      <label>Model</label>
+      <input type="text" id="setModel">
+    </div>
+    <div class="field">
+      <label>API Key</label>
+      <input type="password" id="setApiKey" placeholder="sk-..." oninput="Settings.onApiKeyInput()">
+    </div>
+    <div class="field">
+      <label>Temperature: <span id="setTempVal">1.0</span></label>
+      <input type="range" id="setTemperature" min="0" max="2" step="0.1" value="1" oninput="document.getElementById('setTempVal').textContent=this.value">
+    </div>
+    <div class="row">
+      <button class="primary" onclick="Settings.save()">保存</button>
+      <button onclick="Settings.test()">测试连接</button>
+      <span id="setTestResult" class="mono" style="font-size:11px;color:var(--muted);align-self:center"></span>
+    </div>
+    <hr class="rule">
+    <div class="field">
+      <label>本地 Python 服务</label>
+      <div class="row">
+        <input type="text" id="setBackendUrl" value="http://localhost:8765">
+        <button onclick="Settings.testBackend()">测试</button>
+      </div>
+      <div class="hint" id="setBackendResult">未测试</div>
+    </div>
+  </div>
+</div>
+
+<!-- History modal -->
+<div class="modal-backdrop" id="historyModal">
+  <div class="modal">
+    <button class="modal-close" onclick="History.close()">×</button>
+    <h2>历史记录.</h2>
+    <p class="muted italic">自动版本保留最近 30 个；手动存档的版本永久保留。恢复前会自动备份当前内容。</p>
+    <div class="row" style="align-items:flex-end">
+      <div class="field" style="margin-bottom:0">
+        <label>存档当前版本</label>
+        <input type="text" id="snapName" placeholder="版本名称，如：初稿、给老板看的版本">
+      </div>
+      <button class="primary" onclick="History.create()" style="flex:0 0 auto">存档</button>
+    </div>
+    <hr class="rule">
+    <div id="snapList"></div>
+  </div>
+</div>
+
+<!-- Backend blocker -->
+<div id="backendBlocker" style="display:none;position:fixed;inset:0;background:var(--bg);z-index:3000;align-items:center;justify-content:center">
+  <div style="max-width:520px;text-align:center;padding:32px">
+    <h2 style="margin-bottom:12px">本地服务未启动.</h2>
+    <p class="muted">此工具的数据保存与 AI 功能依赖本地 Python 服务。请先在项目目录运行：</p>
+    <div style="background:var(--panel);padding:14px 18px;font-family:var(--font-mono);font-size:13px;text-align:left;margin:16px 0;line-height:1.8">cd server<br>pip install -r requirements.txt<br>python app.py</div>
+    <button class="primary" onclick="location.reload()">已启动，重新连接</button>
+  </div>
+</div>
+
+<div class="tooltip" id="tooltip"></div>
+<div class="toast" id="toast"></div>
+
+<script>
+/* ============================================================
+   CORE STATE & UTILITIES
+   ============================================================ */
+const STORAGE_KEY = 'gbw_atelier_v1';
+
+const DEFAULT_SETTINGS = {
+  provider: 'deepseek',
+  apiKey: '',
+  baseUrl: 'https://api.deepseek.com',
+  model: 'deepseek-v4-flash',
+  temperature: 1.0,
+  backendUrl: 'http://localhost:8765'
+};
+
+function defaultState(){
+  return {
+    meta: { savedAt: null, isDemo: false, demoSnapshot: null },
+    settings: { api: {...DEFAULT_SETTINGS}, autoSave: true, manualMode: false },
+    work1: Work1 ? Work1.defaultData() : {},
+    work2: Work2 ? Work2.defaultData() : {},
+    work3: Work3 ? Work3.defaultData() : {},
+    work4: Work4 ? Work4.defaultData() : {},
+    work5: Work5 ? Work5.defaultData() : {}
+  };
+}
+
+let state = null;
+let backendOnline = false;
+
+const $ = s => document.querySelector(s);
+const $$ = s => Array.from(document.querySelectorAll(s));
+const el = (tag, attrs={}, ...children) => {
+  const e = document.createElement(tag);
+  for(const [k,v] of Object.entries(attrs)){
+    if(k==='class') e.className=v;
+    else if(k==='html') e.innerHTML=v;
+    else if(k.startsWith('on') && typeof v==='function') e.addEventListener(k.slice(2), v);
+    else if(k==='style'){
+      if(typeof v==='object') Object.assign(e.style, v);
+      else if(typeof v==='string') e.style.cssText=v;
+    } else if(typeof v==='boolean'){
+      if(v) e.setAttribute(k, ''); else e.removeAttribute(k);
+    }
+    else e.setAttribute(k, v);
+  }
+  for(const c of children.flat()){
+    if(c==null||c===false) continue;
+    e.appendChild(typeof c==='string'||typeof c==='number' ? document.createTextNode(c) : c);
+  }
+  return e;
+};
+const esc = s => String(s??'').replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const uid = (p='id') => p+'_'+Math.random().toString(36).slice(2,10);
+const clamp = (v,lo,hi)=>Math.max(lo,Math.min(hi,v))
+const median = arr => { if(!arr.length) return 0; const s=[...arr].sort((a,b)=>a-b); const m=Math.floor(s.length/2); return s.length%2?s[m]:(s[m-1]+s[m])/2; }
+const mean = arr => arr.length ? arr.reduce((a,b)=>a+b,0)/arr.length : 0;
+const sd = arr => { if(arr.length<2) return 0; const m=mean(arr); return Math.sqrt(mean(arr.map(x=>(x-m)**2))); }
+
+function showToast(msg, ms=1800){
+  const t=$('#toast'); t.textContent=msg; t.classList.add('show');
+  clearTimeout(showToast._t); showToast._t=setTimeout(()=>t.classList.remove('show'), ms);
+}
+
+/* ============================================================
+   PERSISTENCE — server-backed store (replaces localStorage)
+   State lives in server/data/default/current.json; every save
+   also creates a throttled auto snapshot server-side.
+   ============================================================ */
+// Absolute backend URL for API calls — works whether the page is served by
+// the backend (http://localhost:8765/) or opened from disk (file://), because
+// the backend allows any origin via CORS.
+function apiUrl(path){ return (state?.settings?.api?.backendUrl || DEFAULT_SETTINGS.backendUrl) + path; }
+
+const Store = {
+  projectId: 'default',
+  _chain: Promise.resolve(),
+
+  save(stateObj){
+    if(!stateObj) return Promise.resolve();
+    if(stateObj.meta.isDemo){
+      const ss=$('#saveStatus'); if(ss) ss.textContent='演示模式 · 不会保存';
+      return Promise.resolve();
+    }
+    // Serialize saves — rapid edits must not race the server.
+    this._chain = this._chain.then(()=>this._doSave(stateObj)).catch(()=>{});
+    return this._chain;
+  },
+
+  async _doSave(stateObj){
+    stateObj.meta.savedAt = new Date().toISOString();
+    try{
+      const res = await fetch(apiUrl('/api/state'), {
+        method:'PUT', headers:{'Content-Type':'application/json'},
+        body: JSON.stringify({project_id:this.projectId, state:stateObj})
+      });
+      if(res.ok){
+        const ss=$('#saveStatus'); if(ss) ss.textContent='已保存 · '+new Date().toLocaleTimeString();
+      }else{
+        showToast('保存失败: HTTP '+res.status);
+      }
+    }catch(e){ showToast('保存失败: '+e.message); }
+  },
+
+  async load(){
+    try{
+      const res = await fetch(apiUrl('/api/state')+'?project_id='+encodeURIComponent(this.projectId));
+      if(!res.ok) return null;  // 404 = no saved state yet
+      return await res.json();
+    }catch{ return null; }
+  },
+
+  // Synchronous-ish save for page unload — sendBeacon survives tab close.
+  saveSync(){
+    if(!state || state.meta.isDemo) return;
+    try{
+      state.meta.savedAt = new Date().toISOString();
+      const blob = new Blob([JSON.stringify({project_id:this.projectId, state})], {type:'application/json'});
+      navigator.sendBeacon(apiUrl('/api/state'), blob);
+    }catch{}
+  },
+
+  // One-time migration: legacy localStorage data (and its plaintext key) → server.
+  async migrateFromLocalStorage(){
+    try{
+      const raw = localStorage.getItem(STORAGE_KEY);
+      if(!raw) return null;
+      const parsed = JSON.parse(raw);
+      const legacyKey = parsed?.settings?.api?.apiKey || '';
+      if(legacyKey){
+        try{
+          const cfg = await (await fetch(apiUrl('/api/config'))).json();
+          if(!cfg.apiKeyExists){
+            const api = parsed.settings.api;
+            await fetch(apiUrl('/api/config'), {method:'PUT', headers:{'Content-Type':'application/json'},
+              body: JSON.stringify({
+                provider:api.provider||cfg.provider, baseUrl:api.baseUrl||cfg.baseUrl,
+                model:api.model||cfg.model, temperature:api.temperature??cfg.temperature,
+                backendUrl:api.backendUrl||cfg.backendUrl, apiKey:legacyKey
+              })});
+          }
+        }catch{}
+      }
+      const merged = mergeWithDefaults(parsed);
+      // Never persist a plaintext key inside the state file — masked flag only.
+      merged.settings.api.apiKey = legacyKey ? '********' : '';
+      await fetch(apiUrl('/api/state'), {method:'PUT', headers:{'Content-Type':'application/json'},
+        body: JSON.stringify({project_id:this.projectId, state:merged})});
+      localStorage.removeItem(STORAGE_KEY);
+      return merged;
+    }catch(e){ console.error('migration failed', e); return null; }
+  }
+};
+
+// Merge a (possibly partial) saved state over defaults so new fields exist.
+function mergeWithDefaults(parsed){
+  const def = defaultState();
+  return {
+    ...def, ...parsed,
+    meta: {...def.meta, ...(parsed.meta||{})},
+    settings: {...def.settings, ...(parsed.settings||{}),
+      api: {...DEFAULT_SETTINGS, ...(parsed.settings?.api||{})}},
+    work1: {...def.work1, ...(parsed.work1||{})},
+    work2: {...def.work2, ...(parsed.work2||{})},
+    work3: {...def.work3, ...(parsed.work3||{})},
+    work4: {...def.work4, ...(parsed.work4||{})},
+    work5: {...def.work5, ...(parsed.work5||{})}
+  };
+}
+
+async function saveNow(){ await Store.save(state); }
+function save(manual){
+  saveNow().then(()=>{ if(manual && !state.meta.isDemo) showToast('已保存'); });
+}
+let saveTimer=null;
+function autosave(){
+  if(!state?.settings?.autoSave) return;
+  clearTimeout(saveTimer);
+  saveTimer=setTimeout(()=>saveNow(), 1000);
+}
+
+/* ============================================================
+   LLM API ENGINE
+   ============================================================ */
+const API = {
+  config(){ return state.settings.api; },
+
+  // All LLM traffic goes through the local backend proxy — the API key
+  // never reaches the browser. Backend returns the provider response plus
+  // a normalized `_text` field with the extracted content.
+  async call(messages, opts={}){
+    const res = await fetch(apiUrl('/api/llm'), {
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({
+        messages,
+        opts: {temperature: opts.temperature, response_format: opts.response_format},
+        profile: opts.profile || null  // reserved: multi-model profiles (e.g. Delphi)
+      }),
+      signal: opts.signal || null
+    });
+    if(!res.ok){
+      let msg='HTTP '+res.status;
+      try{ const j=await res.json(); msg=j.error?.message||msg; }catch{}
+      if(res.status===401) throw new Error('API Key 无效 (401)');
+      if(res.status===429) throw new Error('请求被限流 (429)，请稍后再试');
+      throw new Error(msg);
+    }
+    const data=await res.json();
+    return data._text || '';
+  },
+
+  // Call with JSON mode and parse. Falls back to extracting JSON from text.
+  async callJson(messages, opts={}){
+    const opts2={...opts};
+    if(this.config().provider!=='gemini'){
+      opts2.response_format={type:'json_object'};
+    }
+    const text = await this.call(messages, opts2);
+    return this.extractJson(text);
+  },
+
+  extractJson(text){
+    if(!text) return null;
+    // Try direct parse first
+    try{ return JSON.parse(text); }catch{}
+    // Try fenced block
+    const fence = text.match(/```(?:json)?\s*([\s\S]*?)```/);
+    if(fence){ try{ return JSON.parse(fence[1]); }catch{} }
+    // Grab first { ... } or [ ... ]
+    const firstObj=text.indexOf('{'), firstArr=text.indexOf('[');
+    const start = firstObj===-1?firstArr : firstArr===-1?firstObj : Math.min(firstObj,firstArr);
+    if(start===-1) return null;
+    const open=text[start], close=open==='{'?'}':']';
+    let depth=0, inStr=false, esc=false;
+    for(let i=start;i<text.length;i++){
+      const ch=text[i];
+      if(inStr){ if(esc)esc=false; else if(ch==='\\')esc=true; else if(ch==='"')inStr=false; continue; }
+      if(ch==='"'){inStr=true;continue;}
+      if(ch===open)depth++;
+      else if(ch===close){depth--; if(depth===0){ try{return JSON.parse(text.slice(start,i+1));}catch{} return null; }}
+    }
+    return null;
+  },
+
+  // Manual-mode helper: replace {var} in a template.
+  fillVars(tpl, vars){
+    return tpl.replace(/\{(\w+)\}/g, (_,k)=> vars[k] ?? `{${k}}`);
+  },
+
+  manualBox(container, promptText, onParse, opts={}){
+    const wrap = el('div',{class:'ai-box'});
+    wrap.appendChild(el('span',{class:'callout-title'}, '手动模式 — 未配置 API Key，或手动操作'));
+    wrap.appendChild(el('p',{class:'muted',style:'font-size:13px'}, '复制下面的提示词到任意 AI 工具，把结果粘回下方：'));
+    const promptEl = el('div',{class:'prompt-box'}, promptText);
+    wrap.appendChild(promptEl);
+    const row=el('div',{class:'ai-actions'},
+      el('button',{onclick:()=>{navigator.clipboard.writeText(promptText);showToast('已复制');}}, '复制提示词'),
+    );
+    wrap.appendChild(row);
+    const ta=el('textarea',{rows:8,placeholder:'把 AI 的回答粘贴到这里…'});
+    wrap.appendChild(ta);
+    wrap.appendChild(el('div',{class:'ai-actions',style:'margin-top:8px'},
+      el('button',{class:'primary',onclick:()=>{
+        let parsed=null;
+        try{ parsed=JSON.parse(ta.value); }catch{ parsed=API.extractJson(ta.value); }
+        if(!parsed){ showToast('未能解析 JSON'); return; }
+        onParse(parsed, ta.value);
+      }}, '解析并填入'),
+      !opts.rawOnly && el('button',{class:'ghost',onclick:()=>onParse(null, ta.value)}, '作为文本填入'),
+    ));
+    container.appendChild(wrap);
+    return wrap;
+  },
+
+  // One-button AI helper with progress + manual fallback + abort.
+  async aiButton(opts){
+    const { button, container, buildPrompt, onResult, jsonMode=true, label='用 AI 生成' } = opts;
+    const useManual = state.settings.manualMode || !this.config().apiKey;
+    if(useManual){
+      // Manual mode: copy prompt, paste result. No background process, no Runner.
+      const promptText = typeof buildPrompt==='function' ? buildPrompt() : buildPrompt;
+      const fullPrompt = Array.isArray(promptText) ? promptText.map(m=>m.content).join('\n\n') : String(promptText);
+      API.manualBox(container, fullPrompt, (parsed, raw)=>{
+        onResult(parsed, raw, 'manual');
+      });
+      return;
+    }
+    const task = Runner.start({id:label, label, button, pausable:false});
+    if(!task) return;
+    try{
+      const messages = typeof buildPrompt==='function' ? buildPrompt() : buildPrompt;
+      const result = jsonMode
+        ? await this.callJson(messages, {signal: task.controller.signal})
+        : await this.call(messages, {signal: task.controller.signal});
+      if(task.aborted) return;
+      onResult(result, null, 'api');
+    }catch(e){
+      if(task.aborted || (e && e.name==='AbortError')){ showToast('已中止'); return; }
+      showToast('AI 失败: '+e.message);
+      const promptText = typeof buildPrompt==='function' ? buildPrompt() : buildPrompt;
+      const fullPrompt = Array.isArray(promptText) ? promptText.map(m=>m.content).join('\n\n') : String(promptText);
+      API.manualBox(container, fullPrompt, (parsed,raw)=>onResult(parsed,raw,'manual'));
+    }finally{
+      Runner.finish();
+    }
+  }
+};
+
+/* ============================================================
+   RUNNER — global single-task lock with pause/abort.
+   One-shot buttons: pausable=false (abort only).
+   Long loops (work1 survey, work2 delphi, work3/5 chains):
+   pausable=true, call Runner.checkpoint() between units.
+   ============================================================ */
+const Runner = {
+  current: null,
+  // Returns a task handle, or null if another task is running.
+  start({id, label, button, total=0, pausable=false, onPause, onResume}){
+    if(this.current && !this.current._finished){
+      showToast('请先暂停或中止当前 AI 任务');
+      return null;
+    }
+    const task={
+      id, label, button, total, pausable, onPause, onResume,
+      controller: new AbortController(),
+      status:'running', paused:false, aborted:false, done:0,
+      _resume:null, _origOnclick:null, _origText:'', _abortBtn:null, _finished:false
+    };
+    if(button){
+      task._origText=button.textContent;
+      task._origOnclick=button.onclick;
+      if(pausable) button.onclick=()=>this.togglePause();
+      const ab=el('button',{class:'abort-btn',type:'button',title:'中止',
+        onclick:()=>this.abort()},'×');
+      button.insertAdjacentElement('afterend', ab);
+      task._abortBtn=ab;
+      if(!pausable) button.disabled=true;
+    }
+    this.current=task;
+    this.renderUI();
+    return task;
+  },
+  togglePause(){
+    const t=this.current; if(!t||!t.pausable||t.aborted) return;
+    if(t.paused){
+      t.paused=false; t.status='running';
+      if(t.onResume){ try{ t.onResume(); }catch{} }
+      if(t._resume){t._resume();t._resume=null;}
+    } else {
+      t.paused=true; t.status='paused';
+      if(t.onPause){ try{ t.onPause(); }catch{} }
+    }
+    this.renderUI();
+  },
+  abort(){
+    const t=this.current; if(!t||t.aborted) return;
+    t.aborted=true; t.status='aborting';
+    try{ t.controller.abort(); }catch{}
+    if(t._resume){ t._resume(); t._resume=null; }  // unblock a paused wait
+    this.renderUI();
+  },
+  // Await between units: blocks while paused, throws if aborted.
+  async checkpoint(){
+    const t=this.current; if(!t) return;
+    if(t.aborted) throw new DOMException('Aborted','AbortError');
+    if(t.paused){
+      await new Promise(res=>{ t._resume=res; });
+      if(t.aborted) throw new DOMException('Aborted','AbortError');
+    }
+  },
+  tick(n=1){ const t=this.current; if(t){ t.done+=n; this.renderUI(); } },
+  setTotal(n){ const t=this.current; if(t){ t.total=n; this.renderUI(); } },
+  signal(){ return this.current ? this.current.controller.signal : undefined; },
+  finish(){
+    const t=this.current; if(!t) return;
+    t._finished=true;
+    if(t.button){
+      if(t._origOnclick!==null) t.button.onclick=t._origOnclick;
+      buttonRestore(t.button, t._origText);
+    }
+    if(t._abortBtn){ t._abortBtn.remove(); t._abortBtn=null; }
+    this.current=null;
+    this.renderUI();
+  },
+  renderUI(){
+    const t=this.current;
+    // lock top-bar mode switch + settings gear while a task runs
+    const locked=!!(state && state.meta && state.meta.isDemo);
+    const sw=document.getElementById('modeSwitch');
+    if(sw) sw.querySelectorAll('button').forEach(b=>b.disabled=!!t||locked);
+    const gear=document.getElementById('settingsGear');
+    if(gear) gear.disabled=!!t||locked;
+    if(!t || !t.button) return;
+    if(t.pausable){
+      if(t.paused) t.button.textContent = t.total?`继续 · ${t.done}/${t.total}`:'继续';
+      else t.button.textContent = t.total?`暂停 · ${Math.round(100*t.done/t.total)}%`:'暂停';
+    }else{
+      t.button.textContent='生成中…';
+    }
+  }
+};
+// Restore a run/generate button without clobbering child nodes it may gain later.
+function buttonRestore(button, text){
+  button.disabled=false;
+  if(text!=null) button.textContent=text;
+}
+
+/* ============================================================
+   BACKEND (Python service)
+   ============================================================ */
+const Backend = {
+  // state may be null during early init (health check runs before state load).
+  base(){ return state?.settings?.api?.backendUrl || DEFAULT_SETTINGS.backendUrl; },
+  async health(){
+    try{
+      const r=await fetch(this.base()+'/api/health',{method:'GET'});
+      if(!r.ok) return false;
+      const d=await r.json();
+      backendOnline = d.status==='ok';
+      return backendOnline;
+    }catch{ backendOnline=false; return false; }
+  },
+  async lda(documents, params={}){
+    const r=await fetch(this.base()+'/api/lda',{
+      method:'POST',headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({documents, k:5, passes:15, iterations:100, no_below:2, no_above:0.5, ...params})
+    });
+    if(!r.ok){ const t=await r.text(); throw new Error(t); }
+    return r.json();
+  },
+  async parseExcel(file){
+    const fd=new FormData(); fd.append('file', file);
+    const r=await fetch(this.base()+'/api/parse-excel',{method:'POST',body:fd});
+    if(!r.ok){ const t=await r.text(); throw new Error(t); }
+    return r.json();
+  }
+};
+
+/* ============================================================
+   SETTINGS MODAL
+   ============================================================ */
+const Settings = {
+  // Server (config.yaml + .env) is the source of truth. state.settings.api
+  // mirrors it with a masked key so API.aiButton's "configured?" check works.
+
+  // Global API/manual toggle (persisted in state, independent of key presence).
+  hasKey(){ return !!(state?.settings?.api?.apiKey); },
+  setMode(mode){
+    if(Runner.current){ showToast('请先暂停或中止当前 AI 任务'); return; }
+    if(mode==='api' && !this.hasKey()){
+      showToast('请先点 ⚙ 配置 API Key');
+      this.renderModeSwitch();
+      return;
+    }
+    state.settings.manualMode = (mode==='manual');
+    autosave();
+    this.renderModeSwitch();
+  },
+  renderModeSwitch(){
+    const sw=document.getElementById('modeSwitch'); if(!sw) return;
+    const manual=!!state.settings.manualMode || !this.hasKey();
+    const forceManual=!this.hasKey();
+    sw.querySelectorAll('button').forEach(b=>{
+      const m=b.dataset.mode;
+      b.classList.toggle('active', (m==='manual')===manual);
+      b.disabled = (m==='api' && forceManual);
+      b.title = (m==='api' && forceManual) ? '请先点 ⚙ 配置 API Key' : '';
+    });
+  },
+
+  async open(){
+    let cfg={...DEFAULT_SETTINGS, apiKeyExists: !!state?.settings?.api?.apiKey};
+    try{ cfg = await (await fetch(apiUrl('/api/config'))).json(); }catch{}
+    $('#setProvider').value=cfg.provider;
+    $('#setBaseUrl').value=cfg.baseUrl;
+    $('#setModel').value=cfg.model;
+    $('#setApiKey').value='';
+    $('#setApiKey').placeholder=cfg.apiKeyExists ? '已配置 · 留空保持不变' : 'sk-...';
+    $('#setTemperature').value=cfg.temperature;
+    $('#setTempVal').textContent=Number(cfg.temperature).toFixed(1);
+    $('#setBackendUrl').value=cfg.backendUrl;
+    $('#setTestResult').textContent = cfg.apiKeyExists ? '● 已配置 API Key（点「测试连接」验证）' : '';
+    $('#setTestResult').style.color='var(--maroon)';
+    $('#settingsModal').classList.add('open');
+  },
+  close(){ $('#settingsModal').classList.remove('open'); },
+  onApiKeyInput(){
+    const r=$('#setTestResult');
+    const k=$('#setApiKey').value.trim();
+    if(!k){ r.textContent=''; return; }
+    r.textContent='● 已输入新 Key（保存后生效，点「测试连接」验证）';
+    r.style.color='var(--maroon)';
+  },
+  onProviderChange(){
+    const p=$('#setProvider').value;
+    const presets={
+      deepseek:{baseUrl:'https://api.deepseek.com',model:'deepseek-v4-flash'},
+      openai:{baseUrl:'https://api.openai.com/v1',model:'gpt-4o-mini'},
+      gemini:{baseUrl:'https://generativelanguage.googleapis.com/v1beta',model:'gemini-2.0-flash'},
+      custom:{baseUrl:'',model:''}
+    };
+    const v=presets[p];
+    $('#setBaseUrl').value=v.baseUrl; $('#setModel').value=v.model;
+  },
+  async save(){
+    const body={
+      provider:$('#setProvider').value,
+      baseUrl:$('#setBaseUrl').value.trim(),
+      model:$('#setModel').value.trim(),
+      temperature:parseFloat($('#setTemperature').value),
+      backendUrl:$('#setBackendUrl').value.trim() || DEFAULT_SETTINGS.backendUrl
+    };
+    const key=$('#setApiKey').value.trim();
+    if(key) body.apiKey=key;  // empty = keep existing key server-side
+    try{
+      const res = await fetch(apiUrl('/api/config'), {
+        method:'PUT', headers:{'Content-Type':'application/json'}, body:JSON.stringify(body)
+      });
+      if(!res.ok) throw new Error('HTTP '+res.status);
+      const merged = await res.json();
+      state.settings.api = {...merged, apiKey: merged.apiKeyExists ? '********' : ''};
+      this.close();
+      showToast('设定已保存');
+      this.renderModeSwitch();
+      this.checkBackend();
+    }catch(e){ showToast('设定保存失败: '+e.message); }
+  },
+  async test(){
+    const r=$('#setTestResult'); r.textContent='测试中…'; r.style.color='var(--muted)';
+    try{
+      const text=await API.call([{role:'user',content:'回复"OK"两个字符'}]);
+      if(text.trim().includes('OK')){ r.textContent='连接成功'; r.style.color='var(--maroon)'; }
+      else{ r.textContent='已连接，回复异常: '+text.slice(0,30); r.style.color='var(--warn)'; }
+    }catch(e){ r.textContent='失败: '+e.message; r.style.color='var(--warn)'; }
+  },
+  async testBackend(){
+    const r=$('#setBackendResult'); r.textContent='测试中…';
+    state.settings.api.backendUrl=$('#setBackendUrl').value.trim()||DEFAULT_SETTINGS.backendUrl;
+    const ok=await Backend.health();
+    if(ok){ r.textContent='● 本地服务已连接'; r.style.color='var(--maroon)'; }
+    else{ r.textContent='○ 未连接（LDA/Excel 将降级）'; r.style.color='var(--warn)'; }
+    App.updateSummary();
+  },
+  async checkBackend(){
+    await this.testBackend();
+  }
+};
+
+/* ============================================================
+   APP
+   ============================================================ */
+const App = {
+  currentWork:1, currentStep:1,
+  async init(){
+    // 1. Backend is mandatory — block with instructions if unreachable.
+    const ok = await Backend.health();
+    if(!ok){
+      $('#backendBlocker').style.display='flex';
+      return;
+    }
+    // 2. Config from server (source of truth for API settings).
+    let cfg = {...DEFAULT_SETTINGS, apiKeyExists:false};
+    try{ cfg = await (await fetch(apiUrl('/api/config'))).json(); }catch{}
+    state = defaultState();
+    state.settings.api = {...cfg, apiKey: cfg.apiKeyExists ? '********' : ''};
+    // 3. Load state from server; first run migrates legacy localStorage data.
+    let data = await Store.load();
+    if(!data){
+      data = await Store.migrateFromLocalStorage();
+      if(data) showToast('已将浏览器本地数据迁移到服务器');
+    }
+    if(data){
+      const keepApi = state.settings.api;
+      state = mergeWithDefaults(data);
+      state.settings.api = keepApi;  // server config wins over saved copy
+    }
+    // 4. Flush on navigation & page hide — covers "填到一半关页面".
+    window.addEventListener('beforeunload', ()=>Store.saveSync());
+    document.addEventListener('visibilitychange', ()=>{
+      if(document.visibilityState==='hidden') Store.saveSync();
+    });
+    // 5. Render.
+    this.renderAll();
+    this.bindKeys();
+    this.updateSummary();
+  },
+  bindKeys(){
+    document.addEventListener('keydown', e=>{
+      if((e.ctrlKey||e.metaKey) && e.key>='1' && e.key<='5'){
+        e.preventDefault(); this.goWork(parseInt(e.key));
+      }
+    });
+  },
+  goWork(n){
+    saveNow();  // flush pending edits before leaving the workshop
+    this.currentWork=n;
+    $$('.workshop').forEach(s=>s.classList.toggle('active', +s.dataset.workshop===n));
+    $$('.tab').forEach(t=>t.classList.toggle('active', +t.dataset.work===n));
+    // default step
+    const first = this.workshopSteps(n)[0]?.id || 1;
+    this.goStep(first);
+    window.scrollTo({top:0,behavior:'smooth'});
+  },
+  workshopSteps(n){
+    const mod={1:Work1,2:Work2,3:Work3,4:Work4,5:Work5}[n];
+    return mod.steps;
+  },
+  goStep(id){
+    saveNow();  // flush pending edits before leaving the step
+    this.currentStep=id;
+    const n=this.currentWork;
+    $$(`#subtabs${n} .subtab`).forEach(t=>t.classList.toggle('active', t.dataset.step===String(id)));
+    $$(`#steps${n} .step`).forEach(s=>s.classList.toggle('active', s.dataset.step===String(id)));
+    // refresh step content lazily
+    const mod={1:Work1,2:Work2,3:Work3,4:Work4,5:Work5}[n];
+    if(mod && mod.renderStep) mod.renderStep(id);
+  },
+  renderAll(){
+    // Demo mode is read-only: lock the step content panels (inputs/buttons)
+    // while the masthead and the workshop/step navigation stay browsable.
+    const locked=!!state.meta.isDemo;
+    [1,2,3,4,5].forEach(n=>{ const el=$('#steps'+n); if(el) el.inert=locked; });
+    // lock top-bar mode switch in demo read-only mode
+    const sw=document.getElementById('modeSwitch');
+    if(sw) sw.querySelectorAll('button').forEach(b=>b.disabled=locked);
+    const gear=document.getElementById('settingsGear');
+    if(gear) gear.disabled=locked;
+    if(typeof Settings!=='undefined') Settings.renderModeSwitch();
+    [1,2,3,4,5].forEach(n=>{
+      const mod={1:Work1,2:Work2,3:Work3,4:Work4,5:Work5}[n];
+      const sub=$(`#subtabs${n}`); sub.innerHTML='';
+      const steps=$(`#steps${n}`); steps.innerHTML='';
+      mod.steps.forEach((s,i)=>{
+        const b=el('button',{class:'subtab'+(i===0?' active':''),'data-step':s.id,onclick:()=>this.goStep(s.id)},
+          el('span',{},s.label));
+        sub.appendChild(b);
+        const sec=el('section',{class:'step'+(i===0?' active':''),'data-step':s.id});
+        steps.appendChild(sec);
+      });
+    });
+    // render first step of each workshop (so first paint has content)
+    [1,2,3,4,5].forEach(n=>{
+      const mod={1:Work1,2:Work2,3:Work3,4:Work4,5:Work5}[n];
+      if(mod.renderStep) mod.renderStep(mod.steps[0].id);
+    });
+    this.goWork(1);
+  },
+  updateSummary(){
+    const sbu=state.work1?.sbu?.name||'';
+    const mkt=state.work2?.markets?.find(m=>m.id===state.work2?.matrix?.selectedMarketId)?.name||'';
+    const val=state.work3?.proposition?.chosenValueText||state.work3?.candidates?.find(c=>c.selected)?.name||'';
+    $('#sumSbu').textContent=sbu||'— 未填写';
+    $('#sumMarket').textContent=mkt||'— 未填写';
+    $('#sumValue').textContent=val||'— 未填写';
+    const be=$('#sumBackend');
+    if(backendOnline){ be.textContent='已连接'; be.style.color='var(--maroon)'; }
+    else{ be.textContent='未连接'; be.style.color='var(--warn)'; }
+  },
+  save(manual){ save(manual); },
+  async reset(){
+    if(!confirm('确定清空全部内容并重置？当前内容会先自动存档，可在「历史记录」恢复。')) return;
+    // Archive current state before wiping — reset is recoverable via History.
+    try{
+      await saveNow();
+      await fetch(apiUrl('/api/snapshots'),{method:'POST',headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({project_id:'default', name:'重置前存档 '+new Date().toLocaleString()})});
+    }catch{}
+    const keepApi=state.settings.api;
+    state=defaultState();
+    state.settings.api=keepApi;
+    await saveNow();
+    this.renderAll();
+    this.updateSummary();
+    showToast('已重置');
+  },
+  async toggleDemo(){
+    if(state.meta.isDemo){
+      // Exit demo: reload real state from the server — nothing demo-related
+      // was ever persisted, so the real data is exactly where we left it.
+      const keepApi=state.settings.api;
+      const real=await Store.load();
+      state = real ? mergeWithDefaults(real) : defaultState();
+      state.settings.api=keepApi;
+      state.meta.isDemo=false;
+      $('#demoBanner').classList.remove('show');
+      $('#demoBtn').textContent='查看演示';
+      document.body.classList.remove('is-demo');
+    }else{
+      // Enter demo: make sure real work is persisted first, then swap in
+      // demo data in-memory only. Store.save() refuses while isDemo=true.
+      await saveNow();
+      state.meta.isDemo=true;
+      DemoData.inject(state);
+      $('#demoBanner').classList.add('show');
+      $('#demoBtn').textContent='退出演示';
+      document.body.classList.add('is-demo');
+    }
+    this.renderAll();
+    this.updateSummary();
+  },
+  exportMd(){
+    const parts=[
+      `# Global Brand Building and Marketing Communication`,
+      `导出时间：${new Date().toLocaleString()}`,
+      '',
+      Work1.exportMd?.()||'',
+      Work2.exportMd?.()||'',
+      Work3.exportMd?.()||'',
+      Work4.exportMd?.()||'',
+      Work5.exportMd?.()||''
+    ];
+    // Embed the full state as an HTML comment so the .md round-trips.
+    // Markdown renderers hide comments; importMd() extracts it back.
+    const payload={...state, settings:{...state.settings, api:{...state.settings.api, apiKey:''}}};
+    parts.push('<!-- data:'+JSON.stringify(payload)+' -->');
+    const blob=new Blob([parts.join('\n\n')],{type:'text/markdown;charset=utf-8'});
+    const a=el('a',{href:URL.createObjectURL(blob),download:'brand-workshop.md'});
+    a.click(); URL.revokeObjectURL(a.href);
+  },
+  importMd(){
+    const inp=el('input',{type:'file',accept:'.md,.markdown,.txt'});
+    inp.addEventListener('change', async ()=>{
+      const file=inp.files[0]; if(!file) return;
+      const text=await file.text();
+      const m=text.match(/<!--\s*data:(\{[\s\S]*?\})\s*-->/);
+      if(!m){ showToast('无法识别：文件中没有嵌入的数据块'); return; }
+      let parsed;
+      try{ parsed=JSON.parse(m[1]); }catch{ showToast('数据块解析失败'); return; }
+      if(!confirm('导入将覆盖当前全部内容（当前内容会先自动存档）。继续？')) return;
+      try{
+        // Archive current before overwriting — import is recoverable via History.
+        await saveNow();
+        await fetch(apiUrl('/api/snapshots'),{method:'POST',headers:{'Content-Type':'application/json'},
+          body:JSON.stringify({project_id:'default', name:'导入前存档 '+new Date().toLocaleString()})});
+        const keepApi=state.settings.api;
+        state=mergeWithDefaults(parsed);
+        state.settings.api=keepApi;  // never import API config from a file
+        state.meta.isDemo=false;
+        $('#demoBanner').classList.remove('show');
+        $('#demoBtn').textContent='查看演示';
+        document.body.classList.remove('is-demo');
+        await saveNow();
+        this.renderAll();
+        this.updateSummary();
+        showToast('导入完成');
+      }catch(e){ showToast('导入失败: '+e.message); }
+    });
+    inp.click();
+  }
+};
+
+/* ============================================================
+   HISTORY — snapshot list / named archive / restore
+   ============================================================ */
+const History = {
+  async open(){
+    $('#historyModal').classList.add('open');
+    await this.render();
+  },
+  close(){ $('#historyModal').classList.remove('open'); },
+  async render(){
+    const list=$('#snapList'); list.innerHTML='';
+    let snaps=[];
+    try{ snaps=await (await fetch(apiUrl('/api/snapshots')+'?project_id=default')).json(); }catch{}
+    if(!snaps.length){
+      list.appendChild(el('p',{class:'muted italic'},'还没有历史版本。'));
+      return;
+    }
+    snaps.forEach(s=>{
+      const time=new Date(s.created_at*1000).toLocaleString();
+      const isNamed=s.type==='named';
+      list.appendChild(el('div',{class:'expert-row'},
+        el('div',{style:'flex:1;min-width:0'},
+          el('div',{style:'font-family:var(--font-mono);font-size:13px'},
+            isNamed? s.name : time,
+            isNamed? '' : ' '),
+          el('div',{class:'hint'}, isNamed? time+' · 存档' : '自动保存')
+        ),
+        el('button',{class:'small',onclick:()=>History.restore(s.id)},'恢复')
+      ));
+    });
+  },
+  async create(){
+    const name=$('#snapName').value.trim();
+    if(!name){ showToast('请输入版本名称'); return; }
+    try{
+      await saveNow();  // persist latest edits before archiving
+      await fetch(apiUrl('/api/snapshots'),{method:'POST',headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({project_id:'default', name})});
+      $('#snapName').value='';
+      showToast('已存档');
+      await this.render();
+    }catch(e){ showToast('存档失败: '+e.message); }
+  },
+  async restore(id){
+    if(!confirm('恢复此版本？当前内容会先自动备份。')) return;
+    try{
+      const res=await fetch(apiUrl('/api/snapshots/'+encodeURIComponent(id)+'/restore')+'?project_id=default',{method:'POST'});
+      if(!res.ok) throw new Error('HTTP '+res.status);
+      const data=await res.json();
+      const keepApi=state.settings.api;
+      state=mergeWithDefaults(data.state);
+      state.settings.api=keepApi;
+      state.meta.isDemo=false;
+      $('#demoBanner').classList.remove('show');
+      $('#demoBtn').textContent='查看演示';
+      document.body.classList.remove('is-demo');
+      this.close();
+      App.renderAll();
+      App.updateSummary();
+      showToast('已恢复');
+    }catch(e){ showToast('恢复失败: '+e.message); }
+  }
+};
+
+/* ============================================================
+   SHARED UI COMPONENTS
+   ============================================================ */
+const UI = {
+  stepHeader(num, title, subtitle){
+    return el('div',{class:'step-header'},
+      el('span',{class:'step-number'}, num),
+      el('h2',{}, title+(title.endsWith('.')?'':'.')),
+      subtitle && el('p',{class:'muted italic'}, subtitle)
+    );
+  },
+  label(text){ return el('label',{},text); },
+  field(labelText, ...children){
+    const f=el('div',{class:'field'});
+    if(labelText) f.appendChild(this.label(labelText));
+    children.flat().forEach(c=>f.appendChild(c));
+    return f;
+  },
+  tagsInput(initial=[], placeholder='输入后回车添加'){
+    const wrap=el('div',{class:'chip-row'});
+    const input=el('input',{type:'text',placeholder});
+    let items=[...initial];
+    function render(){
+      wrap.innerHTML='';
+      items.forEach((t,i)=>{
+        const chip=el('span',{class:'chip'}, t,
+          el('button',{type:'button',onclick:()=>{items.splice(i,1);render();}}, '×')
+        );
+        wrap.appendChild(chip);
+      });
+      wrap.appendChild(input);
+    }
+    input.addEventListener('keydown', e=>{
+      if(e.key==='Enter' && input.value.trim()){
+        e.preventDefault();
+        items.push(input.value.trim()); input.value=''; render();
+      }
+    });
+    render();
+    return { el:wrap, get:()=>items, set:arr=>{items=[...arr];render();} };
+  },
+  bar(value, max=100, label){
+    const w=clamp(Number(value)||0,0,max)/max*100;
+    return el('div',{},
+      label && el('div',{style:{display:'flex',justifyContent:'space-between',fontFamily:'var(--font-mono)','font-size':'11px'}},
+        el('span',{},label), el('span',{},Number(value).toFixed(1))),
+      el('div',{style:{height:'4px',background:'var(--maroon-soft)',marginTop:'4px'}},
+        el('div',{style:{height:'100%',background:'var(--maroon)',width:w+'%'}}))
+    );
+  }
+};
+
+/* ============================================================
+   SHARED SVG MATRIX (Work 2 + Work 3)
+   Plumb-scatter style, Atelier palette. No rounded corners.
+   ============================================================ */
+function renderMatrix(opts){
+  const {
+    container, points, xLabel='竞争力', yLabel='吸引力',
+    xCut=null, yCut=null, onSelect=null, showSector=false,
+    sectorAngle=90, sectorRadius=12, selectedId=null,
+    xLabel2='可实施性', yLabel2='合意性'
+  }=opts;
+  container.innerHTML='';
+  const W=640,H=520,L=60,R=24,T=30,B=60;
+  const pw=W-L-R, ph=H-T-B;
+  const xCutVal = xCut==null ? median(points.map(p=>p.x)) : xCut;
+  const yCutVal = yCut==null ? median(points.map(p=>p.y)) : yCut;
+  const x=v=>L+v/10*pw, y=v=>T+(10-v)/10*ph;
+
+  let svg=`<svg class="chart" viewBox="0 0 ${W} ${H}">`;
+  // quadrant backgrounds
+  svg+=`<rect x="${L}" y="${T}" width="${pw}" height="${ph}" fill="#F2EFE8" stroke="#D4CFC4"/>`;
+  const xc=x(xCutVal), yc=y(yCutVal);
+  svg+=`<rect x="${L}" y="${T}" width="${xc-L}" height="${yc-T}" fill="rgba(138,130,117,.10)"/>`;
+  svg+=`<rect x="${xc}" y="${T}" width="${L+pw-xc}" height="${yc-T}" fill="rgba(58,25,15,.08)"/>`;
+  svg+=`<rect x="${xc}" y="${yc}" width="${L+pw-xc}" height="${T+ph-yc}" fill="rgba(180,175,165,.12)"/>`;
+  svg+=`<rect x="${L}" y="${yc}" width="${xc-L}" height="${T+ph-yc}" fill="rgba(139,37,0,.08)"/>`;
+
+  // sector
+  if(showSector){
+    const cx=L, cy=T+ph;
+    const rMax=Math.sqrt(pw*pw+ph*ph);
+    const aMin=(45-sectorAngle/2)*Math.PI/180;
+    const aMax=(45+sectorAngle/2)*Math.PI/180;
+    const x1=cx+sectorRadius/10*pw*Math.cos(aMin);
+    const y1=cy-sectorRadius/10*ph*Math.sin(aMin);
+    const x2=cx+rMax*Math.cos(aMin), y2=cy-rMax*Math.sin(aMin);
+    const x3=cx+rMax*Math.cos(aMax), y3=cy-rMax*Math.sin(aMax);
+    const x4=cx+sectorRadius/10*pw*Math.cos(aMax), y4=cy-sectorRadius/10*ph*Math.sin(aMax);
+    svg+=`<path d="M ${x1} ${y1} L ${x2} ${y2} A ${rMax} ${rMax} 0 0 1 ${x3} ${y3} L ${x4} ${y4} A ${sectorRadius/10*pw} ${sectorRadius/10*ph} 0 0 0 ${x1} ${y1} Z"
+       fill="rgba(58,25,15,.10)" stroke="#3A190F" stroke-width="1" stroke-dasharray="4 3"/>`;
+  }
+
+  // grid
+  for(let v=0;v<=10;v+=2){
+    svg+=`<line x1="${x(v)}" y1="${T}" x2="${x(v)}" y2="${T+ph}" stroke="#D4CFC4" stroke-width=".5"/>`;
+    svg+=`<line x1="${L}" y1="${y(v)}" x2="${L+pw}" y2="${y(v)}" stroke="#D4CFC4" stroke-width=".5"/>`;
+  }
+  // cut lines
+  svg+=`<line x1="${xc}" y1="${T}" x2="${xc}" y2="${T+ph}" stroke="#8A8275" stroke-width="1" stroke-dasharray="4 3"/>`;
+  svg+=`<line x1="${L}" y1="${yc}" x2="${L+pw}" y2="${yc}" stroke="#8A8275" stroke-width="1" stroke-dasharray="4 3"/>`;
+  // axes labels
+  svg+=`<text x="${L+pw/2}" y="${H-18}" text-anchor="middle" font-family="JetBrains Mono" font-size="11" fill="#8A8275">${esc(xLabel)} →</text>`;
+  svg+=`<text x="18" y="${T+ph/2}" transform="rotate(-90 18 ${T+ph/2})" text-anchor="middle" font-family="JetBrains Mono" font-size="11" fill="#8A8275">${esc(yLabel)} →</text>`;
+  // tick labels
+  for(let v=0;v<=10;v+=2){
+    svg+=`<text x="${x(v)}" y="${T+ph+18}" text-anchor="middle" font-family="JetBrains Mono" font-size="10" fill="#8A8275">${v}</text>`;
+    svg+=`<text x="${L-8}" y="${y(v)+3}" text-anchor="end" font-family="JetBrains Mono" font-size="10" fill="#8A8275">${v}</text>`;
+  }
+  // quadrant labels
+  svg+=`<text x="${L+pw-8}" y="${T+16}" text-anchor="end" font-family="Lora" font-style="italic" font-size="13" fill="#8A8275">${esc(opts.qHighHigh||'明星')}</text>`;
+  svg+=`<text x="${L+8}" y="${T+16}" font-family="Lora" font-style="italic" font-size="13" fill="#8A8275">${esc(opts.qHighYLowX||'愿景')}</text>`;
+  svg+=`<text x="${L+pw-8}" y="${T+ph-8}" text-anchor="end" font-family="Lora" font-style="italic" font-size="13" fill="#8A8275">${esc(opts.qlowYHighX||'产能')}</text>`;
+  svg+=`<text x="${L+8}" y="${T+ph-8}" font-family="Lora" font-style="italic" font-size="13" fill="#8A8275">${esc(opts.qLowLow||'淘汰')}</text>`;
+
+  // points
+  points.forEach((p,i)=>{
+    const isSel=p.id===selectedId;
+    svg+=`<circle cx="${x(p.x)}" cy="${y(p.y)}" r="7" fill="${isSel?'#3A190F':'#F2EFE8'}" stroke="#3A190F" stroke-width="1.5" data-pid="${esc(p.id)}" style="cursor:pointer"/>`;
+    const label=p.label.length>10?p.label.slice(0,10)+'…':p.label;
+    svg+=`<text x="${x(p.x)+10}" y="${y(p.y)-9}" font-family="JetBrains Mono" font-size="11" fill="#1A1A1A" pointer-events="none">${esc(label)}</text>`;
+  });
+  svg+=`</svg>`;
+  container.innerHTML=svg;
+
+  // click handler
+  if(onSelect){
+    container.querySelectorAll('circle[data-pid]').forEach(c=>{
+      c.addEventListener('click', ()=>onSelect(c.getAttribute('data-pid')));
+    });
+  }
+}
+
+/* ============================================================
+   HORIZONTAL BAR CHART (F5-style, Atelier)
+   ============================================================ */
+// Keyed by logical step (work+step), NOT the element — renderStep() recreates
+// the container on every visit, so an element WeakSet would replay each time.
+const _revealedSteps = new Set();
+function _stepKey(container){
+  const step=container.closest('.step');
+  if(!step) return null;
+  const w=step.closest('.workshop')?.dataset.workshop||'?';
+  return w+'/'+step.dataset.step;
+}
+function renderBarChart(container, items, opts={}){
+  const { unit='', max=null, height=14 }=opts;
+  const m=max ?? Math.max(1,...items.map(i=>i.value));
+  container.innerHTML='';
+  // Bars grow from 0 only the first time a step's results are *visible*.
+  // At startup renderAll() builds hidden workshops too — don't count those as
+  // revealed, or the reveal plays invisibly and never fires when the user
+  // actually visits the step. Later visits/data updates render instantly.
+  const key=_stepKey(container);
+  const step=container.closest('.step');
+  const visible = !!step && step.classList.contains('active') &&
+    step.closest('.workshop')?.classList.contains('active');
+  const reveal = visible && key!=null && !_revealedSteps.has(key);
+  if(reveal) _revealedSteps.add(key);
+  const fills=[];
+  items.forEach(it=>{
+    const frac=clamp(it.value/m,0,1);
+    const fill=el('div',{class:'bar-fill',
+      style:{background:it.color||'var(--maroon)',transform:'scaleX('+(reveal?0:frac)+')'}});
+    const row=el('div',{class:'bar-row'+(reveal?' anim':'')},
+      el('div',{style:{display:'flex','justify-content':'space-between','font-family':'var(--font-mono)','font-size':'11px',marginBottom:'3px'}},
+        el('span',{},it.label), el('span',{},it.value.toFixed(1)+unit)),
+      el('div',{class:'bar-track',style:{height:height+'px'}}, fill)
+    );
+    container.appendChild(row);
+    fills.push({fill,frac});
+  });
+  if(reveal){
+    // Double rAF ensures the initial scaleX(0) is painted before we retarget.
+    requestAnimationFrame(()=>requestAnimationFrame(()=>{
+      fills.forEach(f=>f.fill.style.transform='scaleX('+f.frac+')');
+    }));
+  }
+}
+
+/* ============================================================
+   HUNDRED FIELD (L14 dot grid, 100 dots)
+   ============================================================ */
+function renderHundredField(container, segments){
+  // segments: [{label, count, color}]
+  const total=segments.reduce((a,b)=>a+b.count,0);
+  const W=240,H=30,dot=4,gap=2;
+  let html=`<svg class="chart" viewBox="0 0 ${W} ${H}" style="max-width:${W}px">`;
+  let i=0;
+  segments.forEach(seg=>{
+    for(let k=0;k<seg.count;k++){
+      const col=i%20, row=Math.floor(i/20);
+      html+=`<rect x="${col*(dot+gap)}" y="${row*(dot+gap)}" width="${dot}" height="${dot}" fill="${seg.color||'#3A190F'}"/>`;
+      i++;
+    }
+  });
+  html+=`</svg>`;
+  const legend=el('div',{class:'chip-row',style:'margin-top:6px'},
+    ...segments.map(s=>el('span',{class:'chip'},
+      el('span',{style:{display:'inline-block',width:'8px',height:'8px',background:s.color||'#3A190F',marginRight:'4px'}}),
+      s.label+' '+s.count+'%')));
+  container.innerHTML='';
+  container.insertAdjacentHTML('beforeend', html);
+  container.appendChild(legend);
+}
+
+/* placehold for workshop modules — they are appended below and assigned */
+var Work1={steps:[],defaultData:()=>({})};
+var Work2={steps:[],defaultData:()=>({})};
+var Work3={steps:[],defaultData:()=>({})};
+var Work4={steps:[],defaultData:()=>({})};
+var Work5={steps:[],defaultData:()=>({})};
+</script>
+
+<!-- ============================================================
+     WORKSHOP MODULES (injected below)
+     ============================================================ -->
+<script src="workshop1.js?v=50001"></script>
+<script src="workshop2.js?v=50002"></script>
+<script src="workshop3.js?v=50003"></script>
+<script src="workshop4.js?v=50004"></script>
+<script src="workshop5.js?v=50005"></script>
+<script src="demo-data.js?v=50006"></script>
+<script>
+document.addEventListener('DOMContentLoaded', ()=>App.init());
+</script>
+</body>
+</html>

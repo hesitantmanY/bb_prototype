@@ -1,0 +1,137 @@
+<!doctype html>
+<html lang="zh">
+<head>
+<meta charset="utf-8" />
+<title>开放题主题 · HALLMARK 样式预览</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,500;0,700;1,500&family=Lora:ital,wght@0,400;0,500;1,400&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+<style>
+  :root{
+    --bg:#F2EFE8; --panel:#E8DFD8; --ink:#2B1F18; --muted:#8A8275; --line:#D4CFC4;
+    --maroon:#3A190F; --maroon-soft:#E8DFD8;
+    --font-display:'Playfair Display','Noto Serif SC',Georgia,"Songti SC","SimSun",serif;
+    --font-body:'Lora','Noto Serif SC',Georgia,"Songti SC","SimSun",serif;
+    --font-mono:'JetBrains Mono','Noto Sans SC',ui-monospace,"SF Mono","Cascadia Code","Microsoft YaHei",sans-serif;
+    --ease-out:cubic-bezier(0.23,1,0.32,1);
+  }
+  *{box-sizing:border-box}
+  body{
+    background:var(--bg);color:var(--ink);
+    font-family:var(--font-body);font-size:16px;line-height:1.65;
+    -webkit-font-smoothing:antialiased;
+    margin:0;padding:48px 56px;
+  }
+  .step-header{margin-bottom:36px}
+  .step-number{
+    font-family:var(--font-mono);font-size:12px;letter-spacing:.2em;color:var(--muted);
+    text-transform:uppercase;margin-bottom:8px;display:block;
+  }
+  h2{font-family:var(--font-display);font-weight:900;font-size:40px;margin:0;line-height:1.2}
+  h3{font-family:var(--font-display);font-style:italic;font-weight:700;color:var(--maroon);font-size:22px;margin:32px 0 18px}
+
+  .hallmark-list{margin:14px 0 28px;max-width:980px}
+  .hallmark-item{
+    display:grid;
+    grid-template-columns:56px 1fr 260px;
+    gap:28px;
+    padding:26px 0 24px;
+    border-top:1px solid var(--line);
+    align-items:start;
+  }
+  .hallmark-item:last-child{border-bottom:1px solid var(--line)}
+  .hallmark-num{
+    font-family:var(--font-mono);
+    font-size:11px;letter-spacing:.18em;
+    color:var(--muted);text-transform:uppercase;
+    padding-top:8px;
+  }
+  .hallmark-headline{
+    font-family:var(--font-display);
+    font-style:italic;font-weight:500;
+    font-size:24px;line-height:1.3;color:var(--ink);
+    margin:0 0 14px;letter-spacing:-.005em;
+  }
+  .hallmark-quote{
+    display:block;margin:6px 0;
+    padding:4px 0 4px 14px;
+    border-left:2px solid var(--maroon);
+    font-style:italic;color:var(--ink);
+    font-size:14px;line-height:1.65;
+    opacity:.78;
+  }
+  .hallmark-quote::before{content:'“';margin-right:2px;color:var(--maroon);font-style:normal}
+  .hallmark-quote::after{content:'”';margin-left:2px;color:var(--maroon);font-style:normal}
+  .hallmark-right .hallmark-label{
+    display:block;
+    font-family:var(--font-mono);
+    font-size:10px;letter-spacing:.22em;
+    text-transform:uppercase;
+    color:var(--muted);
+    margin-bottom:12px;
+  }
+  .hallmark-themes{display:flex;flex-direction:column;gap:6px;font-size:14px;color:var(--ink)}
+  .hallmark-theme-row{
+    display:flex;align-items:baseline;gap:10px;
+    padding-bottom:6px;border-bottom:1px dotted var(--line);
+  }
+  .hallmark-theme-row:last-child{border-bottom:none;padding-bottom:0}
+  .hallmark-theme-label{flex:1;min-width:0}
+  .hallmark-theme-count{
+    font-family:var(--font-mono);
+    font-size:11px;color:var(--maroon);
+    min-width:28px;text-align:right;letter-spacing:.04em;
+  }
+  .hallmark-empty{font-style:italic;color:var(--muted);font-size:13px;line-height:1.6}
+  .hallmark-action{margin-top:14px}
+  .muted{color:var(--muted)}
+  .meta-line{font-family:var(--font-mono);font-size:11px;color:var(--muted);letter-spacing:.1em;text-transform:uppercase;margin-top:8px}
+</style>
+</head>
+<body>
+  <div class="step-header">
+    <span class="step-number">STEP 4</span>
+    <h2>调研数据分析.</h2>
+    <p class="muted">分布、均值、主题聚类；自动聚合并呈现在 Atelier 图表中。</p>
+  </div>
+
+  <h3>开放题主题</h3>
+  <div class="hallmark-list">
+    <article class="hallmark-item">
+      <div class="hallmark-num">01</div>
+      <div class="hallmark-mid">
+        <h4 class="hallmark-headline">你最近一次买茶的场景是什么？</h4>
+        <p class="hallmark-quote">新年送礼给上司，想显得有文化品位</p>
+        <p class="hallmark-quote">自己在家下午茶，替代咖啡</p>
+      </div>
+      <div class="hallmark-right">
+        <span class="hallmark-label">KEY POINTS</span>
+        <div class="hallmark-themes">
+          <div class="hallmark-theme-row"><span class="hallmark-theme-label">送礼</span><span class="hallmark-theme-count">×4</span></div>
+          <div class="hallmark-theme-row"><span class="hallmark-theme-label">自饮仪式</span><span class="hallmark-theme-count">×3</span></div>
+          <div class="hallmark-theme-row"><span class="hallmark-theme-label">商务场景</span><span class="hallmark-theme-count">×2</span></div>
+        </div>
+      </div>
+    </article>
+
+    <article class="hallmark-item">
+      <div class="hallmark-num">02</div>
+      <div class="hallmark-mid">
+        <h4 class="hallmark-headline">你希望品牌为你解决什么问题？</h4>
+        <p class="hallmark-quote">告诉我这泡茶是哪位师傅做的</p>
+        <p class="hallmark-quote">盒子能直接当花器就好</p>
+      </div>
+      <div class="hallmark-right">
+        <span class="hallmark-label">KEY POINTS</span>
+        <div class="hallmark-themes">
+          <div class="hallmark-theme-row"><span class="hallmark-theme-label">产地透明</span><span class="hallmark-theme-count">×3</span></div>
+          <div class="hallmark-theme-row"><span class="hallmark-theme-label">可持续包装</span><span class="hallmark-theme-count">×2</span></div>
+          <div class="hallmark-theme-row"><span class="hallmark-theme-label">持续发现</span><span class="hallmark-theme-count">×2</span></div>
+        </div>
+      </div>
+    </article>
+  </div>
+
+  <p class="meta-line">END · 开放题主题</p>
+</body>
+</html>

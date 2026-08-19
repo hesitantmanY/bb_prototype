@@ -1,0 +1,16 @@
+# Secrets — never commit
+server/config.yaml
+server/.env
+
+# User data — version snapshots
+server/data/
+
+# Logs
+*.log
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+.venv/
+venv/
