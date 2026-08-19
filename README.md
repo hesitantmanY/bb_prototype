@@ -1,11 +1,11 @@
 # Global Brand Building and Marketing Communication
 
-一个面向"品牌国际化战略"课程的完整工具：5 个工作坊串联 SBU → 目标市场 → 价值主张 → 营销组合 → 策划书，含 LLM 合成调研、Delphi 专家权重、LDA 主题建模、最优决策扇面等方法。
+一个面向"品牌国际化战略"的完整工具：5 个工作坊串联 SBU → 目标市场 → 价值主张 → 营销组合 → 策划书，含 LLM 合成调研、Delphi 专家权重、LDA 主题建模、最优决策扇面等方法。
 
 ## 架构
 
 - **前端**：`docs/global-brand-building.html` + 5 个 `workshopN.js` 模块，全部纯原生 JS。
-- **后端**（必需）：`server/` 下的 FastAPI，端口 `8765`。负责：
+- **后端**：`server/` 下的 FastAPI，端口 `8765`。负责：
   - **配置与数据持久化**：API 配置存 `server/config.yaml`，API Key 存 `server/.env`（均已 git-ignore）；工作内容存 `server/data/default/current.json`。
   - **LLM 请求代理**：所有 AI 调用经后端转发，API Key 不会到达浏览器。
   - **版本回溯**：每次保存自动建快照（保留最近 30 个），支持手动命名存档与一键恢复。
@@ -14,7 +14,7 @@
 
 ## 运行
 
-### 1. 启动 Python 后端（必需）
+### 1. 启动 Python 后端
 
 ```bash
 cd server
