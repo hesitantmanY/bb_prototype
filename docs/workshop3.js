@@ -55,7 +55,7 @@ Work3.renderStep = function(id){
   if(!sec) return;
   if(sec.dataset.rendered==='1'){ Work3.refreshDynamic(id); return; }
   sec.innerHTML='';
-  sec.appendChild(UI.stepHeader('STEP '+Work3.steps.findIndex(s=>s.id===id),
+  sec.appendChild(UI.stepHeader('STEP '+(Work3.steps.findIndex(s=>s.id===id)+1),
     Work3.titles[id], Work3.subtitles[id]));
   const fn=Work3.render[id]; if(fn) fn(sec);
   sec.dataset.rendered='1';
@@ -811,7 +811,7 @@ Work3.exportMd = function(){
   }
   out+='### 4. 卖点矩阵\n';
   Work3.computeMatrix().sort((a,b)=>(b.x+b.y)-(a.x+a.y)).forEach(c=>{
-    out+=`- **${c.name}**：合意性 ${c.y.toFixed(2)} / 可实施性 ${c.x.toFixed(2)} ${c.selected?'✓':''}\n`;
+    out+=`- **${c.name}**：合意性 ${c.y.toFixed(2)} / 可实施性 ${c.x.toFixed(2)} ${c.selected?'*':''}\n`;
   });
   out+=`\n### 5. 价值主张\n> ${d.proposition.chosenValueText}\n\n**定位句**：${d.proposition.positioningStatement}\n\n**品牌人格**：${d.proposition.mbti} ${(d.proposition.personalityTraits||[]).join('/')}\n\n**Slogan**：${d.proposition.chosenSlogan}\n`;
   return out;

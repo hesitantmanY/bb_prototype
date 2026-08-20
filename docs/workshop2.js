@@ -44,7 +44,7 @@ Work2.renderStep = function(id){
   if(sec.dataset.rendered==='1'){ Work2.refreshDynamic(id); return; }
   sec.innerHTML='';
   sec.appendChild(UI.stepHeader(
-    'STEP '+Work2.steps.findIndex(s=>s.id===id),
+    'STEP '+(Work2.steps.findIndex(s=>s.id===id)+1),
     Work2.titles[id], Work2.subtitles[id]
   ));
   const fn=Work2.render[id]; if(fn) fn(sec);
@@ -460,7 +460,7 @@ Work2.render.matrix = function(sec){
     const q=p.x>=xCut&&p.y>=yCut?'明星':p.x<xCut&&p.y>=yCut?'潜力':p.x>=xCut&&p.y<yCut?'产能':'放弃';
     const tr=el('tr',{},
       el('td',{},String(i+1)),
-      el('td',{style:{'font-style':'italic'}},p.name+(p.id===state.work2.matrix.selectedMarketId?' ✓':'')) ,
+      el('td',{style:{'font-style':'italic'}},p.name+(p.id===state.work2.matrix.selectedMarketId?' *':'')) ,
       el('td',{class:'mono'},p.y.toFixed(2)),
       el('td',{class:'mono'},p.x.toFixed(2)),
       el('td',{},el('span',{class:'tag '+(q==='明星'?'maroon':'')},q)),

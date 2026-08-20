@@ -20,11 +20,11 @@ Work1.defaultData = () => ({
     threeQuestions: { customer:false, channel:false, brand:false }, // 业务三问：任一为 true → 独立 SBU
     boundary:''   // 边界声明：与母公司客户/渠道/品牌/损益四维的隔离点与复用资源
   },
-  // ② 环境（Step 2 业务基本情况 + Step 3 竞争者）
+  // ② 环境（Step 2 业务基本情况 + Step 3 竞争者 + 我们的资源盘点）
   environment: {
     political:'', economic:'', social:'', technological:'',
-    industry:'', trends:'',
-    // 业务基本情况：每维 实况/目标/数据来源；最近业绩必含 市场份额/ROI/年增长率
+    industry:'',
+    // 业务基本情况：每维 实况/目标；最近业绩必含 市场份额/ROI/年增长率
     basics: {
       scale:    { actual:'', target:'', source:'' },
       scope:    { actual:'', target:'', source:'' },
@@ -41,10 +41,20 @@ Work1.defaultData = () => ({
     competitors: [
       // { id, name, price, strengths, weaknesses, position }
     ],
-    // 5 维优劣势 + 微笑曲线收口
-    edges: {
-      manufacturing:'', technology:'', brand:'', channel:'', compliance:'',
-      defensive:'', critical:'', structural:'', smileCurve:''
+    // 我们的资源盘点（内部·我们视角）：5 维 + 3 段总结 + 收口 + 趋势
+    ourCapabilities: {
+      // 5 维能力（通用 5 维，适用于任何 SBU 行业）
+      delivery:'',    // 交付：产品或服务
+      core:'',        // 核心：能力/资源/关系
+      brand:'',       // 品牌：资产/认知/溢价
+      customer:'',    // 客户：触达/渠道/关系
+      compliance:'',  // 合规：监管/资质/门槛
+      // 3 段总结
+      defensive:'', critical:'', structural:'',
+      // 微笑曲线收口
+      smileCurve:'',
+      // 关键趋势
+      trends:''
     }
   },
   // ③ 客户画像
@@ -130,7 +140,7 @@ Work1.rerender = function(id){
 Work1._renderFull = function(sec, id){
   sec.innerHTML='';
   sec.appendChild(UI.stepHeader(
-    'STEP '+Work1.steps.findIndex(s=>s.id===id),
+    'STEP '+(Work1.steps.findIndex(s=>s.id===id)+1),
     Work1.titles[id],
     Work1.subtitles[id]
   ));
@@ -150,17 +160,17 @@ Work1.titles = {
   recommendations:'策略建议'
 };
 Work1.subtitles = {
-  sbu:'Step 1：用业务三问筛出独立 SBU，写清 SBU 声明与四维边界（客户/渠道/品牌/损益）。',
-  environment:'Step 2-3：PEST 宏观扫描 + 六维业务基本情况（实况/目标）+ 5-7 家竞品对标与微笑曲线。',
-  personas:'Step 4：3-6 个画像，并按场景拆 4×4 感知价值矩阵（总利益 − 总成本），定位决定性短板。',
-  metrics:'Step 5：≥5 个一级指标 × ≥3 测评点，每个测评点 1-10 分（首年预测/三年目标）；调研后回填实测分并算偏差。',
-  survey:'验证层：让画像作为合成受访者回答李克特 5 点问卷（AI-Human Hybrids, JM 2025），实测用于回填上一步。',
+  sbu:'用业务三问筛出独立 SBU，写清 SBU 声明与四维边界（客户/渠道/品牌/损益）。',
+  environment:'PEST 宏观扫描 + 六维业务基本情况（实况/目标）+ 5-7 家竞品对标与微笑曲线。',
+  personas:'3-6 个画像，并按场景拆 4×4 感知价值矩阵（总利益 − 总成本），定位决定性短板。',
+  metrics:'≥5 个一级指标 × ≥3 测评点，每个测评点 1-10 分（首年预测/三年目标）；调研后回填实测分并算偏差。',
+  survey:'验证层：让画像作为合成受访者回答李克特 5 点问卷，实测用于回填上一步。',
   analysis:'验证层：分布/均值/主题聚类，把李克特 1-5 均值映射为 1-10 回填指标实测分，标出分差 >1.5 的认知断点。',
   values:'调研后综合：从功能/情感/社会/认知/条件五维提炼客户价值要素。',
   recommendations:'按"先修最薄弱层、再修分差最大项"输出短中长期建议，风险单列。'
 };
 
-// 李克特 1-5 → 价值评分 1-10（线性映射，仅用于预测 vs 实测对照，不宣称等价）
+// 李克特 1-5 → 价值评分 1-10（线性映射，仅用于预测与实测对照，不宣称等价）
 Work1.likertToScore = mean => (mean==null||isNaN(mean))?null:clamp(((mean-1)/4)*9+1, 1, 10);
 // 把调研实测分回填到 metrics 二级指标的 actual
 Work1.backfillScores = function(){
@@ -405,7 +415,7 @@ Work1.render.sbu = function(sec){
   const qs = [
     ['customer', '客户是否不同？', 'B 端 / C 端、整机厂 / 经销商、自有用户 / 客户配套……'],
     ['channel', '渠道是否不同？', 'ODM 配套 / Amazon 零售 / 经销批销 / 自建 DTC……'],
-    ['brand', '品牌是否独立露出？', '贴客户 logo / 自有 logo、母品牌子品牌关系……']
+    ['brand', '品牌是否独立露出？', '贴客户 logo / 自有 logo、 母品牌子品牌关系……']
   ];
   const list = el('div', {class:'hallmark-list'});
   qs.forEach((pair, i) => {
@@ -459,7 +469,7 @@ Work1.render.sbu = function(sec){
   const anyIndependent = !!(tq.customer || tq.channel || tq.brand);
   const verdict = el('div', {class:'sbu-verdict', 'data-state': anyIndependent ? 'independent' : 'extension'},
     el('span', {class:'v-label'}, '→ Verdict'),
-    el('span', {class:'v-text'}, anyIndependent ? '独立 SBU · 需在四维（客户/渠道/品牌/损益）至少一项独立核算' : '可能只是现有业务延伸（三问皆否）'),
+    el('span', {class:'v-text'}, ''),
     el('span', {class:'v-pill'}, anyIndependent ? 'Independent' : 'Extension')
   );
   sec.appendChild(verdict);
@@ -473,13 +483,16 @@ Work1.render.sbu = function(sec){
     if (any) {
       verdict.dataset.state = 'independent';
       verdict.querySelector('.v-pill').textContent = 'Independent';
-      verdict.querySelector('.v-text').textContent = '独立 SBU · 需在四维（客户/渠道/品牌/损益）至少一项独立核算（' + dims.join(' / ') + '）';
+      //verdict.querySelector('.v-text').textContent = '独立 SBU';
+      verdict.querySelector('.v-text').textContent = '独立 SBU · ' + dims.join(' / ') ;
+
     } else {
       verdict.dataset.state = 'extension';
       verdict.querySelector('.v-pill').textContent = 'Extension';
-      verdict.querySelector('.v-text').textContent = '可能只是现有业务延伸（三问皆否）';
+      verdict.querySelector('.v-text').textContent = '可能只是现有业务延伸';
     }
   }
+  updateVerdict(); // 用与勾选后一致的逻辑初始化判定文案
 
   // === 边界声明 CALLOUT（沿用全局 .callout，新增 .sbu-callout 修饰） ===
   const callout = el('div', {class:'callout sbu-callout'},
@@ -507,22 +520,54 @@ Work1.render.environment = function(sec){
   ['scale','scope','products','customers','supply'].forEach(k=>{ if(!d.basics[k]) d.basics[k]={actual:'',target:'',source:''}; });
   if(!d.basics.performance) d.basics.performance={share:{},roi:{},growth:{}};
   ['share','roi','growth'].forEach(k=>{ if(!d.basics.performance[k]) d.basics.performance[k]={actual:'',target:'',source:''}; });
-  if(!d.edges || typeof d.edges!=='object') d.edges={manufacturing:'',technology:'',brand:'',channel:'',compliance:'',defensive:'',critical:'',structural:'',smileCurve:''};
-  // 把旧的 10 个分散字段合并到单一文本框 d.edgesText（首次渲染时迁移一次）
-  if(typeof d.edgesText !== 'string'){
-    const parts=[];
-    const pushPair=(label,val)=>{ if(val) parts.push(`【${label}】${val}`); };
-    pushPair('制造', d.edges.manufacturing);
-    pushPair('技术', d.edges.technology);
-    pushPair('品牌', d.edges.brand);
-    pushPair('渠道', d.edges.channel);
-    pushPair('合规', d.edges.compliance);
-    if(d.edges.defensive) parts.push(`【防御性优势】${d.edges.defensive}`);
-    if(d.edges.critical) parts.push(`【关键劣势】${d.edges.critical}`);
-    if(d.edges.structural) parts.push(`【结构性劣势】${d.edges.structural}`);
-    if(d.edges.smileCurve) parts.push(`【微笑曲线收口】${d.edges.smileCurve}`);
-    d.edgesText = parts.join('\n\n');
+  // 我们的资源盘点（首次渲染时做一次性迁移）
+  if(!d.ourCapabilities || typeof d.ourCapabilities!=='object'){
+    d.ourCapabilities={delivery:'',core:'',brand:'',customer:'',compliance:'',defensive:'',critical:'',structural:'',smileCurve:'',trends:''};
   }
+  // 通用 5 维：旧字段名 → 新字段名（一次性迁移）
+  const oldToNew = {manufacturing:'delivery', technology:'core', channel:'customer'};
+  Object.keys(oldToNew).forEach(oldKey=>{
+    if(d.ourCapabilities[oldKey] && !d.ourCapabilities[oldToNew[oldKey]]){
+      d.ourCapabilities[oldToNew[oldKey]] = d.ourCapabilities[oldKey];
+    }
+    delete d.ourCapabilities[oldKey];
+  });
+  // 兼容旧数据：旧分散字段 d.edges → 迁移到 ourCapabilities（带字段名映射）
+  if(d.edges && typeof d.edges==='object'){
+    Object.keys(oldToNew).forEach(oldKey=>{
+      if(d.edges[oldKey] && !d.ourCapabilities[oldToNew[oldKey]]){
+        d.ourCapabilities[oldToNew[oldKey]] = d.edges[oldKey];
+      }
+    });
+    ['brand','compliance','defensive','critical','structural','smileCurve'].forEach(k=>{
+      if(d.edges[k] && !d.ourCapabilities[k]) d.ourCapabilities[k] = d.edges[k];
+    });
+  }
+  // 兼容旧数据：旧合并文本 d.edgesText → 解析后填 ourCapabilities（一次性）
+  if(typeof d.edgesText === 'string' && d.edgesText.trim()){
+    const parseOldEdgesText = (txt) => {
+      const out = {};
+      // 匹配 【标签】内容（直到下一个【或结尾）
+      const re = /【([^】]+)】([\s\S]*?)(?=【|$)/g;
+      const map = {
+        '制造':'delivery','技术':'core','品牌':'brand','渠道':'customer','合规':'compliance',
+        '防御性优势':'defensive','关键劣势':'critical','结构性劣势':'structural',
+        '微笑曲线收口':'smileCurve','关键趋势':'trends'
+      };
+      let m;
+      while((m = re.exec(txt)) !== null){
+        const key = map[m[1].trim()];
+        if(key && !out[key]) out[key] = m[2].trim();
+      }
+      return out;
+    };
+    const parsed = parseOldEdgesText(d.edgesText);
+    Object.keys(parsed).forEach(k=>{
+      if(!d.ourCapabilities[k]) d.ourCapabilities[k] = parsed[k];
+    });
+  }
+  // 兼容旧数据：环境顶层的 trends → 迁移到 ourCapabilities.trends
+  if(d.trends && !d.ourCapabilities.trends) d.ourCapabilities.trends = d.trends;
 
   // —— PEST ——
   const pest=[
@@ -550,35 +595,39 @@ Work1.render.environment = function(sec){
   sec.appendChild(grid);
   sec.appendChild(el('hr',{class:'rule'}));
 
-  // —— 业务基本情况（Step 2：六维实况/目标/来源）——
-  sec.appendChild(el('h3',{},'业务基本情况（实况 / 目标 / 数据来源）'));
-  sec.appendChild(el('p',{class:'sbu-sub-lead'},'用六维表把业务现状结构化：规模与员工 / 业务范围 / 产品线 / 客户 / 供应链 / 最近业绩。每一维同时填实况（历史或当下数据）与目标（3-5 年期望值），概念阶段业务允许实况为空但目标必填并附推导依据。'));
+  // —— 业务基本情况（Step 2：六维实况/目标）——
+  sec.appendChild(el('h3',{},'业务基本情况（实况 / 目标）'));
+  sec.appendChild(el('p',{class:'sbu-sub-lead'},'用六维表把业务现状结构化：规模与员工 / 业务范围 / 产品线 / 客户 / 供应链 / 最近业绩。每一维同时填实况（历史或当下数据）与目标（3-5 年期望值），概念阶段业务允许实况为空但目标必填。'));
   const b=d.basics;
   const trio=(obj,phActual,phTarget)=>el('div',{class:'basics-trio'},
     el('input',{type:'text',value:obj.actual||'',placeholder:phActual||'实况',oninput:e=>{obj.actual=e.target.value;autosave()}}),
-    el('input',{type:'text',value:obj.target||'',placeholder:phTarget||'目标',oninput:e=>{obj.target=e.target.value;autosave()}}),
-    el('input',{type:'text',value:obj.source||'',placeholder:'数据来源',oninput:e=>{obj.source=e.target.value;autosave()}}));
+    el('input',{type:'text',value:obj.target||'',placeholder:phTarget||'目标',oninput:e=>{obj.target=e.target.value;autosave()}}));
   const basicsRow=(title,obj,phA,phT)=>el('div',{class:'basics-row'},
     el('span',{class:'basics-label'},title), trio(obj,phA,phT));
   sec.appendChild(basicsRow('规模与员工（成立时间/面积/人数/资质）', b.scale));
   sec.appendChild(basicsRow('业务范围（做什么 / 不做什么，排除项必写）', b.scope));
   sec.appendChild(basicsRow('产品 / 业务线（SKU × 定价 × 场景 × 销量占比）', b.products));
   sec.appendChild(basicsRow('客户（直接客户/渠道/与母公司差异）', b.customers));
-  sec.appendChild(basicsRow('供应链（来源/复用vs新增/瓶颈）', b.supply));
+  sec.appendChild(basicsRow('供应链（来源/复用与新增/瓶颈）', b.supply));
   sec.appendChild(el('div',{class:'basics-row'},
     el('span',{class:'basics-label'},'最近业绩 · 市场份额'), trio(b.performance.share)));
   sec.appendChild(el('div',{class:'basics-row'},
     el('span',{class:'basics-label'},'最近业绩 · ROI'), trio(b.performance.roi)));
   sec.appendChild(el('div',{class:'basics-row'},
     el('span',{class:'basics-label'},'最近业绩 · 年增长率'), trio(b.performance.growth)));
-  sec.appendChild(el('hr',{class:'rule'}));
 
-  // —— 竞争者（Step 3）——
-  sec.appendChild(el('h3',{},'竞争者对标（建议 5-7 家）'));
+  // —— 竞争者与我们的资源盘点（Step 3：内部·我们）——
+  sec.appendChild(el('h3',{},'竞争者与资源盘点'));
+  //sec.appendChild(el('p',{class:'sbu-sub-lead'},
+    //'先看外部（市场 / 竞品），再看内部 。'));
   const mkField=(label,value,onInput,rows,ph)=>el('div',{class:'field field-h'},
     el('label',{},label), el('textarea',{rows,placeholder:ph||'',oninput:onInput},value||''));
+  // 3.1 市场格局 [外部·市场]
+  //sec.appendChild(el('h4',{class:'sub-section'},'3.1 市场格局 [外部·市场]'));
   sec.appendChild(mkField('市场格局摘要', d.industry, e=>{d.industry=e.target.value;autosave()}, 4,
-    '用 3-5 句话回答：这个市场由谁主导（活跃品牌数 / Top 玩家）？渗透到什么程度（增量 vs 替换）？区域与价格带怎么分布？是否存在未被占领的垂直定位空白？这一段为后续定位陈述与差异化提供事实基础。'));
+    '这个市场由谁主导（活跃品牌数 / 头部）？渗透到什么程度（增量/替换）？区域与价格带怎么分布？是否存在未被占领的垂直定位空白？'));
+  // 3.2 竞品对标 [外部·竞品]
+  //sec.appendChild(el('h4',{class:'sub-section'},'3.2 竞品对标 [外部·竞品]'));
 
   // competitor table
   const tbl=el('table',{class:'data competitor-table'});
@@ -604,13 +653,101 @@ Work1.render.environment = function(sec){
     autosave(); Work1.rerender('environment');
   }},'+ 添加竞品'));
 
-  // 5-dim edges + smile curve + trends（合并为单一文本框 · 与"市场格局摘要"同款）
-  sec.appendChild(el('h4',{},'五维优劣势判断'));
-  sec.appendChild(el('p',{class:'sbu-sub-lead'},
-    '用 5 个维度（制造 / 技术 / 品牌 / 渠道 / 合规）逐一回答优劣势，再分别用 3 段总结防御性优势、关键劣势、结构性劣势，最后落到微笑曲线收口。'));
-  sec.appendChild(mkField('五维优劣势 · 防御收口 · 关键趋势',
-    d.edgesText, e => { d.edgesText = e.target.value; autosave(); }, 12,
-    '【制造】我们的制造能力如何（成本 / 工艺 / 产能 / 复用 vs 新建）\n【技术】技术壁垒与代差\n【品牌】品牌资产 / 知名度 / 溢价能力\n【渠道】渠道深度与广度\n【合规】监管 / 资质 / 准入门槛\n\n【防御性优势】对手短期难复制的 1-2 点（最值钱）\n【关键劣势】必须补、客户直接感知的致命短板\n【结构性劣势】受资源 / 位置限制、宜绕开而非硬拼的劣势\n\n【微笑曲线收口】优势落在价值链哪一端（研发 / 品牌 / 渠道）？劣势落在哪一端？这决定后续定位方向。\n\n【关键趋势】3 个值得追踪的方向（例：节气营销、可追溯供应链、KOC 内容种草、私域订阅…）'));
+  // 外部（3.1 市场 + 3.2 竞品）→ 内部（3.3 资源盘点）的分界
+  sec.appendChild(el('hr',{class:'rule'}));
+
+  // 3.3 我们的资源盘点（4 步手风琴：5 维 → 3 段 → 收口 → 趋势）
+  sec.appendChild(el('h4',{},'资源盘点'));
+  // 手风琴：4 步
+  const cap = d.ourCapabilities;
+  const capField = (label, key, ph, rows, extraClass) => {
+    const labelDiv = el('div',{class:'cap-field-label'},
+      label,
+      el('span',{class:'zh'}, ph || '')
+    );
+    const value = cap[key] || '';
+    const input = el('textarea',{
+      class:'cap-field-input'+(extraClass?' '+extraClass:''),
+      rows: rows||2,
+      oninput: e => { cap[key] = e.target.value; autosave(); }
+    });
+    input.value = value;
+    return el('div',{class:'cap-field'}, labelDiv, input);
+  };
+  // 步骤构造
+  const mkAccStep = (idx, tag, title, question, openByDefault, contentFn) => {
+    const id = 'cap-acc-' + Math.random().toString(36).slice(2,9);
+    const item = el('article',{class:'cap-acc-item'+(openByDefault?' open':''), id:id},
+      el('div',{class:'cap-acc-head', onclick:()=>{
+        document.getElementById(id).classList.toggle('open');
+      }},
+        el('div',{class:'cap-acc-num'}, String(idx)),
+        el('div',{class:'cap-acc-title-block'},
+          el('span',{class:'cap-acc-tag'}, tag),
+          el('span',{class:'cap-acc-title'}, title),
+          el('span',{class:'cap-acc-question'}, question)
+        ),
+        el('div',{class:'cap-acc-arrow'}, '›')
+      ),
+      el('div',{class:'cap-acc-body'})
+    );
+    // 填充 body 内容
+    const body = item.querySelector('.cap-acc-body');
+    contentFn(body);
+    return item;
+  };
+  // 第 1 步：5 维能力（默认展开）
+  sec.appendChild(el('div',{class:'cap-accordion'},
+    mkAccStep(1, '第 1 层 · 事实', '5 维能力', '我们有什么？客观描述家底清单，不需要下结论。', true, (body) => {
+      body.appendChild(capField('交付', 'delivery', '产品或服务？我们能交付什么？'));
+      body.appendChild(capField('核心', 'core', '别人没有的？能力/资源/关系？'));
+      body.appendChild(capField('品牌', 'brand', '资产？知名度？溢价？'));
+      body.appendChild(capField('客户', 'customer', '怎么找到？触达/渠道/关系？'));
+      body.appendChild(capField('合规', 'compliance', '监管/资质/准入门槛？'));
+    })
+  ));
+  // 第 2 步：3 段判断
+  sec.appendChild(el('div',{class:'cap-accordion'},
+    mkAccStep(2, '第 2 层 · 提炼（依赖第 1 层）', '3 段判断', '什么是真本事、什么是软肋？不能空想，必须从第 1 层 5 维里"找出来"。', false, (body) => {
+      body.appendChild(capField('防御性优势', 'defensive', '对手短期难复制的 1-2 点（最值钱）'));
+      body.appendChild(capField('关键劣势', 'critical', '客户能直接感知的致命短板'));
+      body.appendChild(capField('结构性劣势', 'structural', '受资源/位置限制、宜绕开而非硬拼'));
+      // 提炼依据说明
+      const derive = el('div',{class:'cap-acc-derive'}, '3 段判断必须从第 1 层 5 维里提炼（如"制造"+ "技术" → 防御性优势）');
+      body.appendChild(derive);
+    })
+  ));
+  // 第 3 步：微笑曲线
+  sec.appendChild(el('div',{class:'cap-accordion'},
+    mkAccStep(3, '第 3 层 · 收敛（依赖第 2 层）', '微笑曲线收口', '优势/劣势落在价值链哪一端？这一句决定后续定位方向。', false, (body) => {
+      const callout = el('div',{class:'cap-field'});
+      const labelDiv = el('div',{class:'cap-field-label'}, '一句话定位',
+        el('span',{class:'zh'}, '优势/劣势落在价值链哪一端？'));
+      const value = cap.smileCurve || '';
+      const input = el('textarea',{
+        class:'cap-field-input callout',
+        rows: 3,
+        oninput: e => { cap.smileCurve = e.target.value; autosave(); }
+      });
+      input.value = value;
+      callout.appendChild(labelDiv);
+      callout.appendChild(input);
+      body.appendChild(callout);
+    })
+  ));
+  // 第 4 步：关键趋势
+  sec.appendChild(el('div',{class:'cap-accordion'},
+    mkAccStep(4, '第 4 层 · 变量（独立观察）', '关键趋势', '未来 12-24 个月要盯什么？与第 3 层定位方向关联。', false, (body) => {
+      body.appendChild(capField('3 个值得追踪的方向', 'trends', '例：节气营销、可追溯供应链、KOC 内容种草、私域订阅', 3));
+      // AI 按钮放在第 4 步末尾
+      body.appendChild(el('button',{class:'cap-ai-btn', onclick:()=>{
+        // AI 一键生成：基于 SBU + 5 维 → 3 段 + 收口 + 趋势
+        // 实际 AI 调用在下方 AI 盒子统一处理（防止重复按钮）
+        showToast('请使用下方"用 AI 起草"按钮');
+      }}, '用 AI 起草（基于 5 维 → 生成 3 段 + 收口 + 趋势）'));
+      body.appendChild(el('div',{class:'cap-ai-hint'}, '必须先填第 1 层 5 维，AI 才有素材生成第 2/3/4 层。'));
+    })
+  ));
 
   // —— AI ——
   const ai=el('div',{class:'ai-box ai-box-step1'});
@@ -622,19 +759,31 @@ Work1.render.environment = function(sec){
   meta.appendChild(el('span',{class:'ai-box-meta-draft'},'DRAFT WITH AI'));
   top.appendChild(meta);
   top.appendChild(el('h4',{class:'ai-box-headline'},'用 AI 起草环境与竞争分析'));
-  top.appendChild(el('p',{class:'ai-box-hint'},'基于 SBU，生成 PEST、行业格局、5-7 家竞品对标行、五维优劣势与微笑曲线结论。'));
+  top.appendChild(el('p',{class:'ai-box-hint'},'基于 SBU，生成 PEST、行业格局、5-7 家竞品对标行、我们的资源盘点（5 维 + 3 段 + 收口 + 趋势）。'));
   ai.appendChild(top);
   const action=el('div',{class:'ai-box-action'});
   const btn=el('button',{class:'primary',onclick:()=>{
     API.aiButton({
       button:btn, container:ai,
-      buildPrompt:()=>[{role:'system',content:'你是全球品牌战略顾问。基于 SBU 生成结构化市场分析。输出 JSON：{"political":"","economic":"","social":"","technological":"","industry":"市场格局摘要（活跃品牌/渗透率/价格带/垂直空白）","trends":"三个关键趋势","competitors":[{"name":"","price":"","strengths":"","weaknesses":"","position":""}],"edges":{"manufacturing":"","technology":"","brand":"","channel":"","compliance":"","defensive":"","critical":"","structural":"","smileCurve":""}}。competitors 给 5-7 家同价位同场景直接竞品。'},
+      buildPrompt:()=>[{role:'system',content:'你是全球品牌战略顾问。基于 SBU 生成结构化市场分析。输出 JSON：{"political":"","economic":"","social":"","technological":"","industry":"市场格局摘要（活跃品牌/渗透率/价格带/垂直空白）","competitors":[{"name":"","price":"","strengths":"","weaknesses":"","position":""}],"ourCapabilities":{"delivery":"产品/服务交付能力（能交付什么？怎么交付？标准化？）","core":"核心能力/资源/关系（别人短期追不上的）","brand":"品牌资产/知名度/溢价能力","customer":"客户触达/渠道/关系","compliance":"监管/资质/准入门槛","defensive":"防御性优势（对手短期难复制的 1-2 点）","critical":"关键劣势（客户能直接感知的致命短板）","structural":"结构性劣势（受资源/位置限制、宜绕开）","smileCurve":"优势/劣势落在价值链哪一端、决定后续定位方向","trends":"3 个值得追踪的方向"}}。competitors 给 5-7 家同价位同场景直接竞品。'},
         {role:'user',content:`SBU: ${state.work1.sbu.name}\n品类: ${state.work1.sbu.category}\n阶段: ${state.work1.sbu.stage}\n范围: ${state.work1.sbu.scope}\n概述: ${state.work1.sbu.summary}`}],
       onResult:r=>{
         if(!r){ showToast('解析失败'); return; }
-        ['political','economic','social','technological','industry','trends'].forEach(k=>{ if(r[k]) d[k]=r[k]; });
+        ['political','economic','social','technological','industry'].forEach(k=>{ if(r[k]) d[k]=r[k]; });
         if(Array.isArray(r.competitors)) d.competitors=r.competitors.map(c=>({id:uid('c'),name:c.name||'',price:c.price||'',strengths:c.strengths||'',weaknesses:c.weaknesses||'',position:c.position||''}));
-        if(r.edges) Object.keys(r.edges).forEach(k=>{ if(r.edges[k]!=null) d.edges[k]=r.edges[k]; });
+        // 兼容：AI 返回 ourCapabilities（新版）或 edges（旧版）
+        const cap = r.ourCapabilities || r.edges;
+        if(cap && typeof cap==='object'){
+          if(!d.ourCapabilities) d.ourCapabilities={};
+          // 通用 5 维：旧字段名 → 新字段名（AI 偶发回退兼容）
+          const oldToNew = {manufacturing:'delivery', technology:'core', channel:'customer'};
+          Object.keys(cap).forEach(k=>{
+            if(cap[k]!=null){
+              const newKey = oldToNew[k] || k;
+              d.ourCapabilities[newKey] = cap[k];
+            }
+          });
+        }
         autosave(); Work1.rerender('environment');
       }
     });
@@ -918,7 +1067,7 @@ Work1.render.metrics = function(sec){
       + (lowSec?'有一级指标测评点 <3':'')));
   }
 
-  // 整组 vs 单项汇总
+  // 整组与单项汇总
   const sum=el('div',{class:'metric-summary'});
   sec.appendChild(sum);
   sec._summaryEl=sum;
@@ -955,7 +1104,7 @@ Work1.renderMetricSummary = function(box){
     rows.push({name:dim.name||'(未命名)', avg, n:fc.length});
     (dim.secondaries||[]).forEach(s=>{ if(s.forecast!=null) all.push(s); });
   });
-  box.appendChild(el('h4',{},'汇总（整组均分 vs 单项）'));
+  box.appendChild(el('h4',{},'汇总（整组均分/单项）'));
   const grid=el('div',{class:'grid3'});
   rows.forEach(r=>{
     grid.appendChild(el('div',{class:'plate',style:{padding:'10px 12px'}},
@@ -1256,13 +1405,13 @@ Work1.render.analysis = function(sec){
   renderBarChart(barC, a.indicatorMeans.slice().sort((x,y)=>y.value-x.value), {unit:''});
   barPlate.appendChild(barC); sec.appendChild(barPlate);
 
-  // 预测 vs 实测对照（Step 5 双列评分 + 回填偏差）
+  // 预测/实测对照（Step 5 双列评分 + 回填偏差）
   const scored=[];
   (state.work1.metrics.dimensions||[]).forEach(dim=>(dim.secondaries||[]).forEach(s2=>{
     if(s2.forecast!=null || s2.actual!=null) scored.push({dim:dim.name, ...s2});
   }));
   if(scored.length){
-    sec.appendChild(el('h3',{},'预测 vs 实测回填'));
+    sec.appendChild(el('h3',{},'预测/实测回填'));
     const tbl=el('table',{class:'data'});
     tbl.appendChild(el('thead',{}, el('tr',{}, ...['一级指标','测评点','首年预测','三年目标','实测(1-10)','Δ(实测−预测)'].map(h=>el('th',{},h)))));
     const tb=el('tbody');
@@ -1550,13 +1699,30 @@ Work1.exportMd = function(){
     d.environment.competitors.forEach(c=>{ out+=`| ${c.name} | ${c.price} | ${c.strengths} | ${c.weaknesses} | ${c.position} |\n`; });
     out+='\n';
   }
-  const e=d.environment.edges||{};
-  const edgesText = d.environment.edgesText || '';
-  if (edgesText) {
-    out += `**五维优劣势与收口**\n\n${edgesText}\n\n`;
-  } else {
-    // 兼容老数据（10 字段散落）
-    out += `**五维优劣势**：制造 ${e.manufacturing||'—'}；技术 ${e.technology||'—'}；品牌 ${e.brand||'—'}；渠道 ${e.channel||'—'}；合规 ${e.compliance||'—'}\n- 防御性优势：${e.defensive||'—'}\n- 关键劣势：${e.critical||'—'}\n- 结构性劣势：${e.structural||'—'}\n- 微笑曲线：${e.smileCurve||'—'}\n\n**关键趋势**：${d.environment.trends||''}\n\n`;
+  const oc=d.environment.ourCapabilities||{};
+  const e=d.environment.edges||{};  // 兼容老数据
+  const edgesText = d.environment.edgesText || '';  // 兼容老数据
+  // 优先级：ourCapabilities（新） > edges（旧分散字段） > edgesText（旧合并文本，解析后填回）
+  const capData = (Object.values(oc).some(v=>v) || d.environment.ourCapabilities)
+    ? oc
+    : (Object.values(e).some(v=>v) ? e : null);
+  if (capData) {
+    out += `**我们的资源盘点**\n\n`;
+    out += `5 维能力：\n`;
+    out += `- 交付：${capData.delivery||'—'}\n`;
+    out += `- 核心：${capData.core||'—'}\n`;
+    out += `- 品牌：${capData.brand||'—'}\n`;
+    out += `- 客户：${capData.customer||'—'}\n`;
+    out += `- 合规：${capData.compliance||'—'}\n\n`;
+    out += `3 段判断：\n`;
+    out += `- 防御性优势：${capData.defensive||'—'}\n`;
+    out += `- 关键劣势：${capData.critical||'—'}\n`;
+    out += `- 结构性劣势：${capData.structural||'—'}\n\n`;
+    out += `微笑曲线收口：${capData.smileCurve||'—'}\n\n`;
+    out += `关键趋势：${capData.trends || d.environment.trends || '—'}\n\n`;
+  } else if (edgesText) {
+    // 兼容老数据：合并文本
+    out += `**我们的资源盘点（旧版合并文本）**\n\n${edgesText}\n\n`;
   }
 
   out+=`### 3. 客户画像与价值诉求\n`;

@@ -58,7 +58,7 @@ Work4.renderStep = function(id){
   Work4.syncBodyAttrs();
   if(sec.dataset.rendered===Work4.RENDER_VERSION){ Work4.refreshDynamic(id); return; }
   sec.innerHTML='';
-  sec.appendChild(UI.stepHeader('STEP '+Work4.steps.findIndex(s=>s.id===id),
+  sec.appendChild(UI.stepHeader('STEP '+(Work4.steps.findIndex(s=>s.id===id)+1),
     Work4.titles[id], Work4.subtitles[id]));
   // Context bar
   const c=state.work4;
@@ -547,7 +547,7 @@ Work4.render.summary = function(sec){
   }
   checks.forEach(([q,ok])=>{
     sec.appendChild(el('div',{style:{display:'flex',gap:'10px',alignItems:'center',padding:'8px 0',borderBottom:'1px solid var(--line)'}},
-      el('span',{class:'tag '+(ok?'maroon':'')}, ok?'✓ 达成':'待补'),
+      el('span',{class:'tag '+(ok?'maroon':'')}, ok?'达成':'待补'),
       el('span',{},q)));
   });
 

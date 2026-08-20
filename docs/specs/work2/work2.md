@@ -84,7 +84,7 @@
 
 - 进入 Work 2 时自动从 `state.work1.sbu` 读取 `name` 和 `oneLine`，填入只读回显区。
 - 如果 Work 1 未填，显示提示"请先在 Work 1 填写 SBU"，并提供链接跳回。
-- 学员可点"覆盖"手动修改（仅影响 Work 2，不回写 Work 1）。
+- 用户可点"覆盖"手动修改（仅影响 Work 2，不回写 Work 1）。
 
 ### 备选市场列表
 
@@ -97,7 +97,7 @@
 - 「让 AI 推荐备选市场」按钮：
   - 输入：SBU 名称 + 一句话说明 + 行业。
   - 输出：5 个候选市场，每个含名称 + 一句话理由（API 返回 JSON）。
-  - 学员从中勾选要加入的，追加到 `markets`（不覆盖已有）。
+  - 用户从中勾选要加入的，追加到 `markets`（不覆盖已有）。
   - 手动模式：显示提示词 + 粘贴区 + 解析按钮。
 
 **默认提示词**：
@@ -358,7 +358,7 @@
 ```
 
 - 「一键复制」按钮：`navigator.clipboard.writeText`。
-- 不直接生成 PPT（保持单文件边界），学员可粘到 KimiPPT/Gamma/WPS。
+- 不直接生成 PPT（保持单文件边界），用户可粘到 KimiPPT/Gamma/WPS。
 
 ### AI 综合分析（双模式）
 
@@ -375,3 +375,236 @@
 > 评估数据：
 > {所有市场的吸引力/竞争力总分及各指标评分}
 > 用 Markdown 输出，500 字以内。
+
+---
+
+## 附录 A：与方法论规格的差距审计与修复方案（2026-08-20）
+
+> 本节对比 [《工作坊2：海外目标市场选择》](工作坊2：海外目标市场选择.md) 方法论规格（来自课程材料，本工具要落地的标准操作流程）与 `workshop2.js` 实现，列出 5 处关键差距、修复优先级与最小修复清单。本工具面向实际做品牌出海决策的用户，不是学生培训平台。
+
+### A.1 流程结构对比
+
+| 方法论 § | 方法论要求 | 实现 § | 实现内容 | 偏差 |
+| --- | --- | --- | --- | --- |
+| Step 1 | **初筛淘汰**：候选国 5–10 → 保留 3 个 | scope | 决策问题/时间窗口/约束/候选数量 | ⚠️ **遗漏初筛淘汰环节** |
+| — | — | indicators | 4–6 个吸引力+竞争力指标 + rubric | ⬅️ 规格是 4×2=8 项固定结构；实现是 AI 生成变长 |
+| — | — | delphi | 5 位合成专家两轮打分 | ⬅️ 方法论是 3–5 位真人；实现是 AI 模拟（本工具的优势：让任何用户都能跑 Delphi） |
+| Step 1 | 候选国清单 | markets | 4–8 个候选市场 | ✅ 但顺序换了 |
+| Step 2 | 吸引力 4×2 + 权重 | indicators + delphi | 同上 | ✅ 拆成两步更细 |
+| Step 3 | 竞争力 4×2 + 权重 | indicators + delphi | 同上 | ✅ 拆成两步更细 |
+| Step 4 | 24 格评分 + **3 人独立打分** + 数据来源 | scoring | 单用户打分 / AI 一键评分 | ⚠️ **缺 3 人交叉验证 + 强制数据来源** |
+| Step 5 | 矩阵 + **三档决策卡**（主战场 80% / 观察期 5% / 暂缓含触发条件） | matrix + decision | 单选 + 排名 | ⚠️ **缺三档结构 + 触发再评估条件** |
+| Step 6 | 10 页 PPT + **敏感度分析** + 6 个月里程碑 + 模板归档 | （无，仅 exportMd） | 仅 markdown 导出 | ⚠️ 汇报/沉淀基本缺失 |
+
+**核心问题**：实现把规格的「流程说明书」拆得更细（7 步），但**关键决策结构（初筛、三档、3 人打分、数据来源、敏感度）反而没有落地**。流程更长，质量控制更松。
+
+### A.2 五处关键差距（按重要性排序）
+
+#### 🔴 差距 1：决策结构只支持「单选」，丢了规格最核心的「三档决策卡」
+
+**方法论原文**（Step 5）：
+- 主战场（80% 资源、6 个月里程碑）
+- 观察期（5% 资源、观察指标、重新评估时点）
+- 暂缓/放弃（触发再评估条件）
+
+**当前实现**：
+- `state.work2.matrix.selectedMarketId` 只能选 1 个
+- `decision.rationale / sequence / risks / nextSteps` 四个字段，没有"观察期"、"资源占比"、"里程碑"、"触发再评估条件"
+
+**为什么这是最严重的差距**：方法论 5.2 节反复强调"必须有且仅有一个主战场"、"不能因为差不多就平均资源"——这恰恰是决策工具最该逼用户做的事。单选下，用户随便点一个就完事，三档结构才逼他们做"投入-观察-放弃"的资源分配决策。
+
+**修复方案（P0）**：改造 `decision` 步骤的数据结构与 UI
+
+数据 schema（追加到 `state.work2`）：
+
+```js
+decision: {
+  primary: null,    // { marketId, resourcePct, actions:[], milestones:[] }
+  watch:   [],      // [{ marketId, resourcePct, indicators:[], reviewAt:'YYYY-MM' }]
+  defer:   [],      // [{ marketId, trigger:'再评估触发条件' }]
+  // 兼容老字段（v1 期间保留）
+  rationale:'', sequence:'', risks:[], nextSteps:''
+}
+```
+
+UI 改造（`Work2.render.decision`）：
+
+- 把 decision 步骤分 3 栏："主战场（必填 1 个）" / "观察期（最多 2 个）" / "暂缓（剩余）"
+- 每档可从矩阵图拖入市场，或在排名表里点"加入主战场/观察期/暂缓"
+- 资源占比输入框，三档相加=100% 才能进入下一步（不阻塞但红色提示）
+- 关键动作（3–5 条）、里程碑（量化）、触发条件各自必填
+
+```js
+// 伪代码：资源占比校验
+function validateDecision(decision) {
+  const sum = (decision.primary?.resourcePct || 0)
+    + decision.watch.reduce((a,b) => a + (b.resourcePct||0), 0)
+    + decision.defer.reduce((a,b) => a + (b.resourcePct||0), 0);
+  return Math.abs(sum - 100) < 0.5;
+}
+```
+
+#### 🔴 差距 2：评分格不强制数据来源
+
+**方法论原文**（Step 4.1）：
+
+> 每个评分格必须包含 `[二级指标]：[分数]/10`，依据：[1-2 条具体数据来源 + 数字]
+
+**当前实现**：
+
+- AI 评分时 `mk['e_'+ind.id]` 存了 evidence，但**手动输入时只设 `src_=user`，没有任何证据字段**
+- UI 上 evidence 只有在 AI 生成时才显示
+
+**为什么严重**：规格第 4.2 节的易错点第一条就是"没有数据来源就是主观"。这一步是整个矩阵可信度的根基。
+
+**修复方案（P0）**：`scoring` 步骤加 evidence 字段
+
+UI 改造（每个评分格增加 evidence 文本输入）：
+
+- 评分 ≤3 或 ≥8 时，evidence 弹窗强制（不填不让保存）
+- 评分 4–7 时 evidence 可选（不阻塞）
+- exportMd 时 evidence 缺失的格标黄（不是阻止导出，但显眼提示）
+
+```js
+// 评分保存 oninput
+oninput = e => {
+  const score = parseFloat(e.target.value);
+  const evidence = evidenceInput.value;
+  mk.scores[ind.id] = score;
+  mk['e_'+ind.id] = evidence;
+  mk['src_'+ind.id] = evidence ? 'user' : 'unscored';
+  // 极值分数强制证据
+  if ((score <= 3 || score >= 8) && !evidence) {
+    showEvidenceModal(ind, score);
+  }
+}
+```
+
+#### 🟡 差距 3：缺少「初筛淘汰」环节
+
+**方法论 Step 1.2** 给出了可量化的淘汰标准（市场规模 < 1 亿美元且 CAGR < 5% / 认证成本 > 营收 20% / 文化极端距离 / 政治高风险）。
+
+**当前实现**：直接进 markets 步骤添加 4–8 个市场，没有"为什么保留这个、淘汰那个"的痕迹。
+
+**影响**：初筛淘汰是方法论强调"主观偏好会污染后续打分"的关键防污步骤。实际使用中，用户可能只列他熟悉的市场，跳过系统性扫描。
+
+**修复方案（P1）**：在 `scope` 步骤里加"淘汰市场清单"卡片（轻量级，不新增 step）：
+
+```js
+screened: {
+  rejected: [],  // [{name, criterion, dataSource}]  // 每个淘汰市场记 1 行
+  criteria: [
+    {name:'市场规模过小', rule:'年市场规模 < 1 亿美元 且 CAGR < 5%'},
+    {name:'认证成本极高', rule:'主要认证预算 > 单市场首年营收 20%'},
+    {name:'文化极端距离', rule:'Hofstede UAI > 80 且无本地合作方'},
+    {name:'政治高风险',   rule:'战争/制裁/重大贸易壁垒'}
+  ]
+}
+```
+
+UI：scope 步骤加折叠面板"淘汰清单（可选但推荐）"，4 条标准模板可勾选 + 自定义。
+
+#### 🟡 差距 4：单人打分，无交叉验证
+
+**方法论**："3 人独立打分（业务负责人 + 产品经理 + 外部顾问），差异 >2 分必须开会讨论"。
+
+**当前实现**：单用户打分 / AI 一键评分，没有多评分人机制，也没有差异讨论。
+
+**修复方案（P2，降级版）**：AI 评分时同时出 3 个角色（业务/产品/顾问）的分数
+
+UI 改造（scoring 步骤加"3 角色打分"开关）：
+
+- 默认关闭（单用户模式，向后兼容）
+- 开启后，AI 一键评分时并行 3 次（业务/产品/顾问 persona），结果以"3 角色卡"展示
+- 差异 >2 分的指标显示 ⚠️ 标记 + 讨论 prompt（"业务 7 分，产品 4 分，为什么差这么多？"）
+
+```js
+// 伪代码：3 角色并行打分
+async function aiScoreWithTriad(market, indicators) {
+  const roles = ['business','product','advisor'];
+  return await Promise.all(roles.map(role =>
+    callAi(buildPrompt(role, market, indicators))
+  ));
+}
+// 差异 >2 提示
+const max = Math.max(...scores), min = Math.min(...scores);
+if (max - min > 2) flagDisagreement(indicatorId, scores);
+```
+
+#### 🟡 差距 5：缺敏感度分析、6 个月里程碑、模板归档
+
+**方法论 Step 6**：敏感度分析（"权重 +20% 会怎样"）、6 个月里程碑、模板归档至 wiki。
+
+**当前实现**：`exportMd` 只是把现有 state 拼成 markdown，缺：
+
+- 敏感度分析（"权重 ±20% 主战场是否变化"）
+- 6 个月里程碑字段
+- 模板独立导出
+
+**修复方案（P1）**：decision 步骤加「敏感度沙盒」子面板
+
+- 折叠面板，点开后是简易调节器（4–6 个指标权重 ±20% 滑块）
+- 实时显示主战场是否变化
+- 让"假设错了怎么办"从 PPT 概念变成可操作体验
+
+```js
+// 伪代码：敏感度沙盒
+function sensitivitySandbox(weights, markets) {
+  const perturbed = perturbWeights(weights, 0.2);
+  const newRanking = computeMatrix(markets, perturbed);
+  const newTop = newRanking[0].id;
+  const originalTop = computeMatrix(markets, weights)[0].id;
+  return {
+    stable: newTop === originalTop,
+    newLeader: newTop,
+    delta: newRanking[0].score - newRanking[1].score
+  };
+}
+```
+
+### A.3 修复优先级
+
+| 优先级 | 修复 | 工作量 | 价值 |
+| --- | --- | --- | --- |
+| **P0** | 决策步骤改三档结构 | 1 步 × 半天 | 直接把方法论最核心的"逼用户做资源分配决策"做出来 |
+| **P0** | scoring 步骤加 evidence 字段，用户手动评分也强制填依据 | 半天 | 整个矩阵可信度的根基 |
+| **P1** | 在 markets 前加"淘汰清单"卡片 | 半天 | 防主观偏好污染 |
+| **P1** | decision 加「敏感度分析」子步骤 | 1 天 | 实用价值高（用户立刻看到"假设错了会发生什么"） |
+| **P2** | AI 评分时同时出 3 个角色分数，差异 >2 分显示讨论 prompt | 1 天 | 模拟"3 人独立打分" |
+
+### A.4 最小修复清单（1 个工作日可完成）
+
+按 ROI 排序：
+
+1. **decision 步骤加三档结构**（主战场/观察期/放弃，每档 4 个字段，资源占比合计强制 100%） — 3 小时
+2. **scoring 步骤加 evidence 必填**（≤3 或 ≥8 强制弹窗） — 2 小时
+3. **scope 步骤加淘汰清单卡片**（每个淘汰市场记 1 行原因） — 1 小时
+4. **exportMd 改为 10 段输出**（按规格 Step 6 PPT 顺序：候选国/吸引力表/竞争力表/矩阵/决策/风险/敏感度/行动/里程碑/附录） — 2 小时
+
+合计 ~8 小时（1 个工作日），可达成规格 80% 的核心要求。
+
+### A.5 推荐取舍
+
+1. **三档结构 vs 单选：必须做三档，不要妥协**。三档是方法论反复强调的"主战场没有，资源必然稀释"这件事的**唯一抓手**。**关键：让 UI 强制资源占比相加=100%**——用户分配不到 100% 时不让下一步。
+2. **Delphi 5 位 AI 专家：保留，不要改成真人**。真人凑不齐（用户多是单个产品经理或创业者，没有"3-5 位高管"配置）；AI 模拟 Delphi 的价值在于：① 让用户看到"5 个不同视角怎么拉权重"；② 让用户看到"主持人综合"是干什么的；③ 比"老板拍脑袋给权重"强 10 倍。唯一要做的是：第二轮时**展示每位专家的修订幅度**，让用户看到"分歧收敛"的过程。
+3. **指标 4×2 固定 vs AI 生成变长：建议固定 4×2，但允许用户改**。规格的设计意图是"4 个一级 × 2 个二级 = 8 项 25%/12.5%"——这让跨 SBU 横向比较有基准。建议：AI 生成时默认给 4×2 结构；用户可以删/加，但**警告"偏离 4×2 后跨 SBU 对比失效"**。
+4. **评分证据：用户手动也要强制**。不要做成"AI 评分有 evidence / 用户没有"这种不对称。建议：任何评分格都有 evidence 字段；评完最低分（≤3）或最高分（≥8）时，UI 弹窗强制"请给 1 条数据来源"；exportMd 时缺 evidence 的格标黄。
+5. **敏感度分析：值得做，做成"沙盒"**。不要做成必做步骤（用户时间宝贵），做成 decision 步骤里的"敏感性沙盒"：默认折叠，点开是简易调节器（指标权重 ±20%），实时显示主战场是否变化。
+6. **模板归档：放到工具外动作**。模板归档是组织知识管理动作（wiki/Notion），不是单次决策时用户需要完成的事。工具层面只要 exportMd 能导出 4 个独立模板（候选国初筛清单 / 吸引力表 / 竞争力表 / 决策卡）就够。
+
+### A.6 关联 PR / 实现任务拆分
+
+如果按最小修复清单实施，建议拆 4 个独立 commit（每个 commit 自包含、可回滚）：
+
+| Commit | 范围 | 涉及文件 | 验收 |
+| --- | --- | --- | --- |
+| `w2-fix-decision-3tier` | A.2 差距 1：三档结构 | `workshop2.js`（decision render + data schema） | 资源占比合计 100% 校验；3 档字段齐备 |
+| `w2-fix-evidence-required` | A.2 差距 2：evidence 必填 | `workshop2.js`（scoring render） | ≤3/≥8 弹窗；exportMd 缺 evidence 标黄 |
+| `w2-fix-screened-list` | A.2 差距 3：淘汰清单 | `workshop2.js`（scope render） | 4 条标准模板；至少 1 条淘汰记录才能进 markets |
+| `w2-fix-export-10sections` | A.4 第 4 项：10 段 exportMd | `workshop2.js`（exportMd） | 输出包含敏感度、6 个月里程碑 |
+
+每个 commit 完成后对应 P0/P1 验收点。
+
+---
+
+**审计者备注**：本附录为 2026-08-20 实测审计结果。方法论 6 步的核心决策目标（量化打分 → 矩阵决策 → 资源分配 → 风险与触发条件 → 汇报沉淀）在当前实现中**约 50% 落地**。落地部分（Delphi、矩阵、评分表、AI 评分）质量较高；未落地部分（三档决策、初筛淘汰、强制证据、敏感度）正是方法论反复强调的"决策质量保障"环节。建议**优先 P0 修复**，再做 P1 增强。

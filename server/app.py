@@ -1,8 +1,13 @@
 """FastAPI entry point. Serves the HTML tool and provides API endpoints for config, state, snapshots, LLM proxy, LDA, and Excel parsing."""
 from __future__ import annotations
 
+import mimetypes
 from pathlib import Path
 from typing import Any
+
+# Some machines (notably Windows) don't register the woff2 MIME type; without
+# it StaticFiles serves the font as application/octet-stream and browsers refuse it.
+mimetypes.add_type("font/woff2", ".woff2")
 
 from fastapi import FastAPI, File, HTTPException, Query, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
@@ -223,6 +228,9 @@ def index() -> FileResponse:
 DOCS_DIR = ROOT / "docs"
 if DOCS_DIR.exists():
     app.mount("/docs", StaticFiles(directory=str(DOCS_DIR)), name="docs")
+    FONTS_DIR = DOCS_DIR / "fonts"
+    if FONTS_DIR.exists():
+        app.mount("/fonts", StaticFiles(directory=str(FONTS_DIR)), name="fonts")
 
     @app.get("/{filename}")
     def docs_file(filename: str) -> FileResponse:

@@ -44,7 +44,8 @@ h1,h2,h3,h4{font-family:var(--font-display);font-weight:900;line-height:1.2;marg
 h1{font-size:52px;letter-spacing:-.01em}
 h2{font-size:40px;margin-bottom:.4em}
 h3{font-size:22px;font-style:italic;font-weight:700;color:var(--maroon);margin:32px 0 18px}
-h4{font-size:17px;font-family:var(--font-mono);font-weight:500;text-transform:uppercase;letter-spacing:.12em;color:var(--muted)}
+h4{font-size:17px;font-family:var(--font-mono);font-weight:500;text-transform:uppercase;letter-spacing:.12em;color:var(--muted);margin:24px 0 12px}
+h4.sub-section{font-size:12px;letter-spacing:.18em;color:var(--placeholder);margin:20px 0 8px;font-weight:400}
 p{margin:.6em 0}
 em,.italic{font-style:italic}
 a{color:var(--maroon);text-decoration:none;border-bottom:1px solid var(--maroon)}
@@ -81,7 +82,8 @@ button.ghost{border-color:var(--line);color:var(--muted)}
 button.ghost:hover{border-color:var(--ink);color:var(--ink);background:transparent}
 button:disabled{opacity:.4;cursor:not-allowed;transform:none}
 button.small{padding:5px 10px;font-size:10px}
-button.icon-btn{padding:9px 12px}
+button.icon-btn{padding:0;width:33px;height:33px;display:inline-flex;align-items:center;justify-content:center;line-height:0}
+button.icon-btn svg{width:17px;height:17px;display:block}
 /* Top-bar API/Manual mode segmented switch */
 .mode-switch{display:inline-flex;border:1px solid var(--ink)}
 .mode-switch button{border:none;border-right:1px solid var(--ink);padding:9px 14px;color:var(--muted);background:transparent}
@@ -315,7 +317,7 @@ table.data textarea{font-family:var(--font-body);font-style:italic;font-size:13p
 /* 业务基本情况 实况/目标/来源 */
 .basics-row{display:grid;grid-template-columns:260px 1fr;gap:12px;align-items:center;margin:8px 0}
 .basics-label{font-family:var(--font-body);font-size:14px;letter-spacing:0;color:var(--ink);font-weight:500}
-.basics-trio{display:grid;grid-template-columns:1fr 1fr 200px;gap:8px}
+.basics-trio{display:grid;grid-template-columns:1fr 1fr;gap:8px}
 .basics-trio input{border:1px solid var(--line);background:var(--bg);padding:7px 9px;font-family:var(--font-mono);font-size:12px}
 .basics-trio input:focus{outline:none;border-color:var(--ink);background:var(--panel)}
 /* 空输入框：对角斜线（从左上到右下）— 用 :placeholder-shown 触发 */
@@ -865,7 +867,7 @@ body[data-w4-entry="greenfield"] .x-entry-heavy { display:block; }
 }
 .sbu-sub-lead{
   color:var(--ink);font-style:italic;font-size:16px;line-height:1.7;
-  margin:14px 0 24px;max-width:780px;opacity:.75;
+  margin:14px 0 24px;opacity:.75;
 }
 
 /* YES/NO pill（替换 checkbox） */
@@ -917,8 +919,8 @@ body[data-w4-entry="greenfield"] .x-entry-heavy { display:block; }
 /* 边界声明 CALLOUT 扩展（在现有 .callout 基础上） */
 .sbu-callout{padding:22px 26px;margin:36px 0 12px}
 .sbu-callout .c-label{
-  display:block;font-family:var(--font-mono);font-size:10px;letter-spacing:.24em;
-  text-transform:uppercase;color:var(--maroon);margin-bottom:10px;
+  display:block;font-family:var(--font-mono);font-size:14px;letter-spacing:.16em;
+  text-transform:uppercase;color:var(--maroon);margin-bottom:10px;font-weight:500;
 }
 .sbu-callout .c-hint{
   color:#5C4033;font-style:italic;font-size:15px;line-height:1.7;
@@ -936,6 +938,148 @@ body[data-w4-entry="greenfield"] .x-entry-heavy { display:block; }
 .sbu-end{
   font-family:var(--font-mono);font-size:10px;letter-spacing:.24em;
   text-transform:uppercase;color:var(--muted);text-align:right;margin-top:32px;
+}
+
+/* === 3.3 我们的资源盘点：4 步手风琴 === */
+.cap-task{
+  background:var(--maroon-soft);
+  border-left:3px solid var(--maroon);
+  padding:14px 18px;
+  margin:0 0 18px;
+  font-style:italic;font-size:15px;line-height:1.6;
+  color:var(--ink);
+}
+.cap-task-title{
+  display:block;
+  font-family:var(--font-mono);font-style:normal;
+  font-size:10px;letter-spacing:.18em;
+  text-transform:uppercase;color:var(--maroon);
+  margin-bottom:6px;
+}
+/* 4 层流程图 */
+.cap-flow{
+  display:grid;
+  grid-template-columns:repeat(4,1fr);
+  gap:0;
+  margin:0 0 18px;
+  border:1px solid var(--line);
+}
+.cap-flow-step{
+  padding:12px 14px;
+  border-right:1px solid var(--line);
+  background:var(--bg);
+}
+.cap-flow-step:last-child{border-right:none}
+.cap-flow-step.active{background:var(--maroon);color:var(--bg)}
+.cap-flow-num{
+  font-family:var(--font-mono);font-size:10px;letter-spacing:.18em;
+  text-transform:uppercase;margin-bottom:4px;opacity:.7;
+}
+.cap-flow-step.active .cap-flow-num{color:var(--maroon-soft);opacity:1}
+.cap-flow-name{
+  font-family:var(--font-display);font-style:italic;font-weight:700;
+  font-size:16px;line-height:1.25;margin-bottom:2px;
+}
+.cap-flow-tag{
+  font-family:var(--font-mono);font-size:10px;letter-spacing:.06em;opacity:.7;
+}
+.cap-flow-step:not(.active) .cap-flow-tag{color:var(--muted)}
+/* 手风琴 */
+.cap-accordion{border-top:1px solid var(--line);margin-top:8px}
+.cap-acc-item{border-bottom:1px solid var(--line)}
+.cap-acc-head{
+  display:grid;
+  grid-template-columns:48px 1fr 24px;
+  gap:16px;
+  padding:14px 0;
+  cursor:pointer;
+  align-items:start;
+  user-select:none;
+}
+.cap-acc-head:hover .cap-acc-arrow{color:var(--maroon)}
+.cap-acc-num{
+  font-family:var(--font-display);
+  font-style:italic;font-weight:700;
+  font-size:28px;line-height:1;
+  color:var(--maroon);
+  padding-top:2px;
+}
+.cap-acc-title-block{display:flex;flex-direction:column;gap:3px}
+.cap-acc-tag{
+  font-family:var(--font-mono);font-size:10px;letter-spacing:.18em;
+  text-transform:uppercase;color:var(--muted);
+}
+.cap-acc-title{
+  font-family:var(--font-display);font-weight:700;
+  font-size:18px;line-height:1.3;color:var(--ink);
+}
+.cap-acc-question{
+  font-style:italic;color:var(--muted);
+  font-size:13px;line-height:1.5;margin-top:2px;
+}
+.cap-acc-arrow{
+  font-family:var(--font-mono);
+  font-size:16px;color:var(--muted);
+  text-align:center;
+  transition:transform .2s ease;
+  padding-top:6px;
+}
+.cap-acc-item.open .cap-acc-arrow{transform:rotate(90deg);color:var(--maroon)}
+.cap-acc-body{display:none;padding:0 0 16px 64px}
+.cap-acc-item.open .cap-acc-body{display:block}
+/* 字段（紧凑） */
+.cap-field{
+  display:flex;flex-direction:column;
+  margin:8px 0;
+}
+.cap-field-label{
+  font-family:var(--font-mono);font-size:11px;letter-spacing:.16em;
+  text-transform:uppercase;color:var(--muted);
+  margin-bottom:3px;
+}
+.cap-field-label .zh{
+  font-family:var(--font-display);
+  font-style:italic;font-weight:500;
+  font-size:14px;letter-spacing:0;
+  text-transform:none;color:var(--ink);
+  margin-left:6px;
+}
+.cap-field-input{
+  font-family:var(--font-body);
+  font-size:14px;line-height:1.6;color:var(--ink);
+  padding:6px 0;
+  border-bottom:1px solid var(--line);
+  background:transparent;border-left:none;border-right:none;border-top:none;
+  width:100%;outline:none;
+}
+.cap-field-input:focus{border-bottom-color:var(--maroon)}
+.cap-field-input.callout{
+  font-style:italic;
+  border-left:2px solid var(--maroon);
+  padding:6px 0 6px 14px;
+  border-bottom:none;
+  border-top:none;border-right:none;
+}
+.cap-acc-derive{
+  font-family:var(--font-mono);font-size:10px;letter-spacing:.06em;
+  color:var(--maroon);
+  margin-top:4px;
+}
+.cap-acc-derive::before{content:'← 来自第 1 层 '}
+/* AI 按钮（折叠面板内） */
+.cap-ai-btn{
+  display:inline-flex;align-items:center;gap:8px;
+  margin-top:14px;
+  background:var(--maroon);color:var(--bg);
+  font-family:var(--font-mono);font-size:11px;
+  text-transform:uppercase;letter-spacing:.16em;
+  padding:10px 16px;
+  border:none;cursor:pointer;
+}
+.cap-ai-btn::before{content:''}
+.cap-ai-hint{
+  font-family:var(--font-body);font-style:italic;
+  font-size:12px;color:var(--muted);margin-top:6px;
 }
 
 /* 国家 chip（用 .sbu-chip 避开全局 .chip） */
@@ -978,7 +1122,12 @@ body[data-w4-entry="greenfield"] .x-entry-heavy { display:block; }
         <button type="button" data-mode="api" onclick="Settings.setMode('api')">API 自动</button>
         <button type="button" data-mode="manual" onclick="Settings.setMode('manual')">手动模式</button>
       </div>
-      <button class="ghost icon-btn" id="settingsGear" onclick="Settings.open()" title="API 设定">⚙</button>
+      <button class="ghost icon-btn" id="settingsGear" onclick="Settings.open()" title="API 设定" aria-label="API 设定">
+        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <circle cx="12" cy="12" r="3"/>
+          <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.6 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.6a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9c.16.38.5.66.9.74.13.03.27.04.4.04H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/>
+        </svg>
+      </button>
     </div>
   </div>
   <div class="summary-bar" id="summaryBar">
@@ -1551,7 +1700,7 @@ const Settings = {
   setMode(mode){
     if(Runner.current){ showToast('请先暂停或中止当前 AI 任务'); return; }
     if(mode==='api' && !this.hasKey()){
-      showToast('请先点 ⚙ 配置 API Key');
+      showToast('请先点设置配置 API Key');
       this.renderModeSwitch();
       return;
     }
@@ -1567,7 +1716,7 @@ const Settings = {
       const m=b.dataset.mode;
       b.classList.toggle('active', (m==='manual')===manual);
       b.disabled = (m==='api' && forceManual);
-      b.title = (m==='api' && forceManual) ? '请先点 ⚙ 配置 API Key' : '';
+      b.title = (m==='api' && forceManual) ? '请先点设置配置 API Key' : '';
     });
   },
 
@@ -1940,12 +2089,23 @@ const History = {
 /* ============================================================
    SHARED UI COMPONENTS
    ============================================================ */
+// Wrap ASCII Latin tokens (≥2 letters) in <em> for selective italic.
+// Chinese characters render as ugly fake-italic under font-style:italic,
+// so we only italicize Latin tokens and leave Chinese upright.
+// XSS-safe: HTML-escape is applied BEFORE inserting <em> tags; the
+// mark→escape→restore order prevents "&amp;" from being italicized.
+function latinize(s){
+  return s
+    .replace(/[A-Za-z]{2,}/g, m => '\u0001'+m+'\u0002')
+    .replace(/[&<>]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]))
+    .replace(/\u0001([\s\S]*?)\u0002/g, '<em>$1</em>');
+}
 const UI = {
   stepHeader(num, title, subtitle){
     return el('div',{class:'step-header'},
       el('span',{class:'step-number'}, num),
       el('h2',{}, title+(title.endsWith('.')?'':'.')),
-      subtitle && el('p',{class:'muted italic'}, subtitle)
+      subtitle && el('p',{class:'muted', html: latinize(subtitle)})
     );
   },
   label(text){ return el('label',{},text); },

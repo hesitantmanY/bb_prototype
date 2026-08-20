@@ -21,7 +21,6 @@ const DemoData = {
         social:'华人 25–40 岁群体对节气、慢生活、正念饮茶的兴趣上升；KOL 文化推动送礼场景。',
         technological:'Shopee、Lazada、TikTok Shop 渗透率高；小程序+独立站跨境电商成熟；冷链已覆盖一线城市。',
         industry:'活跃品牌数十个，Top 为 TWG/ITO EN/TEAMan；精品茶渗透率仍低（增量市场）；价格带分超高端百货、年轻拼配、本地老字号三段；"产地溯源+节气+订阅"垂直定位空白。',
-        trends:'节气营销、可追溯供应链、茶具订阅礼盒、KOC 内容种草、正念/慢生活运动',
         basics:{
           scale:{actual:'团队 12 人，深圳+新加坡各一办公室',target:'海外团队 25 人（含本地茶师 3 位）',source:'内部台账'},
           scope:{actual:'原叶茶 + 茶具订阅，不做瓶装茶饮',target:'增加商务定制线，不进入商超袋泡茶',source:'战略规划'},
@@ -41,16 +40,17 @@ const DemoData = {
           {id:'c4',name:'ITO EN',price:'瓶装茶 SGD 2-4',strengths:'渠道渗透、即饮便利',weaknesses:'非原叶体验、无文化溢价',position:'不直接竞争（不同场景）'},
           {id:'c5',name:'Aesthetic Tea Co.',price:'SGD 40-70/罐',strengths:'设计驱动、独立站成熟',weaknesses:'产地不透明、SKU 少',position:'以茶师溯源 AR 建立信任'}
         ],
-        edges:{
-          manufacturing:'复用母公司供应链，工艺稳定但海外小批量灵活度待提升',
-          technology:'AR 溯源小程序与可跳过订阅系统为技术长板',
+        ourCapabilities:{
+          delivery:'复用母公司供应链，工艺稳定但海外小批量灵活度待提升',
+          core:'AR 溯源小程序与可跳过订阅系统为技术长板',
           brand:'海外知名度为零，但中文文化叙事独特',
-          channel:'国内私域成熟，海外渠道从零建设',
+          customer:'国内私域成熟，海外渠道从零建设',
           compliance:'新加坡食品进口合规清晰，印尼清真认证待办',
           defensive:'12 位茶师 3 年独家 + 节气内容 IP',
           critical:'海外品牌零知名度，首单获客成本高',
           structural:'海外重资产开柜成本高，宜以快闪+线上规避',
-          smileCurve:'优势在研发/内容（茶师+节气 IP）与品牌端，劣势在渠道/零售终端——定位为"内容与品牌驱动的订阅"，不在门店密度上硬拼。'
+          smileCurve:'优势在研发/内容（茶师+节气 IP）与品牌端，劣势在渠道/零售终端——定位为"内容与品牌驱动的订阅"，不在门店密度上硬拼。',
+          trends:'节气营销、可追溯供应链、茶具订阅礼盒、KOC 内容种草、正念/慢生活运动'
         }
       },
       personas: [
