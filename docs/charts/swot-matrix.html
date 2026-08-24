@@ -1,0 +1,182 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>SWOT 矩阵 · Mono — Lieflat Charts</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="_lib/mono.css">
+</head>
+<body>
+  <div class="grid2">
+    <div class="card">
+      <h2>SO 主导：茶园直采 + 健康趋势是双引擎</h2>
+      <div class="sub">内部 × 外部 × 积极/消极 · S+O 主导战略 · 通用教学样张（茶饮品牌 SEA 扩张）</div>
+      <svg id="chart" viewBox="0 0 720 540" style="width:100%;height:auto;display:block"></svg>
+      <div class="src">L4 ARC MATRIX · SWOT · 通用教学样张 · 战略分析</div>
+    </div>
+  </div>
+
+  <script src="_lib/mono.js"></script>
+  <script>
+    /* ── 数据 ──
+       SWOT 4 象限，每象限若干短标签
+       通用教学样张：茶饮品牌评估东南亚扩张 */
+    const SWOT = {
+      S: {
+        title:'优势 Strengths',
+        sub:'内部 · 积极',
+        items: [
+          '茶园直采（成本+品控）',
+          '工艺专利 3 项',
+          '创始人品牌故事（10 年）',
+          'ISO 22000 认证完整',
+        ]
+      },
+      W: {
+        title:'劣势 Weaknesses',
+        sub:'内部 · 消极',
+        items: [
+          '海外品牌认知近乎空白',
+          '数字营销团队 3 人',
+          '冷链成本高于行业 18%',
+          '本地化运营经验 0',
+        ]
+      },
+      O: {
+        title:'机会 Opportunities',
+        sub:'外部 · 积极',
+        items: [
+          '健康消费年增 22%',
+          '东南亚中产 1.2 亿',
+          '茶文化输出窗口期',
+          '跨境电商政策红利',
+        ]
+      },
+      T: {
+        title:'威胁 Threats',
+        sub:'外部 · 消极',
+        items: [
+          '本地巨头渠道垄断',
+          '竞品价格战 -15%',
+          '贸易关税波动',
+          '汇率波动 ±8%',
+        ]
+      }
+    };
+
+    /* ── 渲染 ──
+       候选审计：库外图型。最像 L4 Arc Matrix（轻量矩阵）。
+       视觉契约：2×2 象限，S/O 强调（深色），W/T 弱化（浅色）；
+       引导读者优先看增长（SO），再看防御（WT）。 */
+    MONO.obsReveal('chart', el => {
+      const W = 720, H = 540;
+      const padL = 90, padR = 24, padT = 80, padB = 60;
+      const innerW = W - padL - padR;
+      const innerH = H - padT - padB;
+      const colW = innerW / 2;
+      const rowH = innerH / 2;
+      const headerY = padT - 18;
+      const sideX = padL - 12;
+
+      // 轴标签：内部/外部、积极/消极
+      // 顶部：内部  | 底部：外部
+      MONO.txt(el, {
+        x: padL + colW / 2, y: padT - 44, 'text-anchor':'middle',
+        'font-size': 11, 'font-weight': 700, fill: MONO.INK, 'letter-spacing':'0.06em'
+      }, '← 内部因素 →');
+      MONO.txt(el, {
+        x: padL + colW / 2, y: padT + innerH + 26, 'text-anchor':'middle',
+        'font-size': 11, 'font-weight': 700, fill: MONO.INK, 'letter-spacing':'0.06em'
+      }, '← 外部因素 →');
+      // 左：积极，右：消极
+      MONO.txt(el, {
+        x: sideX, y: padT + rowH / 2, transform: `rotate(-90, ${sideX}, ${padT + rowH / 2})`,
+        'text-anchor':'middle', 'font-size': 11, 'font-weight': 700, fill: MONO.INK, 'letter-spacing':'0.06em'
+      }, '←  积极  →');
+      MONO.txt(el, {
+        x: sideX, y: padT + rowH + rowH / 2, transform: `rotate(-90, ${sideX}, ${padT + rowH + rowH / 2})`,
+        'text-anchor':'middle', 'font-size': 11, 'font-weight': 700, fill: MONO.INK, 'letter-spacing':'0.06em'
+      }, '←  消极  →');
+
+      // 4 象限
+      // 强调色：S（深）/O（深）= INK 标题
+      // 弱化色：W/T = MUTED 标题
+      const cells = [
+        { key:'S', x: padL,           y: padT,           accent: true },
+        { key:'W', x: padL + colW,    y: padT,           accent: false },
+        { key:'O', x: padL,           y: padT + rowH,    accent: true },
+        { key:'T', x: padL + colW,    y: padT + rowH,    accent: false },
+      ];
+      cells.forEach(cell => {
+        const data = SWOT[cell.key];
+        // 象限底色（强调象限淡墨底，弱化象限白底）
+        MONO.el(el, 'rect', {
+          x: cell.x + 4, y: cell.y + 4,
+          width: colW - 8, height: rowH - 8,
+          fill: cell.accent ? 'rgba(28,28,26,0.05)' : 'rgba(28,28,26,0.015)',
+          rx: 6
+        });
+        // 边框（强调象限粗边）
+        MONO.el(el, 'rect', {
+          x: cell.x + 4, y: cell.y + 4,
+          width: colW - 8, height: rowH - 8,
+          fill: 'none', stroke: cell.accent ? MONO.INK : MONO.GRID,
+          'stroke-width': cell.accent ? 1.5 : 0.8,
+          rx: 6
+        });
+        // 标题
+        const headColor = cell.accent ? MONO.INK : MONO.MUTED;
+        MONO.txt(el, {
+          x: cell.x + 20, y: cell.y + 32,
+          'font-size': 18, 'font-weight': 800, fill: headColor
+        }, data.title.split(' ')[0]);
+        MONO.txt(el, {
+          x: cell.x + 20, y: cell.y + 50,
+          'font-size': 11, 'font-weight': 700, fill: headColor, 'letter-spacing':'0.04em'
+        }, data.title.split(' ')[1] || '');
+        // 副标题
+        MONO.txt(el, {
+          x: cell.x + 20, y: cell.y + 68,
+          'font-size': 9, 'font-weight': 600, fill: MONO.MUTED, 'letter-spacing':'0.08em'
+        }, data.sub.toUpperCase());
+        // 标签列表
+        data.items.forEach((it, i) => {
+          // 项目符号
+          MONO.el(el, 'circle', {
+            cx: cell.x + 26, cy: cell.y + 92 + i * 22 + 4, r: 2,
+            fill: cell.accent ? MONO.INK : MONO.MUTED
+          });
+          // 文字
+          const t = MONO.txt(el, {
+            x: cell.x + 38, y: cell.y + 92 + i * 22 + 8,
+            'font-size': 11.5, 'font-weight': 500, fill: MONO.INK, class: 'fade'
+          }, it);
+          t.style.animationDelay = (300 + (i * 60)) + 'ms';
+        });
+      });
+
+      // 中央十字（极淡）
+      el.appendChild(MONO.el(el, 'line', {
+        x1: padL + colW, y1: padT, x2: padL + colW, y2: padT + innerH,
+        stroke: MONO.FAINT, 'stroke-width': 0.5
+      }));
+      el.appendChild(MONO.el(el, 'line', {
+        x1: padL, y1: padT + rowH, x2: padL + innerW, y2: padT + rowH,
+        stroke: MONO.FAINT, 'stroke-width': 0.5
+      }));
+
+      // 故事条：SO/WO/ST/WT 战略提示
+      const storyY = H - 22;
+      MONO.txt(el, {
+        x: padL, y: storyY, 'font-size': 9, 'font-weight': 700, fill: MONO.INK, 'letter-spacing':'0.08em'
+      }, '战略组合 ·');
+      MONO.txt(el, {
+        x: padL + 56, y: storyY, 'font-size': 10.5, 'font-weight': 500, fill: MONO.INK
+      }, 'SO 增长（茶园直采 + 健康趋势）· WO 转型（借跨境电商补品牌认知）· ST 多元（用工艺专利避价格战）· WT 防御（汇率对冲 + 渠道自建）');
+    });
+  </script>
+</body>
+</html>

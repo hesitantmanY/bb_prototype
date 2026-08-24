@@ -1,0 +1,157 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>指标均值条形图 · Mono — Lieflat Charts</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="_lib/mono.css">
+</head>
+<body>
+  <div class="grid2">
+    <div class="card">
+      <h2>服务与产品功效领先，私域与传播是短板</h2>
+      <div class="sub">8 个一级指标 · 品牌资产综合评分 0-10 · 越长越强 · 通用教学样张（CBBE 框架）</div>
+      <svg id="chart" viewBox="0 0 720 460" style="width:100%;height:auto;display:block"></svg>
+      <div class="src">F5 TICK ROWS · INDICATOR MEANS · 通用教学样张 · CBBE 体系</div>
+    </div>
+  </div>
+
+  <script src="_lib/mono.js"></script>
+  <script>
+    /* ── 数据 ──
+       一级指标综合均分（0-10），按降序排
+       假设数据：8 个品牌资产指标，CBBE 框架的简化版 */
+    const DATA = [
+      { label:'客户体验·服务',           v: 7.8, group:'体验' },
+      { label:'品牌功效·产品',           v: 7.2, group:'功效' },
+      { label:'品牌功效·技术',           v: 6.9, group:'功效' },
+      { label:'客户体验·回购意愿',       v: 6.3, group:'体验' },
+      { label:'品牌形象·竞争地位',       v: 6.0, group:'形象' },
+      { label:'品牌形象·品牌传播',       v: 5.4, group:'形象' },
+      { label:'品牌形象·知名度',         v: 5.1, group:'形象' },
+      { label:'数字资产·私域运营',       v: 4.2, group:'数字' },
+    ];
+
+    /* ── 渲染 ──
+       候选审计：F5 Tick Rows（横向排名比较，单位可数）—— 完全匹配。
+       Mono 灰阶按 group 二分（功效/体验=深, 形象/数字=浅），用 ladder 区分。 */
+    MONO.obsReveal('chart', el => {
+      const W = 720, H = 460;
+      const padL = 170, padR = 70, padT = 50, padB = 50;
+      const innerW = W - padL - padR;
+      const innerH = H - padT - padB;
+      const xMax = 10;
+      const xFor = v => padL + (v / xMax) * innerW;
+      const yFor = i => padT + (i + 0.5) * (innerH / DATA.length);
+
+      // 按 group 决定灰阶深浅
+      const colorFor = g => ({
+        体验: MONO.INK,
+        功效: MONO.L[1],
+        形象: MONO.L[3],
+        数字: MONO.L[5],
+      })[g] || MONO.L[3];
+
+      const xAxisY = padT + innerH;
+
+      // 标题行 + X 轴
+      txt(el, {
+        x: W/2, y: padT - 30, 'text-anchor':'start',
+        'font-size': 9, 'font-weight': 600, fill: MONO.MUTED, 'letter-spacing':'0.06em'
+      }, '分 值  →');
+
+      // X 轴 + 刻度
+      el.appendChild(MONO.el(el, 'line', {
+        x1: padL, y1: xAxisY, x2: padL + innerW, y2: xAxisY,
+        stroke: MONO.GRID, 'stroke-width': 1
+      }));
+      for (let v = 0; v <= xMax; v += 2) {
+        const x = xFor(v);
+        el.appendChild(MONO.el(el, 'line', {
+          x1: x, y1: xAxisY, x2: x, y2: xAxisY + 4,
+          stroke: MONO.GRID, 'stroke-width': 1
+        }));
+        MONO.txt(el, {
+          x, y: xAxisY + 16, 'text-anchor':'middle',
+          'font-size': 9.5, 'font-weight': 600, fill: MONO.MUTED
+        }, String(v));
+      }
+      // 5 分中位线
+      el.appendChild(MONO.el(el, 'line', {
+        x1: xFor(5), y1: padT, x2: xFor(5), y2: xAxisY,
+        stroke: MONO.FAINT, 'stroke-width': 0.5,
+        'stroke-dasharray': '2 3', opacity: 0.7
+      }));
+
+      // 顶/底分组带（视觉分组，强化"体验功效 vs 形象数字"）
+      el.appendChild(MONO.el(el, 'rect', {
+        x: padL - 8, y: padT,
+        width: 4, height: innerH * 4 / DATA.length,
+        fill: MONO.INK, opacity: 0.06
+      }));
+      el.appendChild(MONO.el(el, 'rect', {
+        x: padL - 8, y: padT + innerH * 4 / DATA.length,
+        width: 4, height: innerH * 4 / DATA.length,
+        fill: MONO.MUTED, opacity: 0.06
+      }));
+
+      // 行
+      DATA.forEach((d, i) => {
+        const y = yFor(i);
+        const rowH = innerH / DATA.length;
+        const trackH = Math.max(10, rowH * 0.42);
+        const trackY = y - trackH / 2;
+        const xEnd = xFor(d.v);
+        const barH = trackH * 0.62;
+        const barY = y - barH / 2;
+        const groupColor = colorFor(d.group);
+
+        // 标签
+        MONO.txt(el, {
+          x: padL - 14, y: y - 1, 'text-anchor':'end',
+          'font-size': 11.5, 'font-weight': 700, fill: MONO.INK
+        }, d.label);
+        // 末尾数值
+        MONO.txt(el, {
+          x: padL + innerW + 8, y: y + 4,
+          'text-anchor':'start',
+          'font-size': 13, 'font-weight': 800, fill: MONO.INK
+        }, d.v.toFixed(1));
+
+        // 轨道（细发丝）
+        el.appendChild(MONO.el(el, 'line', {
+          x1: padL, y1: y, x2: padL + innerW, y2: y,
+          stroke: MONO.GRID, 'stroke-width': 0.5
+        }));
+
+        // 条
+        const bar = MONO.el(el, 'rect', {
+          x: padL, y: barY, width: 0, height: barH,
+          rx: barH / 2, fill: groupColor,
+          class: 'bar-grow'
+        });
+        bar.style.animationDelay = (120 + i * 90) + 'ms';
+        bar.style.transformOrigin = `${padL}px ${y}px`;
+        // 用 requestAnimationFrame 触发动画终态
+        requestAnimationFrame(() => requestAnimationFrame(() => {
+          bar.setAttribute('width', xEnd - padL);
+        }));
+        // tooltip
+        MONO.tip(bar, `${d.label}（${d.group}）：${d.v.toFixed(1)} / 10`);
+      });
+
+      // 故事条
+      const storyY = H - 22;
+      MONO.txt(el, {
+        x: padL, y: storyY, 'font-size': 9, 'font-weight': 700, fill: MONO.INK, 'letter-spacing':'0.08em'
+      }, '图说 ·');
+      MONO.txt(el, {
+        x: padL + 38, y: storyY, 'font-size': 10.5, 'font-weight': 500, fill: MONO.INK
+      }, '体验/功效 4 项均在 6.3+ · 形象/数字 4 项均 ≤ 6.0 · 短板集中在私域与传播');
+    });
+  </script>
+</body>
+</html>

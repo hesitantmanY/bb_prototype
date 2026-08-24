@@ -17,7 +17,7 @@ Exact props, types, and defaults. Options passed to `toast()` override the same 
 | `mobileOffset` | `string \| number \| object` | `'16px'` | Offset when screen width < 600px. |
 | `swipeDirections` | `array` | based on position | Allowed swipe-to-dismiss directions. |
 | `dir` | `string` | `'ltr'` | Text directionality. |
-| `hotkey` | `string` | `⌥/alt + T` | Keyboard shortcut that focuses the toaster area. |
+| `hotkey` | `string` | `/alt + T` | Keyboard shortcut that focuses the toaster area. |
 | `invert` | `boolean` | `false` | Dark toasts in light mode and vice versa. |
 | `toastOptions` | `object` | – | Default options applied to every toast (any `toast()` option below). |
 | `gap` | `number` | `14` | Gap between toasts when expanded. |

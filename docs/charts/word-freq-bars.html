@@ -1,0 +1,140 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>LDA 词频条形图 · Mono — Lieflat Charts</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="_lib/mono.css">
+</head>
+<body>
+  <div class="grid2">
+    <div class="card">
+      <h2>口感与包装是评论主轴，配料与工艺是盲区</h2>
+      <div class="sub">12 关键词 · LDA 主题建模 · 词频计数 · 通用教学样张（茶饮品牌 6 个月评论）</div>
+      <svg id="chart" viewBox="0 0 720 460" style="width:100%;height:auto;display:block"></svg>
+      <div class="src">F5 TICK ROWS · LDA WORD FREQUENCY · 通用教学样张 · 6 个月评论聚合</div>
+    </div>
+  </div>
+
+  <script src="_lib/mono.js"></script>
+  <script>
+    /* ── 数据 ──
+       LDA 主题建模后 top 12 关键词 + 频次 + 主题分组 */
+    const DATA = [
+      { word:'口感',   count: 142, topic:'产品' },
+      { word:'包装',   count:  98, topic:'产品' },
+      { word:'配送',   count:  87, topic:'服务' },
+      { word:'新鲜',   count:  76, topic:'产品' },
+      { word:'价格',   count:  68, topic:'商业' },
+      { word:'服务',   count:  54, topic:'服务' },
+      { word:'茶香',   count:  49, topic:'产品' },
+      { word:'颜值',   count:  43, topic:'产品' },
+      { word:'性价比', count:  38, topic:'商业' },
+      { word:'礼盒',   count:  32, topic:'品牌' },
+      { word:'配料',   count:  27, topic:'产品' },
+      { word:'工艺',   count:  21, topic:'品牌' },
+    ];
+
+    /* ── 渲染 ──
+       候选审计：F5 Tick Rows（横向排名比较）—— 完全匹配。 */
+    MONO.obsReveal('chart', el => {
+      const W = 720, H = 460;
+      const padL = 100, padR = 80, padT = 40, padB = 50;
+      const innerW = W - padL - padR;
+      const innerH = H - padT - padB;
+      const xMax = Math.max(...DATA.map(d => d.count));
+      const xFor = v => padL + (v / xMax) * innerW;
+      const yFor = i => padT + (i + 0.5) * (innerH / DATA.length);
+
+      const grayFor = topic => ({
+        产品: MONO.INK,
+        服务: MONO.L[1],
+        商业: MONO.L[3],
+        品牌: MONO.L[5],
+      })[topic] || MONO.L[3];
+
+      // X 轴 + 刻度
+      const xAxisY = padT + innerH;
+      el.appendChild(MONO.el(el, 'line', {
+        x1: padL, y1: xAxisY, x2: padL + innerW, y2: xAxisY,
+        stroke: MONO.GRID, 'stroke-width': 1
+      }));
+      for (let v = 0; v <= xMax; v += 30) {
+        const x = xFor(v);
+        el.appendChild(MONO.el(el, 'line', {
+          x1: x, y1: xAxisY, x2: x, y2: xAxisY + 4,
+          stroke: MONO.GRID, 'stroke-width': 1
+        }));
+        MONO.txt(el, {
+          x, y: xAxisY + 16, 'text-anchor':'middle',
+          'font-size': 9.5, 'font-weight': 600, fill: MONO.MUTED
+        }, String(v));
+      }
+      MONO.txt(el, {
+        x: padL + innerW/2, y: xAxisY + 38,
+        'text-anchor':'middle', 'font-size': 10, 'font-weight': 600, fill: MONO.MUTED
+      }, '频 次  →');
+
+      // 行
+      DATA.forEach((d, i) => {
+        const y = yFor(i);
+        const rowH = innerH / DATA.length;
+        const barH = rowH * 0.55;
+        const barY = y - barH / 2;
+        const xEnd = xFor(d.count);
+
+        // 标签
+        MONO.txt(el, {
+          x: padL - 14, y: y + 4, 'text-anchor':'end',
+          'font-size': 12, 'font-weight': 700, fill: MONO.INK
+        }, d.word);
+        // 末尾计数
+        MONO.txt(el, {
+          x: padL + innerW + 8, y: y + 4,
+          'text-anchor':'start',
+          'font-size': 13, 'font-weight': 800, fill: MONO.INK
+        }, d.count);
+        // 主题标签
+        MONO.txt(el, {
+          x: padL - 14, y: y + 18, 'text-anchor':'end',
+          'font-size': 8.5, 'font-weight': 500, fill: MONO.MUTED, 'letter-spacing':'0.04em'
+        }, d.topic);
+
+        // 轨道（细发丝）
+        el.appendChild(MONO.el(el, 'line', {
+          x1: padL, y1: y, x2: padL + innerW, y2: y,
+          stroke: MONO.GRID, 'stroke-width': 0.4, opacity: 0.6
+        }));
+
+        // 条
+        const bar = MONO.el(el, 'rect', {
+          x: padL, y: barY, width: 0, height: barH,
+          rx: barH / 2, fill: grayFor(d.topic),
+          class: 'bar-grow'
+        });
+        bar.style.animationDelay = (120 + i * 80) + 'ms';
+        bar.style.transformOrigin = `${padL}px ${y}px`;
+        requestAnimationFrame(() => requestAnimationFrame(() => {
+          bar.setAttribute('width', xEnd - padL);
+        }));
+        MONO.tip(bar, `${d.word}（${d.topic}）：${d.count} 次`);
+      });
+
+      // 故事条
+      const storyY = H - 22;
+      const productSum = DATA.filter(d => d.topic === '产品').reduce((a,b)=>a+b.count,0);
+      const totalSum = DATA.reduce((a,b)=>a+b.count,0);
+      const productPct = (productSum/totalSum*100).toFixed(0);
+      MONO.txt(el, {
+        x: padL, y: storyY, 'font-size': 9, 'font-weight': 700, fill: MONO.INK, 'letter-spacing':'0.08em'
+      }, '图说 ·');
+      MONO.txt(el, {
+        x: padL + 38, y: storyY, 'font-size': 10.5, 'font-weight': 500, fill: MONO.INK
+      }, `产品类 ${productSum} 词占 ${productPct}%（主轴）· 服务 141 + 商业 106 是次轴 · 品牌 53 偏低（品牌叙事是盲区）`);
+    });
+  </script>
+</body>
+</html>

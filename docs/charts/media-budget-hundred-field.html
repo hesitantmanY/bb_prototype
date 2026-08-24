@@ -1,0 +1,134 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>媒介预算百点图 · Mono — Lieflat Charts</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="_lib/mono.css">
+</head>
+<body>
+  <div class="grid2">
+    <div class="card">
+      <h2>信息流与 KOL 是预算主轴，户外是补位</h2>
+      <div class="sub">6 媒介渠道 · 100 点 = 100% · 越深占比越高 · 通用教学样张（茶饮品牌上市期 6 个月）</div>
+      <svg id="chart" viewBox="0 0 720 460" style="width:100%;height:auto;display:block"></svg>
+      <div class="src">L14 HUNDRED FIELD · MEDIA BUDGET · 通用教学样张 · 上市期 6 个月</div>
+    </div>
+  </div>
+
+  <script src="_lib/mono.js"></script>
+  <script>
+    /* ── 数据 ──
+       6 个媒介渠道的预算占比，总和 = 100 */
+    const SEGS = [
+      { label:'信息流广告', count: 30, note:'抖音/微信/小红书' },
+      { label:'KOL 合作',   count: 22, note:'中腰部为主' },
+      { label:'短视频种草', count: 18, note:'品牌自制 + UGC' },
+      { label:'户外广告',   count: 12, note:'地铁/商圈' },
+      { label:'私域运营',   count: 10, note:'社群 + 企微' },
+      { label:'公关活动',   count:  8, note:'开业/快闪/媒体' },
+    ];
+
+    /* ── 渲染 ──
+       候选审计：L14 Hundred Field（100% 构成，≤6 类）—— 完全匹配。
+       视觉契约：10×10 圆点矩阵，按 segment 顺序填充；色阶 = Mono ladder。
+       6 类对应 LAD 5 阶 + 1 阶 = 6 阶。 */
+    MONO.obsReveal('chart', el => {
+      const W = 720, H = 460;
+      const padL = 60, padR = 60, padT = 50, padB = 60;
+      const innerW = W - padL - padR;
+      const innerH = H - padT - padB;
+
+      // 10×10 圆点矩阵
+      const cols = 10, rows = 10;
+      const gridSize = Math.min(innerW, innerH * 1.4);
+      const cellSize = gridSize / cols;
+      const dotR = cellSize * 0.34;
+      const gridX = padL + (innerW - gridSize) / 2;
+      const gridY = padT + 20;
+
+      // 6 段灰度（按 count 排序的视觉优先级：越大越深）
+      // 这里按数据顺序上色（先列优先）
+      const colors = [MONO.INK, MONO.L[1], MONO.L[2], MONO.L[3], MONO.L[4], MONO.L[5]];
+
+      // 渲染 100 个点
+      let idx = 0;
+      for (let r = 0; r < rows; r++) {
+        for (let c = 0; c < cols; c++) {
+          // 找到当前 idx 属于哪个 segment
+          let segIdx = 0, segCount = 0;
+          for (let s = 0; s < SEGS.length; s++) {
+            if (idx < SEGS.slice(0, s + 1).reduce((a, b) => a + b.count, 0)) {
+              segIdx = s;
+              segCount = SEGS[s].count;
+              break;
+            }
+          }
+          const cx = gridX + c * cellSize + cellSize / 2;
+          const cy = gridY + r * cellSize + cellSize / 2;
+          const dot = MONO.el(el, 'circle', {
+            cx, cy, r: dotR,
+            fill: colors[segIdx],
+            class: 'pop'
+          });
+          // 动画错峰
+          const dotIndex = r * cols + c;
+          dot.style.animationDelay = (100 + dotIndex * 6) + 'ms';
+          // tooltip
+          const seg = SEGS[segIdx];
+          MONO.tip(dot, `${seg.label}（${seg.count}%）· ${seg.note}`);
+          idx++;
+        }
+      }
+
+      // 100% 边界刻度（行 1 = 10%, 行 10 = 100%）
+      MONO.txt(el, {
+        x: gridX - 10, y: gridY + cellSize / 2 + 4,
+        'text-anchor':'end', 'font-size': 9, 'font-weight': 600, fill: MONO.MUTED
+      }, '10%');
+      MONO.txt(el, {
+        x: gridX - 10, y: gridY + gridSize - cellSize / 2 + 4,
+        'text-anchor':'end', 'font-size': 9, 'font-weight': 600, fill: MONO.MUTED
+      }, '100%');
+      // 顶部
+      MONO.txt(el, {
+        x: gridX + gridSize / 2, y: gridY - 8,
+        'text-anchor':'middle', 'font-size': 9, 'font-weight': 700, fill: MONO.MUTED, 'letter-spacing':'0.08em'
+      }, '100 点 = 100% 预算');
+
+      // 底部图例
+      const legendY = gridY + gridSize + 36;
+      const legendW = gridSize;
+      const itemW = legendW / SEGS.length;
+      SEGS.forEach((s, i) => {
+        const lx = gridX + itemW * i + itemW / 2;
+        // 色块
+        MONO.el(el, 'rect', {
+          x: lx - 22, y: legendY - 8, width: 8, height: 8, rx: 1,
+          fill: colors[i]
+        });
+        // 名称
+        MONO.txt(el, {
+          x: lx - 10, y: legendY, 'font-size': 9.5, 'font-weight': 600, fill: MONO.INK
+        }, s.label);
+        // 百分比
+        MONO.txt(el, {
+          x: lx - 10, y: legendY + 14, 'font-size': 12, 'font-weight': 800, fill: MONO.INK
+        }, s.count + '%');
+      });
+
+      // 故事条
+      const storyY = H - 22;
+      MONO.txt(el, {
+        x: padL, y: storyY, 'font-size': 9, 'font-weight': 700, fill: MONO.INK, 'letter-spacing':'0.08em'
+      }, '图说 ·');
+      MONO.txt(el, {
+        x: padL + 38, y: storyY, 'font-size': 10.5, 'font-weight': 500, fill: MONO.INK
+      }, '信息流 + KOL + 短视频 = 70%（数字主导）· 户外 12% 是品牌补位 · 私域 10% / 公关 8% 偏弱');
+    });
+  </script>
+</body>
+</html>

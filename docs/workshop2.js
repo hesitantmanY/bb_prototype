@@ -47,6 +47,8 @@ Work2.renderStep = function(id){
     'STEP '+(Work2.steps.findIndex(s=>s.id===id)+1),
     Work2.titles[id], Work2.subtitles[id]
   ));
+  // 工具栏「随机生成示例」只挂在 scope step-header 上（用户点哪个 tab 看到的都是它）
+  if(id==='scope') Work2.mountRandomExample(sec);
   const fn=Work2.render[id]; if(fn) fn(sec);
   sec.dataset.rendered='1';
 };
@@ -521,3 +523,173 @@ Work2.exportMd = function(){
   out+=`\n### 7. 决策\n- **目标市场**：${sel?.name||'未选'}\n- **理由**：${d.decision.rationale}\n- **进入次序**：${d.decision.sequence}\n- **风险**：${(d.decision.risks||[]).join('；')}\n- **下一步**：${d.decision.nextSteps}\n`;
   return out;
 };
+
+/* ============================================================
+   RandomExample — Work 2
+   工具栏挂在「scope」子 step 的 step-header。覆盖范围：scope +
+   指标体系 + 候选市场 + 矩阵。Delphi 留空（用户自己跑）。
+   ============================================================ */
+const WORK2_SAMPLES = [
+  // 样本 1：东南亚茶品牌（山木茶事实战化简版）
+  {
+    scope: { question:'首阶段进入哪个东南亚市场能最大化品牌资产积累？',
+      timeframe:'18 个月内启动，第 36 个月实现首站盈利',
+      constraints:'首阶段预算 USD 1.2M；不与母公司经销网重叠；清真认证在印尼可推迟 12+ 月',
+      candidateCount:3 },
+    attractiveness: { indicators:[
+      { id:'a1', name:'市场规模与增长', source:'user', rubric:{high:'精品茶年增速 ≥15% 且人均茶消费 ≥SGD 80/年', mid:'精品茶年增速 8-15% 或人均茶消费 SGD 40-80', low:'精品茶年增速 <8% 或人均茶消费 <SGD 40'} },
+      { id:'a2', name:'华人密度与文化亲和', source:'user', rubric:{high:'华人占比 ≥25% 且对中餐/茶接受度高', mid:'华人占比 10-25% 或部分接受', low:'华人占比 <10% 或接受度低'} },
+      { id:'a3', name:'数字渠道成熟度', source:'user', rubric:{high:'Shopee/Lazada/TikTok Shop GMV 占比茶品类 ≥30%', mid:'15-30%', low:'<15%'} },
+      { id:'a4', name:'法规与清真友好度', source:'user', rubric:{high:'食品进口合规清晰, 清真认证成熟或可推迟', mid:'合规需 6-12 月, 清真可选', low:'合规 >12 月, 清真强制'} }
+    ]},
+    competitiveness: { indicators:[
+      { id:'c1', name:'品牌资产可迁移', source:'user', rubric:{high:'中文文化叙事可直接迁移且不冲突', mid:'需翻译/本地化 <3 月', low:'需重塑品牌'} },
+      { id:'c2', name:'供应链与产地复用度', source:'user', rubric:{high:'复用母公司 80%+ 供应链, 海运 <14 天', mid:'复用 50-80%, 海运 14-21 天', low:'<50% 复用'} },
+      { id:'c3', name:'团队与渠道资源', source:'user', rubric:{high:'有现成海外团队/代理/合资伙伴', mid:'可 6 月内建立', low:'需 12+ 月从零建设'} }
+    ]},
+    markets: [
+      { id:'m1', name:'新加坡', region:'东南亚·城邦', population:'5.9M', gdpPerCapita:'USD 84,000',
+        notes:'TWG 主战场, 华人占 75%, 数字渠道成熟, 食品进口合规最快',
+        scores: {a1:9, a2:10, a3:9, a4:9, c1:9, c2:8, c3:8} },
+      { id:'m2', name:'吉隆坡', region:'东南亚·马来西亚', population:'8.4M', gdpPerCapita:'USD 28,000',
+        notes:'华人 23%, 本地老字号各占一边, Shopee 渗透高',
+        scores: {a1:7, a2:6, a3:8, a4:7, c1:8, c2:7, c3:6} },
+      { id:'m3', name:'雅加达', region:'东南亚·印尼', population:'11M', gdpPerCapita:'USD 13,000',
+        notes:'华人 <7%, 清真强制, 数字渠道 TikTok Shop 最强',
+        scores: {a1:6, a2:3, a3:8, a4:3, c1:6, c2:5, c3:4} }
+    ],
+    matrix: { selectedMarketId:'m1', xCut:6.5, yCut:6.5, notes:'新加坡位于高吸引力+高竞争力象限。雅加达数字渠道强但合规是硬门槛。' },
+    decision: { rationale:'新加坡在吸引力 4 维中 3 维得分 ≥9, 竞争力 3 维中 2 维 ≥8, 是唯一落在"高吸引力+高竞争力"象限的市场。雅加达数字渠道虽强, 但合规与文化亲和是结构性短板, 不符合 18 月启动目标。吉隆坡介于两者之间, 36 月窗口可作为第二阶段。',
+      sequence:'M0-3: 新加坡公司注册 + 食品合规 + Shopee/Lazada 上线; M4-9: AR 溯源 + 节气订阅首发; M10-18: KOL 矩阵 + 第二城市评估',
+      risks:['TWG 在新加坡百货的强势可能挤压"高端"心智','清真认证推迟后印尼市场进入窗口延后 12+ 月','订阅模式在新加坡早期接受度低需 KOC 验证'],
+      nextSteps:'新加坡公司注册 → 母公司供应链签出口合同 → Shopee SG 旗舰店 6 月上线 → 7 月 AR 溯源首发 → 9 月节气订阅季首期' }
+  },
+  // 样本 2：欧洲设计师家居
+  {
+    scope: { question:'原创设计家居在欧洲的优先进驻城市组合是什么？',
+      timeframe:'24 个月在 2 个城市启动 DTC 站 + 买手店',
+      constraints:'首阶段预算 EUR 0.8M；不通过亚马逊；必须在 2 个城市建立品牌露出',
+      candidateCount:3 },
+    attractiveness: { indicators:[
+      { id:'a1', name:'设计消费力', source:'user', rubric:{high:'人均设计消费 ≥EUR 200/年且独立买手店密度高', mid:'EUR 100-200/年', low:'<EUR 100/年'} },
+      { id:'a2', name:'设计展与媒体话语权', source:'user', rubric:{high:'每年有国际级设计周+主流设计媒体总部', mid:'区域级设计展', low:'无设计展/媒体'} },
+      { id:'a3', name:'中产与年轻客群规模', source:'user', rubric:{high:'25-40 岁中产 ≥2M 且城市化率高', mid:'1-2M', low:'<1M'} }
+    ]},
+    competitiveness: { indicators:[
+      { id:'c1', name:'品牌叙事兼容度', source:'user', rubric:{high:'当代极简/东方美学叙事能直接沟通', mid:'需微调视觉', low:'风格冲突需重塑'} },
+      { id:'c2', name:'海运/仓储可达性', source:'user', rubric:{high:'汉堡/鹿特丹港 14 天内可达 + 第三方海外仓成熟', mid:'海运 14-21 天', low:'海运 >21 天或仓储复杂'} },
+      { id:'c3', name:'独立设计渠道渗透', source:'user', rubric:{high:'独立买手店/DTC 设计师品牌已成主流', mid:'部分买手店但大卖场仍主导', low:'大卖场为主, 独立买手店稀缺'} }
+    ]},
+    markets: [
+      { id:'m1', name:'阿姆斯特丹', region:'欧洲·荷兰', population:'0.9M', gdpPerCapita:'EUR 60,000',
+        notes:'设计周主场, 北欧设计集群, 独立买手店密度欧洲第一',
+        scores: {a1:9, a2:10, a3:7, c1:9, c2:10, c3:10} },
+      { id:'m2', name:'柏林', region:'欧洲·德国', population:'3.7M', gdpPerCapita:'EUR 50,000',
+        notes:'Designmai + DMY 设计周, 客群偏年轻极简, 但分销渠道碎片化',
+        scores: {a1:7, a2:8, a3:8, c1:8, c2:9, c3:7} },
+      { id:'m3', name:'米兰', region:'欧洲·意大利', population:'1.4M', gdpPerCapita:'EUR 45,000',
+        notes:'米兰设计周主战场, 但本土品牌强势, 东方美学准入壁垒高',
+        scores: {a1:8, a2:10, a3:6, c1:5, c2:8, c3:6} }
+    ],
+    matrix: { selectedMarketId:'m1', xCut:7.0, yCut:7.0, notes:'阿姆斯特丹是高吸引+高竞争力象限唯一解。米兰话语权高但品牌叙事冲突。' },
+    decision: { rationale:'阿姆斯特丹在 3 维吸引力全部 ≥7, 3 维竞争力全部 ≥9, 是首阶段双城之一的必然选择。柏林作为第二城, 客群结构与 DTC 渠道契合但分销需自建。米兰话语权最强但与东方美学叙事冲突, 留待第三阶段。',
+      sequence:'M0-3: 阿姆斯特丹 DTC 站上线 + 与 3 家买手店签约; M4-9: 柏林 DTC 站 + DMY 参展; M10-18: 米兰设计周试水',
+      risks:['欧洲家居需求 Q4 集中, 库存周转压力大','独立买手店账期长（60-90 天）','物流成本在 14 天海运线之外难以竞争'],
+      nextSteps:'阿姆斯特丹 DTC 站 4 月上线 → 6 月与底特律设计集合店签约 → 9 月柏林 DMY 参展 → 12 月米兰设计周预热' }
+  }
+];
+
+// 把样本暴露到 Work2 命名空间，方便 Work5 链式触发
+Work2.WORK2_SAMPLES = WORK2_SAMPLES;
+
+// 把 applySample 提到命名空间上，AI 模式也能复用同一份填入逻辑
+Work2._applyWork2Sample = function(s){
+  const d = state.work2;
+  // scope（缺失字段保持原值）
+  d.scope.question = s.scope?.question || d.scope.question;
+  d.scope.timeframe = s.scope?.timeframe || d.scope.timeframe;
+  d.scope.constraints = s.scope?.constraints || d.scope.constraints;
+  d.scope.candidateCount = s.scope?.candidateCount || d.scope.candidateCount;
+  // indicators
+  if(s.attractiveness?.indicators?.length){
+    d.attractiveness.indicators = s.attractiveness.indicators.map(x => ({
+      id: 'a' + uid('ind').slice(-4), name: x.name || '', source: x.source || 'user',
+      weight: 0, support: 0,
+      rubric: { high: x.rubric?.high || '', mid: x.rubric?.mid || '', low: x.rubric?.low || '' }
+    }));
+  }
+  if(s.competitiveness?.indicators?.length){
+    d.competitiveness.indicators = s.competitiveness.indicators.map(x => ({
+      id: 'c' + uid('ind').slice(-4), name: x.name || '', source: x.source || 'user',
+      weight: 0, support: 0,
+      rubric: { high: x.rubric?.high || '', mid: x.rubric?.mid || '', low: x.rubric?.low || '' }
+    }));
+  }
+  // 重置 Delphi
+  d.delphi = Work2.defaultData().delphi;
+  d.delphi.panel = Work2.EXPERTS.map(e => ({...e, round1:null, round2:null}));
+  // markets
+  if(s.markets?.length){
+    d.markets = s.markets.map(m => ({
+      id: uid('m'), name: m.name || '', region: m.region || '',
+      population: m.population || '', gdpPerCapita: m.gdpPerCapita || '',
+      notes: m.notes || '',
+      scores: {...(m.scores || {})}
+    }));
+    // 重建 sample.scores 的 key 映射到新 indicator id
+    const aMap = {}; (s.attractiveness?.indicators || []).forEach((x, i) => aMap[x.id] = d.attractiveness.indicators[i]?.id);
+    const cMap = {}; (s.competitiveness?.indicators || []).forEach((x, i) => cMap[x.id] = d.competitiveness.indicators[i]?.id);
+    d.markets.forEach((m, mi) => {
+      const newScores = {};
+      const sScores = s.markets[mi]?.scores || {};
+      Object.keys(sScores).forEach(k => {
+        if(k.startsWith('a') && aMap[k]) newScores[aMap[k]] = sScores[k];
+        else if(k.startsWith('c') && cMap[k]) newScores[cMap[k]] = sScores[k];
+        else newScores[k] = sScores[k]; // 兜底：保留原 key
+      });
+      m.scores = newScores;
+    });
+  }
+  // matrix
+  if(s.matrix && Object.keys(s.matrix).length){
+    d.matrix = {...d.matrix, ...s.matrix};
+    d.matrix.selectedMarketId = d.markets[0] ? d.markets[0].id : null;
+  }
+  // decision
+  if(s.decision && Object.keys(s.decision).length){
+    d.decision = {...d.decision, ...s.decision};
+  }
+};
+
+Work2.mountRandomExample = function(sec){
+  if(!window.RandomExample) return;
+  window.RandomExample.mount({
+    section: sec,
+    workKey: 'work2',
+    samples: WORK2_SAMPLES,
+    coverMsg: '这会覆盖 Work 2 当前的目标市场选择内容（scope/指标/市场/矩阵/决策），继续？',
+    hasData: () => {
+      const d = state.work2;
+      return !!(d.scope.question || d.markets.length || d.attractiveness.indicators.length || d.competitiveness.indicators.length);
+    },
+    applySample: (s) => Work2._applyWork2Sample(s),
+    rerenderIds: ['scope','indicators','delphi','markets','scoring','matrix','decision'],
+    buildPrompt: () => [
+      {role:'system', content:'你是国际市场进入战略专家。基于给定 SBU 与决策范围, 生成一套完整的目标市场选择示例(覆盖 7 步)。输出 JSON: {"scope":{"question":"","timeframe":"","constraints":"","candidateCount":3},"attractiveness":{"indicators":[{"id":"a1","name":"","rubric":{"high":"","mid":"","low":""}}]},"competitiveness":{"indicators":[{"id":"c1","name":"","rubric":{"high":"","mid":"","low":""}}]},"markets":[{"name":"","region":"","population":"","gdpPerCapita":"","notes":"","scores":{"a1":0-10,"c1":0-10}}],"matrix":{"xCut":0-10,"yCut":0-10,"notes":""},"decision":{"rationale":"","sequence":"","risks":[""],"nextSteps":""}}。Delphi 不需要填, 由用户自己跑。selectedMarketId 省略, 系统会用第一个市场。'},
+      {role:'user', content:`SBU: ${state.work1.sbu.name}\n品类: ${state.work1.sbu.category}\n地理范围: ${state.work1.sbu.scope}\n决策范围: ${state.work2.scope.question || '(用户尚未填)'}`}
+    ],
+    onAiResult: (r, {refresh}) => {
+      if(!r){ showToast('AI 返回为空'); return; }
+      Work2._applyWork2Sample({
+        scope: r.scope,
+        attractiveness: r.attractiveness,
+        competitiveness: r.competitiveness,
+        markets: r.markets,
+        matrix: r.matrix,
+        decision: r.decision
+      });
+      refresh();
+    }
+  });
+};
+

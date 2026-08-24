@@ -1,0 +1,160 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>渠道结构树 · Mono — Lieflat Charts</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="_lib/mono.css">
+</head>
+<body>
+  <div class="grid2">
+    <div class="card">
+      <h2>线上六成、自营 App 是头号阵地</h2>
+      <div class="sub">2 一级渠道 × 7 二级渠道 · 一级 share 总和 100 · 二级 share 归一到一级 · 通用教学样张（茶饮品牌 SEA 扩张）</div>
+      <svg id="chart" viewBox="0 0 720 480" style="width:100%;height:auto;display:block"></svg>
+      <div class="src">G7 TREE LR · CHANNEL STRUCTURE · 通用教学样张</div>
+    </div>
+  </div>
+
+  <script src="_lib/mono.js"></script>
+  <script>
+    /* ── 数据 ──
+       2 一级渠道，每个含若干二级渠道
+       一级 share 之和 = 100；二级 share 之和 = 对应一级 */
+    const TREE = [
+      {
+        name: '线上', share: 60,
+        children: [
+          { name:'自营 App',   share: 25 },
+          { name:'外卖平台',   share: 20 },
+          { name:'电商平台',   share: 10 },
+          { name:'内容种草',   share: 5 },
+        ]
+      },
+      {
+        name: '线下', share: 40,
+        children: [
+          { name:'直营旗舰店', share: 18 },
+          { name:'商超便利',   share: 12 },
+          { name:'加盟经销',   share: 10 },
+        ]
+      }
+    ];
+
+    /* ── 渲染 ──
+       候选审计：G7 Tree LR（2-3 层层级结构）—— 完全匹配。
+       视觉契约：左右两栏（一级/二级），发丝连线 + 灰度按 share 映射。 */
+    MONO.obsReveal('chart', el => {
+      const W = 720, H = 480;
+      const padL = 32, padR = 32, padT = 50, padB = 60;
+      const innerW = W - padL - padR;
+      const innerH = H - padT - padB;
+      const colL_w = 160;   // 一级节点宽
+      const colR_w = 240;   // 二级节点宽
+      const colL_x = padL + 32;
+      const colR_x = padL + innerW - colR_w - 32;
+      const xL_right = colL_x + colL_w;
+      const xR_left  = colR_x;
+
+      const totalChildren = TREE.reduce((a, g) => a + g.children.length, 0);
+      const childRowH = innerH / totalChildren;
+      const childBarMaxH = Math.max(10, childRowH * 0.55);
+
+      // 一级节点垂直居中分布
+      const groupsTotalH = innerH;
+      const groupH = groupsTotalH / TREE.length;
+
+      // 头部提示
+      MONO.txt(el, {
+        x: padL + 16, y: padT - 24, 'font-size': 9, 'font-weight': 700, fill: MONO.MUTED, 'letter-spacing':'0.08em'
+      }, '一 级');
+      MONO.txt(el, {
+        x: colR_x, y: padT - 24, 'font-size': 9, 'font-weight': 700, fill: MONO.MUTED, 'letter-spacing':'0.08em'
+      }, '二 级');
+
+      // 灰度映射：share 越大越深
+      const grayFor = share => {
+        if (share >= 20) return MONO.INK;
+        if (share >= 12) return MONO.L[1];
+        if (share >= 8)  return MONO.L[3];
+        if (share >= 5)  return MONO.L[5];
+        return MONO.L[6];
+      };
+
+      TREE.forEach((g, gi) => {
+        const gy = padT + groupH * gi + groupH / 2;
+        // 一级节点（盒子）
+        const gBoxH = 50;
+        const gBoxY = gy - gBoxH / 2;
+        // 边框
+        MONO.el(el, 'rect', {
+          x: colL_x, y: gBoxY, width: colL_w, height: gBoxH,
+          fill: MONO.INK, rx: 4, class: 'pop'
+        });
+        // 名称
+        MONO.txt(el, {
+          x: colL_x + 14, y: gBoxY + 22,
+          'font-size': 14, 'font-weight': 800, fill: MONO.PAPER
+        }, g.name);
+        // share
+        MONO.txt(el, {
+          x: colL_x + colL_w - 14, y: gBoxY + 22,
+          'text-anchor':'end', 'font-size': 18, 'font-weight': 800, fill: MONO.PAPER
+        }, g.share + '%');
+
+        // 二级子节点
+        const grpChildren = g.children;
+        const grpChildH = groupH / grpChildren.length;
+        grpChildren.forEach((c, ci) => {
+          const cy = padT + groupH * gi + grpChildH * ci + grpChildH / 2;
+          const barH = childBarMaxH;
+          const barY = cy - barH / 2;
+          // 发丝引线（一级右沿 → 二级左沿）
+          el.appendChild(MONO.el(el, 'line', {
+            x1: xL_right, y1: gy,
+            x2: xR_left, y2: cy,
+            stroke: MONO.GRID, 'stroke-width': 0.5
+          }));
+
+          // 二级条
+          const bar = MONO.el(el, 'rect', {
+            x: colR_x, y: barY,
+            width: colR_w, height: barH,
+            rx: 3,
+            fill: grayFor(c.share), class: 'pop'
+          });
+          bar.style.animationDelay = (200 + (gi * grpChildren.length + ci) * 60) + 'ms';
+          MONO.tip(bar, `${g.name} · ${c.name}：${c.share}%`);
+
+          // 二级名称（在条内左对齐）
+          MONO.txt(el, {
+            x: colR_x + 12, y: cy + 4,
+            'font-size': 11.5, 'font-weight': 700,
+            fill: c.share >= 12 ? MONO.PAPER : MONO.INK
+          }, c.name);
+
+          // 二级 share（在条内右对齐）
+          MONO.txt(el, {
+            x: colR_x + colR_w - 12, y: cy + 4,
+            'text-anchor':'end',
+            'font-size': 13, 'font-weight': 800,
+            fill: c.share >= 12 ? MONO.PAPER : MONO.INK
+          }, c.share + '%');
+        });
+      });
+
+      // 故事条
+      const storyY = H - 22;
+      MONO.txt(el, {
+        x: padL + 8, y: storyY, 'font-size': 9, 'font-weight': 700, fill: MONO.INK, 'letter-spacing':'0.08em'
+      }, '图说 ·');
+      MONO.txt(el, {
+        x: padL + 46, y: storyY, 'font-size': 10.5, 'font-weight': 500, fill: MONO.INK
+      }, '线上 60%（自营 App 25 + 外卖 20 是双引擎）· 线下 40%（直营 18 为主）· 内容种草仅 5% 是数字短板');
+    });
+  </script>
+</body>
+</html>

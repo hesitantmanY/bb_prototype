@@ -60,6 +60,8 @@ Work4.renderStep = function(id){
   sec.innerHTML='';
   sec.appendChild(UI.stepHeader('STEP '+(Work4.steps.findIndex(s=>s.id===id)+1),
     Work4.titles[id], Work4.subtitles[id]));
+  // 工具栏「随机生成示例」只挂在 route step-header
+  if(id==='route') Work4.mountRandomExample(sec);
   // Context bar
   const c=state.work4;
   const mkt=state.work2.markets.find(m=>m.id===state.work2.matrix.selectedMarketId);
@@ -702,4 +704,348 @@ Work4.refreshDynamic=function(){};
 
 Work4.exportMd = function(){
   return `\n## IV. 营销组合\n\n### 出海路径\n${Work4.summaryText('route')}\n\n### 产品\n${Work4.summaryText('product')}\n\n### 价格\n${Work4.summaryText('price')}\n\n### 渠道\n${Work4.summaryText('place')}\n\n### 促销\n${Work4.summaryText('promotion')}\n`;
+};
+
+/* ============================================================
+   RandomExample — Work 4
+   工具栏挂在「route」子 step 的 step-header。覆盖 4P 全部字段。
+   ============================================================ */
+const WORK4_SAMPLES = [
+  // 样本 1：东南亚茶（山木茶事实战化简版）
+  {
+    route: {
+      scope:'global', oemType:'OBM', entryMode:'greenfield', light:['philosophy'], politicalPower:''
+    },
+    product: {
+      name:'山木茶事',
+      description:'8 期节气茶单 + AR 茶师溯源 + 东方美学茶具, 让"送礼与自饮都讲得出故事"的高端原叶茶品牌。',
+      coreDifferentiators:[
+        '8 期节气内容 IP, 12 位签约茶师 3 年独家',
+        'AR 茶师溯源, 每一片叶子可查到茶山与茶师',
+        '订阅可跳过, 透明 SKU, 学生价入门款',
+        '陶瓷联名茶具 + 故事卡, 文化场景可分享'
+      ],
+      physicalFeatures:'陶瓷密封罐 + 铝箔独立小袋 + NFC 标签 + 礼盒纸套',
+      serviceOffering:'节气茶单订阅 / 单盒购买 / 商务礼盒定制 / 学校节气课程包',
+      technologyMoat:'AR 溯源小程序 + 订阅跳过系统 + 茶师 IP 数字资产',
+      skus:[
+        {sku:'S1', name:'节气入门款 8 期/月', priceSGD:68, audience:'学生/年轻创作者'},
+        {sku:'S2', name:'节气标准款 8 期/月', priceSGD:128, audience:'都市中产/自饮'},
+        {sku:'S3', name:'商务礼盒 1 盒', priceSGD:288, audience:'企业客户'},
+        {sku:'S4', name:'陶瓷联名茶具套装', priceSGD:198, audience:'设计爱好者'},
+        {sku:'S5', name:'学校节气课程包', priceSGD:498, audience:'中小学'}
+      ],
+      aiResult:'',
+      businessType:'physical',
+      certifications:'新加坡 SFA 食品进口注册 + Halal 推迟 (印尼 12 月后)',
+      localization:'英文/中文双语包装 + IG/TikTok 内容本地化',
+      serviceLocalization:'客服 WeChat + WhatsApp 双通道',
+      people:'本地茶师 3 位 + 数字运营 4 位 + 销售 3 位 (新加坡)',
+      process:'母公司供应链 → 海运 14 天 → 新加坡仓 → Shopee + 独立站',
+      physicalEvidence:'陶瓷罐可作桌面摆件; 礼盒可作收礼展示; AR 体验可发 IG 故事'
+    },
+    price: {
+      strategy:'价值定价 (Premium Value Pricing)',
+      strategyNote:'比 TWG 低 15-20%, 比 TEAMan 高 100%, 锚定"有故事可分享的中高端"。',
+      tiers:[
+        {tier:'入门', rangeSGD:'SGD 60-80/月', note:'学生/创作者, 拉新入口'},
+        {tier:'标准', rangeSGD:'SGD 100-150/月', note:'主力, 都市中产订阅'},
+        {tier:'礼盒', rangeSGD:'SGD 200-500/盒', note:'商务礼赠, 毛利最高'}
+      ],
+      channelPricing:'Shopee 旗舰店与独立站同价; Shopee 节日活动允许 8 折一次/月',
+      promotions:[
+        'M3 开业: 订阅首月半价',
+        'M9 中秋: 礼盒买 2 送 1 (限商务渠道)',
+        'M12 周年: 学生装免运费'
+      ],
+      competitorPrices:'TWG SGD 55-120/100g, 山木 SGD 80-180/100g (定位中高端)',
+      aiResult:'',
+      ppp:'在马来西亚与印尼市场暂以新加坡价格 80% 切入, 后续根据本地化成本上浮',
+      pricingNumbers:'客单价 SGD 130, 复购率目标 35%, LTV/CAC 目标 ≥3',
+      fxSensitivity:'SGD/USD 波动 5% 范围内不影响定价; CNY/SGD 升值 10% 需上调 5%'
+    },
+    place: {
+      onlineSelf:[
+        {name:'山木独立站', region:'全球华人', share:25, notes:'Shopify + Klaviyo + 故事型落地页'},
+        {name:'山木小程序', region:'新加坡/马来西亚华人', share:15, notes:'微信生态, AR 溯源入口'}
+      ],
+      onlineThird:[
+        {name:'Shopee SG', region:'新加坡', share:30, notes:'主战场, B2C 主力'},
+        {name:'Lazada SG', region:'新加坡', share:10, notes:'品牌店, 配合节日活动'},
+        {name:'TikTok Shop', region:'新马印', share:15, notes:'内容种草 + 直播'}
+      ],
+      onlineNotes:'Shopee + 独立站双前台, 库存/价格统一, TikTok 走 KOC 内容',
+      offlineDirect:[
+        {name:'山木茶室 @ ION Orchard', region:'新加坡', share:5, notes:'快闪 + 体验中心, 18 月内'}
+      ],
+      offlineDistrib:[
+        {name:'Tang Plaza 食品区', region:'新加坡', share:0, notes:'12 月起, 谈判中'}
+      ],
+      offlineRetail:[],
+      offlineNotes:'线下作为体验和礼赠, 不作为销量主战场',
+      keyPartners:[
+        {name:'Shopee SG', role:'B2C 主战场'},
+        {name:'WeChat Pay SG', role:'华人支付'},
+        {name:'新加坡旅游局', role:'节气文化节合作'},
+        {name:'南洋理工大学', role:'节气课程试点'}
+      ],
+      channelIncentives:'Shopee 旗舰店首年免佣金, 18 月后回到 6%; KOL 合作 CPS 15-25%',
+      structure:[
+        {name:'线上', children:[
+          {name:'自营', share:40},
+          {name:'平台', share:45}
+        ]},
+        {name:'线下', children:[
+          {name:'自营快闪', share:5},
+          {name:'经销', share:10}
+        ]}
+      ],
+      aiResult:'',
+      localChannelRelations:'母公司过去无东南亚经销, 需从零建设; 优先选择愿意投入 AR/内容共建的渠道方'
+    },
+    promotion: {
+      advertising:[
+        {channel:'Shopee 内', format:'品牌广告 + 直播切片', budgetSGD:'8,000/月'},
+        {channel:'IG / TikTok', format:'KOC + 节气短剧', budgetSGD:'12,000/月'},
+        {channel:'Google Search', format:'节气 + 原叶茶 关键词', budgetSGD:'3,000/月'}
+      ],
+      pr:[
+        {event:'新加坡 F1 周末礼盒', note:'高端曝光, 目标商务客群'},
+        {event:'中秋/教师节 学校节气课', note:'公关+教育场景双重'},
+        {event:'茶师纪录片(YouTube 8 集)', note:'内容资产, 长期 SEO'}
+      ],
+      salesPromotion:[
+        {type:'订阅首月半价', period:'M3-M5', note:'拉新'},
+        {type:'礼盒买 2 送 1', period:'M9 中秋', note:'清库存 + 拓 B 端'},
+        {type:'学生价入门款', period:'长期', note:'社群建设'}
+      ],
+      crm:{
+        tool:'Klaviyo (邮件) + 微信群 (社群)',
+        membership:'节气会员, 12 期茶单订阅者进入"节气生活家"社群',
+        repurchase:'订阅 8 期后自动续, 跳过 1 月无碍; 12 月未复购触发召回邮件',
+        notes:'首阶段不做积分, 避免把文化品牌做成折扣品牌'
+      },
+      contentStrategy:'节气 + 茶师 + 客户场景三轮内容; IG/TikTok 主战场, 故事卡 + AR 体验',
+      aiResult:'',
+      theme:'"节气可溯源, 茶有故事"',
+      context:'新加坡 + 25-40 岁城市华人/文化爱好者 + 中高端',
+      taboos:'不做低价促销 (破坏品牌感); 不打"养生药效" (合规风险); 不与连锁商超合作 (调性不符)',
+      kolTiers:[
+        {tier:'头部 KOL', example:'@jeanniewee (生活/文化, 200k 粉丝)', budgetSGD:'5,000-15,000/篇', role:'品牌叙事'},
+        {tier:'腰部 KOC', example:'10 位 @xxtea (15-50k 粉丝)', budgetSGD:'500-2,000/篇', role:'场景种草'},
+        {tier:'学校教师', example:'Ms. Lim 类 + 5 所学校', budgetSGD:'赠送 100 份课程包', role:'教育渗透'}
+      ],
+      language:'英文 (IG/TikTok/Shopee) + 中文 (小程序/WeChat/企业礼赠)'
+    }
+  },
+  // 样本 2：欧洲设计师家居
+  {
+    route: {
+      scope:'global', oemType:'OBM', entryMode:'export', light:['borrow-boat'], politicalPower:''
+    },
+    product: {
+      name:'CASA',
+      description:'中国原创设计家居, 用 AR 试摆 + 30 天试坐 + 材质溯源, 让欧洲年轻人买设计家具不再焦虑。',
+      coreDifferentiators:[
+        'AR 试摆小程序 (上传房间照片即看摆放)',
+        '30 天试坐 + 免费取回 (降低首次决策风险)',
+        '每件家具配 FSC 认证 + Wallpaper* 联名 IP',
+        '设计师在线 30 分钟一对一咨询 (附 6 个月)'
+      ],
+      physicalFeatures:'实木主架 + 布艺可拆洗 + 隐藏式连接件 + 平板包装',
+      serviceOffering:'AR 试摆 / 30 天试坐 / 设计师咨询 / 布艺换新 / 延保',
+      technologyMoat:'AR 摆放小程序 + 试坐流程中台 + 设计师排班系统',
+      skus:[
+        {sku:'S1', name:'CASA 沙发 3 人位', priceEUR:1290, audience:'欧洲 25-40 城市中产'},
+        {sku:'S2', name:'CASA 单椅', priceEUR:490, audience:'首次购置/补配'},
+        {sku:'S3', name:'CASA 餐桌 4 人', priceEUR:890, audience:'家庭客群'},
+        {sku:'S4', name:'CASA 茶几', priceEUR:390, audience:'公寓小户型'},
+        {sku:'S5', name:'CASA 灯具 (Wallpaper* 联名)', priceEUR:250, audience:'设计爱好者/送礼'}
+      ],
+      aiResult:'',
+      businessType:'physical',
+      certifications:'FSC 木材认证 + REACH 材料合规 + 欧盟 CE 标识',
+      localization:'荷兰语/德语/法语/英语 4 语言包装 + 本地设计师标注',
+      serviceLocalization:'客服 Email + WhatsApp + 本地设计师预约',
+      people:'荷兰本地团队 4 位 (销售/设计/客服/物流) + 中国供应链对接 2 位',
+      process:'中国佛山/越南代工 → 海运 21 天至鹿特丹 → 本地仓 → 独立站/DTC',
+      physicalEvidence:'平板包装, 拆箱即体验; 材质证书随件; Wallpaper* 联名标贴可展示'
+    },
+    price: {
+      strategy:'渗透定价 (Penetration Pricing)',
+      strategyNote:'比 Hay/Muuto 低 20-30%, 比无印良品高 50%, 锚定"中国设计+欧洲可及价位"。',
+      tiers:[
+        {tier:'入门', rangeEUR:'EUR 250-500', note:'灯具/单椅, 引流款'},
+        {tier:'主力', rangeEUR:'EUR 800-1500', note:'沙发/餐桌, 利润款'},
+        {tier:'联名', rangeEUR:'EUR 1500-3000', note:'联名限量, 品牌款'}
+      ],
+      channelPricing:'独立站与买手店同价; 独立站 6 月/年终大促允许 8 折',
+      promotions:[
+        'M2 上线: 沙发首单 9 折',
+        'M6 米兰设计周: 联名款 95 折',
+        'M11 黑五: 桌椅套装 85 折 (1 周限)'
+      ],
+      competitorPrices:'Hay 沙发 EUR 2000-3500, Muuto EUR 1800-3200, CASA EUR 1290 (错位)',
+      aiResult:'',
+      ppp:'德国/荷兰以 EUR 报价; 北欧/英国按本地购买力指数 ±10% 微调',
+      pricingNumbers:'客单价 EUR 950, 复购率目标 18% (家具行业低), LTV EUR 1800',
+      fxSensitivity:'CNY/EUR 升值 5% 触发 3% 提价; 升值 10% 触发设计降本方案'
+    },
+    place: {
+      onlineSelf:[
+        {name:'CASA 独立站 (Shopify Plus)', region:'欧洲 7 国', share:40, notes:'Klaviyo 邮件 + AR 摆放 + 设计博客'},
+        {name:'CASA 小程序', region:'欧洲华人/留学生', share:5, notes:'微信引流, 试摆入口'}
+      ],
+      onlineThird:[
+        {name:'Amazon EU', region:'德/法/意/西', share:15, notes:'B2C, 价格带中段'},
+        {name:'Wayfair', region:'欧洲 5 国', share:10, notes:'家居垂类, 流量补充'}
+      ],
+      onlineNotes:'独立站为主, Amazon/Wayfair 为辅, 维持品牌价格话语权',
+      offlineDirect:[
+        {name:'CASA Amsterdam 快闪', region:'荷兰', share:8, notes:'设计周 + 季度快闪'},
+        {name:'CASA Berlin Showroom', region:'德国', share:5, notes:'预约制体验中心'}
+      ],
+      offlineDistrib:[
+        {name:'底特律设计集合店', region:'荷兰/德国', share:12, notes:'北欧设计集群'},
+        {name:'Magnet 家具店', region:'德国', share:5, notes:'区域分销'}
+      ],
+      offlineRetail:[],
+      offlineNotes:'线下首阶段是体验而非销量, 与买手店共建内容',
+      keyPartners:[
+        {name:'底特律设计集合店', role:'买手店合作'},
+        {name:'Magnet 家具', role:'区域分销'},
+        {name:'Wallpaper* 杂志', role:'联名 IP'},
+        {name:'米兰设计周', role:'年度品牌曝光'}
+      ],
+      channelIncentives:'买手店首年 50/50 毛利分成, 12 月后转 60/40; 设计师 CPS EUR 80-200/单',
+      structure:[
+        {name:'线上', children:[
+          {name:'自营独立站', share:40},
+          {name:'平台', share:25}
+        ]},
+        {name:'线下', children:[
+          {name:'自营快闪', share:13},
+          {name:'买手店', share:17},
+          {name:'分销', share:5}
+        ]}
+      ],
+      aiResult:'',
+      localChannelRelations:'与 3 家北欧买手店有 2 年合作基础; 德国分销是新启动, 需 6 月培育'
+    },
+    promotion: {
+      advertising:[
+        {channel:'IG / Pinterest', format:'设计灵感 + 场景图', budgetEUR:'5,000/月'},
+        {channel:'Google Search', format:'Scandinavian / MUJI 等关键词', budgetEUR:'3,000/月'},
+        {channel:'YouTube', format:'设计师访谈 + 工厂纪录', budgetEUR:'2,000/月'}
+      ],
+      pr:[
+        {event:'米兰设计周 (4 月)', note:'联名款首发, 媒体邀请'},
+        {event:'荷兰设计周 (10 月)', note:'快闪 + 工作室开放'},
+        {event:'Wallpaper* 年度设计奖申报', note:'品牌资产, 长期 SEO'}
+      ],
+      salesPromotion:[
+        {type:'沙发首单 9 折', period:'M2-M3', note:'拉新'},
+        {type:'米兰设计周 95 折', period:'M6 一周', note:'清库存 + 媒体事件'},
+        {type:'黑五套装 85 折', period:'M11 一周', note:'年度冲量'}
+      ],
+      crm:{
+        tool:'Klaviyo + 本地设计师回访',
+        membership:'CASA 会员, 12 月内 3 单升级"设计合伙人"',
+        repurchase:'家具行业低复购; 6 月触发布艺换新 + 灯具补购推荐',
+        notes:'不做积分折扣, 强调设计内容共创'
+      },
+      contentStrategy:'设计师 + 客户家访 + 工厂纪实; IG/Pinterest 主战场, 内容资产化',
+      aiResult:'',
+      theme:'"设计看得到, 坐得安心"',
+      context:'欧洲 25-40 城市公寓 + 追求设计但怕踩坑 + 中端价位',
+      taboos:'不做纯折扣; 不模仿 MUJI/Hay 极简 (避免同质); 不做大型商超 (调性冲突)',
+      kolTiers:[
+        {tier:'头部设计师 KOL', example:'@ilovemydesign (欧洲设计博主, 500k)', budgetEUR:'3,000-8,000/篇', role:'品牌叙事'},
+        {tier:'家居 KOC', example:'20 位 @apartmenttherapy 风格博主', budgetEUR:'200-800/篇', role:'家访种草'},
+        {tier:'米兰/荷兰设计周策展人', example:'策展人推荐 5 位', budgetEUR:'联名合作 (无现金)', role:'行业渗透'}
+      ],
+      language:'英语 (主) + 荷兰语/德语/法语 (本地化)'
+    }
+  }
+];
+
+// 把样本暴露到命名空间，方便 Work5 链式触发
+Work4.WORK4_SAMPLES = WORK4_SAMPLES;
+
+Work4._applyWork4Sample = function(s){
+  const d = state.work4;
+  // 覆盖前清空 aiResult 避免上次的残留干扰显示
+  if(s.route){ d.route = {...d.route, ...s.route}; }
+  if(s.product){
+    d.product = {
+      ...d.product, ...s.product,
+      coreDifferentiators: (s.product.coreDifferentiators || []).slice(),
+      skus: (s.product.skus || []).map(x => ({...x})),
+      aiResult:''
+    };
+  }
+  if(s.price){
+    d.price = {
+      ...d.price, ...s.price,
+      tiers: (s.price.tiers || []).map(x => ({...x})),
+      promotions: (s.price.promotions || []).slice(),
+      aiResult:''
+    };
+  }
+  if(s.place){
+    d.place = {
+      ...d.place, ...s.place,
+      onlineSelf: (s.place.onlineSelf || []).map(x => ({...x})),
+      onlineThird: (s.place.onlineThird || []).map(x => ({...x})),
+      offlineDirect: (s.place.offlineDirect || []).map(x => ({...x})),
+      offlineDistrib: (s.place.offlineDistrib || []).map(x => ({...x})),
+      offlineRetail: (s.place.offlineRetail || []).map(x => ({...x})),
+      keyPartners: (s.place.keyPartners || []).map(x => ({...x})),
+      structure: JSON.parse(JSON.stringify(s.place.structure || [])),
+      aiResult:''
+    };
+  }
+  if(s.promotion){
+    d.promotion = {
+      ...d.promotion, ...s.promotion,
+      advertising: (s.promotion.advertising || []).map(x => ({...x})),
+      pr: (s.promotion.pr || []).map(x => ({...x})),
+      salesPromotion: (s.promotion.salesPromotion || []).map(x => ({...x})),
+      kolTiers: (s.promotion.kolTiers || []).map(x => ({...x})),
+      crm: {...(s.promotion.crm || {})},
+      aiResult:''
+    };
+  }
+  Work4.syncBodyAttrs();
+};
+
+Work4.mountRandomExample = function(sec){
+  if(!window.RandomExample) return;
+  window.RandomExample.mount({
+    section: sec,
+    workKey: 'work4',
+    samples: WORK4_SAMPLES,
+    coverMsg: '这会覆盖 Work 4 当前的 4P 内容（路径/产品/价格/渠道/促销），继续？',
+    hasData: () => {
+      const d = state.work4;
+      return !!(d.product.name || d.price.strategy || d.place.keyPartners?.length || d.promotion.theme);
+    },
+    applySample: (s) => Work4._applyWork4Sample(s),
+    rerenderIds: ['route','product','price','place','promotion','summary'],
+    buildPrompt: () => [
+      {role:'system', content:'你是 4P 营销组合专家。基于给定 SBU/目标市场/价值主张, 生成完整的 Work 4 4P 示例(6 子步)。输出 JSON: {"route":{"scope":"global|domestic","oemType":"OEM|ODM|OBM|EMS","entryMode":"export|licensing|franchise|contract-mfg|jv|acquisition|greenfield","light":["philosophy|borrow-boat|single-point"]},"product":{"name":"","description":"","coreDifferentiators":[""],"physicalFeatures":"","serviceOffering":"","technologyMoat":"","skus":[{"sku":"","name":"","priceSGD":0,"audience":""}],"businessType":"physical|service|hybrid","certifications":"","localization":"","serviceLocalization":"","people":"","process":"","physicalEvidence":""},"price":{"strategy":"","strategyNote":"","tiers":[{"tier":"","rangeSGD":"","note":""}],"channelPricing":"","promotions":[""],"competitorPrices":"","ppp":"","pricingNumbers":"","fxSensitivity":""},"place":{"onlineSelf":[{"name":"","region":"","share":0,"notes":""}],"onlineThird":[{"name":"","region":"","share":0,"notes":""}],"onlineNotes":"","offlineDirect":[{"name":"","region":"","share":0,"notes":""}],"offlineDistrib":[{"name":"","region":"","share":0,"notes":""}],"offlineNotes":"","keyPartners":[{"name":"","role":""}],"channelIncentives":"","structure":[{"name":"","children":[{"name":"","share":0}]}],"localChannelRelations":""},"promotion":{"advertising":[{"channel":"","format":"","budgetSGD":""}],"pr":[{"event":"","note":""}],"salesPromotion":[{"type":"","period":"","note":""}],"crm":{"tool":"","membership":"","repurchase":"","notes":""},"contentStrategy":"","theme":"","context":"","taboos":"","kolTiers":[{"tier":"","example":"","budgetSGD":"","role":""}],"language":""}}。价格货币用 SGD 字段名, 即使实际是 EUR 等也照填, 演示。'},
+      {role:'user', content:`SBU: ${state.work1.sbu.name}\n品类: ${state.work1.sbu.category}\n目标市场: ${(state.work2.markets.find(m=>m.id===state.work2.matrix.selectedMarketId)||{}).name || state.work1.sbu.scope}\n价值主张: ${state.work3.proposition.chosenValueText || '—'}\n定位: ${state.work3.proposition.positioningStatement || '—'}`}
+    ],
+    onAiResult: (r, {refresh}) => {
+      if(!r){ showToast('AI 返回为空'); return; }
+      Work4._applyWork4Sample({
+        route: r.route,
+        product: r.product,
+        price: r.price,
+        place: r.place,
+        promotion: r.promotion
+      });
+      refresh();
+    }
+  });
 };

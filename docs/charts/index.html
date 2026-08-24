@@ -1,0 +1,211 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>docs/charts/ · Lieflat Charts 画廊</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="_lib/mono.css">
+  <style>
+    /* 画廊专属样式（与 mono.css 共存，不冲突） */
+    .gallery{max-width:1100px;margin:0 auto}
+    .gallery-header{
+      padding:24px 0 32px;
+      border-bottom:1px solid var(--grid);
+      margin-bottom:32px;
+    }
+    .gallery-header h1{
+      font-size:24px;
+      font-weight:700;
+      letter-spacing:-.02em;
+      margin-bottom:6px;
+    }
+    .gallery-header .lede{
+      font-size:13px;
+      color:var(--muted);
+      max-width:680px;
+      line-height:1.6;
+    }
+    .gallery-grid{
+      display:grid;
+      grid-template-columns:1fr 1fr;
+      gap:20px;
+    }
+    @media(max-width:760px){
+      .gallery-grid{grid-template-columns:1fr}
+    }
+    .tile{
+      display:block;
+      padding:20px 22px;
+      background:var(--bg);
+      border:1px solid var(--grid);
+      border-radius:16px;
+      text-decoration:none;
+      color:inherit;
+      transition:border-color .2s ease, transform .2s ease;
+    }
+    .tile:hover{
+      border-color:var(--ink);
+      transform:translateY(-1px);
+    }
+    .tile-num{
+      font-size:10px;
+      font-weight:700;
+      color:var(--muted);
+      letter-spacing:0.12em;
+      margin-bottom:6px;
+    }
+    .tile-name{
+      font-size:16px;
+      font-weight:700;
+      margin-bottom:4px;
+      letter-spacing:-.01em;
+    }
+    .tile-meta{
+      font-size:10.5px;
+      color:var(--muted);
+      letter-spacing:0.08em;
+      font-weight:500;
+      text-transform:uppercase;
+      margin-bottom:10px;
+    }
+    .tile-desc{
+      font-size:12px;
+      color:var(--ink);
+      line-height:1.5;
+      opacity:0.78;
+    }
+    .tile-tag{
+      display:inline-block;
+      font-size:9.5px;
+      font-weight:600;
+      letter-spacing:0.06em;
+      color:var(--muted);
+      border:1px solid var(--grid);
+      padding:2px 7px;
+      border-radius:3px;
+      margin-right:4px;
+      margin-top:10px;
+    }
+    .legend{
+      margin-top:32px;
+      padding:18px 22px;
+      background:var(--bg);
+      border:1px solid var(--grid);
+      border-radius:12px;
+      font-size:12px;
+      color:var(--muted);
+      line-height:1.7;
+    }
+    .legend strong{color:var(--ink);font-weight:700}
+  </style>
+</head>
+<body>
+  <div class="gallery">
+    <header class="gallery-header">
+      <h1>docs/charts/ · Lieflat Charts 画廊</h1>
+      <div class="lede">
+        本目录是 Brand-building 项目的 lieflat-charts 风格图的标准位置。下面是当前沉淀的 8 张图，全部使用 Mono 灰阶与统一工作流。
+        点击任一卡片进入独立 HTML（双击也能开）。数据是通用教学样张，可按需替换。
+      </div>
+    </header>
+
+    <div class="gallery-grid">
+      <a class="tile" href="smile-curve.html">
+        <div class="tile-num">01</div>
+        <div class="tile-name">微笑曲线诊断</div>
+        <div class="tile-meta">SMILE CURVE · 库外图型</div>
+        <div class="tile-desc">5 维能力在价值链 U 形上的位置。OEM→OBM 转型情境的典型画像：交付强、两端弱。</div>
+        <span class="tile-tag">workshop1</span>
+        <span class="tile-tag">战略定位</span>
+      </a>
+
+      <a class="tile" href="perceived-value-matrix.html">
+        <div class="tile-num">02</div>
+        <div class="tile-name">感知价值矩阵</div>
+        <div class="tile-meta">4×4 · G20 思路</div>
+        <div class="tile-desc">4 画像 × 4 场景的感知价值。深色单元格=高价值；附行/列合计与极值标注。</div>
+        <span class="tile-tag">workshop1</span>
+        <span class="tile-tag">客户研究</span>
+      </a>
+
+      <a class="tile" href="indicator-means-bars.html">
+        <div class="tile-num">03</div>
+        <div class="tile-name">指标均值条形图</div>
+        <div class="tile-meta">F5 TICK ROWS</div>
+        <div class="tile-desc">8 个一级指标的综合评分；按 group 分色（功效/体验/形象/数字），5 分中位线参考。</div>
+        <span class="tile-tag">workshop1</span>
+        <span class="tile-tag">品牌资产</span>
+      </a>
+
+      <a class="tile" href="market-matrix.html">
+        <div class="tile-num">04</div>
+        <div class="tile-name">市场吸引力 × 竞争力矩阵</div>
+        <div class="tile-meta">F8 PLUMB SCATTER</div>
+        <div class="tile-desc">7 候选市场 + 中位线切四象限（明星/愿景/淘汰/产能）。东南亚扩张情境。</div>
+        <span class="tile-tag">workshop2</span>
+        <span class="tile-tag">目标市场</span>
+      </a>
+
+      <a class="tile" href="desirability-matrix.html">
+        <div class="tile-num">05</div>
+        <div class="tile-name">合意性 × 可实施性 + 决策扇面</div>
+        <div class="tile-meta">MATRIX + SECTOR</div>
+        <div class="tile-desc">10 备选卖点 + 决策扇面（从原点出发的 60° 楔形）。扇面内=明星落点；外=迁移对象。</div>
+        <span class="tile-tag">workshop3</span>
+        <span class="tile-tag">价值主张</span>
+      </a>
+
+      <a class="tile" href="channel-tree.html">
+        <div class="tile-num">06</div>
+        <div class="tile-name">渠道结构树</div>
+        <div class="tile-meta">G7 TREE LR</div>
+        <div class="tile-desc">2 一级 × 7 二级渠道；按 share 大小映射灰阶深浅。线上/线下 share 总和 100。</div>
+        <span class="tile-tag">workshop4</span>
+        <span class="tile-tag">营销组合</span>
+      </a>
+
+      <a class="tile" href="media-budget-hundred-field.html">
+        <div class="tile-num">07</div>
+        <div class="tile-name">媒介预算百点图</div>
+        <div class="tile-meta">L14 HUNDRED FIELD</div>
+        <div class="tile-desc">10×10 圆点矩阵 = 100% 预算；6 段灰度对应 6 媒介渠道。上市期 6 个月分配。</div>
+        <span class="tile-tag">workshop4</span>
+        <span class="tile-tag">营销组合</span>
+      </a>
+
+      <a class="tile" href="word-freq-bars.html">
+        <div class="tile-num">08</div>
+        <div class="tile-name">LDA 词频条形图</div>
+        <div class="tile-meta">F5 TICK ROWS</div>
+        <div class="tile-desc">12 关键词 × 频次；按 LDA 主题（产品/服务/商业/品牌）上色。6 个月评论聚合。</div>
+        <span class="tile-tag">workshop3</span>
+        <span class="tile-tag">卖点挖掘</span>
+      </a>
+
+      <a class="tile" href="swot-matrix.html">
+        <div class="tile-num">09</div>
+        <div class="tile-name">SWOT 矩阵</div>
+        <div class="tile-meta">L4 ARC MATRIX 思路</div>
+        <div class="tile-desc">2×2 象限（内部/外部 × 积极/消极）；S/O 强调（深），W/T 弱化（浅）；附 SO/WO/ST/WT 战略提示。</div>
+        <span class="tile-tag">workshop5</span>
+        <span class="tile-tag">战略分析</span>
+      </a>
+    </div>
+
+    <div class="legend">
+      <strong>使用约定 ·</strong> 所有图都使用 Mono 灰阶（INK/PAPER/MUTED/FAINT/GRID + 7 阶 ladder），
+      卡片结构统一为「结论式 h2 + 副标题（带图例）+ SVG + 大写 src」，
+      动画统一为 obsReveal（滚入播 / 点击重播 / reduced-motion 降级）。
+      <br>
+      <strong>替换数据 ·</strong> 每张图顶部的 <code>DATA</code> / <code>POINTS</code> / <code>SEGS</code> 常量是唯一需要改的地方。
+      改完直接双击 HTML 即可看新版。
+      <br>
+      <strong>工作流参考 ·</strong> <a href="https://github.com/larashero3-dotcom/lieflat-charts/blob/main/SKILL.md" style="color:var(--ink)">lieflat-charts/SKILL.md</a> ·
+      <a href="https://github.com/larashero3-dotcom/lieflat-charts/blob/main/catalog.md" style="color:var(--ink)">catalog.md</a>
+    </div>
+  </div>
+</body>
+</html>

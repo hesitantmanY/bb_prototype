@@ -173,8 +173,51 @@ Work5.toolbar=function(){
     el('button',{class:'primary',onclick:()=>Work5.aggregateAll()},'从 Work 1–4 一键汇总'),
     el('button',{onclick:()=>window.print()},'打印 / PDF'),
     el('button',{onclick:()=>App.exportMd()},'导出 Markdown'),
-    el('button',{class:'ghost',onclick:e=>Work5.aiPolishAll(e.currentTarget)},'AI 润色全文')
+    el('button',{class:'ghost',onclick:e=>Work5.aiPolishAll(e.currentTarget)},'AI 润色全文'),
+    el('button',{class:'ghost',onclick:()=>Work5.randomExampleAll()},'随机生成示例')
   );
+};
+
+// 随机生成示例：先看 Work 1-4 是否已有数据。
+// 有 → 直接汇总（与"从 Work 1-4 一键汇总"等价，但语义统一为"随机示例"）
+// 无 → 用各 work 内置的样本数据快速填一份, 再汇总
+Work5.randomExampleAll = function(){
+  // 检查 Work 1-4 是否已有内容
+  const w1 = state.work1 && (state.work1.sbu.name || state.work1.environment.political);
+  const w2 = state.work2 && (state.work2.markets.length || state.work2.scope.question);
+  const w3 = state.work3 && (state.work3.mining.documents.length || state.work3.proposition.chosenValueText);
+  const w4 = state.work4 && (state.work4.product.name || state.work4.price.strategy);
+  const allEmpty = !w1 && !w2 && !w3 && !w4;
+
+  if(allEmpty){
+    if(!confirm('Work 1-4 都还是空的, 将先在各 work 填入内置示例数据, 再汇总为策划书. 继续？')) return;
+    // 链式触发：用各 work 的样本和 apply 函数
+    try{
+      if(typeof Work1 !== 'undefined' && Work1.SBU_SAMPLES && Work1.applySBU){
+        Work1.applySBU(Work1.SBU_SAMPLES[0]);
+      }
+      if(typeof Work2 !== 'undefined' && Work2.WORK2_SAMPLES && Work2._applyWork2Sample){
+        Work2._applyWork2Sample(Work2.WORK2_SAMPLES[0]);
+      }
+      if(typeof Work3 !== 'undefined' && Work3.WORK3_SAMPLES && Work3._applyWork3Sample){
+        Work3._applyWork3Sample(Work3.WORK3_SAMPLES[0]);
+      }
+      if(typeof Work4 !== 'undefined' && Work4.WORK4_SAMPLES && Work4._applyWork4Sample){
+        Work4._applyWork4Sample(Work4.WORK4_SAMPLES[0]);
+      }
+    }catch(e){ console.warn('Work5 random example fill failed', e); }
+  } else {
+    if((state.work5.ch1_business || state.work5.abstract) && !confirm('这会从 Work 1-4 重新汇总并覆盖当前策划书, 继续？')) return;
+  }
+  // 补全封面默认值
+  const c = state.work5.cover;
+  if(!c.title) c.title = (state.work1.sbu.name || '示例品牌') + ' · 品牌国际化战略策划书';
+  if(!c.subtitle) c.subtitle = 'Work 1-4 自动汇总的策划书草案';
+  if(!c.team) c.team = '战略小组 / ' + (new Date()).toISOString().slice(0,7);
+  if(!c.date) c.date = new Date().toISOString().slice(0,10);
+  autosave();
+  Work5.aggregateAll();
+  showToast(allEmpty ? '已用内置示例填 Work 1-4 + 汇总策划书' : '已从 Work 1-4 汇总策划书');
 };
 
 Work5.section=function(id,title,bodyFn){

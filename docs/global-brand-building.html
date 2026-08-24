@@ -706,6 +706,31 @@ svg.chart{display:block;width:100%;height:auto;background:var(--bg)}
   white-space:nowrap;
 }
 
+/* Help ⓘ: inline icon with hover-tooltip on data-help */
+.help-q{
+  display:inline-block;width:14px;height:14px;line-height:14px;text-align:center;
+  border:1px solid var(--ink);border-radius:50%;color:var(--ink);
+  font-family:var(--font-mono);font-size:10px;font-weight:600;cursor:help;
+  margin-left:6px;vertical-align:middle;position:relative;user-select:none;
+}
+.help-q:hover{background:var(--ink);color:var(--bg)}
+/* hover tooltip */
+.help-q[data-help]:hover::after{
+  content:attr(data-help);
+  position:absolute;bottom:calc(100% + 6px);left:50%;transform:translateX(-50%);
+  background:var(--ink);color:var(--bg);
+  padding:8px 12px;border-radius:0;
+  font-family:var(--font-mono);font-size:11px;line-height:1.5;
+  width:max-content;max-width:280px;white-space:normal;text-align:left;
+  z-index:200;pointer-events:none;
+  /* 小三角 */
+}
+.help-q[data-help]:hover::before{
+  content:'';position:absolute;bottom:100%;left:50%;transform:translateX(-50%);
+  border:5px solid transparent;border-top-color:var(--ink);
+  z-index:201;
+}
+
 .score-cell{position:relative}
 .ai-mark{
   position:absolute;top:-4px;right:-4px;width:6px;height:6px;background:var(--maroon);border-radius:50%;
@@ -1198,7 +1223,9 @@ body[data-w4-entry="greenfield"] .x-entry-heavy { display:block; }
       <input type="password" id="setApiKey" placeholder="sk-..." oninput="Settings.onApiKeyInput()">
     </div>
     <div class="field">
-      <label>Temperature: <span id="setTempVal">1.0</span></label>
+      <label>Temperature: <span id="setTempVal">1.0</span>
+        <span class="help-q" data-help="控制 LLM 答案的随机性:\n• 0.0 = 几乎确定, 每次答案接近, 适合事实/分类\n• 0.7-1.0 = 平衡, 推荐 (本工具默认 1.0)\n• 1.5-2.0 = 高随机, 适合头脑风暴但容易跑题\n\n调参建议: 合成调研/打分用 0.7-1.0 (稳定); 创意文案/命名用 1.2-1.5 (发散)">?</span>
+      </label>
       <input type="range" id="setTemperature" min="0" max="2" step="0.1" value="1" oninput="document.getElementById('setTempVal').textContent=this.value">
     </div>
     <div class="row">
@@ -1731,7 +1758,7 @@ const Settings = {
     $('#setTemperature').value=cfg.temperature;
     $('#setTempVal').textContent=Number(cfg.temperature).toFixed(1);
     $('#setBackendUrl').value=cfg.backendUrl;
-    $('#setTestResult').textContent = cfg.apiKeyExists ? '● 已配置 API Key（点「测试连接」验证）' : '';
+    $('#setTestResult').textContent = cfg.apiKeyExists ? ' 已配置 API Key（点「测试连接」验证）' : '';
     $('#setTestResult').style.color='var(--maroon)';
     $('#settingsModal').classList.add('open');
   },
@@ -1740,7 +1767,7 @@ const Settings = {
     const r=$('#setTestResult');
     const k=$('#setApiKey').value.trim();
     if(!k){ r.textContent=''; return; }
-    r.textContent='● 已输入新 Key（保存后生效，点「测试连接」验证）';
+    r.textContent=' 已输入新 Key（保存后生效，点「测试连接」验证）';
     r.style.color='var(--maroon)';
   },
   onProviderChange(){
@@ -1789,8 +1816,8 @@ const Settings = {
     const r=$('#setBackendResult'); r.textContent='测试中…';
     state.settings.api.backendUrl=$('#setBackendUrl').value.trim()||DEFAULT_SETTINGS.backendUrl;
     const ok=await Backend.health();
-    if(ok){ r.textContent='● 本地服务已连接'; r.style.color='var(--maroon)'; }
-    else{ r.textContent='○ 未连接（LDA/Excel 将降级）'; r.style.color='var(--warn)'; }
+    if(ok){ r.textContent=' 本地服务已连接'; r.style.color='var(--maroon)'; }
+    else{ r.textContent=' 未连接（LDA/Excel 将降级）'; r.style.color='var(--warn)'; }
     App.updateSummary();
   },
   async checkBackend(){

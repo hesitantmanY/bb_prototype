@@ -1,0 +1,212 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>合意性×可实施性矩阵 · Mono — Lieflat Charts</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="_lib/mono.css">
+</head>
+<body>
+  <div class="grid2">
+    <div class="card">
+      <h2>鲜泡现制与 0 糖 0 卡是扇面内的明星卖点</h2>
+      <div class="sub">10 备选卖点 · 合意性 × 可实施性 0-10 · 扇面 = 决策落点 · 通用教学样张（茶饮品牌价值主张筛选）</div>
+      <svg id="chart" viewBox="0 0 720 540" style="width:100%;height:auto;display:block"></svg>
+      <div class="src">MATRIX + SECTOR · DESIRABILITY × IMPLEMENTABILITY · 通用教学样张</div>
+    </div>
+  </div>
+
+  <script src="_lib/mono.js"></script>
+  <script>
+    /* ── 数据 ──
+       10 个备选卖点，合意性（客户想要度）× 可实施性（企业能力匹配度），0-10 */
+    const POINTS = [
+      { id:'C1', name:'鲜泡现制',     d: 8.5, i: 7.2, group:'产品' },
+      { id:'C2', name:'0 糖 0 卡',    d: 7.8, i: 8.5, group:'产品' },
+      { id:'C3', name:'冷链鲜送',     d: 7.5, i: 6.0, group:'供应链' },
+      { id:'C4', name:'文化叙事',     d: 7.0, i: 4.5, group:'品牌' },
+      { id:'C5', name:'IP 联名',      d: 6.5, i: 7.0, group:'品牌' },
+      { id:'C6', name:'ESG 可持续',   d: 6.2, i: 5.0, group:'品牌' },
+      { id:'C7', name:'私域定制',     d: 6.0, i: 5.5, group:'数字' },
+      { id:'C8', name:'AI 配茶',      d: 5.8, i: 4.0, group:'数字' },
+      { id:'C9', name:'海外原料直采', d: 5.5, i: 6.5, group:'供应链' },
+      { id:'C10',name:'直播种草',     d: 5.0, i: 8.0, group:'传播' },
+    ];
+    // 决策扇面：从原点出发的扇形，圆心角 90°，半径阈值
+    // 任何 D/I 比值在 [cot(45+a/2), cot(45-a/2)] 区间内 且 D+I >= 阈值
+    const SECTOR = { angle: 60, rMin: 12 }; // rMin = D+I 的最低和
+
+    /* ── 渲染 ── */
+    MONO.obsReveal('chart', el => {
+      const W = 720, H = 540;
+      const padL = 64, padR = 32, padT = 60, padB = 70;
+      const innerW = W - padL - padR;
+      const innerH = H - padT - padB;
+      const xMax = 10, yMax = 10;
+      const xFor = v => padL + (v / xMax) * innerW;
+      const yFor = v => padT + (1 - v / yMax) * innerH;
+
+      // 扇面路径（从原点 (xFor(0), yFor(0)) 出发的扇形）
+      const ox = xFor(0), oy = yFor(0);
+      const rMax = Math.sqrt(innerW * innerW + innerH * innerH);
+      // SVG y 向下，所以 45° 是右上
+      const half = SECTOR.angle / 2;
+      const a0 = 45 - half;  // 起始角（°）
+      const a1 = 45 + half;  // 终止角
+      const r0x = ox + SECTOR.rMin / 20 * innerW * Math.cos(a0 * Math.PI / 180);
+      const r0y = oy - SECTOR.rMin / 20 * innerH * Math.sin(a0 * Math.PI / 180);
+      const r1x = ox + rMax * Math.cos(a0 * Math.PI / 180);
+      const r1y = oy - rMax * Math.sin(a0 * Math.PI / 180);
+      const r2x = ox + rMax * Math.cos(a1 * Math.PI / 180);
+      const r2y = oy - rMax * Math.sin(a1 * Math.PI / 180);
+      const r3x = ox + SECTOR.rMin / 20 * innerW * Math.cos(a1 * Math.PI / 180);
+      const r3y = oy - SECTOR.rMin / 20 * innerH * Math.sin(a1 * Math.PI / 180);
+      const sectorPath = `M ${r0x} ${r0y} L ${r1x} ${r1y} A ${rMax} ${rMax} 0 0 1 ${r2x} ${r2y} L ${r3x} ${r3y} A ${SECTOR.rMin/20*innerW} ${SECTOR.rMin/20*innerH} 0 0 0 ${r0x} ${r0y} Z`;
+
+      // 扇面背景（淡墨填充）
+      const sector = MONO.el(el, 'path', {
+        d: sectorPath,
+        fill: MONO.INK, 'fill-opacity': 0.06,
+        stroke: MONO.INK, 'stroke-width': 1,
+        'stroke-dasharray': '4 3', class: 'draw'
+      });
+      sector.style.animationDelay = '100ms';
+
+      // 扇面标签
+      const labelR = innerW * 0.6;
+      const labelAng = 45 * Math.PI / 180;
+      const lx = ox + labelR * Math.cos(labelAng);
+      const ly = oy - labelR * Math.sin(labelAng);
+      MONO.txt(el, {
+        x: lx, y: ly, 'text-anchor':'middle',
+        'font-size': 10, 'font-weight': 700, 'font-style':'italic',
+        fill: MONO.INK, 'letter-spacing':'0.04em', class: 'fade'
+      }, '决策扇面（明星落点）');
+
+      // 网格
+      for (let v = 0; v <= 10; v += 2) {
+        el.appendChild(MONO.el(el, 'line', {
+          x1: xFor(v), y1: padT, x2: xFor(v), y2: padT + innerH,
+          stroke: MONO.GRID, 'stroke-width': 0.5
+        }));
+        el.appendChild(MONO.el(el, 'line', {
+          x1: padL, y1: yFor(v), x2: padL + innerW, y2: yFor(v),
+          stroke: MONO.GRID, 'stroke-width': 0.5
+        }));
+      }
+      // 5 分中位线
+      el.appendChild(MONO.el(el, 'line', {
+        x1: xFor(5), y1: padT, x2: xFor(5), y2: padT + innerH,
+        stroke: MONO.FAINT, 'stroke-width': 0.5, 'stroke-dasharray': '2 3', opacity: 0.7
+      }));
+      el.appendChild(MONO.el(el, 'line', {
+        x1: padL, y1: yFor(5), x2: padL + innerW, y2: yFor(5),
+        stroke: MONO.FAINT, 'stroke-width': 0.5, 'stroke-dasharray': '2 3', opacity: 0.7
+      }));
+
+      // 轴
+      el.appendChild(MONO.el(el, 'line', {
+        x1: padL, y1: padT, x2: padL, y2: padT + innerH,
+        stroke: MONO.INK, 'stroke-width': 1.5
+      }));
+      el.appendChild(MONO.el(el, 'line', {
+        x1: padL, y1: padT + innerH, x2: padL + innerW, y2: padT + innerH,
+        stroke: MONO.INK, 'stroke-width': 1.5
+      }));
+
+      // 刻度 + 轴标签
+      for (let v = 0; v <= 10; v += 2) {
+        MONO.txt(el, {
+          x: xFor(v), y: padT + innerH + 16,
+          'text-anchor':'middle', 'font-size': 9.5, 'font-weight': 600, fill: MONO.MUTED
+        }, String(v));
+        MONO.txt(el, {
+          x: padL - 10, y: yFor(v) + 3,
+          'text-anchor':'end', 'font-size': 9.5, 'font-weight': 600, fill: MONO.MUTED
+        }, String(v));
+      }
+      MONO.txt(el, {
+        x: padL + innerW/2, y: padT + innerH + 38,
+        'text-anchor':'middle', 'font-size': 11, 'font-weight': 700, fill: MONO.INK
+      }, '可实施性  →');
+      MONO.txt(el, {
+        x: 20, y: padT + innerH/2, transform: `rotate(-90, 20, ${padT + innerH/2})`,
+        'text-anchor':'middle', 'font-size': 11, 'font-weight': 700, fill: MONO.INK
+      }, '合意性  →');
+
+      // 象限标签
+      const ql = [
+        { x: padL + 8,                y: padT + 18,          text:'愿景',  align:'start' },
+        { x: padL + innerW - 8,       y: padT + 18,          text:'明星',  align:'end' },
+        { x: padL + 8,                y: padT + innerH - 8,  text:'淘汰',  align:'start' },
+        { x: padL + innerW - 8,       y: padT + innerH - 8,  text:'产能',  align:'end' },
+      ];
+      ql.forEach(q => MONO.txt(el, {
+        x: q.x, y: q.y, 'text-anchor': q.align,
+        'font-size': 13, 'font-weight': 700, 'font-style':'italic',
+        fill: MONO.MUTED, 'letter-spacing':'0.04em'
+      }, q.text));
+
+      // 散点
+      // 判断是否在扇面内：D+I >= rMin 且 |atan2(D,I) - 45°| < half
+      const inSector = p => {
+        const sum = p.d + p.i;
+        if (sum < SECTOR.rMin) return false;
+        const ratio = Math.atan2(p.d, p.i) * 180 / Math.PI;
+        return Math.abs(ratio - 45) <= half;
+      };
+      POINTS.forEach((p, i) => {
+        const cx = xFor(p.i), cy = yFor(p.d);
+        const isStar = inSector(p);
+        const inRight = p.i >= 5;
+        const inTop = p.d >= 5;
+        const lx = inRight ? cx + 12 : cx - 12;
+        const ly = cy - 8;
+        const anchor = inRight ? 'start' : 'end';
+
+        // 影圈（扇面内的画更大、加白边）
+        if (isStar) {
+          MONO.el(el, 'circle', {
+            cx, cy, r: 14, fill: 'none',
+            stroke: MONO.INK, 'stroke-width': 0.5, 'stroke-dasharray': '2 2',
+            opacity: 0.5
+          });
+        }
+        const dot = MONO.el(el, 'circle', {
+          cx, cy, r: isStar ? 9 : 7,
+          fill: isStar ? MONO.INK : MONO.PAPER,
+          stroke: MONO.INK, 'stroke-width': 1.5,
+          class: 'pop'
+        });
+        dot.style.animationDelay = (300 + i * 60) + 'ms';
+        MONO.tip(dot, `${p.name}（${p.group}）· 合意 ${p.d} · 实施 ${p.i}${isStar?' ★ 扇面内':''}`);
+
+        // 引线
+        el.appendChild(MONO.el(el, 'line', {
+          x1: cx, y1: cy, x2: lx + (inRight ? -3 : 3), y2: ly + 4,
+          stroke: MONO.GRID, 'stroke-width': 0.5, class: 'fade'
+        }));
+        // 标签
+        const lbl = MONO.txt(el, {
+          x: lx, y: ly, 'text-anchor': anchor,
+          'font-size': 11, 'font-weight': 700, fill: MONO.INK, class: 'fade'
+        }, p.name);
+        lbl.style.animationDelay = (380 + i * 60) + 'ms';
+      });
+
+      // 故事条
+      const storyY = H - 24;
+      const stars = POINTS.filter(inSector);
+      MONO.txt(el, {
+        x: padL, y: storyY, 'font-size': 9, 'font-weight': 700, fill: MONO.INK, 'letter-spacing':'0.08em'
+      }, '图说 ·');
+      MONO.txt(el, {
+        x: padL + 38, y: storyY, 'font-size': 10.5, 'font-weight': 500, fill: MONO.INK
+      }, `扇面内 ${stars.length} 个：${stars.map(s=>s.name).join('、')} · 扇面外需生成迁移路径`);
+    });
+  </script>
+</body>
+</html>

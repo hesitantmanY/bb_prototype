@@ -1,7 +1,7 @@
 # Work 4 — 营销组合（4P）
 
 > 4 个子模块（4P），每个一个子 tab。涉及 AI 的步骤统一支持双模式（API 调用 / 手动粘贴）。
-> 流程：① 产品/技术/服务 → ② 定价/价格体系 → ③ 渠道治理 → ④ 传播促销/客户关系
+> 流程： 产品/技术/服务 →  定价/价格体系 →  渠道治理 →  传播促销/客户关系
 > 设计系统、API 引擎、数据模型见 [README.md](README.md)。
 > 上游：Work 1（SBU）、Work 2（目标市场）、Work 3（价值主张、定位、品牌个性）。
 > 下游：Work 5（策划书第 4 章营销组合）。
@@ -22,7 +22,7 @@
     slogan: ""             // 从 work3.identity.chosenSlogan 带入
   },
 
-  // ① 产品 / 技术 / 服务
+  //  产品 / 技术 / 服务
   product: {
     name: "",              // 产品/产品线名称
     description: "",       // 产品概述
@@ -37,7 +37,7 @@
     aiResult: ""           // AI 提炼的产品卖点文案
   },
 
-  // ② 定价 / 价格体系
+  //  定价 / 价格体系
   price: {
     strategy: "",          // cost-plus | value | competitive | penetration | skimming
     strategyNote: "",      // 选择该策略的理由
@@ -58,7 +58,7 @@
     aiResult: ""
   },
 
-  // ③ 销售渠道治理
+  //  销售渠道治理
   place: {
     online: {
       selfOperated: [],    // 自营渠道（官网、独立站、App）
@@ -81,7 +81,7 @@
     aiResult: ""
   },
 
-  // ④ 传播促销 / 客户关系
+  //  传播促销 / 客户关系
   promotion: {
     advertising: [
       // 广告投放
@@ -137,7 +137,7 @@ SBU：xxx   目标市场：xxx   价值主张：xxx   定位：xxx   Slogan：xx
 
 ---
 
-## ① 产品 / 技术 / 服务
+##  产品 / 技术 / 服务
 
 ### 字段
 
@@ -168,7 +168,7 @@ SBU：xxx   目标市场：xxx   价值主张：xxx   定位：xxx   Slogan：xx
 
 ---
 
-## ② 定价 / 价格体系
+##  定价 / 价格体系
 
 ### 字段
 
@@ -217,7 +217,7 @@ SBU：xxx   目标市场：xxx   价值主张：xxx   定位：xxx   Slogan：xx
 
 ---
 
-## ③ 销售渠道治理
+##  销售渠道治理
 
 ### 字段
 
@@ -261,7 +261,7 @@ SBU：xxx   目标市场：xxx   价值主张：xxx   定位：xxx   Slogan：xx
 
 ---
 
-## ④ 传播促销 / 客户关系
+##  传播促销 / 客户关系
 
 ### 字段
 

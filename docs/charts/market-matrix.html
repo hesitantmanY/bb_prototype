@@ -1,0 +1,186 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>市场吸引力×竞争力矩阵 · Mono — Lieflat Charts</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="_lib/mono.css">
+</head>
+<body>
+  <div class="grid2">
+    <div class="card">
+      <h2>曼谷、吉隆坡是明星市场，新加坡是愿景市场</h2>
+      <div class="sub">7 候选市场 · 吸引力 × 竞争力 0-10 · 中位线切四象限 · 通用教学样张（茶饮品牌东南亚扩张）</div>
+      <svg id="chart" viewBox="0 0 720 540" style="width:100%;height:auto;display:block"></svg>
+      <div class="src">F8 PLUMB SCATTER · ATTRACTIVENESS × COMPETITIVENESS · 通用教学样张</div>
+    </div>
+  </div>
+
+  <script src="_lib/mono.js"></script>
+  <script>
+    /* ── 数据 ──
+       7 个东南亚候选市场，加权汇总后的吸引力 & 竞争力分（0-10）
+       通用教学样张：茶饮品牌评估进入机会 */
+    const POINTS = [
+      { id:'M1', name:'越南·胡志明', region:'中南半岛', x: 6.2, y: 8.5 },
+      { id:'M2', name:'印尼·雅加达', region:'海岛',     x: 5.5, y: 7.8 },
+      { id:'M3', name:'泰国·曼谷',   region:'中南半岛', x: 7.8, y: 7.2 },
+      { id:'M4', name:'马来·吉隆坡', region:'海岛',     x: 8.0, y: 6.5 },
+      { id:'M5', name:'菲律宾·马尼拉', region:'海岛',   x: 4.5, y: 6.0 },
+      { id:'M6', name:'新加坡',       region:'发达',     x: 9.2, y: 5.5 },
+      { id:'M7', name:'缅甸·仰光',   region:'中南半岛', x: 3.8, y: 4.5 },
+    ];
+
+    /* ── 渲染 ──
+       候选审计：F8 Plumb Scatter（≤20 点二维散点）—— 完全匹配。
+       额外加：median 切线分四象限，标识市场分组。 */
+    MONO.obsReveal('chart', el => {
+      const W = 720, H = 540;
+      const padL = 64, padR = 32, padT = 60, padB = 70;
+      const innerW = W - padL - padR;
+      const innerH = H - padT - padB;
+      const xMax = 10, yMax = 10;
+      const xFor = v => padL + (v / xMax) * innerW;
+      const yFor = v => padT + (1 - v / yMax) * innerH;
+
+      const xCut = MONO.median(POINTS.map(p => p.x));
+      const yCut = MONO.median(POINTS.map(p => p.y));
+
+      // 象限背景（极淡）
+      const qBG = [
+        { x: padL,           y: padT,           w: xFor(xCut)-padL, h: yFor(yCut)-padT, fill: 'rgba(28,28,26,0.04)' }, // 愿景（左上：低x高y）
+        { x: xFor(xCut),     y: padT,           w: padL+innerW-xFor(xCut), h: yFor(yCut)-padT, fill: 'rgba(28,28,26,0.10)' }, // 明星（右上：高x高y）
+        { x: padL,           y: yFor(yCut),     w: xFor(xCut)-padL, h: padT+innerH-yFor(yCut), fill: 'rgba(28,28,26,0.02)' }, // 淘汰（左下）
+        { x: xFor(xCut),     y: yFor(yCut),     w: padL+innerW-xFor(xCut), h: padT+innerH-yFor(yCut), fill: 'rgba(28,28,26,0.06)' }, // 产能（右下）
+      ];
+      qBG.forEach((q, i) => {
+        el.appendChild(MONO.el(el, 'rect', {
+          x: q.x, y: q.y, width: q.w, height: q.h, fill: q.fill
+        }));
+      });
+
+      // 网格（每 2 分）
+      for (let v = 0; v <= 10; v += 2) {
+        el.appendChild(MONO.el(el, 'line', {
+          x1: xFor(v), y1: padT, x2: xFor(v), y2: padT + innerH,
+          stroke: MONO.GRID, 'stroke-width': 0.5
+        }));
+        el.appendChild(MONO.el(el, 'line', {
+          x1: padL, y1: yFor(v), x2: padL + innerW, y2: yFor(v),
+          stroke: MONO.GRID, 'stroke-width': 0.5
+        }));
+      }
+
+      // 中位切线（粗虚线 + 标签）
+      el.appendChild(MONO.el(el, 'line', {
+        x1: xFor(xCut), y1: padT, x2: xFor(xCut), y2: padT + innerH,
+        stroke: MONO.INK, 'stroke-width': 1, 'stroke-dasharray': '5 4'
+      }));
+      el.appendChild(MONO.el(el, 'line', {
+        x1: padL, y1: yFor(yCut), x2: padL + innerW, y2: yFor(yCut),
+        stroke: MONO.INK, 'stroke-width': 1, 'stroke-dasharray': '5 4'
+      }));
+
+      // 轴
+      el.appendChild(MONO.el(el, 'line', {
+        x1: padL, y1: padT, x2: padL, y2: padT + innerH,
+        stroke: MONO.INK, 'stroke-width': 1.5
+      }));
+      el.appendChild(MONO.el(el, 'line', {
+        x1: padL, y1: padT + innerH, x2: padL + innerW, y2: padT + innerH,
+        stroke: MONO.INK, 'stroke-width': 1.5
+      }));
+
+      // 刻度 + 轴标签
+      for (let v = 0; v <= 10; v += 2) {
+        MONO.txt(el, {
+          x: xFor(v), y: padT + innerH + 16,
+          'text-anchor':'middle', 'font-size': 9.5, 'font-weight': 600, fill: MONO.MUTED
+        }, String(v));
+        MONO.txt(el, {
+          x: padL - 10, y: yFor(v) + 3,
+          'text-anchor':'end', 'font-size': 9.5, 'font-weight': 600, fill: MONO.MUTED
+        }, String(v));
+      }
+      MONO.txt(el, {
+        x: padL + innerW/2, y: padT + innerH + 38,
+        'text-anchor':'middle', 'font-size': 11, 'font-weight': 700, fill: MONO.INK
+      }, '竞争力  →');
+      MONO.txt(el, {
+        x: 20, y: padT + innerH/2, transform: `rotate(-90, 20, ${padT + innerH/2})`,
+        'text-anchor':'middle', 'font-size': 11, 'font-weight': 700, fill: MONO.INK
+      }, '吸引力  →');
+
+      // 象限标签（四角，淡墨斜体）
+      const quadLabels = [
+        { x: padL + 8,                y: padT + 18,          text:'愿景',  align:'start' },
+        { x: padL + innerW - 8,       y: padT + 18,          text:'明星',  align:'end' },
+        { x: padL + 8,                y: padT + innerH - 8,  text:'淘汰',  align:'start' },
+        { x: padL + innerW - 8,       y: padT + innerH - 8,  text:'产能',  align:'end' },
+      ];
+      quadLabels.forEach(q => {
+        MONO.txt(el, {
+          x: q.x, y: q.y, 'text-anchor': q.align,
+          'font-size': 13, 'font-weight': 700, 'font-style':'italic',
+          fill: MONO.MUTED, 'letter-spacing':'0.04em'
+        }, q.text);
+      });
+
+      // 中位线值标签
+      MONO.txt(el, {
+        x: xFor(xCut) + 4, y: padT + 12,
+        'font-size': 9, 'font-weight': 600, fill: MONO.INK
+      }, `x̄=${xCut.toFixed(1)}`);
+      MONO.txt(el, {
+        x: padL + innerW - 6, y: yFor(yCut) - 4,
+        'text-anchor':'end', 'font-size': 9, 'font-weight': 600, fill: MONO.INK
+      }, `ȳ=${yCut.toFixed(1)}`);
+
+      // 散点 + 标签
+      POINTS.forEach((p, i) => {
+        const cx = xFor(p.x), cy = yFor(p.y);
+        // 选象限决定标签位置（避免越界/重叠）
+        const inRight = p.x >= xCut;
+        const inTop = p.y >= yCut;
+        const lx = inRight ? cx + 12 : cx - 12;
+        const ly = cy - 8;
+        const anchor = inRight ? 'start' : 'end';
+
+        const dot = MONO.el(el, 'circle', {
+          cx, cy, r: 8,
+          fill: MONO.INK, stroke: MONO.PAPER, 'stroke-width': 2,
+          class: 'pop'
+        });
+        dot.style.animationDelay = (200 + i * 80) + 'ms';
+        MONO.tip(dot, `${p.name}（${p.region}）· 吸引力 ${p.y} · 竞争力 ${p.x}`);
+
+        // 引线
+        el.appendChild(MONO.el(el, 'line', {
+          x1: cx, y1: cy, x2: lx + (inRight ? -3 : 3), y2: ly + 4,
+          stroke: MONO.GRID, 'stroke-width': 0.5, class: 'fade'
+        }));
+
+        // 标签
+        const lbl = MONO.txt(el, {
+          x: lx, y: ly,
+          'text-anchor': anchor,
+          'font-size': 11, 'font-weight': 700, fill: MONO.INK, class: 'fade'
+        }, p.name);
+        lbl.style.animationDelay = (300 + i * 80) + 'ms';
+      });
+
+      // 故事条
+      const storyY = H - 24;
+      MONO.txt(el, {
+        x: padL, y: storyY, 'font-size': 9, 'font-weight': 700, fill: MONO.INK, 'letter-spacing':'0.08em'
+      }, '图说 ·');
+      MONO.txt(el, {
+        x: padL + 38, y: storyY, 'font-size': 10.5, 'font-weight': 500, fill: MONO.INK
+      }, '明星 2 个（曼谷/吉隆坡）· 产能 1 个（新加坡）· 愿景 3 个（胡志明/雅加达/马尼拉）· 淘汰 1 个（仰光）');
+    });
+  </script>
+</body>
+</html>

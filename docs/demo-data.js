@@ -181,7 +181,7 @@ const DemoData = {
       }
     };
     delete s.__demoAnalysis;
-    // 回填指标实测分（李克特 1-5 → 1-10），让 ④⑥ 展示预测 vs 实测偏差
+    // 回填指标实测分（李克特 1-5 → 1-10），让  展示预测 vs 实测偏差
     if(typeof Work1!=='undefined' && Work1.backfillScores) Work1.backfillScores();
 
     s.work2 = {

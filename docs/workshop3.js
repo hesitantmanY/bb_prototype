@@ -57,6 +57,8 @@ Work3.renderStep = function(id){
   sec.innerHTML='';
   sec.appendChild(UI.stepHeader('STEP '+(Work3.steps.findIndex(s=>s.id===id)+1),
     Work3.titles[id], Work3.subtitles[id]));
+  // 工具栏「随机生成示例」只挂在 context step-header
+  if(id==='context') Work3.mountRandomExample(sec);
   const fn=Work3.render[id]; if(fn) fn(sec);
   sec.dataset.rendered='1';
 };
@@ -815,4 +817,243 @@ Work3.exportMd = function(){
   });
   out+=`\n### 5. 价值主张\n> ${d.proposition.chosenValueText}\n\n**定位句**：${d.proposition.positioningStatement}\n\n**品牌人格**：${d.proposition.mbti} ${(d.proposition.personalityTraits||[]).join('/')}\n\n**Slogan**：${d.proposition.chosenSlogan}\n`;
   return out;
+};
+
+/* ============================================================
+   RandomExample — Work 3
+   工具栏挂在「context」子 step 的 step-header。覆盖范围：mining
+   (documents + topics + painMap) + candidates + matrix + proposition。
+   ============================================================ */
+const WORK3_SAMPLES = [
+  // 样本 1：东南亚茶（山木茶事实战化简版）
+  {
+    mining: {
+      documents: [
+        '周末一个人安静读书时','给客户讲文化的开场','朋友来家做客','给孩子做节气课',
+        '下午办公室仪式感','生日礼物想要有心意','送父母他们会觉得洋气','商务晚宴的伴手礼',
+        '希望有印尼本地合作茶师','单价对学生偏贵','希望茶具能单卖','AR 操作不够简单',
+        '小包装更环保','希望节气课程进入学校','希望增加冷泡选项','希望提供更详细冲泡指南',
+        '我愿意为故事和确定性付钱','一份能讲出产地和工艺的茶礼','如果茶能像 ceramics 一样成为日常 art object',
+        '我想要 SKU 透明到能查每一片叶子的产地'
+      ],
+      topics: [
+        { id:0, label:'节气饮茶', share:32, keywords:[
+          {word:'节气', weight:0.12}, {word:'仪式', weight:0.08}, {word:'茶师', weight:0.07},
+          {word:'产地', weight:0.06}, {word:'订阅', weight:0.05}, {word:'溯源', weight:0.05},
+          {word:'学生', weight:0.04}, {word:'课程', weight:0.04}, {word:'学校', weight:0.03}
+        ], representative_docs:['给孩子做节气课','下午办公室仪式感','我愿意为故事和确定性付钱'] },
+        { id:1, label:'商务礼赠', share:28, keywords:[
+          {word:'礼', weight:0.10}, {word:'商务', weight:0.09}, {word:'客户', weight:0.08},
+          {word:'故事', weight:0.06}, {word:'文化', weight:0.06}, {word:'价格', weight:0.05},
+          {word:'生日', weight:0.04}, {word:'送父母', weight:0.04}
+        ], representative_docs:['给客户讲文化的开场','商务晚宴的伴手礼','生日礼物想要有心意'] },
+        { id:2, label:'美学与社群', share:24, keywords:[
+          {word:'设计', weight:0.10}, {word:'美学', weight:0.08}, {word:'陶瓷', weight:0.07},
+          {word:'艺术', weight:0.06}, {word:'东方', weight:0.05}, {word:'茶具', weight:0.04}
+        ], representative_docs:['朋友来家做客','希望茶具能单卖','如果茶能像 ceramics 一样成为日常 art object'] },
+        { id:3, label:'操作与可及性', share:16, keywords:[
+          {word:'AR', weight:0.08}, {word:'操作', weight:0.06}, {word:'小包装', weight:0.05},
+          {word:'冷泡', weight:0.05}, {word:'指南', weight:0.05}, {word:'冲泡', weight:0.05}
+        ], representative_docs:['AR 操作不够简单','小包装更环保','希望提供更详细冲泡指南'] }
+      ],
+      wordFreqTop: [
+        {word:'节气', count:7}, {word:'仪式', count:5}, {word:'故事', count:5},
+        {word:'设计', count:5}, {word:'商务', count:4}, {word:'产地', count:4}
+      ],
+      stats: { raw_count: 20, valid_count: 20, total_words: 380, vocab_size: 142, coherence: 0.52 },
+      painMap: [
+        { id:uid('pain'), pain:'对文化礼赠缺乏既得体又有故事的选择', evidence:'p2 "商务赠礼缺文化品位" / p5 "教师节首选"',
+          frequency:5, linkedNeeds:['n1','n3'], linkedTopicId:1, type:'痒点' },
+        { id:uid('pain'), pain:'日常没有"小确幸"仪式感', evidence:'p1 "周末读书时" / p3 "日常 art object"',
+          frequency:4, linkedNeeds:['n1','n2'], linkedTopicId:0, type:'痒点' },
+        { id:uid('pain'), pain:'市面茶礼包装过度/拼配甜腻', evidence:'p1 "不要甜得发腻"',
+          frequency:3, linkedNeeds:['n1','n3'], linkedTopicId:1, type:'痛点' },
+        { id:uid('pain'), pain:'孩子/学校接触不到好茶文化', evidence:'p5 "学校茶文化活动缺好茶具"',
+          frequency:3, linkedNeeds:['n2','n4'], linkedTopicId:0, type:'痛点' },
+        { id:uid('pain'), pain:'AR/订阅等数字化体验门槛高', evidence:'p3 "AR 操作不够简单"',
+          frequency:3, linkedNeeds:['n5'], linkedTopicId:3, type:'痛点' },
+        { id:uid('pain'), pain:'学生/年轻创作者价格门槛高', evidence:'p3 "对学生偏贵"',
+          frequency:2, linkedNeeds:['n1'], linkedTopicId:3, type:'痛点' }
+      ]
+    },
+    candidates: [
+      { id:uid('c'), name:'节气可溯源的原叶茶礼', pain:'对文化礼赠缺乏既得体又有故事的选择',
+        description:'8 期节气茶单 + AR 茶师溯源 + 东方美学礼盒', evidence:'商务礼赠+日常仪式',
+        desirabilityScores:{importance:9, uniqueness:8, credibility:8}, extraDims:{} },
+      { id:uid('c'), name:'东方美学可分享的茶具+茶套装', pain:'日常没有"小确幸"仪式感',
+        description:'陶瓷联名 IP + 故事卡 + 冲泡指南', evidence:'社群+美学场景',
+        desirabilityScores:{importance:7, uniqueness:8, credibility:7}, extraDims:{} },
+      { id:uid('c'), name:'可跳过 + 可查 + 可学的订阅', pain:'AR/订阅等数字化体验门槛高',
+        description:'订阅可跳过 + 批次号透明 + 学生价', evidence:'可及性+年轻客群',
+        desirabilityScores:{importance:6, uniqueness:7, credibility:8}, extraDims:{} }
+    ],
+    matrix: { showSector:true, sectorAngle:90, sectorRadius:12, xCut:7, yCut:7, manualSelected:[] },
+    proposition: {
+      coreValueIds:[],
+      alternatives:[],
+      chosenValueText:'节气可溯源的原叶茶礼——给愿意为故事付钱的城市文化人',
+      positioning:{
+        brand:'山木茶事',
+        audience:'25-40 岁东南亚城市华人/文化爱好者, 愿为故事与确定性付钱',
+        coreValue:'节气 + 可溯源 + 东方美学 + 可分享',
+        category:'高端原叶茶 + 茶具订阅'
+      },
+      positioningStatement:'对于 25-40 岁、追求仪式感与确定性的东南亚城市华人, 山木茶事是唯一一个用 8 期节气茶单 + AR 茶师溯源 + 东方美学茶具, 让"送礼与自饮都讲得出故事"的高端原叶茶品牌。',
+      sloganOptions:[
+        {text:'节气可溯源, 茶有故事', source:'agent'},
+        {text:'一片叶子, 一年节气', source:'user'},
+        {text:'每一杯, 都有茶师签名', source:'user'}
+      ],
+      chosenSlogan:'节气可溯源, 茶有故事',
+      mbti:'INFJ (顾问型 — 偏安静、文化深度、长期主义)',
+      personalityTraits:['真实','有故事','有距离感','东方','可信赖','可持续']
+    }
+  },
+  // 样本 2：欧洲设计师家居
+  {
+    mining: {
+      documents: [
+        '我想要一把能用十年的椅子','小户型客厅没地方放','我担心材质标的是不是真的实木',
+        '设计杂志说某某设计奖','inspiration from MUJI style','我想要 Scandinavian 又不要太冷',
+        '组装太复杂怎么办','清洗方式不清楚','如何跟现有家具搭配',
+        '希望能在买之前看到 3D 摆放效果','环保认证看不懂','家庭聚会时需要更多座椅',
+        '价格太高犹豫三个月','希望有布艺换新服务','儿童安全有保障吗',
+        '客户家装修找不到配套灯饰','希望提供一站式软装方案','设计感但不能太张扬'
+      ],
+      topics: [
+        { id:0, label:'实用与耐用', share:30, keywords:[
+          {word:'耐用', weight:0.10}, {word:'十年', weight:0.08}, {word:'材质', weight:0.07},
+          {word:'实木', weight:0.06}, {word:'组装', weight:0.05}, {word:'清洗', weight:0.05}
+        ], representative_docs:['我想要一把能用十年的椅子','组装太复杂怎么办','清洗方式不清楚'] },
+        { id:1, label:'设计风格与搭配', share:26, keywords:[
+          {word:'设计', weight:0.10}, {word:'风格', weight:0.08}, {word:'搭配', weight:0.07},
+          {word:'极简', weight:0.06}, {word:'Scandinavian', weight:0.05}, {word:'MUJI', weight:0.05}
+        ], representative_docs:['设计杂志说某某设计奖','inspiration from MUJI style','如何跟现有家具搭配'] },
+        { id:2, label:'数字与空间', share:22, keywords:[
+          {word:'3D', weight:0.10}, {word:'摆放', weight:0.08}, {word:'效果', weight:0.07},
+          {word:'AR', weight:0.06}, {word:'小户型', weight:0.05}, {word:'空间', weight:0.05}
+        ], representative_docs:['希望能在买之前看到 3D 摆放效果','小户型客厅没地方放'] },
+        { id:3, label:'认证与服务', share:22, keywords:[
+          {word:'认证', weight:0.10}, {word:'环保', weight:0.08}, {word:'布艺', weight:0.07},
+          {word:'换新', weight:0.06}, {word:'服务', weight:0.05}, {word:'儿童', weight:0.05}
+        ], representative_docs:['环保认证看不懂','希望有布艺换新服务','儿童安全有保障吗'] }
+      ],
+      wordFreqTop: [
+        {word:'设计', count:6}, {word:'耐用', count:4}, {word:'搭配', count:4},
+        {word:'材质', count:3}, {word:'环保', count:3}, {word:'3D', count:3}
+      ],
+      stats: { raw_count: 19, valid_count: 19, total_words: 320, vocab_size: 124, coherence: 0.48 },
+      painMap: [
+        { id:uid('pain'), pain:'无法在购买前确认家具与家中空间的协调', evidence:'p2 "小户型没地方放" / p4 "AR 摆放"',
+          frequency:5, linkedNeeds:['n1'], linkedTopicId:2, type:'痛点' },
+        { id:uid('pain'), pain:'高端设计家具价格门槛高, 缺乏"先试后买"信心', evidence:'p3 "价格犹豫三个月"',
+          frequency:4, linkedNeeds:['n2'], linkedTopicId:0, type:'痛点' },
+        { id:uid('pain'), pain:'设计风格协调是知识门槛, 普通用户搭配焦虑', evidence:'p1 "inspiration 散乱"',
+          frequency:4, linkedNeeds:['n3'], linkedTopicId:1, type:'痒点' },
+        { id:uid('pain'), pain:'环保/材质认证信息不透明, 担心被"漂绿"', evidence:'p5 "环保认证看不懂"',
+          frequency:3, linkedNeeds:['n4'], linkedTopicId:3, type:'痛点' }
+      ]
+    },
+    candidates: [
+      { id:uid('c'), name:'AR 试摆 + 设计顾问在线 30 分钟', pain:'无法在购买前确认家具与家中空间的协调',
+        description:'小程序内 AR 摆放 + 一对一设计师咨询', evidence:'欧洲 25-40 城市公寓客群',
+        desirabilityScores:{importance:8, uniqueness:8, credibility:7}, extraDims:{} },
+      { id:uid('c'), name:'30 天试坐 + 免费取回', pain:'高端设计家具价格门槛高, 缺乏"先试后买"信心',
+        description:'30 天无理由试坐 + 顺丰上门取回', evidence:'降低首次决策风险',
+        desirabilityScores:{importance:7, uniqueness:7, credibility:8}, extraDims:{} },
+      { id:uid('c'), name:'材质溯源 + 设计杂志联名', pain:'环保/材质认证信息不透明, 担心被"漂绿"',
+        description:'每件家具配材质证书 + 与 Wallpaper* 联名', evidence:'高端设计+文化资本',
+        desirabilityScores:{importance:7, uniqueness:9, credibility:7}, extraDims:{} }
+    ],
+    matrix: { showSector:true, sectorAngle:90, sectorRadius:12, xCut:7, yCut:7, manualSelected:[] },
+    proposition: {
+      coreValueIds:[],
+      alternatives:[],
+      chosenValueText:'AR 试摆 + 30 天试坐 + 材质溯源——让欧洲年轻人买设计家具不再焦虑',
+      positioning:{
+        brand:'CASA',
+        audience:'欧洲 25-40 岁城市公寓客群, 追求设计感但怕踩坑',
+        coreValue:'AR 试摆 + 30 天试坐 + 材质可溯源 + 设计师在线',
+        category:'原创设计家具 + 数字体验'
+      },
+      positioningStatement:'对于 25-40 岁、住在欧洲城市公寓、追求设计感但又怕搭配踩雷的城市中产, CASA 是唯一一个用 AR 试摆 + 30 天试坐 + 设计师在线 30 分钟, 让"买设计家具从冲动变成信心"的中国原创设计品牌。',
+      sloganOptions:[
+        {text:'设计看得到, 坐得安心', source:'agent'},
+        {text:'30 天试坐, 设计属于你', source:'user'},
+        {text:'每一件, 都有设计师签名', source:'agent'}
+      ],
+      chosenSlogan:'设计看得到, 坐得安心',
+      mbti:'ISFP (探险家型 — 偏审美、体验主义、独立)',
+      personalityTraits:['安静','克制','真实','有距离感','可信赖']
+    }
+  }
+];
+
+// 把样本暴露到命名空间，方便 Work5 链式触发
+Work3.WORK3_SAMPLES = WORK3_SAMPLES;
+
+Work3._applyWork3Sample = function(s){
+  const d = state.work3;
+  if(s.mining){
+    d.mining.documents = s.mining.documents.slice();
+    d.mining.topics = s.mining.topics.map(t => ({
+      id: t.id, label: t.label, share: t.share, keywords: t.keywords.slice(),
+      representative_docs: t.representative_docs.slice()
+    }));
+    d.mining.wordFreqTop = (s.mining.wordFreqTop || []).map(w => ({...w}));
+    d.mining.stats = s.mining.stats ? {...s.mining.stats} : null;
+    d.mining.painMap = (s.mining.painMap || []).map(p => ({
+      id: uid('pain'), pain: p.pain, evidence: p.evidence, frequency: p.frequency,
+      linkedNeeds: p.linkedNeeds || [], linkedTopicId: p.linkedTopicId, type: p.type
+    }));
+  }
+  if(s.candidates){
+    d.candidates = s.candidates.map(c => ({
+      id: uid('c'),
+      name: c.name, pain: c.pain, description: c.description, evidence: c.evidence,
+      desirabilityScores: {...(c.desirabilityScores || {})},
+      extraDims: {...(c.extraDims || {})},
+      x: null, y: null, selected: false
+    }));
+  }
+  if(s.matrix){
+    d.matrix = {...d.matrix, ...s.matrix};
+  }
+  if(s.proposition){
+    d.proposition = {...d.proposition, ...s.proposition};
+    d.proposition.coreValueIds = s.proposition.coreValueIds || [];
+    d.proposition.alternatives = s.proposition.alternatives || [];
+    d.proposition.sloganOptions = (s.proposition.sloganOptions || []).map(x => ({...x}));
+    d.proposition.personalityTraits = (s.proposition.personalityTraits || []).slice();
+  }
+};
+
+Work3.mountRandomExample = function(sec){
+  if(!window.RandomExample) return;
+  window.RandomExample.mount({
+    section: sec,
+    workKey: 'work3',
+    samples: WORK3_SAMPLES,
+    coverMsg: '这会覆盖 Work 3 当前的卖点挖掘/备选/矩阵/价值主张内容，继续？',
+    hasData: () => {
+      const d = state.work3;
+      return !!(d.mining.documents.length || d.mining.topics.length || d.mining.painMap.length || d.candidates.length || d.proposition.chosenValueText);
+    },
+    applySample: (s) => Work3._applyWork3Sample(s),
+    rerenderIds: ['mining','candidates','matrix','proposition'],
+    buildPrompt: () => [
+      {role:'system', content:'你是品牌战略与用户研究专家。基于给定 SBU 与目标市场, 生成一套完整的 Work 3 示例(覆盖 5 步)。输出 JSON: {"mining":{"documents":[20 条语料],"topics":[{"id":0,"label":"","share":0-100,"keywords":[{"word":"","weight":0.0-0.2}],"representative_docs":[""]}],"wordFreqTop":[{"word":"","count":1}],"stats":{"raw_count":20,"valid_count":20,"total_words":0,"vocab_size":0,"coherence":0.5},"painMap":[{"pain":"","evidence":"","frequency":1-5,"linkedNeeds":[""],"linkedTopicId":0,"type":"痛点|痒点"}]},"candidates":[{"name":"","pain":"","description":"","evidence":"","desirabilityScores":{"importance":0-10,"uniqueness":0-10,"credibility":0-10}}],"matrix":{"xCut":0-10,"yCut":0-10,"manualSelected":[]},"proposition":{"chosenValueText":"","positioning":{"brand":"","audience":"","coreValue":"","category":""},"positioningStatement":"","sloganOptions":[{"text":"","source":"agent"}],"chosenSlogan":"","mbti":"","personalityTraits":[""]}}。'},
+      {role:'user', content:`SBU: ${state.work1.sbu.name}\n品类: ${state.work1.sbu.category}\n目标市场: ${(state.work2.markets.find(m=>m.id===state.work2.matrix.selectedMarketId)||{}).name || state.work1.sbu.scope}\n客户画像: ${state.work1.personas.map(p=>p.name).join('/')}\n价值框架: 功能=${state.work1.values.chosenFunctional||'—'} 情感=${state.work1.values.chosenEmotional||'—'} 社会=${state.work1.values.chosenSocial||'—'}`}
+    ],
+    onAiResult: (r, {refresh}) => {
+      if(!r){ showToast('AI 返回为空'); return; }
+      Work3._applyWork3Sample({
+        mining: r.mining,
+        candidates: r.candidates,
+        matrix: r.matrix,
+        proposition: r.proposition
+      });
+      refresh();
+    }
+  });
 };

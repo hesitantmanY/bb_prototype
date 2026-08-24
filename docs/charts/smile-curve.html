@@ -1,0 +1,213 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+ <meta charset="utf-8" />
+ <meta name="viewport" content="width=device-width,initial-scale=1" />
+ <title>微笑曲线诊断 · Mono — Lieflat Charts</title>
+ <link rel="preconnect" href="https://fonts.googleapis.com">
+ <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+ <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+ <style>
+:root{--bg:#F0EFEB;--dark:#1C1C1A;--ink:#1C1C1A;--muted:#8F8E88;--faint:#C6C5BF;--grid:#DEDDD6}
+ *{margin:0;padding:0;box-sizing:border-box}
+ body{background:var(--bg);font-family:'Inter',sans-serif;color:var(--ink);padding:40px;-webkit-font-smoothing:antialiased}
+.grid2{display:grid;grid-template-columns:1fr;gap:22px;max-width:900px;margin:0 auto}
+.card{background:var(--bg);border-radius:24px;padding:28px 28px 20px}
+.card.wide{grid-column:1/-1}
+ h2{font-weight:700;font-size:16.5px;letter-spacing:-.02em;margin-bottom:3px}
+.sub{font-size:11.5px;color:var(--muted);margin-bottom:14px;line-height:1.5}
+.src{font-size:9.5px;color:var(--faint);margin-top:14px;letter-spacing:.08em;font-weight:500;text-transform:uppercase}
+ svg text{font-family:'Inter',sans-serif}
+.pop{transform-box:fill-box;transform-origin:center;animation:pop.5s cubic-bezier(.2,.7,.3,1.3) both}
+ @keyframes pop{from{transform:scale(0)}to{transform:none}}
+.fade{animation:fade.6s ease both}
+ @keyframes fade{from{opacity:0}}
+.draw{stroke-dasharray:1;stroke-dashoffset:1;animation:draw 1.2s cubic-bezier(.4,0,.2,1) both}
+ @keyframes draw{to{stroke-dashoffset:0}}
+ @media (prefers-reduced-motion:reduce){
+.pop,.fade{animation:none}
+.draw{animation:none;stroke-dasharray:none;stroke-dashoffset:0}
+ }
+ </style>
+</head>
+<body>
+ <div class="grid2">
+ <div class="card">
+ <h2>制造端厚实、品牌端薄弱 —— OEM 价值链画像</h2>
+ <div class="sub">5 维能力定位 · 价值链 0=上游·研发 → 1=下游·品牌 · 强=炭黑 · 弱=浅灰 · 通用教学样张（OEM→OBM 转型情境）</div>
+ <svg id="smile-curve" viewBox="0 0 720 380" style="width:100%;height:auto;display:block" role="img" aria-label="微笑曲线诊断：5 维能力在价值链上的位置"></svg>
+ <div class="src">SMILE CURVE · VALUE CHAIN DIAGNOSTIC · 通用教学样张 · 假设数据</div>
+ </div>
+ </div>
+
+ <script>
+ /* 
+ MONO TOKENS (内联自 lieflat-charts/mono-tokens.js)
+ 风格的唯一正本；任何颜色/字体/动画与本节冲突的，以本节为准。
+ */
+ (function () {
+ 'use strict';
+ const INK = '#1C1C1A';
+ const PAPER = '#F0EFEB';
+ const MUTED = '#8F8E88';
+ const FAINT = '#C6C5BF';
+ const GRID = '#DEDDD6';
+ const timers = {};
+ window.MONO = {
+ INK, PAPER, MUTED, FAINT, GRID,
+ obsReveal(id, fn){
+ const n = document.getElementById(id);
+ if (!n) return;
+ const go = () => {
+ (timers[id] || []).forEach(clearTimeout);
+ timers[id] = [];
+ if (n.tagName === 'svg' || n.tagName === 'SVG') n.innerHTML = '';
+ fn(n);
+ };
+ const io = new IntersectionObserver(es => {
+ if (es[0].isIntersecting) { go(); io.disconnect(); }
+ }, { threshold:.3 });
+ io.observe(n);
+ n.style.cursor = 'pointer';
+ n.addEventListener('click', go);
+ }
+ };
+ })();
+
+ /* 
+ DATA — 用户只需要改这里
+ 通用教学样张：OEM→OBM 转型中的典型企业
+ 5 维 = 核心 / 合规 / 交付 / 客户 / 品牌
+ X = 价值链位置 (固定 0.15/0.30/0.50/0.70/0.85)
+ 得分 = 0-1 (0=无能力, 1=行业领先)
+ 强 ≥ 0.65 / 中 0.35-0.65 / 弱 < 0.35
+ */
+ const DATA = [
+ { key:'core', label:'核心', x:0.15, score:0.32, hint:'weak',
+ note:'设计能力初步建立，核心技术依赖外部' },
+ { key:'compliance', label:'合规', x:0.30, score:0.68, hint:'strong',
+ note:'ISO 体系与海外认证成熟' },
+ { key:'delivery', label:'交付', x:0.50, score:0.92, hint:'strong',
+ note:'规模化制造与品控行业领先' },
+ { key:'customer', label:'客户', x:0.70, score:0.45, hint:'mid',
+ note:'B 端关系稳定，C 端渠道薄弱' },
+ { key:'brand', label:'品牌', x:0.85, score:0.28, hint:'weak',
+ note:'海外品牌资产积累近乎空白' },
+ ];
+
+ /* 
+ RENDER — 库外图型：价值链微笑曲线（U 形参考 + 5 维数据点）
+ 
+ 本体（SKILL.md §六 答本体）：
+ X = 价值链位置 0=上游·研发 → 1=下游·品牌
+ Y = 附加值 0-1（高=顶，低=底）
+ 点 = 5 维能力（核心/合规/交付/客户/品牌）
+ 颜色 = 强弱（强=炭黑，中=灰，弱=浅灰，明度即数据）
+ 参考 U 曲线 = 价值链"理想"形态（虚线、淡墨，仅作参照）
+
+ 候选审计（SKILL.md 硬规则 #10，#12）：
+ [x] L1–L15 / F1–F13 主力均无"价值链 U 形"模板；
+ 最近亲戚 F2 Hairline Line（日序列折线）骨架可借鉴
+ （发丝线、轴+刻度、点+标签），但语义非时间。
+ [x] L5 Radial Convergence / L12 Type Colonnade 是径向多对一，
+ 不承载"价值链位置"这条 X 轴。
+ [x] L11 Trend Lineage 是事件生命史，不是空间位置。
+ → 结论：库外图型，按 §六 翻译流程走。
+ 骨架沿用 F2 发丝思路，色板走 Mono 灰阶 ladder。
+ */
+ MONO.obsReveal('smile-curve', el => {
+ const W = 720, H = 380;
+ const padL = 56, padR = 30, padT = 56, padB = 64;
+ const innerW = W - padL - padR;
+ const innerH = H - padT - padB;
+ const xFor = x => padL + x * innerW;
+ const yFor = s => padT + (1 - s) * innerH;
+
+ const colorFor = h => ({ strong: MONO.INK, mid: MONO.MUTED, weak: MONO.FAINT })[h];
+ const labelFor = h => ({ strong:'强', mid:'中', weak:'弱' })[h];
+
+ // 参考 U 形曲线（左上高 → 中下低 → 右上高）
+ const refPath = `M ${xFor(0)} ${yFor(0.92)} ` +
+ `C ${xFor(0.35)} ${yFor(0.10)}, ${xFor(0.65)} ${yFor(0.10)}, ${xFor(1)} ${yFor(0.92)}`;
+
+ const dots = DATA.map(d => ({
+...d,
+ cx: xFor(d.x),
+ cy: yFor(d.score),
+ color: colorFor(d.hint),
+ }));
+
+ // 故事标签：图右侧的简短结论（sub 之外再补一句"图想说什么"）
+ const story = [
+ { t:'交付 0.92', s:'一枝独秀' },
+ { t:'核心/品牌', s:'两端薄弱' },
+ { t:'路径', s:'沿 OBM 上行' },
+ ];
+
+ el.innerHTML = `
+ <!-- 价值链方向提示 -->
+ <text x="${padL+innerW/2}" y="${padT-22}" text-anchor="middle"
+ font-size="10" font-weight="600" fill="${MONO.MUTED}" letter-spacing="0.04em">
+ ← 价值链 · 从上游研发到下游品牌 →
+ </text>
+
+ <!-- Y 轴 + 刻度 -->
+ <line x1="${padL}" y1="${padT}" x2="${padL}" y2="${padT+innerH}" stroke="${MONO.GRID}" stroke-width="1"/>
+ <text x="${padL-10}" y="${padT+4}" text-anchor="end" font-size="9.5" font-weight="600" fill="${MONO.MUTED}">高附加值</text>
+ <text x="${padL-10}" y="${padT+innerH-2}" text-anchor="end" font-size="9.5" font-weight="600" fill="${MONO.MUTED}">低附加值</text>
+
+ <!-- 0.5 中线（弱参考刻度） -->
+ <line x1="${padL}" y1="${yFor(0.5)}" x2="${W-padR}" y2="${yFor(0.5)}"
+ stroke="${MONO.FAINT}" stroke-width="0.5" stroke-dasharray="1 3" opacity="0.5"/>
+
+ <!-- X 轴 + 价值链分段标注 -->
+ <line x1="${padL}" y1="${padT+innerH}" x2="${W-padR}" y2="${padT+innerH}" stroke="${MONO.GRID}" stroke-width="1"/>
+ <text x="${padL}" y="${padT+innerH+20}" text-anchor="start" font-size="9.5" font-weight="600" fill="${MONO.MUTED}">上游 · 研发</text>
+ <text x="${padL+innerW/2}" y="${padT+innerH+20}" text-anchor="middle" font-size="9.5" font-weight="600" fill="${MONO.MUTED}">中游 · 制造</text>
+ <text x="${W-padR}" y="${padT+innerH+20}" text-anchor="end" font-size="9.5" font-weight="600" fill="${MONO.MUTED}">下游 · 品牌</text>
+
+ <!-- X 轴下方第二行：5 维细名（让读者一眼看到 X 位置对应的能力） -->
+ <text x="${xFor(0.15)}" y="${padT+innerH+38}" text-anchor="middle" font-size="8.5" font-weight="500" fill="${MONO.FAINT}">核心</text>
+ <text x="${xFor(0.30)}" y="${padT+innerH+38}" text-anchor="middle" font-size="8.5" font-weight="500" fill="${MONO.FAINT}">合规</text>
+ <text x="${xFor(0.50)}" y="${padT+innerH+38}" text-anchor="middle" font-size="8.5" font-weight="500" fill="${MONO.FAINT}">交付</text>
+ <text x="${xFor(0.70)}" y="${padT+innerH+38}" text-anchor="middle" font-size="8.5" font-weight="500" fill="${MONO.FAINT}">客户</text>
+ <text x="${xFor(0.85)}" y="${padT+innerH+38}" text-anchor="middle" font-size="8.5" font-weight="500" fill="${MONO.FAINT}">品牌</text>
+
+ <!-- 参考 U 曲线（发丝、虚线、淡） -->
+ <path d="${refPath}" fill="none" stroke="${MONO.FAINT}" stroke-width="0.7" stroke-dasharray="3 3" class="draw"/>
+ <text x="${xFor(0.5)}" y="${yFor(0.18)+4}" text-anchor="middle" font-size="9" font-weight="500" fill="${MONO.FAINT}" font-style="italic" letter-spacing="0.02em">
+ 价值链参考曲线（U 形）
+ </text>
+
+ <!-- 数据点：虚线引导到 X 轴 + 圆点 + 标签 + 得分 -->
+ ${dots.map((d, i) => `
+ <g style="animation-delay: ${300 + i * 90}ms">
+ <line x1="${d.cx}" y1="${d.cy}" x2="${d.cx}" y2="${padT+innerH}"
+ stroke="${MONO.GRID}" stroke-width="0.5" stroke-dasharray="2 2" class="fade"/>
+ <circle cx="${d.cx}" cy="${d.cy}" r="7" fill="${d.color}" stroke="${MONO.PAPER}" stroke-width="2" class="pop">
+ <title>${d.label}：${d.note}（得分 ${d.score.toFixed(2)} · ${labelFor(d.hint)}）</title>
+ </circle>
+ <text x="${d.cx}" y="${d.cy-14}" text-anchor="middle"
+ font-size="11.5" font-weight="700" fill="${MONO.INK}" class="fade"
+ style="animation-delay: ${400 + i * 90}ms">${d.label}</text>
+ <text x="${d.cx}" y="${d.cy+22}" text-anchor="middle"
+ font-size="9.5" font-weight="600" fill="${MONO.MUTED}" class="fade"
+ style="animation-delay: ${450 + i * 90}ms">${d.score.toFixed(2)} · ${labelFor(d.hint)}</text>
+ </g>
+ `).join('')}
+
+ <!-- 故事条（图左上，3 条短结论，给读者"图想说什么"的最简提示） -->
+ <g transform="translate(${padL+8}, ${padT+8})">
+ <text x="0" y="0" font-size="9" font-weight="600" fill="${MONO.INK}" letter-spacing="0.08em">图说 ·</text>
+ <text x="42" y="0" font-size="10" font-weight="500" fill="${MONO.INK}">${story[0].t} ${story[0].s} ·</text>
+ <text x="200" y="0" font-size="10" font-weight="500" fill="${MONO.INK}">${story[1].t} ${story[1].s} ·</text>
+ <text x="350" y="0" font-size="10" font-weight="500" fill="${MONO.INK}">${story[2].t} ${story[2].s}</text>
+ <text x="42" y="16" font-size="9" font-weight="500" fill="${MONO.MUTED}" font-style="italic">
+ OEM 转型 OBM 的典型开局：制造可继承，研发与品牌需重建
+ </text>
+ </g>
+ `;
+ });
+ </script>
+</body>
+</html>

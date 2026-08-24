@@ -1,0 +1,183 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>感知价值矩阵 · Mono — Lieflat Charts</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="_lib/mono.css">
+</head>
+<body>
+  <div class="grid2">
+    <div class="card">
+      <h2>白领 × 商务是核心战场，户外是育儿家庭的天下</h2>
+      <div class="sub">4 场景 × 4 画像 · 单元格 = 感知价值 0-10 · 越深越高 · 通用教学样张（茶饮品牌）</div>
+      <svg id="chart" viewBox="0 0 720 460" style="width:100%;height:auto;display:block"></svg>
+      <div class="src">PERCEIVED VALUE MATRIX · SCENARIO × PERSONA · 通用教学样张</div>
+    </div>
+  </div>
+
+  <script src="_lib/mono.js"></script>
+  <script>
+    /* ── 数据 ──
+       行 = 4 个画像（典型茶饮消费群体）
+       列 = 4 个场景
+       单元格 = 该画像在该场景下的感知价值（0-10） */
+    const PERSONAS = [
+      { id:'P1', label:'都市白领',   sub:'25-35 岁, 一二线' },
+      { id:'P2', label:'育儿家庭',   sub:'30-45 岁, 有孩' },
+      { id:'P3', label:'学生党',     sub:'18-24 岁, 学生' },
+      { id:'P4', label:'银发族',     sub:'55+, 退休' },
+    ];
+    const SCENARIOS = [
+      { id:'S1', label:'日常通勤' },
+      { id:'S2', label:'商务接待' },
+      { id:'S3', label:'户外野餐' },
+      { id:'S4', label:'节日送礼' },
+    ];
+    // 通用教学样张：一家茶饮品牌在不同画像 × 场景下的感知价值
+    // 高分（深）= 该画像在该场景中价值高（高需求 + 高匹配）
+    const MATRIX = [
+      // P1 都市白领
+      [7, 9, 6, 8],
+      // P2 育儿家庭
+      [6, 4, 9, 7],
+      // P3 学生党
+      [8, 3, 7, 5],
+      // P4 银发族
+      [9, 7, 4, 8],
+    ];
+
+    /* ── 渲染 ──
+       候选审计（SKILL.md 硬规则 #10、#12）：
+         ✗ L1–L15 / F1–F13 主力无"4×4 画像场景"模板。
+         最近亲戚 G20 Matrix Heat（快读矩阵）+ L4 Arc Matrix（轻量矩阵）。
+         → 选 G20 思路：4×4 单元直接读数 + Mono 灰阶按值映射。
+       视觉契约：明度 = 感知价值（明度即数据），数字读数居于单元格中央。 */
+    MONO.obsReveal('chart', el => {
+      const W = 720, H = 460;
+      const padL = 110, padR = 24, padT = 60, padB = 60;
+      const innerW = W - padL - padR;
+      const innerH = H - padT - padB;
+      const rows = PERSONAS.length, cols = SCENARIOS.length;
+      const cellW = innerW / cols;
+      const cellH = innerH / rows;
+
+      // Mono 5 阶灰映射：值 0-10 → 灰阶
+      const colorFor = v => {
+        if (v >= 9) return MONO.INK;
+        if (v >= 7) return MONO.L[1];
+        if (v >= 5) return MONO.L[3];
+        if (v >= 3) return MONO.L[5];
+        return MONO.L[6];
+      };
+      // 文字色：深底用纸色，浅底用墨色
+      const textFor = v => v >= 7 ? MONO.PAPER : MONO.INK;
+
+      // 找到极值用于故事条
+      let maxV = -1, maxCell = null, minV = 11, minCell = null;
+      let rowSum = PERSONAS.map(() => 0);
+      let colSum = SCENARIOS.map(() => 0);
+      for (let r = 0; r < rows; r++) {
+        for (let c = 0; c < cols; c++) {
+          const v = MATRIX[r][c];
+          rowSum[r] += v;
+          colSum[c] += v;
+          if (v > maxV) { maxV = v; maxCell = { r, c, v }; }
+          if (v < minV) { minV = v; minCell = { r, c, v }; }
+        }
+      }
+      const bestPersona = PERSONAS[maxCell.r];
+      const bestScenario = SCENARIOS[maxCell.c];
+      const worstPersona = PERSONAS[minCell.r];
+      const worstScenario = SCENARIOS[minCell.c];
+
+      const svg = el; // SVG root
+      el.setAttribute('viewBox', `0 0 ${W} ${H}`);
+
+      // 顶部方向提示
+      txt(svg, {
+        x: W/2, y: padT - 38, 'text-anchor':'middle',
+        'font-size': 10, 'font-weight': 600, fill: MONO.MUTED,
+        'letter-spacing': '0.04em'
+      }, '场 景  →');
+
+      // 列标题（场景）
+      SCENARIOS.forEach((s, c) => {
+        txt(svg, {
+          x: padL + cellW * c + cellW/2, y: padT - 14,
+          'text-anchor':'middle', 'font-size': 12, 'font-weight': 700, fill: MONO.INK
+        }, s.label);
+      });
+
+      // 行标题（画像）
+      PERSONAS.forEach((p, r) => {
+        txt(svg, {
+          x: padL - 10, y: padT + cellH * r + cellH/2 - 4,
+          'text-anchor':'end', 'font-size': 12, 'font-weight': 700, fill: MONO.INK
+        }, p.label);
+        txt(svg, {
+          x: padL - 10, y: padT + cellH * r + cellH/2 + 12,
+          'text-anchor':'end', 'font-size': 9.5, 'font-weight': 500, fill: MONO.MUTED
+        }, p.sub);
+      });
+
+      // 单元格
+      for (let r = 0; r < rows; r++) {
+        for (let c = 0; c < cols; c++) {
+          const v = MATRIX[r][c];
+          const x = padL + cellW * c, y = padT + cellH * r;
+          // 单元格背景
+          const rect = el(svg, 'rect', {
+            x: x + 2, y: y + 2,
+            width: cellW - 4, height: cellH - 4,
+            rx: 4,
+            fill: colorFor(v),
+            class: 'pop',
+          });
+          rect.style.animationDelay = (200 + (r * cols + c) * 30) + 'ms';
+          // tooltip
+          tip(rect, `${PERSONAS[r].label} × ${SCENARIOS[c].label}：感知价值 ${v} / 10`);
+          // 单元格内的数字
+          const num = txt(svg, {
+            x: x + cellW/2, y: y + cellH/2 + 6,
+            'text-anchor':'middle', 'font-size': 22, 'font-weight': 800,
+            fill: textFor(v), 'pointer-events':'none',
+          }, String(v));
+          num.classList.add('fade');
+          num.style.animationDelay = (350 + (r * cols + c) * 30) + 'ms';
+        }
+      }
+
+      // 行/列合计：底部和右侧
+      const footerY = padT + innerH + 22;
+      txt(svg, {
+        x: W/2, y: footerY, 'text-anchor':'start',
+        'font-size': 9, 'font-weight': 600, fill: MONO.MUTED, 'letter-spacing':'0.06em'
+      }, '↓ 画像合计');
+      colSum.forEach((s, c) => {
+        const avg = (s / rows).toFixed(1);
+        txt(svg, {
+          x: padL + cellW * c + cellW/2, y: footerY + 16,
+          'text-anchor':'middle', 'font-size': 10.5, 'font-weight': 600, fill: MONO.INK
+        }, 'Σ ' + s + ' · 均 ' + avg);
+      });
+      txt(svg, {
+        x: padL - 10, y: footerY + 16, 'text-anchor':'end',
+        'font-size': 9, 'font-weight': 600, fill: MONO.MUTED, 'letter-spacing':'0.06em'
+      }, '画像 →');
+
+      // 故事条（图下方）
+      const storyY = H - 32;
+      txt(svg, {
+        x: padL, y: storyY, 'font-size': 9, 'font-weight': 700, fill: MONO.INK, 'letter-spacing':'0.08em'
+      }, '图说 ·');
+      txt(svg, {
+        x: padL + 38, y: storyY, 'font-size': 10.5, 'font-weight': 500, fill: MONO.INK
+      }, `最高 ${bestPersona.label} × ${bestScenario.label} ${maxV} · 最低 ${worstPersona.label} × ${worstScenario.label} ${minV} · 商务场景聚焦白领，户外场景聚焦育儿家庭`);
+    });
+  </script>
+</body>
+</html>

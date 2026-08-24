@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>JsonExtract test runner</title>
+<style>
+ body{font-family:system-ui,sans-serif;max-width:920px;margin:30px auto;padding:0 20px;color:#1a1a1a}
+ h1{font-size:20px;margin-bottom:6px}
+.muted{color:#777;font-size:13px}
+.summary{padding:14px 18px;background:#f4f1ec;border-radius:6px;margin:18px 0;font-family:ui-monospace,monospace;font-size:14px}
+.summary.pass{background:#e8f4ea;color:#0a5a1c}
+.summary.fail{background:#fbe6e6;color:#8a1212}
+ table{width:100%;border-collapse:collapse;font-size:13px}
+ td,th{padding:8px 10px;text-align:left;border-bottom:1px solid #e5e2dc;vertical-align:top}
+ th{background:#f4f1ec;font-weight:600}
+ tr.fail{background:#fbe6e6}
+ tr.skip{background:#faf3df;color:#7a5a00}
+ tr.pass td:last-child{color:#0a5a1c}
+ code{background:#f4f1ec;padding:1px 4px;border-radius:3px;font-size:12px}
+ pre{background:#1a1a1a;color:#e8e8e8;padding:8px 10px;border-radius:4px;font-size:11px;overflow-x:auto;white-space:pre-wrap;word-break:break-all;max-width:480px;margin:4px 0 0}
+.fixture-name{font-weight:600}
+.stage-detail{color:#666;font-size:12px;margin-top:2px}
+</style>
+</head>
+<body>
+<h1>JsonExtract — 25 fixture 回归</h1>
+<p class="muted">
+ Open via FastAPI (this page must be served, not file://) so that the relative
+ <code>../docs/lib/json_extract.js</code> path resolves. Then run:
+ <code>python server/app.py</code> and visit
+ <code>http://localhost:8765/tests/extractJson.test.html</code>.
+</p>
+<div id="summary" class="summary">running…</div>
+<table>
+ <thead>
+ <tr><th style="width:60px">#</th><th>Fixture</th><th>Input (preview)</th><th>Got</th><th>Status</th></tr>
+ </thead>
+ <tbody id="rows"></tbody>
+</table>
+
+<script src="../docs/lib/json_extract.js"></script>
+<script src="extractJson.fixtures.js"></script>
+<script>
+(function(){
+ // Stage labels for diagnostic output
+ const STAGE = [
+ 'direct',
+ 'strip prose + parse',
+ 'strip JS comments + parse',
+ 'strip trailing commas + parse',
+ 'balanced-scan + parse'
+ ];
+
+ function deepEqual(a, b){
+ if(a === b) return true;
+ if(a == null || b == null) return a === b;
+ if(typeof a!== typeof b) return false;
+ if(typeof a!== 'object') return a === b;
+ if(Array.isArray(a)!== Array.isArray(b)) return false;
+ if(Array.isArray(a)){
+ if(a.length!== b.length) return false;
+ for(let i=0;i<a.length;i++) if(!deepEqual(a[i], b[i])) return false;
+ return true;
+ }
+ const ka = Object.keys(a), kb = Object.keys(b);
+ if(ka.length!== kb.length) return false;
+ for(const k of ka){
+ if(!Object.prototype.hasOwnProperty.call(b, k)) return false;
+ if(!deepEqual(a[k], b[k])) return false;
+ }
+ return true;
+ }
+
+ function describeStage(text){
+ // Re-run the same path as JsonExtract.run but report which stage succeeded.
+ const t0 = JsonExtract.run(text);
+ // We can't intercept the internal cascade cheaply without modifying the lib.
+ // Instead, infer stage from console.debug side-effects: the lib only logs on
+ // failure. For pass cases, just return "ok".
+ if(t0!= null) return 'ok (within 5 stages)';
+ return 'all 5 stages failed: ' + JsonExtract.lastError;
+ }
+
+ function short(s, n){ s = String(s); return s.length > n? s.slice(0, n) + '…': s; }
+
+ function run(){
+ const fixtures = (typeof EXTRACT_FIXTURES!== 'undefined')? EXTRACT_FIXTURES: [];
+ const rowsEl = document.getElementById('rows');
+ let pass = 0, fail = 0, skip = 0;
+ fixtures.forEach((fx, i) => {
+ const got = JsonExtract.run(fx.input);
+ const stageDetail = describeStage(fx.input);
+ let status, gotStr;
+ if(fx.kind === 'skip'){
+ status = 'skip (known unsupported)';
+ gotStr = '—';
+ skip++;
+ } else if(fx.kind === 'null'){
+ if(got === null){ status = 'pass (null)'; pass++; }
+ else { status = 'fail — expected null, got ' + JSON.stringify(got); fail++; }
+ gotStr = got === null? 'null': JSON.stringify(got);
+ } else { // 'ok'
+ if(got!== null && deepEqual(got, fx.expected)){
+ status = 'pass'; pass++;
+ } else {
+ status = 'fail'; fail++;
+ }
+ gotStr = got === null? 'null': JSON.stringify(got).slice(0, 200);
+ }
+ const tr = document.createElement('tr');
+ if(fx.kind === 'skip') tr.className = 'skip';
+ else if(status.startsWith('fail')) tr.className = 'fail';
+ else if(status.startsWith('pass')) tr.className = 'pass';
+ tr.innerHTML = `
+ <td>${String(i+1).padStart(2,'0')}</td>
+ <td>
+ <div class="fixture-name">${fx.name}</div>
+ ${fx.note? `<div class="stage-detail">${fx.note}</div>`: ''}
+ </td>
+ <td><code>${short(JSON.stringify(fx.input), 80).replace(/</g,'&lt;')}</code></td>
+ <td>
+ <div>${gotStr.replace(/</g,'&lt;')}</div>
+ <div class="stage-detail">${stageDetail}</div>
+ </td>
+ <td>${status}</td>
+ `;
+ rowsEl.appendChild(tr);
+ });
+
+ const total = fixtures.length;
+ const summary = document.getElementById('summary');
+ summary.className = 'summary ' + (fail === 0? 'pass': 'fail');
+ summary.textContent = `${pass} pass / ${fail} fail / ${skip} skip (total ${total})`;
+ }
+
+ document.addEventListener('DOMContentLoaded', run);
+})();
+</script>
+</body>
+</html>

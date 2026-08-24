@@ -91,11 +91,11 @@ hr{border:0;border-top:1px solid var(--border);margin:18px 0}
   </div>
 
   <div class="tabs no-print">
-    <button class="tab active" data-tab="setup">① 业务与市场</button>
-    <button class="tab" data-tab="indicators">② 指标与权重</button>
-    <button class="tab" data-tab="score">③ 评分测算</button>
-    <button class="tab" data-tab="matrix">④ 目标市场矩阵</button>
-    <button class="tab" data-tab="present">⑤ 3分钟汇报</button>
+    <button class="tab active" data-tab="setup"> 业务与市场</button>
+    <button class="tab" data-tab="indicators"> 指标与权重</button>
+    <button class="tab" data-tab="score"> 评分测算</button>
+    <button class="tab" data-tab="matrix"> 目标市场矩阵</button>
+    <button class="tab" data-tab="present"> 3分钟汇报</button>
   </div>
 
   <section id="setup" class="panel active">
@@ -384,9 +384,9 @@ function renderPresentation(){
   const best=ranked[0],cl=best?classification(best,xCut,yCut):['—','—'];
   $('#presentation').innerHTML=`<div class="presentation-hero"><div class="small">工作坊任务2｜目标市场选择</div><h2 style="margin:5px 0">${escapeHtml(sbu)}</h2><p>${escapeHtml(desc)}</p>${best?`<span class="badge">建议优先：${escapeHtml(best.name)}</span>`:''}</div>
   <div class="grid3" style="margin-top:14px">
-    <div class="node"><strong>① 评估体系</strong><div class="small" style="margin-top:8px">吸引力：${indicators.attr.map(i=>`${escapeHtml(i.name)} ${i.weight}%`).join('；')}</div><div class="small" style="margin-top:8px">竞争力：${indicators.comp.map(i=>`${escapeHtml(i.name)} ${i.weight}%`).join('；')}</div></div>
-    <div class="node"><strong>② 量化结果</strong><div class="small" style="margin-top:8px">${ranked.map(m=>`${escapeHtml(m.name)}：吸引 ${scoreOf(m,'attr').toFixed(2)} / 竞争 ${scoreOf(m,'comp').toFixed(2)}`).join('<br>')}</div></div>
-    <div class="node"><strong>③ 目标市场选择</strong><div class="small" style="margin-top:8px">${best?`${escapeHtml(best.name)} → ${cl[0]} → ${cl[1]}`:'尚未评分'}</div></div>
+    <div class="node"><strong> 评估体系</strong><div class="small" style="margin-top:8px">吸引力：${indicators.attr.map(i=>`${escapeHtml(i.name)} ${i.weight}%`).join('；')}</div><div class="small" style="margin-top:8px">竞争力：${indicators.comp.map(i=>`${escapeHtml(i.name)} ${i.weight}%`).join('；')}</div></div>
+    <div class="node"><strong> 量化结果</strong><div class="small" style="margin-top:8px">${ranked.map(m=>`${escapeHtml(m.name)}：吸引 ${scoreOf(m,'attr').toFixed(2)} / 竞争 ${scoreOf(m,'comp').toFixed(2)}`).join('<br>')}</div></div>
+    <div class="node"><strong> 目标市场选择</strong><div class="small" style="margin-top:8px">${best?`${escapeHtml(best.name)} → ${cl[0]} → ${cl[1]}`:'尚未评分'}</div></div>
   </div>
   <div class="card" style="margin-top:14px"><strong>一句话结论</strong><p style="margin-top:8px">${best?`基于“市场吸引力—业务竞争力”评估，我们对 ${markets.length} 个备选市场进行了加权评分。${escapeHtml(best.name)} 的市场吸引力为 ${scoreOf(best,'attr').toFixed(2)}、业务竞争力为 ${scoreOf(best,'comp').toFixed(2)}，在当前切分标准下属于“${cl[0]}”，因此建议“${cl[1]}”。`:'请先完成各市场评分。'}</p></div>`;
 }

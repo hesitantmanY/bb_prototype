@@ -14,7 +14,7 @@
 │  (Atelier UI + 图表 + 状态管理 + LLM API)   │
 └──────────┬──────────────────────┬───────────┘
            │ fetch                │ fetch（直连，不经后端）
-           ▼                      ▼
+                                 
 ┌────────────────────┐   ┌──────────────────────┐
 │ 本地 Python 服务    │   │ LLM API              │
 │ FastAPI :8765      │   │ DeepSeek/OpenAI/     │
@@ -63,10 +63,10 @@ server/
 
 | 主导航 | 子导航 | 规格 |
 |---|---|---|
-| **Work 1** 业务单元价值体系 | ① SBU 选题 / ② 环境分析 / ③ 客户洞察 / ④ 价值体系 / ⑤ 合成调研 / ⑥ 数据分析 / ⑦ 改进建议与汇报 | [work1.md](work1.md) |
-| **Work 2** 目标市场选择 | ① SBU 与备选市场 / ② 德尔菲指标权重 / ③ 评分测算 / ④ 吸引力×竞争力矩阵 / ⑤ 汇报 | [work2.md](work2.md) |
-| **Work 3** 价值主张与定位 | ① 目标市场接入 / ② 卖点挖掘 / ③ 备选卖点 / ④ 合意性×可实施性矩阵+扇面 / ⑤ 价值主张与定位 / ⑥ 品牌个性与视觉 | [work3.md](work3.md) |
-| **Work 4** 营销组合 | ① 产品 / ② 定价 / ③ 渠道 / ④ 传播促销 | [work4.md](work4.md) |
+| **Work 1** 业务单元价值体系 |  SBU 选题 /  环境分析 /  客户洞察 /  价值体系 /  合成调研 /  数据分析 /  改进建议与汇报 | [work1.md](work1.md) |
+| **Work 2** 目标市场选择 |  SBU 与备选市场 /  德尔菲指标权重 /  评分测算 /  吸引力×竞争力矩阵 /  汇报 | [work2.md](work2.md) |
+| **Work 3** 价值主张与定位 |  目标市场接入 /  卖点挖掘 /  备选卖点 /  合意性×可实施性矩阵+扇面 /  价值主张与定位 /  品牌个性与视觉 | [work3.md](work3.md) |
+| **Work 4** 营销组合 |  产品 /  定价 /  渠道 /  传播促销 | [work4.md](work4.md) |
 | **Work 5** 策划书 | 封面/摘要/1 企业概况/2 环境(PEST+SWOT)/3 STP/4 4P4C/5 展望/参考文献 | [work5.md](work5.md) |
 
 > 5 个 Work 规格已全部完成。数据流：Work 1（SBU/画像/价值体系/合成调研）→ Work 2（目标市场）→ Work 3（价值主张/定位）→ Work 4（4P）→ Work 5（策划书汇总）。
@@ -130,10 +130,10 @@ server/
 
 - **Hairline 分隔**：1px solid `#D4CFC4`
 - **章节编号**：`01 /` 或 `PLATE I`，等宽字体，次要文字色
-- **黑色小方块** `■` 作项目符号
+- **黑色小方块** `` 作项目符号
 - **Em-dash 引导线**：`— STUDIO NOTE`
 - **巨型斜体字符**作 plate marker
-- 所有元素**直角、无阴影、无圆角、无 emoji**（用 → ■ — / 文字符号）
+- 所有元素**直角、无阴影、无圆角、无 emoji**（用 →  — / 文字符号）
 
 ---
 
@@ -144,13 +144,13 @@ server/
 - **API 自动模式**：配置 key 后一键调用 LLM，结果直接填入。
 - **手动模式**：显示可复制的提示词 + 结果粘贴区，学员到外部 AI 工具操作后粘回。未配置 key 时强制此模式。
 
-右上角 masthead 是一个**双段开关 `[ API 自动 | 手动模式 ]` + 齿轮 ⚙**：
+右上角 masthead 是一个**双段开关 `[ API 自动 | 手动模式 ]` + 齿轮 **：
 
 - 点双段开关可在两种模式间随时切换（`state.settings.manualMode`，落盘持久化），即使已配 key 也能主动切到手动模式省 token。
 - 未配置 key 时「API 自动」档置灰，强制停在手动档，hover 提示先配置 key。
-- 齿轮 ⚙ 打开配置面板。运行 AI 任务期间开关与齿轮禁用。
+- 齿轮  打开配置面板。运行 AI 任务期间开关与齿轮禁用。
 
-### 配置面板（齿轮 ⚙）
+### 配置面板（齿轮 ）
 
 - Provider 下拉：**DeepSeek / ChatGPT / Gemini / 其他**（OpenAI 兼容）
 - 选 provider 自动填入默认 baseUrl + model，可改：
@@ -266,7 +266,7 @@ FastAPI 跑在 `http://localhost:8765`。前端在启动时 ping `/api/health`�
 后端未启动时：
 - `/api/lda` 按钮显示"本地服务未启动"，旁边给「用 LLM 模拟主题提取」回退按钮（走 LLM API，质量可接受但不是真 LDA）。
 - `/api/parse-excel` 降级为前端 SheetJS（从 CDN 动态加载）。
-- 页脚显示 `● 本地服务未连接` 栗色小字。
+- 页脚显示 ` 本地服务未连接` 栗色小字。
 
 ---
 
@@ -383,21 +383,21 @@ const ATELIER = {
 
 | Work | 数据形状 | 首选模板 | 编号 | gallery | 备注 |
 |---|---|---|---|---|---|
-| ① ⑥ | 李克特 5 点分布（N 位受访者，1 点 = 1 人） | Hundred Field | **L14** | lupi-gallery | 单位分解，副标题写「one dot = one respondent」；N>60 降级 F1 |
-| ① ⑥ | 单选各选项占比（≤6 项，加总 100%） | Hundred Field | **L14** | lupi-gallery | 同上，按选项分桶 |
-| ① ⑥ | 开放题主题（主题 + 频次 + 代表原话） | Type Colonnade | **L12** | lupi-gallery | 每个主题下列原文，不丢明细；频次用 RAMP 明度编码 |
-| ① ⑥ | 多指标均分对比（4–8 个二级指标，中文长名） | Tick Rows | **F5** | basics-gallery | 横条，中文标签不截断；HERO 标最高分 |
-| ① ⑥ | 指标 × 问题均分热力（小矩阵 ≤100 格） | Arc Matrix | **L4** | lupi-gallery | 行=指标，列=题，明度=均分 |
-| ② ④ | 吸引力 × 竞争力散点（≤15 市场，带象限切分线） | Plumb Scatter | **F8** | basics-gallery | **库外翻译**：F8 为骨架，叠加 xCut/yCut 虚线与 QUAD 象限底色；选中市场 = HERO 实心 r=7，其余 = 描边空心。见下方「库外图型」 |
-| ② ② | 一级指标权重（100% 构成，≤6 项） | Hundred Field | **L14** | lupi-gallery | 或 F5 Tick Rows（权重排序场景） |
-| ② ③ | 指标 × 市场评分热力 | Dot Heat | **F10** | basics-gallery | 周×小时模板平移到指标×市场 |
-| ② ④ | 市场综合总分排名（横向排序） | Tick Rows | **F5** | basics-gallery | HERO 标选中市场 |
-| ③ — | 客户合意性 × 企业可实施性矩阵 | Plumb Scatter | **F8** | basics-gallery | 同 Work 2 矩阵翻译；卖点替代市场点；**叠加最优决策扇面（库外，见下）** |
-| ③ — | 备选卖点合意性 / 可实施性双评分对比 | Dumbbell Queue | **F12** | basics-gallery | 每个卖点两颗珠，HERO 标入选主张 |
-| ④ ③ | 渠道层级结构（2–3 层） | Tree LR | **G7** | glance-gallery | Glance 合理：层级图本就靠形读 |
-| ④ ④ | 营销预算分配（渠道→子渠道，两层权重） | Nested Treemap | **F13** | basics-gallery | 走 F13 硬规则，area=预算，color=一级渠道（CAT3） |
-| ④ ④ | 媒体投放比例（100%，≤6 项） | Hundred Field | **L14** | lupi-gallery | 单序列构成首选 Lupi |
-| ⑤ 5 | SWOT 四象限文字格 | —（库外） | — | — | **不使用 lieflat**：SWOT 是文字网格而非数据编码，直接用 Atelier 直角 2×2 hairline 网格，四象限底色沿用 QUAD 变量 |
+|   | 李克特 5 点分布（N 位受访者，1 点 = 1 人） | Hundred Field | **L14** | lupi-gallery | 单位分解，副标题写「one dot = one respondent」；N>60 降级 F1 |
+|   | 单选各选项占比（≤6 项，加总 100%） | Hundred Field | **L14** | lupi-gallery | 同上，按选项分桶 |
+|   | 开放题主题（主题 + 频次 + 代表原话） | Type Colonnade | **L12** | lupi-gallery | 每个主题下列原文，不丢明细；频次用 RAMP 明度编码 |
+|   | 多指标均分对比（4–8 个二级指标，中文长名） | Tick Rows | **F5** | basics-gallery | 横条，中文标签不截断；HERO 标最高分 |
+|   | 指标 × 问题均分热力（小矩阵 ≤100 格） | Arc Matrix | **L4** | lupi-gallery | 行=指标，列=题，明度=均分 |
+|   | 吸引力 × 竞争力散点（≤15 市场，带象限切分线） | Plumb Scatter | **F8** | basics-gallery | **库外翻译**：F8 为骨架，叠加 xCut/yCut 虚线与 QUAD 象限底色；选中市场 = HERO 实心 r=7，其余 = 描边空心。见下方「库外图型」 |
+|   | 一级指标权重（100% 构成，≤6 项） | Hundred Field | **L14** | lupi-gallery | 或 F5 Tick Rows（权重排序场景） |
+|   | 指标 × 市场评分热力 | Dot Heat | **F10** | basics-gallery | 周×小时模板平移到指标×市场 |
+|   | 市场综合总分排名（横向排序） | Tick Rows | **F5** | basics-gallery | HERO 标选中市场 |
+|  — | 客户合意性 × 企业可实施性矩阵 | Plumb Scatter | **F8** | basics-gallery | 同 Work 2 矩阵翻译；卖点替代市场点；**叠加最优决策扇面（库外，见下）** |
+|  — | 备选卖点合意性 / 可实施性双评分对比 | Dumbbell Queue | **F12** | basics-gallery | 每个卖点两颗珠，HERO 标入选主张 |
+|   | 渠道层级结构（2–3 层） | Tree LR | **G7** | glance-gallery | Glance 合理：层级图本就靠形读 |
+|   | 营销预算分配（渠道→子渠道，两层权重） | Nested Treemap | **F13** | basics-gallery | 走 F13 硬规则，area=预算，color=一级渠道（CAT3） |
+|   | 媒体投放比例（100%，≤6 项） | Hundred Field | **L14** | lupi-gallery | 单序列构成首选 Lupi |
+|  5 | SWOT 四象限文字格 | —（库外） | — | — | **不使用 lieflat**：SWOT 是文字网格而非数据编码，直接用 Atelier 直角 2×2 hairline 网格，四象限底色沿用 QUAD 变量 |
 
 ### 库外图型规则
 
