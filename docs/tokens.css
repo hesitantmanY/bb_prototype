@@ -5,17 +5,19 @@
 :root{
   /* Paper & ink — pure neutral OKLCH palette, see design.md
      Paper is fully achromatic white. paper-2 is a true neutral grey.
-     No warm tint anywhere. Reads as a fresh grid sheet. */
-  --color-paper:        oklch(100% 0 0);
-  --color-paper-2:      oklch(94% 0 0);
-  --color-ink:          oklch(10% 0 0);
-  --color-ink-2:        oklch(42% 0 0);
-  --color-rule:         oklch(86% 0 0);
-  --color-accent:       oklch(28% 0.060 30);
-  --color-accent-soft:  oklch(94% 0 0);
-  --color-accent-ink:   oklch(100% 0 0);
-  --color-warn:         oklch(40% 0.140 35);
-  --color-focus:        oklch(50% 0.180 260);
+     No warm tint anywhere. Reads as a fresh grid sheet.
+     Hex fallbacks guarantee sRGB-perfect white even if OKLCH
+     conversion drifts on certain displays. */
+  --color-paper:        #ffffff;
+  --color-paper-2:      #f6f6f6;
+  --color-ink:          #1a1a1a;
+  --color-ink-2:        #6b6b6b;
+  --color-rule:         #dcdcdc;
+  --color-accent:       #6b2e1a;
+  --color-accent-soft:  #f6f6f6;
+  --color-accent-ink:   #ffffff;
+  --color-warn:         #8b3a1a;
+  --color-focus:        #2c5fb3;
 
   /* Fonts */
   --font-display: 'Playfair Display', 'ChillDuanCN', Georgia, "Songti SC", serif;
@@ -59,4 +61,5 @@
   --muted:        var(--color-ink-2);
   --line:         var(--color-rule);
   --placeholder:  var(--color-ink-2);
+  --ink:          var(--color-ink);     /* old name used in workshop JS */
 }

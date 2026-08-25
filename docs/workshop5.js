@@ -28,6 +28,8 @@ Work5.renderStep = function(id){
   if(sec.dataset.rendered==='1'){ Work5.refreshDynamic(id); return; }
   sec.innerHTML='';
   sec.appendChild(Work5.toolbar());
+  const dn5=UI.demoNote(5,'plan'); if(dn5) sec.appendChild(dn5);
+  if(Work5.mvo) sec.appendChild(UI.mvoCard(Work5.mvo(), sec));
 
   // Cover
   sec.appendChild(Work5.section('cover','封面', function(body){
@@ -41,7 +43,7 @@ Work5.renderStep = function(id){
     body.appendChild(el('div',{class:'ai-actions'},
       el('button',{class:'small',onclick:e=>Work5.aiTitle(e.currentTarget,body)},'用 AI 起名')
     ));
-    body.appendChild(el('div',{id:'coverPreview',class:'plate',style:{marginTop:'14px',padding:'28px',background:'var(--bg)'}}));
+    body.appendChild(el('div',{id:'coverPreview',class:'plate',style:{marginTop:'14px',padding:'28px',background:'var(--color-paper)'}}));
     Work5.refreshCover();
   }));
 
@@ -89,7 +91,7 @@ Work5.renderStep = function(id){
     body.appendChild(swotGrid);
 
     body.appendChild(el('h4',{style:{'margin-top':'20px'}},'SWOT 矩阵'));
-    const swotVis=el('div',{id:'swotVis',style:{display:'grid','grid-template-columns':'1fr 1fr','gap':'0',border:'1px solid var(--line)'}});
+    const swotVis=el('div',{id:'swotVis',style:{display:'grid','grid-template-columns':'1fr 1fr','gap':'0',border:'1px solid var(--color-rule)'}});
     body.appendChild(swotVis);
     Work5.refreshSwotMatrix();
   }));
@@ -168,57 +170,33 @@ Work5.rerender = function(id){
 Work5.titles={};
 Work5.subtitles={};
 
+Work5.mvo = function(){
+  const w=state.work5;
+  return {
+    checks: [
+      {label:'封面（标题/团队/日期）已填', test:()=>!!(w.cover.title&&w.cover.team&&w.cover.date)},
+      {label:'摘要已写或已汇总', test:()=>(w.abstract||'').trim().length>30},
+      {label:'Work 1–4 内容已汇总进各章节', test:()=>!!(w.ch1_business||'').trim()&&!!(w.ch3_market||'').trim()&&!!(w.ch4_mix||'').trim()},
+      {label:'风险与落地（里程碑）已写', test:()=>!!(w.ch6_risks||'').trim()||!!(w.ch7_roadmap||'').trim()},
+    ],
+    note:'策划书是给别人看的——把 AI 汇总的"正确的废话"改成你企业的具体判断和数据。打印前通读一遍，删掉所有没证据支撑的结论。'
+  };
+};
+
 Work5.toolbar=function(){
   return el('div',{class:'plate no-print',style:{display:'flex',gap:'8px','flex-wrap':'wrap',alignItems:'center','margin-bottom':'20px'}},
     el('button',{class:'primary',onclick:()=>Work5.aggregateAll()},'从 Work 1–4 一键汇总'),
     el('button',{onclick:()=>window.print()},'打印 / PDF'),
     el('button',{onclick:()=>App.exportMd()},'导出 Markdown'),
-    el('button',{class:'ghost',onclick:e=>Work5.aiPolishAll(e.currentTarget)},'AI 润色全文'),
-    el('button',{class:'ghost',onclick:()=>Work5.randomExampleAll()},'随机生成示例')
+    el('button',{class:'ghost',onclick:e=>Work5.aiPolishAll(e.currentTarget)},'AI 润色全文')
   );
 };
 
 // 随机生成示例：先看 Work 1-4 是否已有数据。
 // 有 → 直接汇总（与"从 Work 1-4 一键汇总"等价，但语义统一为"随机示例"）
 // 无 → 用各 work 内置的样本数据快速填一份, 再汇总
-Work5.randomExampleAll = function(){
-  // 检查 Work 1-4 是否已有内容
-  const w1 = state.work1 && (state.work1.sbu.name || state.work1.environment.political);
-  const w2 = state.work2 && (state.work2.markets.length || state.work2.scope.question);
-  const w3 = state.work3 && (state.work3.mining.documents.length || state.work3.proposition.chosenValueText);
-  const w4 = state.work4 && (state.work4.product.name || state.work4.price.strategy);
-  const allEmpty = !w1 && !w2 && !w3 && !w4;
-
-  if(allEmpty){
-    if(!confirm('Work 1-4 都还是空的, 将先在各 work 填入内置示例数据, 再汇总为策划书. 继续？')) return;
-    // 链式触发：用各 work 的样本和 apply 函数
-    try{
-      if(typeof Work1 !== 'undefined' && Work1.SBU_SAMPLES && Work1.applySBU){
-        Work1.applySBU(Work1.SBU_SAMPLES[0]);
-      }
-      if(typeof Work2 !== 'undefined' && Work2.WORK2_SAMPLES && Work2._applyWork2Sample){
-        Work2._applyWork2Sample(Work2.WORK2_SAMPLES[0]);
-      }
-      if(typeof Work3 !== 'undefined' && Work3.WORK3_SAMPLES && Work3._applyWork3Sample){
-        Work3._applyWork3Sample(Work3.WORK3_SAMPLES[0]);
-      }
-      if(typeof Work4 !== 'undefined' && Work4.WORK4_SAMPLES && Work4._applyWork4Sample){
-        Work4._applyWork4Sample(Work4.WORK4_SAMPLES[0]);
-      }
-    }catch(e){ console.warn('Work5 random example fill failed', e); }
-  } else {
-    if((state.work5.ch1_business || state.work5.abstract) && !confirm('这会从 Work 1-4 重新汇总并覆盖当前策划书, 继续？')) return;
-  }
-  // 补全封面默认值
-  const c = state.work5.cover;
-  if(!c.title) c.title = (state.work1.sbu.name || '示例品牌') + ' · 品牌国际化战略策划书';
-  if(!c.subtitle) c.subtitle = 'Work 1-4 自动汇总的策划书草案';
-  if(!c.team) c.team = '战略小组 / ' + (new Date()).toISOString().slice(0,7);
-  if(!c.date) c.date = new Date().toISOString().slice(0,10);
-  autosave();
-  Work5.aggregateAll();
-  showToast(allEmpty ? '已用内置示例填 Work 1-4 + 汇总策划书' : '已从 Work 1-4 汇总策划书');
-};
+// Work5.randomExampleAll 已删除：演示数据入口统一走顶栏"演示案例"菜单（DemoMenu），
+// 不再在 Work 5 toolbar 重复一个"随机生成示例"按钮。
 
 Work5.section=function(id,title,bodyFn){
   const det=el('details',{open:true});
@@ -234,10 +212,10 @@ Work5.refreshCover=function(){
   if(!prev) return;
   prev.innerHTML=`
     <div style="text-align:center;padding:32px 20px">
-      <div class="mono" style="font-size:11px;letter-spacing:.2em;color:var(--muted)">GLOBAL BRAND WORKSHOP · ${esc(c.date)}</div>
+      <div class="mono" style="font-size:11px;letter-spacing:.2em;color:var(--color-ink-2)">GLOBAL BRAND WORKSHOP · ${esc(c.date)}</div>
       <h1 style="margin:14px 0 6px">${esc(c.title||'〔标题〕')}</h1>
-      <div style="font-family:var(--font-display);font-style:italic;font-size:20px;color:var(--maroon)">${esc(c.subtitle||'')}</div>
-      <div class="mono" style="font-size:11px;letter-spacing:.15em;color:var(--muted);margin-top:28px">${esc(c.team||'')}</div>
+      <div style="font-family:var(--font-display);font-style:italic;font-size:20px;color:var(--color-accent)">${esc(c.subtitle||'')}</div>
+      <div class="mono" style="font-size:11px;letter-spacing:.15em;color:var(--color-ink-2);margin-top:28px">${esc(c.team||'')}</div>
     </div>`;
 };
 
@@ -253,8 +231,8 @@ Work5.refreshSwotMatrix=function(){
   ];
   vis.innerHTML='';
   cells.forEach(([label,items,bg])=>{
-    const c=el('div',{style:{padding:'14px',background:bg,'border-right':'1px solid var(--line)','border-bottom':'1px solid var(--line)','min-height':'120px'}});
-    c.appendChild(el('div',{class:'mono',style:{'font-size':'11px','letter-spacing':'.15em',color:'var(--maroon)','margin-bottom':'6px'}},label));
+    const c=el('div',{style:{padding:'14px',background:bg,'border-right':'1px solid var(--color-rule)','border-bottom':'1px solid var(--color-rule)','min-height':'120px'}});
+    c.appendChild(el('div',{class:'mono',style:{'font-size':'11px','letter-spacing':'.15em',color:'var(--color-accent)','margin-bottom':'6px'}},label));
     (items||[]).forEach(i=>c.appendChild(el('div',{style:{'font-size':'13px',padding:'2px 0'}},'· '+i)));
     vis.appendChild(c);
   });
@@ -264,7 +242,7 @@ Work5.refreshSwotMatrix=function(){
 Work5.aggregateAll=function(){
   const c=state.work5.cover;
   if(!c.title){
-    c.title = state.work1.sbu.name ? state.work1.sbu.name+' — Global Brand Building and Marketing Communication' : 'Global Brand Building and Marketing Communication';
+    c.title = state.work1.sbu.name ? state.work1.sbu.name+' — 市场分析与品牌布局' : '市场分析与品牌布局';
     const sel=state.work2.markets.find(m=>m.id===state.work2.matrix.selectedMarketId);
     if(sel) c.subtitle='目标市场：'+sel.name;
     if(!c.team) c.team='';
@@ -399,7 +377,7 @@ Work5.aiTitle=async function(button,container){
     if(r?.titles){
       const box=el('div',{class:'plate',style:{'margin-top':'10px'}},
         el('span',{class:'plate-label'},'备选标题（点击使用）'),
-        ...r.titles.map(t=>el('div',{style:{padding:'6px 0',cursor:'pointer','border-bottom':'1px solid var(--line)','font-family':'var(--font-display)','font-style':'italic','font-size':'18px'},
+        ...r.titles.map(t=>el('div',{style:{padding:'6px 0',cursor:'pointer','border-bottom':'1px solid var(--color-rule)','font-family':'var(--font-display)','font-style':'italic','font-size':'18px'},
           onclick:()=>{state.work5.cover.title=t;autosave();Work5.rerender('plan')}},'· '+t))
       );
       container.appendChild(box);

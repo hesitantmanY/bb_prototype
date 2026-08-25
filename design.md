@@ -17,19 +17,21 @@ editorial
 ## Theme
 
 A cold-white-paper, ink-on-paper editorial system. Single ink, restrained accent
-on functional surfaces only. OKLCH is the only colour system; CSS variables
-in `tokens.css` are the only source of truth. The paper is deliberately cool
-white (not warm cream) — it reads as a fresh grid sheet, not an old book.
+on functional surfaces only. **Hex (sRGB) is the source of truth in `tokens.css`**
+— OKLCH was used during design exploration but caused perceptible colour drift
+on certain displays (paper reading as cream rather than white). The hex values
+below are the canonical system; OKLCH approximations are listed for design
+intent only and should NOT be used in code.
 
-- `--color-paper`   oklch(100% 0 0)         — pure white paper, body background
-- `--color-paper-2` oklch(94% 0 0)           — inset surface (plates, MVO, callout) — neutral grey, reads as recessed
-- `--color-ink`     oklch(10% 0 0)           — near-black ink, body text & strong rules
-- `--color-ink-2`   oklch(42% 0 0)           — secondary text, hairlines on paper-2
-- `--color-rule`    oklch(86% 0 0)           — hairlines on paper — neutral grey
-- `--color-accent`  oklch(28% 0.060 30)     — burnt-sienna accent (selective: maroon-soft, primary button fill, link)
-- `--color-accent-ink` oklch(100% 0 0)       — text on accent surface
-- `--color-warn`    oklch(40% 0.140 35)     — error / delete
-- `--color-focus`   oklch(50% 0.180 260)    — focus ring (cool to contrast with warm system)
+- `--color-paper`   `#ffffff`   (≈ oklch(100% 0 0))         — pure white paper, body background
+- `--color-paper-2` `#f6f6f6`   (≈ oklch(96.5% 0 0))         — inset surface (plates, MVO, callout) — barely-there grey
+- `--color-ink`     `#1a1a1a`   (≈ oklch(17% 0 0))           — near-black ink, body text & strong rules
+- `--color-ink-2`   `#6b6b6b`   (≈ oklch(53% 0 0))           — secondary text, hairlines on paper-2
+- `--color-rule`    `#dcdcdc`   (≈ oklch(85% 0 0))           — hairlines on paper — barely-there cool grey
+- `--color-accent`  `#6b2e1a`   (≈ oklch(33% 0.085 35))     — burnt-sienna accent (selective: maroon-soft, primary button fill, link)
+- `--color-accent-ink` `#ffffff`                                — text on accent surface
+- `--color-warn`    `#8b3a1a`   (≈ oklch(43% 0.130 35))     — error / delete
+- `--color-focus`   `#2c5fb3`   (≈ oklch(45% 0.150 260))    — focus ring (cool blue, contrasts with warm system)
 
 ## Typography
 
@@ -111,16 +113,16 @@ Section padding is generous: `xl` between sub-steps, `2xl` between workshops.
 
 ```css
 :root {
-  --color-paper:        oklch(100% 0 0);
-  --color-paper-2:      oklch(94% 0 0);
-  --color-ink:          oklch(10% 0 0);
-  --color-ink-2:        oklch(42% 0 0);
-  --color-rule:         oklch(86% 0 0);
-  --color-accent:       oklch(28% 0.060 30);
-  --color-accent-soft:  oklch(94% 0 0);
-  --color-accent-ink:   oklch(100% 0 0);
-  --color-warn:         oklch(40% 0.140 35);
-  --color-focus:        oklch(50% 0.180 260);
+  --color-paper:        #ffffff;
+  --color-paper-2:      #f6f6f6;
+  --color-ink:          #1a1a1a;
+  --color-ink-2:        #6b6b6b;
+  --color-rule:         #dcdcdc;
+  --color-accent:       #6b2e1a;
+  --color-accent-soft:  #f6f6f6;
+  --color-accent-ink:   #ffffff;
+  --color-warn:         #8b3a1a;
+  --color-focus:        #2c5fb3;
 
   --font-display: 'Playfair Display', 'ChillDuanCN', Georgia, "Songti SC", serif;
   --font-body:    'Lora', 'ChillDuanCN', Georgia, "Songti SC", serif;
