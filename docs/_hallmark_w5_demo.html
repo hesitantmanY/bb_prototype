@@ -1,0 +1,678 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>策划书 Demo — Grid 01 · editorial long document</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@500;700;900&family=Lora:ital,wght@0,400;0,500;0,700;1,400;1,700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="tokens.css?v=4">
+<style>
+/* Hallmark · macrostructure: Long Document (Work 5) · genre: editorial
+   · design-system: design.md · scope: w5 showcase
+   This is a standalone demo of Work 5's策划书 rendered in the new system. */
+*,*::before,*::after{box-sizing:border-box}
+html,body{margin:0;padding:0;overflow-x:clip}
+body{
+  background:var(--color-paper);color:var(--color-ink);
+  font-family:var(--font-body);font-size:19px;line-height:1.7;
+  -webkit-font-smoothing:antialiased;font-synthesis:none;
+}
+
+.doc{max-width:1180px;margin:0 auto;padding:0 40px}
+
+/* ============================================================
+   EYEBROW + SECTION HEADS — vertical stack, never hanging.
+   ============================================================ */
+.eyebrow{
+  font-family:var(--font-mono);font-size:13px;letter-spacing:.22em;
+  text-transform:uppercase;color:var(--color-ink-2);
+  display:flex;align-items:baseline;gap:14px;margin-bottom:14px;
+}
+.eyebrow .num{color:var(--color-accent);font-weight:500}
+.eyebrow .sep{color:var(--color-rule)}
+
+h1,h2,h3,h4{font-family:var(--font-display);font-weight:900;line-height:1.05;
+  letter-spacing:-.01em;margin:0}
+h1{font-size:clamp(3rem, 5vw + 1rem, 5.25rem);color:var(--color-ink)}
+h2{font-size:2.5rem;color:var(--color-ink);margin-bottom:.4em;font-weight:900}
+h3{font-size:1.75rem;color:var(--color-ink);font-weight:700;margin:0 0 .4em}
+h4{font-size:1.25rem;color:var(--color-ink);font-weight:700;margin:0 0 .4em}
+p{margin:.7em 0;max-width:62ch}
+.italic{font-style:italic;font-weight:500}
+.muted{color:var(--color-ink-2)}
+.accent{color:var(--color-accent)}
+.mono{font-family:var(--font-mono)}
+
+.rule{height:1px;background:var(--color-rule);border:none;margin:var(--space-xl) 0}
+.rule-strong{height:2px;background:var(--color-ink);border:none;margin:0 0 var(--space-xl) 0}
+
+/* ============================================================
+   MASTHEAD / TABS — sticky
+   ============================================================ */
+.masthead{
+  border-bottom:2px solid var(--color-ink);
+  padding:18px 40px 14px;background:var(--color-paper);
+  position:sticky;top:0;z-index:100;
+}
+.masthead-top{display:flex;justify-content:space-between;align-items:flex-end;gap:24px;flex-wrap:wrap}
+.masthead h1{font-size:34px;font-weight:900;letter-spacing:-.01em}
+.masthead-slash{font-family:var(--font-mono);font-size:13px;letter-spacing:.18em;
+  text-transform:uppercase;color:var(--color-ink-2)}
+.masthead-actions{display:flex;gap:10px;flex-wrap:wrap}
+
+.tabs{
+  display:grid;grid-template-columns:repeat(5,1fr);
+  border-bottom:1px solid var(--color-rule);background:var(--color-paper);
+  position:sticky;top:80px;z-index:90;
+}
+.tab{
+  font-family:var(--font-mono);font-size:12px;letter-spacing:.16em;
+  text-transform:uppercase;padding:16px 14px;text-align:center;cursor:pointer;
+  border:none;border-right:1px solid var(--color-rule);background:transparent;
+  color:var(--color-ink-2);border-bottom:2px solid transparent;
+}
+.tab:last-child{border-right:none}
+.tab:hover{color:var(--color-ink);background:var(--color-paper-2)}
+.tab.active{color:var(--color-accent);border-bottom-color:var(--color-accent);background:var(--color-paper)}
+.tab-num{display:block;font-size:20px;font-family:var(--font-display);font-style:italic;color:var(--color-ink);margin-bottom:4px;font-weight:700}
+
+/* ============================================================
+   TOOLBAR PLATE (per-section actions)
+   ============================================================ */
+.toolbar{
+  display:flex;gap:10px;flex-wrap:wrap;align-items:center;
+  margin-bottom:var(--space-md);
+  padding:18px 22px;
+  border:1px solid var(--color-rule);background:var(--color-paper-2);
+}
+
+/* ============================================================
+   BUTTONS — Grid 01 voice (NOT Atelier)
+   Default : ink-fill / paper-text button
+   Accent  : 2px underline + accent text (no fill, no frame) — link with weight
+   Ghost   : text + 1px bottom rule only, no frame
+   Hover   : translate up 2px + reveal 2px accent bottom bar (NO color flip)
+   Press   : translate back to 0 (springs back, no scale)
+   ============================================================ */
+.btn{
+  position:relative;
+  font-family:var(--font-mono);font-size:13px;letter-spacing:.18em;
+  text-transform:uppercase;font-weight:500;
+  background:var(--color-ink);color:var(--color-paper);
+  border:none;
+  padding:15px 26px;cursor:pointer;border-radius:0;
+  display:inline-flex;align-items:center;gap:12px;
+  transform:translateY(0);
+  transition:transform 160ms var(--ease-out);
+}
+.btn::after{
+  content:"";position:absolute;left:0;right:0;bottom:-1px;
+  height:2px;background:var(--color-accent);
+  transform:scaleX(0);transform-origin:left center;
+  transition:transform 200ms var(--ease-out);
+}
+.btn:hover{transform:translateY(-2px)}
+.btn:hover::after{transform:scaleX(1)}
+.btn:active{transform:translateY(0)}
+.btn:active::after{transform:scaleX(1);transition-duration:60ms}
+.btn:focus-visible{outline:2px solid var(--color-focus);outline-offset:2px}
+.btn .arrow{
+  display:inline-block;width:14px;height:1px;background:currentColor;
+  position:relative;flex-shrink:0;transition:width 200ms var(--ease-out);
+}
+.btn .arrow::after{
+  content:"";position:absolute;right:0;top:-3px;
+  width:7px;height:7px;border-top:1px solid currentColor;border-right:1px solid currentColor;
+  transform:rotate(45deg);transform-origin:top right;
+}
+.btn:hover .arrow{width:24px}
+
+/* Accent: NO fill, only a 2px underline + accent text. "I am a link with weight." */
+.btn--accent{
+  background:transparent;color:var(--color-accent);
+  border:none;border-bottom:2px solid var(--color-accent);
+  padding:8px 0 10px;position:relative;
+}
+.btn--accent::after{display:none}              /* accent has its own visible rule */
+.btn--accent:hover{
+  color:var(--color-ink);border-bottom-color:var(--color-ink);
+  transform:translateY(-2px);
+}
+.btn--accent .arrow{display:none}
+
+/* Ghost: text only, 1px bottom rule, no frame. */
+.btn--ghost{
+  background:transparent;color:var(--color-ink);
+  border:none;border-bottom:1px solid var(--color-rule);
+  padding:6px 2px 8px;
+}
+.btn--ghost::after{
+  height:1px;background:var(--color-ink);
+  bottom:-1px;
+}
+.btn--ghost:hover{
+  color:var(--color-ink);border-bottom-color:transparent;
+  transform:translateY(-2px);
+}
+.btn--ghost:hover::after{transform:scaleX(1)}
+.btn--ghost .arrow{display:none}
+
+.btn--small{padding:11px 18px;font-size:11px;letter-spacing:.16em}
+
+/* ============================================================
+   COVER — full-bleed page-like, centered
+   ============================================================ */
+.cover{
+  text-align:center;padding:var(--space-3xl) 0 var(--space-2xl);
+  border-bottom:1px solid var(--color-rule);
+}
+.cover .eyebrow{justify-content:center}
+.cover-title{
+  font-family:var(--font-display);font-weight:900;font-style:normal;
+  font-size:clamp(3rem, 6vw + 1rem, 6rem);
+  line-height:1.02;letter-spacing:-.015em;
+  color:var(--color-ink);margin:18px auto 14px;max-width:14ch;
+}
+.cover-subtitle{
+  font-family:var(--font-display);font-style:italic;font-weight:500;
+  font-size:1.75rem;line-height:1.3;color:var(--color-accent);
+  margin:0 auto 40px;max-width:24ch;
+}
+.cover-meta{
+  font-family:var(--font-mono);font-size:12px;letter-spacing:.18em;
+  text-transform:uppercase;color:var(--color-ink-2);
+  display:flex;justify-content:center;gap:32px;flex-wrap:wrap;
+  padding-top:32px;border-top:1px solid var(--color-rule);max-width:560px;margin:32px auto 0;
+}
+.cover-meta strong{color:var(--color-ink);font-weight:500}
+
+/* ============================================================
+   SECTION HEAD — every chapter begins with this pattern
+   ============================================================ */
+.chapter{padding:var(--space-2xl) 0;border-bottom:1px solid var(--color-rule)}
+.chapter:last-child{border-bottom:none}
+.chapter-head{margin-bottom:var(--space-lg)}
+.chapter-head h2{font-size:3rem;font-weight:900;letter-spacing:-.02em;line-height:1.02}
+.chapter-head .lede{font-size:1.375rem;line-height:1.5;color:var(--color-ink);max-width:50ch;margin-top:18px}
+
+.sub-head{margin-top:var(--space-lg);margin-bottom:14px}
+.sub-head h3{font-size:1.75rem;font-family:var(--font-display);font-weight:700;color:var(--color-ink);letter-spacing:-.01em}
+.sub-head .num{
+  font-family:var(--font-mono);font-size:13px;letter-spacing:.2em;
+  color:var(--color-accent);text-transform:uppercase;
+  display:block;margin-bottom:6px;font-weight:500;
+}
+
+/* ============================================================
+   ABSTRACT — italic, indented
+   ============================================================ */
+.abstract{
+  font-family:var(--font-display);font-style:italic;font-weight:500;
+  font-size:1.5rem;line-height:1.45;color:var(--color-ink);
+  letter-spacing:-.005em;max-width:60ch;margin:0 auto;
+  padding:var(--space-md) 0;
+  border-top:1px solid var(--color-rule);
+  border-bottom:1px solid var(--color-rule);
+}
+
+/* ============================================================
+   PEST 2x2 GRID (chapter 2) — hairline-bounded, big serif letter
+   ============================================================ */
+.pest-2x2{
+  display:grid;grid-template-columns:1fr 1fr;
+  border-top:1px solid var(--color-rule);
+  border-bottom:1px solid var(--color-rule);
+  margin:var(--space-md) 0;
+}
+.pest-cell{
+  padding:28px 28px 26px;
+  border-right:1px solid var(--color-rule);
+  border-bottom:1px solid var(--color-rule);
+  display:flex;flex-direction:column;gap:14px;
+}
+.pest-cell:nth-child(2n){border-right:none}
+.pest-cell:nth-last-child(-n+2){border-bottom:none}
+.pest-letter{
+  font-family:var(--font-display);font-style:italic;font-weight:500;
+  font-size:64px;line-height:1;color:var(--color-ink);
+  letter-spacing:-.02em;margin:0;
+}
+.pest-label{
+  font-family:var(--font-mono);font-size:12px;letter-spacing:.22em;
+  text-transform:uppercase;color:var(--color-ink-2);
+}
+.pest-text{font-size:17px;line-height:1.65;color:var(--color-ink);margin:0}
+@media(max-width:760px){
+  .pest-2x2{grid-template-columns:1fr}
+  .pest-cell{border-right:none;border-bottom:1px solid var(--color-rule)}
+  .pest-cell:last-child{border-bottom:none}
+}
+
+/* ============================================================
+   SWOT 2x2 MATRIX — labelled cells, hairline-bounded
+   ============================================================ */
+.swot-2x2{
+  display:grid;grid-template-columns:1fr 1fr;
+  border:1px solid var(--color-rule);
+  margin:var(--space-md) 0;
+}
+.swot-cell{
+  padding:22px 26px;
+  border-right:1px solid var(--color-rule);
+  border-bottom:1px solid var(--color-rule);
+  background:var(--color-paper);
+}
+.swot-cell:nth-child(2n){border-right:none}
+.swot-cell:nth-last-child(-n+2){border-bottom:none}
+.swot-cell .label{
+  font-family:var(--font-mono);font-size:12px;letter-spacing:.22em;
+  text-transform:uppercase;color:var(--color-accent);
+  margin-bottom:14px;display:flex;align-items:center;gap:10px;
+}
+.swot-cell .label .letter{
+  font-family:var(--font-display);font-style:italic;font-weight:900;
+  font-size:32px;line-height:1;color:var(--color-accent);
+  letter-spacing:-.02em;
+}
+.swot-cell .items{font-size:16px;line-height:1.7;display:flex;flex-direction:column;gap:6px}
+.swot-cell .item{display:flex;gap:10px;align-items:flex-start}
+.swot-cell .item::before{content:"·";color:var(--color-ink-2);flex-shrink:0}
+/* SW — neutral surface, OT — recessed surface */
+.swot-cell.s{background:var(--color-paper)}
+.swot-cell.w{background:var(--color-paper-2)}
+.swot-cell.o{background:var(--color-paper-2)}
+.swot-cell.t{background:var(--color-paper)}
+
+/* ============================================================
+   STP TABLE — 3 row, label + body
+   ============================================================ */
+.stp{margin:var(--space-md) 0;display:flex;flex-direction:column;gap:var(--space-md)}
+.stp-row{
+  display:grid;grid-template-columns:200px 1fr;gap:32px;
+  padding:24px 0;border-top:1px solid var(--color-rule);align-items:start;
+}
+.stp-row:last-child{border-bottom:1px solid var(--color-rule)}
+.stp-label{
+  font-family:var(--font-mono);font-size:12px;letter-spacing:.22em;
+  text-transform:uppercase;color:var(--color-ink-2);
+}
+.stp-label .name{
+  display:block;font-family:var(--font-display);font-style:italic;font-weight:500;
+  font-size:1.5rem;letter-spacing:-.01em;color:var(--color-ink);margin-bottom:4px;
+  text-transform:none;letter-spacing:-.01em;
+}
+.stp-text{font-size:17px;line-height:1.65;color:var(--color-ink);max-width:62ch}
+@media(max-width:760px){.stp-row{grid-template-columns:1fr;gap:8px}}
+
+/* ============================================================
+   4P / 4C — 2-col grid of labelled plates
+   ============================================================ */
+.four-grid{display:grid;grid-template-columns:1fr 1fr;gap:0;
+  border-top:1px solid var(--color-rule);border-bottom:1px solid var(--color-rule);
+  margin:var(--space-md) 0}
+.four-cell{
+  padding:24px 28px;border-right:1px solid var(--color-rule);
+  border-bottom:1px solid var(--color-rule);
+  display:flex;flex-direction:column;gap:12px;
+}
+.four-cell:nth-child(2n){border-right:none}
+.four-cell:nth-last-child(-n+2){border-bottom:none}
+.four-label{
+  font-family:var(--font-mono);font-size:12px;letter-spacing:.22em;
+  text-transform:uppercase;color:var(--color-accent);
+}
+.four-name{
+  font-family:var(--font-display);font-style:italic;font-weight:500;
+  font-size:1.5rem;letter-spacing:-.01em;color:var(--color-ink);
+}
+.four-text{font-size:16px;line-height:1.65;color:var(--color-ink);margin:0}
+@media(max-width:760px){
+  .four-grid{grid-template-columns:1fr}
+  .four-cell{border-right:none;border-bottom:1px solid var(--color-rule)}
+  .four-cell:last-child{border-bottom:none}
+}
+
+/* ============================================================
+   REFS TABLE
+   ============================================================ */
+.refs{
+  border:1px solid var(--color-rule);margin:var(--space-md) 0;
+  overflow-x:auto;
+}
+table.refs-tbl{width:100%;border-collapse:collapse;font-family:var(--font-mono);font-size:14px}
+table.refs-tbl th,table.refs-tbl td{
+  border-bottom:1px solid var(--color-rule);border-right:1px solid var(--color-rule);
+  padding:14px 16px;text-align:left;vertical-align:top;
+}
+table.refs-tbl th{background:var(--color-paper-2);font-weight:500;
+  text-transform:uppercase;letter-spacing:.14em;font-size:12px;color:var(--color-ink-2)}
+table.refs-tbl tr:last-child td{border-bottom:none}
+table.refs-tbl td:last-child,table.refs-tbl th:last-child{border-right:none}
+table.refs-tbl td.num{width:48px;color:var(--color-ink-2);font-weight:500}
+
+/* ============================================================
+   FOOTER
+   ============================================================ */
+footer.doc-foot{
+  border-top:1px solid var(--color-rule);
+  padding:var(--space-xl) 0 var(--space-2xl);margin-top:var(--space-2xl);
+  font-family:var(--font-mono);font-size:13px;letter-spacing:.16em;
+  text-transform:uppercase;color:var(--color-ink-2);
+}
+footer.doc-foot .doc{display:flex;justify-content:space-between;flex-wrap:wrap;gap:14px}
+
+@media(max-width:760px){
+  .doc{padding:0 24px}
+  .masthead{padding:14px 24px 10px}
+  .tabs{grid-template-columns:repeat(5,minmax(0,1fr));top:74px}
+  .tab{padding:12px 4px;font-size:10px;letter-spacing:.1em}
+  .tab-num{font-size:16px}
+  .chapter-head h2{font-size:2rem}
+  .sub-head h3{font-size:1.375rem}
+}
+</style>
+</head>
+<body>
+
+<!-- ============================================================
+     MASTHEAD
+     ============================================================ -->
+<header class="masthead">
+  <div class="doc masthead-top" style="padding:0">
+    <div>
+      <h1>策划书 Demo</h1>
+      <div class="masthead-slash" style="margin-top:4px">Work 5 · long document · editorial</div>
+    </div>
+    <div class="masthead-actions">
+      <button class="btn btn--small">从 Work 1–4 一键汇总<span class="arrow"></span></button>
+      <button class="btn btn--ghost btn--small">打印 / PDF</button>
+      <button class="btn btn--ghost btn--small">导出 Markdown</button>
+      <button class="btn btn--ghost btn--small">AI 润色全文</button>
+    </div>
+  </div>
+</header>
+
+<!-- ============================================================
+     5-TAB STRIP (sticky)
+     ============================================================ -->
+<nav class="tabs" aria-label="workshops">
+  <button class="tab"><span class="tab-num">I.</span>业务价值</button>
+  <button class="tab"><span class="tab-num">II.</span>目标市场</button>
+  <button class="tab"><span class="tab-num">III.</span>价值主张</button>
+  <button class="tab"><span class="tab-num">IV.</span>营销组合</button>
+  <button class="tab active"><span class="tab-num">V.</span>策划书</button>
+</nav>
+
+<div class="doc">
+
+<!-- ============================================================
+     COVER
+     ============================================================ -->
+<section class="cover">
+  <div class="eyebrow">
+    <span class="num">V / 01</span>
+    <span class="sep">/</span>
+    <span>Global Brand Workshop · 2026</span>
+  </div>
+  <h1 class="cover-title">山木茶事<br>东南亚扩张策划</h1>
+  <div class="cover-subtitle">从桂北高山到狮城吧台 —— 一份三阶段、可量化、可回滚的出海提案</div>
+  <div class="cover-meta">
+    <div>团队 / <strong>山木出海小组</strong></div>
+    <div>日期 / <strong>2026-08-25</strong></div>
+    <div>版本 / <strong>v0.3</strong></div>
+  </div>
+</section>
+
+<!-- ============================================================
+     ABSTRACT
+     ============================================================ -->
+<section class="chapter">
+  <div class="chapter-head">
+    <div class="eyebrow"><span class="num">V / 02</span><span class="sep">/</span><span>Abstract</span></div>
+    <h2>摘要</h2>
+  </div>
+  <p class="abstract">
+    本策划书围绕山木茶事（精品茶饮供应链）展开。
+    目标市场选择上，以"文化邻近 + 茶饮渗透率"加权排序，新加坡 / 吉隆坡 / 雅加达三地胜出。
+    核心价值主张为：在地风土 × 工艺稳定 × 视觉克制。
+    三年内分三阶段进入，先以吧台供应切入精品咖啡馆，再以零售 SKU 收口家庭场景，最后以订阅服务沉淀复购。
+  </p>
+</section>
+
+<!-- ============================================================
+     CHAPTER 1
+     ============================================================ -->
+<section class="chapter">
+  <div class="chapter-head">
+    <div class="eyebrow"><span class="num">V / 03</span><span class="sep">/</span><span>Chapter 1</span></div>
+    <h2>企业及业务概况</h2>
+    <p class="lede">先把"做茶叶"改成一句具体的话：山木做的是什么、卖的是什么、卖给谁。</p>
+  </div>
+
+  <div class="sub-head"><span class="num">1.1</span><h3>业务基本面</h3></div>
+  <p>山木茶事成立于 2022 年，专注桂北高山乌龙与红茶的精品供应链，主供江浙沪地区 38 家精品买手店与 4 家米其林推荐中餐厅。年营收 1860 万元，毛利率 41%，客单价 280–680 元/泡。供应链端与桂北 6 个合作社签订三年期保底采购协议，源头产能稳定。</p>
+
+  <div class="sub-head"><span class="num">1.2</span><h3>为什么要出海</h3></div>
+  <p>国内精品茶市场年增 12%，但单店天花板已显（江浙沪门店密度趋近饱和）。同期东南亚精品咖啡 + 茶饮赛道复合增速 24%，新加坡独立精品咖啡馆数从 2021 年的 240 家增至 2025 年的 480 家——这是一个有现成吧台、缺内容供应的市场窗口。</p>
+
+  <div class="sub-head"><span class="num">1.3</span><h3>我们是谁、不是谁</h3></div>
+  <p>山木不是消费品品牌，我们是一个精品茶供应链。把我们误读成"下一个 TWG"会让我们把资源花在错的渠道。我们卖的是"产地与工艺的确定性"，卖给愿意为"一杯茶的来历"付溢价的吧台主理人，而不是直接卖给终端消费者。</p>
+</section>
+
+<!-- ============================================================
+     CHAPTER 2 — PEST + SWOT
+     ============================================================ -->
+<section class="chapter">
+  <div class="chapter-head">
+    <div class="eyebrow"><span class="num">V / 04</span><span class="sep">/</span><span>Chapter 2</span></div>
+    <h2>营销环境分析</h2>
+    <p class="lede">PEST 看外生变量，SWOT 把外生变量拉回山木自己能做什么的语境。</p>
+  </div>
+
+  <div class="sub-head"><span class="num">2.1</span><h3>PEST · 政治 / 经济 / 社会 / 技术</h3></div>
+  <div class="pest-2x2">
+    <div class="pest-cell">
+      <div class="pest-letter">P</div>
+      <div class="pest-label">Political</div>
+      <p class="pest-text">中新自贸升级版 2025 生效，关税降至 0%；马来西亚 Halal 认证 60 天可办；印尼对茶叶进口有本地分销商强制合作要求。</p>
+    </div>
+    <div class="pest-cell">
+      <div class="pest-letter">E</div>
+      <div class="pest-label">Economic</div>
+      <p class="pest-text">新币兑人民币 5.38，新加坡精品咖啡人均月消费 180 新币（约 970 人民币）；吉隆坡 35–55 岁中产月精品消费约 2200 人民币。</p>
+    </div>
+    <div class="pest-cell">
+      <div class="pest-letter">S</div>
+      <div class="pest-label">Social</div>
+      <p class="pest-text">新加坡 60% 华人 + 多元饮食文化，对"非日韩系"东方饮品好奇；雅加达穆斯林为主，咖啡文化渗透深但茶饮仍以甜奶茶为主，精品茶认知待教育。</p>
+    </div>
+    <div class="pest-cell">
+      <div class="pest-letter">T</div>
+      <div class="pest-label">Technological</div>
+      <p class="pest-text">Shopify 东南亚版本支持多币种 + 多语言 + 本地支付；冷链跨境到新加坡已成熟（48h 达），到吉隆坡需经冷链中转 + 二次包装。</p>
+    </div>
+  </div>
+
+  <div class="sub-head"><span class="num">2.2</span><h3>SWOT · 优势 / 劣势 / 机会 / 威胁</h3></div>
+  <div class="swot-2x2">
+    <div class="swot-cell s">
+      <div class="label"><span class="letter">S</span><span>优势</span></div>
+      <div class="items">
+        <div class="item">桂北 6 社三年保底采购，原料端稳定</div>
+        <div class="item">创始团队有 8 年精品咖啡供应链经验</div>
+        <div class="item">现有 38 家买手店可作 KOL 转介东南亚</div>
+        <div class="item">非遗工艺可视化素材齐备</div>
+      </div>
+    </div>
+    <div class="swot-cell w">
+      <div class="label"><span class="letter">W</span><span>劣势</span></div>
+      <div class="items">
+        <div class="item">无海外仓储，第一年需借新加坡合作方</div>
+        <div class="item">无 Halal 认证，印尼市场需绕行</div>
+        <div class="item">团队无东南亚市场经验，依赖外部代理</div>
+        <div class="item">无英文 / 马来语产品文案能力</div>
+      </div>
+    </div>
+    <div class="swot-cell o">
+      <div class="label"><span class="letter">O</span><span>机会</span></div>
+      <div class="items">
+        <div class="item">新加坡精品咖啡 480 家缺口是显性</div>
+        <div class="item">TWG / 永琪未做桂北乌龙，存在空白</div>
+        <div class="item">新加坡政府有"亚洲内容"补贴计划</div>
+        <div class="item">TikTok 东南亚茶内容月增 40%</div>
+      </div>
+    </div>
+    <div class="swot-cell t">
+      <div class="label"><span class="letter">T</span><span>威胁</span></div>
+      <div class="items">
+        <div class="item">TWG 若推出"非日韩"子品牌半年内可压制</div>
+        <div class="item">新加坡租金高，吧台渠道毛利挤压</div>
+        <div class="item">印尼合规变更窗口期短</div>
+        <div class="item">汇率波动每年 4–7% 区间</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============================================================
+     CHAPTER 3 — STP
+     ============================================================ -->
+<section class="chapter">
+  <div class="chapter-head">
+    <div class="eyebrow"><span class="num">V / 05</span><span class="sep">/</span><span>Chapter 3</span></div>
+    <h2>营销战略：STP</h2>
+    <p class="lede">先把客户切清楚（Segmentation），再选能打下来的（Targeting），最后用一句具体的话讲明白我们是谁（Positioning）。</p>
+  </div>
+
+  <div class="stp">
+    <div class="stp-row">
+      <div class="stp-label">
+        <span class="name">S — 细分</span>
+        Segmentation
+      </div>
+      <div class="stp-text">按"渠道类型 × 客单价承受力"切成 5 块：精品咖啡馆（核心）/ 米其林推荐中餐（高势能）/ 精品买手店（试验田）/ 高端酒店（旗舰背书）/ 居家精品消费者（远期）。前三块承担第一年收入，后两块承担第二年起势。</div>
+    </div>
+    <div class="stp-row">
+      <div class="stp-label">
+        <span class="name">T — 目标</span>
+        Targeting
+      </div>
+      <div class="stp-text">第一年聚焦新加坡 30 家精品咖啡馆 + 5 家米其林中餐；第二年扩展至吉隆坡 20 家；第三年视印尼 Halal 认证进度决定是否进入雅加达。新加坡是窗口，吉隆坡是回退线，印尼是有上限的彩蛋。</div>
+    </div>
+    <div class="stp-row">
+      <div class="stp-label">
+        <span class="name">P — 定位</span>
+        Positioning
+      </div>
+      <div class="stp-text"><span class="italic">For 注重来源与工艺的新加坡精品咖啡主理人，<br>山木茶事是供应桂北高山乌龙的精品供应链，<br>because 我们与桂北 6 社有三年保底采购协议、且 8 年精品咖啡供应链经验，<br>unlike TWG 与永琪，我们不做零售 SKU、不做混饮、不做堂食。</span></div>
+    </div>
+  </div>
+</section>
+
+<!-- ============================================================
+     CHAPTER 4 — 4P / 4C
+     ============================================================ -->
+<section class="chapter">
+  <div class="chapter-head">
+    <div class="eyebrow"><span class="num">V / 06</span><span class="sep">/</span><span>Chapter 4</span></div>
+    <h2>营销组合：4P / 4C</h2>
+    <p class="lede">4P 是企业视角（我们做什么），4C 是客户视角（他们得到什么）。两份表对照读，避免"自我感动"。</p>
+  </div>
+
+  <div class="sub-head"><span class="num">4.1</span><h3>4P · Product / Price / Place / Promotion</h3></div>
+  <div class="four-grid">
+    <div class="four-cell">
+      <div class="four-label">P · Product</div>
+      <div class="four-name">产品</div>
+      <p class="four-text">桂北高山乌龙 4 款（春/夏/秋/冬）+ 红茶 2 款（正山小种 / 烟小种）。每款 50g / 罐，吧台试用 1kg / 箱。统一视觉，无 SKU 编号外露。</p>
+    </div>
+    <div class="four-cell">
+      <div class="four-label">P · Price</div>
+      <div class="four-name">价格</div>
+      <p class="four-text">对吧台 50g 罐 38 新币（毛利 58%），1kg 箱 580 新币（毛利 42%）。零售建议价 56 新币，强制不上电商不打折。年调价 ≤ 2 次，2 月、8 月。</p>
+    </div>
+    <div class="four-cell">
+      <div class="four-label">P · Place</div>
+      <div class="four-name">渠道</div>
+      <p class="four-text">新加坡本地代理 1 家（已签 Coastal Beverages），冷链经深圳-新加坡 48h。月补货 1 次，新加坡备 8 周安全库存。第二年起自建海外仓（裕廊）。</p>
+    </div>
+    <div class="four-cell">
+      <div class="four-label">P · Promotion</div>
+      <div class="four-name">促销</div>
+      <p class="four-text">不上大众广告。投放 8 位主理人 KOL（按 50–200k 粉丝精挑），每季度 1 次主理人晚宴（10–12 人），每年 1 次桂北茶山回访。预算 18 万新币/年。</p>
+    </div>
+  </div>
+
+  <div class="sub-head"><span class="num">4.2</span><h3>4C · Customer Value / Cost / Convenience / Communication</h3></div>
+  <div class="four-grid">
+    <div class="four-cell">
+      <div class="four-label">C · Value</div>
+      <div class="four-name">客户价值</div>
+      <p class="four-text">主理人无需懂茶，只要 5 秒内能向熟客讲清"这杯乌龙来自哪座山、哪位师傅做的"——我们提供 1 页 A5 的"吧台话术卡"。</p>
+    </div>
+    <div class="four-cell">
+      <div class="four-label">C · Cost</div>
+      <div class="four-name">客户成本</div>
+      <p class="four-text">首单无起订量；30 天账期；首批 50g 罐 12 罐体验装免运费（限额 30 家）；退换 14 天无理由，损耗 ≤ 3% 山木承担。</p>
+    </div>
+    <div class="four-cell">
+      <div class="four-label">C · Convenience</div>
+      <div class="four-name">便利</div>
+      <p class="four-text">WhatsApp 业务号（主理人首选沟通工具）；每月 25 日统一推送下月新品；补货 APP 一键复购，3 次以上自动 9 折；周末下单 24h 响应。</p>
+    </div>
+    <div class="four-cell">
+      <div class="four-label">C · Communication</div>
+      <div class="four-name">沟通</div>
+      <p class="four-text">建立"主理人私董会"（8–12 人/季度），面对面聊；不建公众号；每季度 1 份纸质 8 页通讯；TikTok 账号仅做"工艺纪录片"内容，不卖货。</p>
+    </div>
+  </div>
+</section>
+
+<!-- ============================================================
+     CHAPTER 5 — 总结与展望
+     ============================================================ -->
+<section class="chapter">
+  <div class="chapter-head">
+    <div class="eyebrow"><span class="num">V / 07</span><span class="sep">/</span><span>Chapter 5</span></div>
+    <h2>总结与展望</h2>
+    <p class="lede">把 AI 汇总的"正确的废话"改成你企业的具体判断和数据——这是打印前最后一步。</p>
+  </div>
+  <p>三年总目标：覆盖新加坡 + 吉隆坡共 80 家精品渠道，年营收从 0 增至 2200 万人民币，毛利率维持 40% 以上。2026 投入 380 万、2027 投入 220 万、2028 投入 140 万。失败回退线：第二年吉隆坡扩展前若新加坡未达 25 家、复购率未到 35%，暂停东南亚、回到江浙沪深耕。</p>
+  <p>本策划书的最大风险不是市场不接受桂北乌龙——精品咖啡主理人对"非日韩"内容的好奇心是真实的——而是我们团队缺乏海外运营能力。第一年的关键不在营收数字，而在"我们能不能 12 个月内在新加坡建立 1 个本地的、能独立运转的合作方网络"。</p>
+  <p>如果成功，我们不是下一个 TWG；我们只是把"精品咖啡供应链做茶"这件事在东南亚再走一遍。如果失败，我们至少证明了桂北乌龙有海外需求，只是我们这家公司不擅长做这件事。</p>
+</section>
+
+<!-- ============================================================
+     REFERENCES
+     ============================================================ -->
+<section class="chapter">
+  <div class="chapter-head">
+    <div class="eyebrow"><span class="num">V / 08</span><span class="sep">/</span><span>References</span></div>
+    <h2>参考文献</h2>
+  </div>
+  <div class="refs">
+    <table class="refs-tbl">
+      <thead><tr><th style="width:48px">#</th><th>作者</th><th>标题</th><th style="width:80px">年份</th><th>URL</th></tr></thead>
+      <tbody>
+        <tr><td class="num">01</td><td>新加坡餐饮协会</td><td>Singapore Specialty F&amp;B Report 2025</td><td>2025</td><td>sgfnb.org/2025</td></tr>
+        <tr><td class="num">02</td><td>KAMY · 茶叶供应链</td><td>桂北高山乌龙产地调查报告</td><td>2024</td><td>kamy.cn/p/guibei</td></tr>
+        <tr><td class="num">03</td><td>Euromonitor</td><td>Asia Premium Tea Market Outlook</td><td>2026</td><td>euromonitor.com</td></tr>
+        <tr><td class="num">04</td><td>内部访谈</td><td>30 位新加坡主理人需求访谈纪要</td><td>2026</td><td>内部</td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+</div><!-- /.doc -->
+
+<footer class="doc-foot">
+  <div class="doc">
+    <span>山木茶事 · 东南亚扩张策划 · v0.3</span>
+    <span>策划书 Demo · Grid 01</span>
+  </div>
+</footer>
+
+</body>
+</html>

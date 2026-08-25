@@ -1,137 +1,558 @@
-<!doctype html>
-<html lang="zh">
+<!DOCTYPE html>
+<html lang="zh-CN">
 <head>
-<meta charset="utf-8" />
-<title>开放题主题 · HALLMARK 样式预览</title>
-<link rel="preconnect" href="https://fonts.googleapis.com" />
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,500;0,700;1,500&family=Lora:ital,wght@0,400;0,500;1,400&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Grid 01 — editorial grid system</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@500;700;900&family=Lora:ital,wght@0,400;0,500;0,700;1,400;1,700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="tokens.css?v=4">
 <style>
-  :root{
-    --bg:#F2EFE8; --panel:#E8DFD8; --ink:#2B1F18; --muted:#8A8275; --line:#D4CFC4;
-    --maroon:#3A190F; --maroon-soft:#E8DFD8;
-    --font-display:'Playfair Display','Noto Serif SC',Georgia,"Songti SC","SimSun",serif;
-    --font-body:'Lora','Noto Serif SC',Georgia,"Songti SC","SimSun",serif;
-    --font-mono:'JetBrains Mono','Noto Sans SC',ui-monospace,"SF Mono","Cascadia Code","Microsoft YaHei",sans-serif;
-    --ease-out:cubic-bezier(0.23,1,0.32,1);
-  }
-  *{box-sizing:border-box}
-  body{
-    background:var(--bg);color:var(--ink);
-    font-family:var(--font-body);font-size:16px;line-height:1.65;
-    -webkit-font-smoothing:antialiased;
-    margin:0;padding:48px 56px;
-  }
-  .step-header{margin-bottom:36px}
-  .step-number{
-    font-family:var(--font-mono);font-size:12px;letter-spacing:.2em;color:var(--muted);
-    text-transform:uppercase;margin-bottom:8px;display:block;
-  }
-  h2{font-family:var(--font-display);font-weight:900;font-size:40px;margin:0;line-height:1.2}
-  h3{font-family:var(--font-display);font-style:italic;font-weight:700;color:var(--maroon);font-size:22px;margin:32px 0 18px}
+/* Hallmark · macrostructure: Grid 01 · genre: editorial · design-system: design.md
+   · scope: showcase · axes: paper-band light · display high-contrast-serif · accent warm
+   This is a standalone showcase. It does not modify the workshop app. */
+*,*::before,*::after{box-sizing:border-box}
+html,body{margin:0;padding:0;overflow-x:clip}
+body{
+  background:var(--color-paper);color:var(--color-ink);
+  font-family:var(--font-body);font-size:19px;line-height:1.7;
+  -webkit-font-smoothing:antialiased;font-synthesis:none;
+}
 
-  .hallmark-list{margin:14px 0 28px;max-width:980px}
-  .hallmark-item{
-    display:grid;
-    grid-template-columns:56px 1fr 260px;
-    gap:28px;
-    padding:26px 0 24px;
-    border-top:1px solid var(--line);
-    align-items:start;
+/* 12-col exposed grid — visible hairlines on body to remind the reader
+   that everything sits on a strict column. Disabled on narrow viewports. */
+.grid12{
+  display:grid;grid-template-columns:repeat(12,1fr);
+  column-gap:24px;
+  max-width:1280px;margin:0 auto;
+  padding:0 32px;
+  position:relative;
+}
+@media(min-width:1280px){
+  body::before{
+    content:"";position:fixed;inset:0;pointer-events:none;z-index:0;
+    background:
+      linear-gradient(to right,
+        transparent 0, transparent calc((100vw - 1216px) / 2 - 12px),
+        rgba(0,0,0,.04) calc((100vw - 1216px) / 2 - 12px),
+        rgba(0,0,0,.04) calc((100vw - 1216px) / 2 - 11px),
+        transparent calc((100vw - 1216px) / 2 - 11px)) ,
+      repeating-linear-gradient(to right,
+        transparent 0, transparent calc((100vw - 1216px) / 2 + 1216px / 12 * 0 - 0),
+        rgba(0,0,0,.025) calc((100vw - 1216px) / 2 + 1216px / 12 * 0 - 0),
+        rgba(0,0,0,.025) calc((100vw - 1216px) / 2 + 1216px / 12 * 0 + 0));
   }
-  .hallmark-item:last-child{border-bottom:1px solid var(--line)}
-  .hallmark-num{
-    font-family:var(--font-mono);
-    font-size:11px;letter-spacing:.18em;
-    color:var(--muted);text-transform:uppercase;
-    padding-top:8px;
-  }
-  .hallmark-headline{
-    font-family:var(--font-display);
-    font-style:italic;font-weight:500;
-    font-size:24px;line-height:1.3;color:var(--ink);
-    margin:0 0 14px;letter-spacing:-.005em;
-  }
-  .hallmark-quote{
-    display:block;margin:6px 0;
-    padding:4px 0 4px 14px;
-    border-left:2px solid var(--maroon);
-    font-style:italic;color:var(--ink);
-    font-size:14px;line-height:1.65;
-    opacity:.78;
-  }
-  .hallmark-quote::before{content:'“';margin-right:2px;color:var(--maroon);font-style:normal}
-  .hallmark-quote::after{content:'”';margin-left:2px;color:var(--maroon);font-style:normal}
-  .hallmark-right .hallmark-label{
-    display:block;
-    font-family:var(--font-mono);
-    font-size:10px;letter-spacing:.22em;
-    text-transform:uppercase;
-    color:var(--muted);
-    margin-bottom:12px;
-  }
-  .hallmark-themes{display:flex;flex-direction:column;gap:6px;font-size:14px;color:var(--ink)}
-  .hallmark-theme-row{
-    display:flex;align-items:baseline;gap:10px;
-    padding-bottom:6px;border-bottom:1px dotted var(--line);
-  }
-  .hallmark-theme-row:last-child{border-bottom:none;padding-bottom:0}
-  .hallmark-theme-label{flex:1;min-width:0}
-  .hallmark-theme-count{
-    font-family:var(--font-mono);
-    font-size:11px;color:var(--maroon);
-    min-width:28px;text-align:right;letter-spacing:.04em;
-  }
-  .hallmark-empty{font-style:italic;color:var(--muted);font-size:13px;line-height:1.6}
-  .hallmark-action{margin-top:14px}
-  .muted{color:var(--muted)}
-  .meta-line{font-family:var(--font-mono);font-size:11px;color:var(--muted);letter-spacing:.1em;text-transform:uppercase;margin-top:8px}
+  .grid12{background:
+      repeating-linear-gradient(to right,
+        transparent 0, transparent calc(100% / 12 - 1px),
+        rgba(0,0,0,.025) calc(100% / 12 - 1px),
+        rgba(0,0,0,.025) calc(100% / 12));}
+}
+
+/* Top eyebrow — mono caps, sits above the headline.  NO left-margin label
+   pattern; the eyebrow stacks vertically above the heading in the same column. */
+.eyebrow{
+  font-family:var(--font-mono);font-size:13px;letter-spacing:.22em;
+  text-transform:uppercase;color:var(--color-ink-2);
+  display:flex;align-items:baseline;gap:14px;margin-bottom:14px;
+}
+.eyebrow .num{color:var(--color-accent);font-weight:500}
+.eyebrow .sep{color:var(--color-rule)}
+
+h1,h2,h3,h4{font-family:var(--font-display);font-weight:900;line-height:1.05;
+  letter-spacing:-.01em;margin:0}
+h1{font-size:clamp(3.5rem, 6vw + 1rem, 6rem);color:var(--color-ink)}
+h2{font-size:3rem;color:var(--color-ink);margin-bottom:.4em}
+h3{font-size:2rem;color:var(--color-ink);font-weight:700;margin:0 0 .4em}
+p{margin:.7em 0;max-width:62ch}
+.lede{font-size:1.5rem;line-height:1.45;color:var(--color-ink);max-width:50ch;font-weight:400}
+.italic{font-style:italic;font-weight:500}
+.muted{color:var(--color-ink-2)}
+.accent{color:var(--color-accent)}
+
+.rule{height:var(--rule-hair);background:var(--color-rule);border:none;margin:var(--space-xl) 0}
+.rule-strong{height:var(--rule-strong);background:var(--color-ink);border:none;margin:0 0 var(--space-xl) 0}
+
+/* Section heads — vertical stack: eyebrow, then h2. Hanging / left-margin
+   label pattern is banned; we always stack. */
+.section-head{margin-bottom:var(--space-lg)}
+.section-head .eyebrow{margin-bottom:14px}
+
+/* ============================================================
+   HERO — Grid 01 layout
+   12 columns split: 8 cols for headline, 4 cols for "index card" on the right.
+   The right column holds a vertical stack of: section index, a single fact,
+   and a CTA. Headline sits across cols 1-7. Generous bottom margin.
+   ============================================================ */
+.hero{padding:var(--space-3xl) 0 var(--space-2xl);position:relative;z-index:1}
+.hero .lede{margin-top:var(--space-md)}
+.hero-meta{
+  font-family:var(--font-mono);font-size:14px;letter-spacing:.18em;
+  text-transform:uppercase;color:var(--color-ink-2);
+  border-top:var(--rule-hair) solid var(--color-rule);
+  padding-top:14px;margin-top:var(--space-md);
+  display:flex;flex-direction:column;gap:10px;
+}
+.hero-meta strong{color:var(--color-ink);font-weight:500;letter-spacing:.04em;font-size:18px}
+
+/* ============================================================
+   BUTTONS — square, mono caps, instant press.
+   ============================================================ */
+.btn{
+  font-family:var(--font-mono);font-size:13px;letter-spacing:.18em;
+  text-transform:uppercase;font-weight:500;
+  background:transparent;color:var(--color-ink);
+  border:var(--rule-hair) solid var(--color-ink);
+  padding:15px 26px;cursor:pointer;border-radius:0;
+  display:inline-flex;align-items:center;gap:10px;
+  transition:background var(--dur-short) var(--ease-out),
+             color var(--dur-short) var(--ease-out),
+             border-color var(--dur-short) var(--ease-out),
+             transform var(--dur-short) var(--ease-out);
+}
+.btn:hover{background:var(--color-ink);color:var(--color-paper)}
+.btn:active{transform:scale(.98)}
+.btn:focus-visible{outline:2px solid var(--color-focus);outline-offset:2px}
+.btn--accent{background:var(--color-accent);color:var(--color-accent-ink);border-color:var(--color-accent)}
+.btn--accent:hover{background:var(--color-ink);border-color:var(--color-ink);color:var(--color-paper)}
+.btn--ghost{border-color:var(--color-rule);color:var(--color-ink-2)}
+.btn--ghost:hover{color:var(--color-ink);border-color:var(--color-ink);background:transparent}
+.btn--small{padding:9px 14px;font-size:12px}
+.btn[disabled]{opacity:.4;cursor:not-allowed;transform:none}
+
+/* ============================================================
+   PLATE / CARD — 1px rule, no shadow. No radius.
+   ============================================================ */
+.plate{
+  border:var(--rule-hair) solid var(--color-rule);
+  background:var(--color-paper);
+  padding:var(--space-md);
+}
+.plate-label{
+  font-family:var(--font-mono);font-size:12px;letter-spacing:.22em;
+  text-transform:uppercase;color:var(--color-ink-2);
+  margin-bottom:14px;display:block;
+}
+.plate--inset{background:var(--color-paper-2)}
+.plate--accent{background:var(--color-accent-soft);border-color:var(--color-accent-soft)}
+
+/* ============================================================
+   GRID 01 ITEMS — 3-column editorial list (number · title+body · meta)
+   Hairline rules between rows, generous vertical padding.
+   ============================================================ */
+.g01-list{margin:var(--space-lg) 0}
+.g01-item{
+  display:grid;grid-template-columns:64px 1fr 220px;
+  gap:32px;padding:var(--space-md) 0;
+  border-top:var(--rule-hair) solid var(--color-rule);
+  align-items:start;
+}
+.g01-item:last-child{border-bottom:var(--rule-hair) solid var(--color-rule)}
+.g01-num{
+  font-family:var(--font-mono);font-size:14px;letter-spacing:.2em;
+  color:var(--color-ink-2);padding-top:8px;
+}
+.g01-title{
+  font-family:var(--font-display);font-weight:500;
+  font-size:2rem;line-height:1.3;color:var(--color-ink);
+  margin:0 0 12px;letter-spacing:-.005em;
+}
+.g01-body{font-size:17px;line-height:1.6;color:var(--color-ink);max-width:60ch;margin:0}
+.g01-aside{
+  font-family:var(--font-mono);font-size:12px;letter-spacing:.18em;
+  text-transform:uppercase;color:var(--color-ink-2);
+}
+.g01-aside strong{color:var(--color-accent);font-weight:500;letter-spacing:.04em;font-size:18px;display:block;margin-top:4px}
+
+/* ============================================================
+   INPUT / TEXTAREA — bottom-rule only, paper-2 background.
+   ============================================================ */
+input[type=text],input[type=number],input[type=email],textarea,select{
+  width:100%;background:transparent;color:var(--color-ink);
+  border:none;border-bottom:var(--rule-hair) solid var(--color-rule);
+  font-family:var(--font-body);font-size:17px;line-height:1.5;
+  padding:8px 0;border-radius:0;outline:none;
+  transition:border-color var(--dur-short) var(--ease-out),
+             background var(--dur-short) var(--ease-out);
+}
+input[type=text]:focus,input[type=number]:focus,textarea:focus,select:focus{
+  border-bottom-color:var(--color-accent);background:var(--color-paper-2);
+}
+textarea{resize:vertical;min-height:0;field-sizing:content;font-style:italic}
+label.field-label{
+  font-family:var(--font-mono);font-size:12px;letter-spacing:.22em;
+  text-transform:uppercase;color:var(--color-ink-2);
+  display:block;margin-bottom:8px;
+}
+
+/* ============================================================
+   TABLE — mono data, ink-2 heads, no zebra. Hairlines only.
+   ============================================================ */
+.data-wrap{overflow-x:auto;border:var(--rule-hair) solid var(--color-rule);margin:var(--space-md) 0}
+table.data{width:100%;border-collapse:collapse;font-family:var(--font-mono);font-size:14px}
+table.data th,table.data td{
+  border-bottom:var(--rule-hair) solid var(--color-rule);
+  border-right:var(--rule-hair) solid var(--color-rule);
+  padding:14px 16px;text-align:left;vertical-align:top;
+}
+table.data th{background:var(--color-paper-2);font-weight:500;
+  text-transform:uppercase;letter-spacing:.12em;font-size:12px;color:var(--color-ink-2)}
+table.data tr:last-child td{border-bottom:none}
+table.data td:last-child,table.data th:last-child{border-right:none}
+
+/* ============================================================
+   CHIPS — flat 1px rule, paper-2 fill, 5×10 padding
+   ============================================================ */
+.chip-row{display:flex;flex-wrap:wrap;gap:6px;margin:6px 0}
+.chip{
+  display:inline-flex;align-items:center;gap:8px;
+  font-family:var(--font-mono);font-size:14px;letter-spacing:.04em;
+  padding:8px 14px;background:var(--color-paper-2);
+  border:var(--rule-hair) solid var(--color-rule);color:var(--color-ink);
+}
+.chip button{
+  border:none;background:transparent;color:var(--color-ink-2);
+  cursor:pointer;padding:0;font-size:18px;line-height:1;
+  transition:color var(--dur-short) var(--ease-out);
+}
+.chip button:hover{color:var(--color-warn)}
+
+/* ============================================================
+   STICKY MASTHEAD — 2px ink rule under, 18×32 padding
+   ============================================================ */
+.masthead{
+  border-bottom:var(--rule-strong) solid var(--color-ink);
+  padding:18px 32px 14px;background:var(--color-paper);
+  position:sticky;top:0;z-index:100;
+}
+.masthead-top{display:flex;justify-content:space-between;align-items:flex-end;gap:24px;flex-wrap:wrap}
+.masthead h1{font-size:34px;font-weight:900;letter-spacing:-.01em}
+.masthead-slash{font-family:var(--font-mono);font-size:13px;letter-spacing:.18em;
+  text-transform:uppercase;color:var(--color-ink-2)}
+
+/* ============================================================
+   FOOTER — quiet, mono caps, hairline above
+   ============================================================ */
+footer.demo-foot{
+  border-top:var(--rule-hair) solid var(--color-rule);
+  padding:var(--space-xl) 0 var(--space-2xl);
+  font-family:var(--font-mono);font-size:13px;letter-spacing:.16em;
+  text-transform:uppercase;color:var(--color-ink-2);
+  position:relative;z-index:1;
+}
+footer.demo-foot .grid12{display:flex;justify-content:space-between;flex-wrap:wrap;gap:14px;max-width:none}
+
+/* ============================================================
+   QUOTE — accent left rule, italic display
+   ============================================================ */
+.quote-block{
+  display:grid;grid-template-columns:2px 1fr;gap:24px;
+  padding:var(--space-lg) 0;
+}
+.quote-rule{background:var(--color-accent)}
+.quote-text{
+  font-family:var(--font-display);font-style:italic;font-weight:500;
+  font-size:2.25rem;line-height:1.35;color:var(--color-ink);
+  letter-spacing:-.005em;margin:0;
+}
+.quote-meta{
+  font-family:var(--font-mono);font-size:12px;letter-spacing:.18em;
+  text-transform:uppercase;color:var(--color-ink-2);
+  margin-top:14px;display:flex;gap:18px;
+}
+
+/* ============================================================
+   RESPONSIVE — collapse to single column under 900, two under 600
+   ============================================================ */
+@media(max-width:900px){
+  .grid12{padding:0 24px;column-gap:16px}
+  .g01-item{grid-template-columns:48px 1fr;gap:20px}
+  .g01-aside{grid-column:2}
+  h1{font-size:clamp(3rem, 8vw, 4.5rem)}
+  .hero{padding:var(--space-2xl) 0 var(--space-xl)}
+  .quote-text{font-size:var(--text-xl)}
+  body{font-size:17px}
+  .lede{font-size:1.25rem}
+}
+@media(max-width:600px){
+  .grid12{padding:0 20px}
+  .g01-item{grid-template-columns:1fr;gap:8px}
+  .g01-aside{grid-column:1}
+  .masthead{padding:14px 20px 10px}
+  body{font-size:17px}
+  .lede{font-size:1.25rem}
+}
 </style>
 </head>
 <body>
-  <div class="step-header">
-    <span class="step-number">STEP 4</span>
-    <h2>调研数据分析.</h2>
-    <p class="muted">分布、均值、主题聚类；自动聚合并呈现在 Atelier 图表中。</p>
+
+<header class="masthead">
+  <div class="grid12 masthead-top" style="padding:0">
+    <div>
+      <h1>Grid 01</h1>
+      <div class="masthead-slash" style="margin-top:4px">editorial grid system · showcase</div>
+    </div>
+    <div class="muted" style="font-family:var(--font-mono);font-size:11px;letter-spacing:.18em;text-transform:uppercase">
+      design.md · tokens.css · 单 demo 页
+    </div>
+  </div>
+</header>
+
+<!-- ============================================================
+     HERO — 8/4 split
+     ============================================================ -->
+<section class="hero">
+  <div class="grid12" style="row-gap:var(--space-md)">
+    <div style="grid-column:1 / span 8">
+      <div class="eyebrow">
+        <span class="num">01 / 04</span>
+        <span class="sep">/</span>
+        <span>system · 模式</span>
+      </div>
+      <h1>在纸上<br>排出一份<br>克制的事。</h1>
+      <p class="lede">一个面向中小企业的工作坊工具：五步串联业务体系 → 目标市场 → 价值主张 → 营销组合 → 策划书。
+        本页是它的视觉纲领的最小可读样本。</p>
+      <div style="display:flex;gap:10px;margin-top:var(--space-md);flex-wrap:wrap">
+        <button class="btn btn--accent">进入工具</button>
+        <button class="btn btn--ghost">查看 design.md</button>
+      </div>
+    </div>
+    <aside style="grid-column:9 / span 4">
+      <div class="hero-meta">
+        <div><strong>5</strong> 个工作坊</div>
+        <div><strong>23</strong> 个步骤</div>
+        <div><strong>3</strong> 种语言输入（中/英/数）</div>
+        <div><strong>1</strong> 套 token 系统</div>
+      </div>
+    </aside>
+  </div>
+</section>
+
+<!-- ============================================================
+     SECTION A — PEST / quadrant grid (4-col, hairline dividers)
+     ============================================================ -->
+<section style="padding:var(--space-xl) 0 var(--space-2xl);position:relative;z-index:1">
+  <div class="grid12">
+    <div class="section-head" style="grid-column:1 / span 12">
+      <div class="eyebrow">
+        <span class="num">02 / 04</span><span class="sep">/</span><span>grid · 4 quadrants</span>
+      </div>
+      <h2>四象限，<span class="italic accent">一条规则</span>到底。</h2>
+      <p class="lede">PEST、政治/经济/社会/技术 —— 用一条横线串起来，
+        不用四张卡。视觉上读作同一份资料，而不是四张幻灯片。</p>
+    </div>
+  </div>
+  <div class="grid12" style="margin-top:var(--space-md)">
+    <div style="grid-column:1 / span 12;border-top:var(--rule-hair) solid var(--color-rule);
+                border-bottom:var(--rule-hair) solid var(--color-rule);
+                display:grid;grid-template-columns:repeat(4,1fr);">
+      <div class="plate" style="border-right:var(--rule-hair) solid var(--color-rule);border-top:none;border-bottom:none;border-left:none;background:transparent">
+        <div class="plate-label">P — Political</div>
+        <h3 style="font-family:var(--font-display);font-style:italic;font-weight:500;font-size:32px;line-height:1;margin-bottom:14px">P</h3>
+        <p class="muted" style="font-size:13px;line-height:1.6">地方产业政策、补贴窗口、出口许可。</p>
+      </div>
+      <div class="plate" style="border-right:var(--rule-hair) solid var(--color-rule);border-top:none;border-bottom:none;border-left:none;background:transparent">
+        <div class="plate-label">E — Economic</div>
+        <h3 style="font-family:var(--font-display);font-style:italic;font-weight:500;font-size:32px;line-height:1;margin-bottom:14px">E</h3>
+        <p class="muted" style="font-size:13px;line-height:1.6">原材料价格、汇率、客单价区间。</p>
+      </div>
+      <div class="plate" style="border-right:var(--rule-hair) solid var(--color-rule);border-top:none;border-bottom:none;border-left:none;background:transparent">
+        <div class="plate-label">S — Social</div>
+        <h3 style="font-family:var(--font-display);font-style:italic;font-weight:500;font-size:32px;line-height:1;margin-bottom:14px">S</h3>
+        <p class="muted" style="font-size:13px;line-height:1.6">消费偏好变化、社交平台迁徙、年龄结构。</p>
+      </div>
+      <div class="plate" style="border:none;background:transparent">
+        <div class="plate-label">T — Technological</div>
+        <h3 style="font-family:var(--font-display);font-style:italic;font-weight:500;font-size:32px;line-height:1;margin-bottom:14px">T</h3>
+        <p class="muted" style="font-size:13px;line-height:1.6">关键生产工艺、平台 API、版权与数据合规。</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============================================================
+     SECTION B — 3-col editorial list (hallmark item)
+     ============================================================ -->
+<section style="padding:var(--space-xl) 0;position:relative;z-index:1">
+  <div class="grid12">
+    <div class="section-head" style="grid-column:1 / span 12">
+      <div class="eyebrow">
+        <span class="num">03 / 04</span><span class="sep">/</span><span>list · 3 columns</span>
+      </div>
+      <h2>三栏分隔，<span class="italic">编号是锚</span>，不是标签。</h2>
+      <p class="lede">三栏布局是工具的常用节拍：
+        左为编号（mono caps），中为标题+正文（display + body），右为元数据。
+        行间一根细线，无填色块。</p>
+    </div>
+  </div>
+  <div class="grid12">
+    <div style="grid-column:1 / span 12">
+      <div class="g01-list" style="margin:0">
+        <article class="g01-item">
+          <div class="g01-num">01</div>
+          <div>
+            <h4 class="g01-title">业务基本情况</h4>
+            <p class="g01-body">先写下你是谁、卖什么、卖给谁。文本不要求长，但要写得具体——
+              把"做茶叶"改成"做桂北高山乌龙，主供江浙沪精品买手店"。</p>
+          </div>
+          <div class="g01-aside">
+            Step
+            <strong>01</strong>
+          </div>
+        </article>
+        <article class="g01-item">
+          <div class="g01-num">02</div>
+          <div>
+            <h4 class="g01-title">PEST & 客户画像</h4>
+            <p class="g01-body">政治/经济/社会/技术四象限 + 1–2 张具体客户画像。
+              AI 合成调研可以补齐你没有访谈过的角度，但不能替代你自己的判断。</p>
+          </div>
+          <div class="g01-aside">
+            Step
+            <strong>02–04</strong>
+          </div>
+        </article>
+        <article class="g01-item">
+          <div class="g01-num">03</div>
+          <div>
+            <h4 class="g01-title">指标体系与加权评分</h4>
+            <p class="g01-body">为每个候选市场列出 5–8 个可量化指标，做加权。
+              权重怎么定，你说了算；让 AI 提供一个起点，然后自己改。</p>
+          </div>
+          <div class="g01-aside">
+            Step
+            <strong>05</strong>
+          </div>
+        </article>
+        <article class="g01-item">
+          <div class="g01-num">04</div>
+          <div>
+            <h4 class="g01-title">定位句与 slogan</h4>
+            <p class="g01-body">三句话：一句话写给客户看，一句话写给团队看，一句话写给自己看。
+              最后才写 slogan —— slogan 是结论，不是出发点。</p>
+          </div>
+          <div class="g01-aside">
+            Step
+            <strong>06</strong>
+          </div>
+        </article>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============================================================
+     SECTION C — components grid: plate · input · table · chip · quote
+     ============================================================ -->
+<section style="padding:var(--space-xl) 0 var(--space-2xl);position:relative;z-index:1">
+  <div class="grid12">
+    <div class="section-head" style="grid-column:1 / span 12">
+      <div class="eyebrow">
+        <span class="num">04 / 04</span><span class="sep">/</span><span>components</span>
+      </div>
+      <h2>组件语音：<span class="italic">方、薄、慢。</span></h2>
+      <p class="lede">方角、薄边、不浮动。点击反馈是 1px 缩进，不是阴影。
+        字段下边线、表格细线、卡纸 1px 框 —— 整本系统都活在一根线里。</p>
+    </div>
   </div>
 
-  <h3>开放题主题</h3>
-  <div class="hallmark-list">
-    <article class="hallmark-item">
-      <div class="hallmark-num">01</div>
-      <div class="hallmark-mid">
-        <h4 class="hallmark-headline">你最近一次买茶的场景是什么？</h4>
-        <p class="hallmark-quote">新年送礼给上司，想显得有文化品位</p>
-        <p class="hallmark-quote">自己在家下午茶，替代咖啡</p>
-      </div>
-      <div class="hallmark-right">
-        <span class="hallmark-label">KEY POINTS</span>
-        <div class="hallmark-themes">
-          <div class="hallmark-theme-row"><span class="hallmark-theme-label">送礼</span><span class="hallmark-theme-count">×4</span></div>
-          <div class="hallmark-theme-row"><span class="hallmark-theme-label">自饮仪式</span><span class="hallmark-theme-count">×3</span></div>
-          <div class="hallmark-theme-row"><span class="hallmark-theme-label">商务场景</span><span class="hallmark-theme-count">×2</span></div>
+  <div class="grid12" style="row-gap:var(--space-lg);margin-top:var(--space-md)">
+    <!-- plate + input -->
+    <div style="grid-column:1 / span 6">
+      <div class="plate">
+        <div class="plate-label">Plate · minimal-viable output</div>
+        <p>每步顶部一张可勾选清单，写明这步至少要交什么。
+          全部勾完即可继续；不必等"完美"。</p>
+        <div style="margin-top:14px;display:flex;flex-direction:column;gap:8px">
+          <label style="display:flex;align-items:flex-start;gap:10px;font-family:var(--font-body);font-size:14px;letter-spacing:0;text-transform:none;color:var(--color-ink)">
+            <input type="checkbox" style="width:auto;margin-top:4px">
+            至少写明业务、产品、目标客户三个基本面
+          </label>
+          <label style="display:flex;align-items:flex-start;gap:10px;font-family:var(--font-body);font-size:14px;letter-spacing:0;text-transform:none;color:var(--color-ink)">
+            <input type="checkbox" style="width:auto;margin-top:4px">
+            给客户画像起个名字 + 一句关键需求
+          </label>
+          <label style="display:flex;align-items:flex-start;gap:10px;font-family:var(--font-body);font-size:14px;letter-spacing:0;text-transform:none;color:var(--color-ink)">
+            <input type="checkbox" style="width:auto;margin-top:4px">
+            PEST 四象限各 ≥ 2 条具体事实
+          </label>
         </div>
       </div>
-    </article>
+    </div>
+    <div style="grid-column:7 / span 6">
+      <div class="plate plate--inset">
+        <div class="plate-label">Field · bottom-rule</div>
+        <label class="field-label" for="biz-name">业务名称</label>
+        <input id="biz-name" type="text" placeholder="山木茶事" value="山木茶事">
+        <label class="field-label" for="biz-desc" style="margin-top:18px">一段话写清业务</label>
+        <textarea id="biz-desc" rows="2" placeholder="把 '做茶叶' 改成一句具体的话">桂北高山乌龙，主供江浙沪精品买手店。</textarea>
+        <div style="display:flex;gap:8px;margin-top:18px;flex-wrap:wrap">
+          <button class="btn btn--accent">保存</button>
+          <button class="btn btn--ghost">取消</button>
+        </div>
+      </div>
+    </div>
 
-    <article class="hallmark-item">
-      <div class="hallmark-num">02</div>
-      <div class="hallmark-mid">
-        <h4 class="hallmark-headline">你希望品牌为你解决什么问题？</h4>
-        <p class="hallmark-quote">告诉我这泡茶是哪位师傅做的</p>
-        <p class="hallmark-quote">盒子能直接当花器就好</p>
+    <!-- table + chips -->
+    <div style="grid-column:1 / span 8">
+      <div class="plate-label">Table · mono data</div>
+      <div class="data-wrap">
+        <table class="data">
+          <thead><tr><th>候选市场</th><th>吸引力</th><th>竞争力</th><th>权重分</th></tr></thead>
+          <tbody>
+            <tr><td>江浙沪买手店</td><td>0.78</td><td>0.62</td><td>0.71</td></tr>
+            <tr><td>广东茶饮连锁</td><td>0.71</td><td>0.48</td><td>0.61</td></tr>
+            <tr><td>东南亚出口</td><td>0.65</td><td>0.81</td><td>0.72</td></tr>
+            <tr><td>电商 D2C</td><td>0.55</td><td>0.40</td><td>0.48</td></tr>
+          </tbody>
+        </table>
       </div>
-      <div class="hallmark-right">
-        <span class="hallmark-label">KEY POINTS</span>
-        <div class="hallmark-themes">
-          <div class="hallmark-theme-row"><span class="hallmark-theme-label">产地透明</span><span class="hallmark-theme-count">×3</span></div>
-          <div class="hallmark-theme-row"><span class="hallmark-theme-label">可持续包装</span><span class="hallmark-theme-count">×2</span></div>
-          <div class="hallmark-theme-row"><span class="hallmark-theme-label">持续发现</span><span class="hallmark-theme-count">×2</span></div>
+    </div>
+    <div style="grid-column:9 / span 4">
+      <div class="plate-label">Chip · tag</div>
+      <div class="chip-row" style="margin-top:0">
+        <span class="chip">精品买手 <button>×</button></span>
+        <span class="chip">文化感 <button>×</button></span>
+        <span class="chip">非遗工艺 <button>×</button></span>
+        <span class="chip">高山茶 <button>×</button></span>
+        <span class="chip">桂北 <button>×</button></span>
+        <span class="chip">乌龙 <button>×</button></span>
+      </div>
+      <div class="plate-label" style="margin-top:24px">Tag · 状态</div>
+      <div class="chip-row" style="margin-top:0">
+        <span class="chip" style="background:var(--color-accent);color:var(--color-accent-ink);border-color:var(--color-accent)">AI</span>
+        <span class="chip" style="border-color:var(--color-ink);color:var(--color-ink)">已确认</span>
+        <span class="chip">未填</span>
+      </div>
+    </div>
+
+    <!-- quote -->
+    <div style="grid-column:1 / span 12">
+      <div class="quote-block">
+        <div class="quote-rule" aria-hidden="true"></div>
+        <div>
+          <p class="quote-text">
+            工具不是来替你思考的。工具做的事只有一件 ——<br>
+            把你的判断从「脑子里一坨」摊成「纸上几条」。
+          </p>
+          <div class="quote-meta">
+            <span>Workbook · preface</span>
+            <span>v0.3 · 2026</span>
+          </div>
         </div>
       </div>
-    </article>
+    </div>
   </div>
+</section>
 
-  <p class="meta-line">END · 开放题主题</p>
+<footer class="demo-foot">
+  <div class="grid12">
+    <span>Grid 01 · editorial grid system</span>
+    <span>Hallmark · 2026</span>
+    <span>查看 <code style="font-family:var(--font-mono);color:var(--color-ink)">design.md</code> 锁定的系统</span>
+  </div>
+</footer>
+
 </body>
 </html>

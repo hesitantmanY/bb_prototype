@@ -1,0 +1,62 @@
+/* ============================================================
+   TOKENS — Hallmark · editorial grid system
+   Source of truth: ../design.md
+   ============================================================ */
+:root{
+  /* Paper & ink — pure neutral OKLCH palette, see design.md
+     Paper is fully achromatic white. paper-2 is a true neutral grey.
+     No warm tint anywhere. Reads as a fresh grid sheet. */
+  --color-paper:        oklch(100% 0 0);
+  --color-paper-2:      oklch(94% 0 0);
+  --color-ink:          oklch(10% 0 0);
+  --color-ink-2:        oklch(42% 0 0);
+  --color-rule:         oklch(86% 0 0);
+  --color-accent:       oklch(28% 0.060 30);
+  --color-accent-soft:  oklch(94% 0 0);
+  --color-accent-ink:   oklch(100% 0 0);
+  --color-warn:         oklch(40% 0.140 35);
+  --color-focus:        oklch(50% 0.180 260);
+
+  /* Fonts */
+  --font-display: 'Playfair Display', 'ChillDuanCN', Georgia, "Songti SC", serif;
+  --font-body:    'Lora', 'ChillDuanCN', Georgia, "Songti SC", serif;
+  --font-mono:    'JetBrains Mono', 'ChillDuanCN', ui-monospace, "Microsoft YaHei", monospace;
+
+  /* Spacing — 4pt named scale */
+  --space-3xs: 0.25rem; --space-2xs: 0.5rem; --space-xs: 0.75rem;
+  --space-sm:  1.25rem; --space-md:  2rem;   --space-lg: 3rem;
+  --space-xl:  4.5rem;  --space-2xl: 6.5rem; --space-3xl: 9rem;
+
+  /* Type scale */
+  --text-xs:     0.75rem;
+  --text-sm:     0.875rem;
+  --text-md:     1.0625rem;
+  --text-lg:     1.375rem;
+  --text-xl:     1.75rem;
+  --text-2xl:    1.875rem;
+  --text-3xl:    2.5rem;
+  --text-display: clamp(3rem, 5vw + 1rem, 5.25rem);
+
+  /* Rules & radii */
+  --rule-hair: 1px; --rule-strong: 2px;
+  --radius-card: 0; --radius-pill: 0; --radius-input: 0;
+
+  /* Motion */
+  --ease-out:     cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-in-out:  cubic-bezier(0.77, 0, 0.175, 1);
+  --dur-short:    120ms;
+  --dur-base:     220ms;
+  --dur-reveal:   320ms;
+}
+
+/* Backwards-compat alias map so any hard-coded references in workshop JS / inline
+   styles using the old Atelier variable names still resolve. */
+:root{
+  --bg:           var(--color-paper);
+  --panel:        var(--color-paper-2);
+  --maroon:       var(--color-accent);
+  --maroon-soft:  var(--color-accent-soft);
+  --muted:        var(--color-ink-2);
+  --line:         var(--color-rule);
+  --placeholder:  var(--color-ink-2);
+}
