@@ -82,7 +82,7 @@
       const ly = oy - labelR * Math.sin(labelAng);
       MONO.txt(el, {
         x: lx, y: ly, 'text-anchor':'middle',
-        'font-size': 10, 'font-weight': 700, 'font-style':'italic',
+        'font-size': 10, 'font-weight': 700, 'font-style':'normal',
         fill: MONO.INK, 'letter-spacing':'0.04em', class: 'fade'
       }, '决策扇面（明星落点）');
 
@@ -146,7 +146,7 @@
       ];
       ql.forEach(q => MONO.txt(el, {
         x: q.x, y: q.y, 'text-anchor': q.align,
-        'font-size': 13, 'font-weight': 700, 'font-style':'italic',
+        'font-size': 13, 'font-weight': 700, 'font-style':'normal',
         fill: MONO.MUTED, 'letter-spacing':'0.04em'
       }, q.text));
 

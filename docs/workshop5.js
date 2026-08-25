@@ -2,6 +2,19 @@
    WORKSHOP 5 — 策划书
    Single scrollable document with editable chapters.
    ============================================================ */
+// Work 5 工具步骤的 editorial 视觉注入：
+// 复用 _hallmark_w5_demo.html 的设计语言（Playfair/Lora/12 列 grid 杂志感），
+// 但只套到 #steps5 容器内，不污染 work1-4 同名 class。
+// IIFE 防止重复注入。
+(function(){
+  if (document.getElementById('w5-editorial-styles')) return;
+  const link = document.createElement('link');
+  link.id = 'w5-editorial-styles';
+  link.rel = 'stylesheet';
+  link.href = 'workshop5-editorial.css';
+  document.head.appendChild(link);
+})();
+
 Work5.steps = [
   {id:'plan', label:'策划书'}
 ];
@@ -41,7 +54,7 @@ Work5.renderStep = function(id){
       UI.field('日期', el('input',{type:'date',value:c.date,oninput:e=>{c.date=e.target.value;autosave();Work5.refreshCover()}}))
     ));
     body.appendChild(el('div',{class:'ai-actions'},
-      el('button',{class:'small',onclick:e=>Work5.aiTitle(e.currentTarget,body)},'用 AI 起名')
+      el('button',{class:'btn btn--ghost btn--small',onclick:e=>Work5.aiTitle(e.currentTarget,body)},'用 AI 起名')
     ));
     body.appendChild(el('div',{id:'coverPreview',class:'plate',style:{marginTop:'14px',padding:'28px',background:'var(--color-paper)'}}));
     Work5.refreshCover();
@@ -50,8 +63,8 @@ Work5.renderStep = function(id){
   // Abstract
   sec.appendChild(Work5.section('abstract','摘要', function(body){
     body.appendChild(el('div',{class:'ai-actions'},
-      el('button',{class:'small',onclick:()=>Work5.aggregateAbstract(body)},'从章节自动汇总'),
-      el('button',{class:'small',onclick:e=>Work5.aiPolish('abstract','摘要',e.currentTarget)},'AI 润色')
+      el('button',{class:'btn btn--ghost btn--small',onclick:()=>Work5.aggregateAbstract(body)},'从章节自动汇总'),
+      el('button',{class:'btn btn--ghost btn--small',onclick:e=>Work5.aiPolish('abstract','摘要',e.currentTarget)},'AI 润色')
     ));
     body.appendChild(el('textarea',{rows:5,maxlength:600,oninput:e=>{state.work5.abstract=e.target.value;autosave()}},state.work5.abstract));
   }));
@@ -59,8 +72,8 @@ Work5.renderStep = function(id){
   // Chapter 1
   sec.appendChild(Work5.section('ch1','1. 企业及业务概况', function(body){
     body.appendChild(el('div',{class:'ai-actions'},
-      el('button',{class:'small',onclick:()=>Work5.aggregateCh1(body)},'从 Work 1 汇总'),
-      el('button',{class:'small',onclick:e=>Work5.aiPolish('ch1_business','业务概况',e.currentTarget)},'AI 改写为章节语言')
+      el('button',{class:'btn btn--ghost btn--small',onclick:()=>Work5.aggregateCh1(body)},'从 Work 1 汇总'),
+      el('button',{class:'btn btn--ghost btn--small',onclick:e=>Work5.aiPolish('ch1_business','业务概况',e.currentTarget)},'AI 改写为章节语言')
     ));
     body.appendChild(el('textarea',{rows:8,oninput:e=>{state.work5.ch1_business=e.target.value;autosave()}},state.work5.ch1_business));
   }));
@@ -74,8 +87,8 @@ Work5.renderStep = function(id){
       body.appendChild(UI.field(label, el('textarea',{rows:3,oninput:ev=>{e[k]=ev.target.value;autosave()}},e[k])));
     });
     body.appendChild(el('div',{class:'ai-actions'},
-      el('button',{class:'small',onclick:()=>Work5.importPestFromWork1()},'从 Work 1 导入 PEST'),
-      el('button',{class:'small',onclick:e=>Work5.aiSwot(e.currentTarget)},'AI 提取 SWOT')
+      el('button',{class:'btn btn--ghost btn--small',onclick:()=>Work5.importPestFromWork1()},'从 Work 1 导入 PEST'),
+      el('button',{class:'btn btn--ghost btn--small',onclick:e=>Work5.aiSwot(e.currentTarget)},'AI 提取 SWOT')
     ));
 
     body.appendChild(el('h4',{style:{'margin-top':'20px'}},'2.2 SWOT'));
@@ -103,12 +116,12 @@ Work5.renderStep = function(id){
     body.appendChild(el('textarea',{rows:3,oninput:e=>{s.segmentation=e.target.value;autosave()}},s.segmentation));
     body.appendChild(el('h4',{},'3.2 目标市场 (Targeting)'));
     body.appendChild(el('div',{class:'ai-actions'},
-      el('button',{class:'small',onclick:()=>Work5.importTargeting()},'从 Work 2 导入'),
+      el('button',{class:'btn btn--ghost btn--small',onclick:()=>Work5.importTargeting()},'从 Work 2 导入'),
     ));
     body.appendChild(el('textarea',{rows:4,oninput:e=>{s.targeting=e.target.value;autosave()}},s.targeting));
     body.appendChild(el('h4',{},'3.3 定位 (Positioning)'));
     body.appendChild(el('div',{class:'ai-actions'},
-      el('button',{class:'small',onclick:()=>Work5.importPositioning()},'从 Work 3 导入'),
+      el('button',{class:'btn btn--ghost btn--small',onclick:()=>Work5.importPositioning()},'从 Work 3 导入'),
     ));
     body.appendChild(el('textarea',{rows:4,oninput:e=>{s.positioning=e.target.value;autosave()}},s.positioning));
   }));
@@ -121,8 +134,8 @@ Work5.renderStep = function(id){
       body.appendChild(UI.field(label, el('textarea',{rows:4,oninput:e=>{m[k]=e.target.value;autosave()}},m[k])));
     });
     body.appendChild(el('div',{class:'ai-actions'},
-      el('button',{class:'small',onclick:()=>Work5.import4P()},'从 Work 4 导入'),
-      el('button',{class:'small',onclick:e=>Work5.convert4C(e.currentTarget)},'AI 转换为 4C')
+      el('button',{class:'btn btn--ghost btn--small',onclick:()=>Work5.import4P()},'从 Work 4 导入'),
+      el('button',{class:'btn btn--ghost btn--small',onclick:e=>Work5.convert4C(e.currentTarget)},'AI 转换为 4C')
     ));
     body.appendChild(el('h4',{style:{'margin-top':'16px'}},'4C 视角'));
     [['customerValue','客户价值 (Customer Value)'],['customerCost','客户成本 (Customer Cost)'],
@@ -134,7 +147,7 @@ Work5.renderStep = function(id){
   // Chapter 5
   sec.appendChild(Work5.section('ch5','5. 总结与展望', function(body){
     body.appendChild(el('div',{class:'ai-actions'},
-      el('button',{class:'small',onclick:e=>Work5.aiOutlook(e.currentTarget)},'AI 生成总结展望')
+      el('button',{class:'btn btn--ghost btn--small',onclick:e=>Work5.aiOutlook(e.currentTarget)},'AI 生成总结展望')
     ));
     body.appendChild(el('textarea',{rows:6,oninput:e=>{state.work5.ch5_outlook=e.target.value;autosave()}},state.work5.ch5_outlook));
   }));
@@ -151,11 +164,11 @@ Work5.renderStep = function(id){
       ['authors','title','year','url'].forEach(k=>{
         tr.appendChild(el('td',{},el('input',{value:r[k]||'',oninput:e=>{r[k]=e.target.value;autosave()}})));
       });
-      tr.appendChild(el('td',{},el('button',{class:'ghost small',onclick:()=>{refs.splice(i,1);autosave();Work5.rerender('plan')}},'删除')));
+      tr.appendChild(el('td',{},el('button',{class:'btn btn--ghost btn--small',onclick:()=>{refs.splice(i,1);autosave();Work5.rerender('plan')}},'删除')));
       tb.appendChild(tr);
     });
     t.appendChild(tb);table.appendChild(t);body.appendChild(table);
-    body.appendChild(el('button',{onclick:()=>{refs.push({authors:'',title:'',year:'',url:''});autosave();Work5.rerender('plan')}},'+ 添加文献'));
+    body.appendChild(el('button',{class:'btn btn--ghost btn--small',onclick:()=>{refs.push({authors:'',title:'',year:'',url:''});autosave();Work5.rerender('plan')}},'+ 添加文献'));
   }));
 
   sec.dataset.rendered='1';
@@ -184,11 +197,11 @@ Work5.mvo = function(){
 };
 
 Work5.toolbar=function(){
-  return el('div',{class:'plate no-print',style:{display:'flex',gap:'8px','flex-wrap':'wrap',alignItems:'center','margin-bottom':'20px'}},
-    el('button',{class:'primary',onclick:()=>Work5.aggregateAll()},'从 Work 1–4 一键汇总'),
-    el('button',{onclick:()=>window.print()},'打印 / PDF'),
-    el('button',{onclick:()=>App.exportMd()},'导出 Markdown'),
-    el('button',{class:'ghost',onclick:e=>Work5.aiPolishAll(e.currentTarget)},'AI 润色全文')
+  return el('div',{class:'plate no-print',style:{display:'flex',gap:'10px','flex-wrap':'wrap',alignItems:'center','margin-bottom':'20px'}},
+    el('button',{class:'btn btn--small',onclick:()=>Work5.aggregateAll()},'从 Work 1–4 一键汇总',el('span',{class:'arrow'})),
+    el('button',{class:'btn btn--ghost btn--small',onclick:()=>window.print()},'打印 / PDF'),
+    el('button',{class:'btn btn--ghost btn--small',onclick:()=>App.exportMd()},'导出 Markdown'),
+    el('button',{class:'btn btn--ghost btn--small',onclick:e=>Work5.aiPolishAll(e.currentTarget)},'AI 润色全文')
   );
 };
 
@@ -199,12 +212,57 @@ Work5.toolbar=function(){
 // 不再在 Work 5 toolbar 重复一个"随机生成示例"按钮。
 
 Work5.section=function(id,title,bodyFn){
-  const det=el('details',{open:true});
-  det.appendChild(el('summary',{style:{'font-family':'var(--font-display)','font-style':'italic','font-size':'22px','margin-bottom':'10px','cursor':'pointer'}},title));
-  const body=el('div',{});
+  // 形态：id ∈ {cover, abstract, ch1..ch5, refs} ; title 形如 "1. 企业及业务概况"
+  // 返回：cover 走 .cover 布局；abstract 走 .chapter + eyebrow + h2 + plate(body)；
+  //       其它章节走 .chapter + chapter-head(eyebrow+h2) + plate(body)。
+  const splitTitle = (() => {
+    const m = title.match(/^(\d+)\.\s*(.+)$/);
+    return m ? { num: m[1] + '.', label: m[2] } : null;
+  })();
+  const section = el('section', { class: id === 'cover' ? 'cover' : 'chapter' });
+  if (id === 'cover') {
+    section.appendChild(el('div', { class: 'eyebrow' },
+      el('span', { class: 'num' }, 'V / ' + ((splitTitle && splitTitle.num) || '策划书')),
+      el('span', { class: 'sep' }, '/'),
+      el('span', {}, 'Global Brand Workshop · 策划书')
+    ));
+    const body = el('div', {});
+    bodyFn(body);
+    section.appendChild(body);
+    return section;
+  }
+  if (id === 'abstract') {
+    section.appendChild(el('div', { class: 'chapter-head' },
+      el('div', { class: 'eyebrow' },
+        el('span', { class: 'num' }, 'V / 02'),
+        el('span', { class: 'sep' }, '/'),
+        el('span', {}, 'Abstract')
+      ),
+      el('h2', {}, '摘要')
+    ));
+  } else if (splitTitle) {
+    section.appendChild(el('div', { class: 'chapter-head' },
+      el('div', { class: 'eyebrow' },
+        el('span', { class: 'num' }, 'V / ' + (splitTitle.num.replace('.', '').padStart(2, '0'))),
+        el('span', { class: 'sep' }, '/'),
+        el('span', {}, 'Chapter ' + splitTitle.num.replace('.', ''))
+      ),
+      el('h2', {}, splitTitle.label)
+    ));
+  } else {
+    section.appendChild(el('div', { class: 'chapter-head' },
+      el('div', { class: 'eyebrow' },
+        el('span', { class: 'num' }, 'V / 99'),
+        el('span', { class: 'sep' }, '/'),
+        el('span', {}, 'References')
+      ),
+      el('h2', {}, title || '参考文献')
+    ));
+  }
+  const body = el('div', { class: 'plate' });
   bodyFn(body);
-  det.appendChild(body);
-  return det;
+  section.appendChild(body);
+  return section;
 };
 
 Work5.refreshCover=function(){
@@ -214,7 +272,7 @@ Work5.refreshCover=function(){
     <div style="text-align:center;padding:32px 20px">
       <div class="mono" style="font-size:11px;letter-spacing:.2em;color:var(--color-ink-2)">GLOBAL BRAND WORKSHOP · ${esc(c.date)}</div>
       <h1 style="margin:14px 0 6px">${esc(c.title||'〔标题〕')}</h1>
-      <div style="font-family:var(--font-display);font-style:italic;font-size:20px;color:var(--color-accent)">${esc(c.subtitle||'')}</div>
+      <div style="font-family:var(--font-display);font-style:normal;font-size:20px;color:var(--color-accent)">${esc(c.subtitle||'')}</div>
       <div class="mono" style="font-size:11px;letter-spacing:.15em;color:var(--color-ink-2);margin-top:28px">${esc(c.team||'')}</div>
     </div>`;
 };
@@ -377,7 +435,7 @@ Work5.aiTitle=async function(button,container){
     if(r?.titles){
       const box=el('div',{class:'plate',style:{'margin-top':'10px'}},
         el('span',{class:'plate-label'},'备选标题（点击使用）'),
-        ...r.titles.map(t=>el('div',{style:{padding:'6px 0',cursor:'pointer','border-bottom':'1px solid var(--color-rule)','font-family':'var(--font-display)','font-style':'italic','font-size':'18px'},
+        ...r.titles.map(t=>el('div',{style:{padding:'6px 0',cursor:'pointer','border-bottom':'1px solid var(--color-rule)','font-family':'var(--font-display)','font-style':'normal','font-size':'18px'},
           onclick:()=>{state.work5.cover.title=t;autosave();Work5.rerender('plan')}},'· '+t))
       );
       container.appendChild(box);

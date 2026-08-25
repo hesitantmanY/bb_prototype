@@ -16,6 +16,7 @@ from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
 
 from config import load_config, public_config, save_config
+from doc_extract import extract_document
 from excel_parser import parse_spreadsheet
 from lda import run_lda
 from llm_proxy import proxy_llm
@@ -208,6 +209,22 @@ async def parse_excel_endpoint(file: UploadFile = File(...)) -> dict:
     result = parse_spreadsheet(file.filename or "upload.xlsx", data)
     if "error" in result:
         raise HTTPException(status_code=400, detail=result["error"])
+    return result
+
+
+@app.post("/api/extract-doc")
+async def extract_doc_endpoint(file: UploadFile = File(...)) -> dict:
+    """Extract plain text from an uploaded context file (txt/md/csv/docx/pdf).
+
+    Used by the global file drawer so users can feed their own documents
+    (research notes, reports, transcripts) into AI prompts. 5MB per file.
+    """
+    data = await file.read()
+    if len(data) > 5 * 1024 * 1024:
+        raise HTTPException(status_code=413, detail="文件过大（单文件上限 5MB）")
+    result = extract_document(file.filename or "upload.txt", data)
+    if not result.get("ok"):
+        raise HTTPException(status_code=400, detail=result.get("error", "解析失败"))
     return result
 
 

@@ -19,3 +19,9 @@ venv/
 # full OTF/TTF source dirs are kept locally but not committed (hundreds of MB).
 docs/fonts/ChillDuanHeiSong_v1.2/
 docs/fonts/叁慕斜宋体/
+
+# Tooling
+.worktrees/
+
+# macOS
+.DS_Store

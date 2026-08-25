@@ -139,11 +139,16 @@ Work1.rerender = function(id){
 };
 Work1._renderFull = function(sec, id){
   sec.innerHTML='';
-  sec.appendChild(UI.stepHeader(
-    'STEP '+(Work1.steps.findIndex(s=>s.id===id)+1),
-    Work1.titles[id],
-    Work1.subtitles[id]
+  const idx = Work1.steps.findIndex(s=>s.id===id);
+  sec.appendChild(el('div',{class:'sub-head'},
+    el('span',{class:'num'},'1.'+(idx+1)),
+    el('h3',{}, Work1.titles[id])
   ));
+  const subEl = Work1.subtitles && Work1.subtitles[id];
+  if(subEl){
+    sec.appendChild(el('p',{class:'lede', style:{fontFamily:'var(--font-display)', fontStyle:'normal', fontSize:'1.125rem', lineHeight:1.5, color:'var(--color-ink)', maxWidth:'62ch', margin:'0 0 28px'}}, subEl));
+  }
+  sec.appendChild(el('div',{class:'plate plate--empty'}));
   const dn=UI.demoNote(1,id); if(dn) sec.appendChild(dn);
   if(Work1.mvo && Work1.mvo[id]) sec.appendChild(UI.mvoCard(Work1.mvo[id](), sec));
   const fn = Work1.render[id];
@@ -327,6 +332,7 @@ Work1.SBU_SAMPLES = SBU_SAMPLES;
 Work1.applySBU = applySBU;
 
 Work1.render.sbu = function(sec){
+  const plate = sec.querySelector('.plate');
   const d=state.work1.sbu;
   if(!Array.isArray(d.countries)) d.countries=[];
 
@@ -383,7 +389,7 @@ Work1.render.sbu = function(sec){
   const countriesHint = el('div', {class:'sbu-countries-hint'});
   const countriesField = el('div', {class:'sbu-cell-12 sbu-field', style:'display:none'},
     el('span', {class:'sbu-label'}, '具体国家 ',
-      el('span', {class:'muted', style:'text-transform:none;letter-spacing:0;font-style:italic;font-size:11px'}, '— 多选')),
+      el('span', {class:'muted', style:'text-transform:none;letter-spacing:0;font-style:normal;font-size:11px'}, '— 多选')),
     countriesChips,
     countriesHint
   );
@@ -429,17 +435,17 @@ Work1.render.sbu = function(sec){
     refreshHint();
   }
   refreshCountryBlock();
-  sec.appendChild(grid);
+  plate.appendChild(grid);
 
   // === Sub-head: STEP 1.1 · 业务三问 ===
-  sec.appendChild(el('div', {class:'sbu-sub-head'},
+  plate.appendChild(el('div', {class:'sbu-sub-head'},
     el('div', {class:'sbu-sub-head-left'},
       el('span', {class:'sbu-sub-num'}, 'STEP 1.1'),
       el('h3', {}, '业务三问（独立 SBU 自检）')
     ),
     el('span', {class:'sbu-sub-meta'}, '3 QUESTIONS · 任一为"是"即独立')
   ));
-  sec.appendChild(el('p', {class:'sbu-sub-lead'},
+  plate.appendChild(el('p', {class:'sbu-sub-lead'},
     '三问中任一答"是"，即构成独立 SBU，须在客户/渠道/品牌/损益四维至少一项独立核算。'));
 
   // === Hallmark 3-col 卡片（沿用全局 .hallmark-item 3 列 grid） ===
@@ -462,64 +468,73 @@ Work1.render.sbu = function(sec){
       el('h4', {class:'hallmark-headline'}, head),
       el('p', {class:'hallmark-hint'}, hint)
     ));
-    // 右列：pill + STATUS
-    const pill = el('div', {class:'yn-pill', role:'group', 'aria-label': head},
-      el('button', {type:'button', 'data-val':'no', class: yes ? '' : 'active'}, 'No'),
-      el('button', {type:'button', 'data-val':'yes', class: yes ? 'active' : ''}, 'Yes')
+    // 右列：segmented control（不 / 是）— 任一选中变黑底白字
+    const noBtn = el('button', {
+      type:'button',
+      class:'sbu-seg' + (yes ? '' : ' is-on'),
+      'data-q':k, 'data-val':'no',
+      'aria-pressed': yes ? 'false' : 'true',
+      'aria-label': head + '：不'
+    }, '不');
+    const yesBtn = el('button', {
+      type:'button',
+      class:'sbu-seg' + (yes ? ' is-on' : ''),
+      'data-q':k, 'data-val':'yes',
+      'aria-pressed': yes ? 'true' : 'false',
+      'aria-label': head + '：是'
+    }, '是');
+    const seg = el('div', {class:'sbu-segmented', role:'group', 'aria-label':head}, noBtn, yesBtn);
+    const status = el('span', {class:'sbu-seg-status'}, yes ? '独立 · ' + dim : '不独立');
+    const right = el('div', {class:'hallmark-right'},
+      el('div', {class:'sbu-seg-block'}, seg, status)
     );
-    const statusBox = el('div');
-    statusBox.appendChild(el('span', {class:'hallmark-label'}, 'STATUS'));
-    const statusLine = el('div', {class:'sbu-status-line ' + (yes ? 'on' : 'off'), 'data-default':'不独立'},
-      yes ? '独立 · ' + dim : '不独立'
-    );
-    statusBox.appendChild(statusLine);
-    const right = el('div', {class:'hallmark-right'}, pill, statusBox);
     item.appendChild(right);
     list.appendChild(item);
 
-    pill.addEventListener('click', e => {
-      const btn = e.target.closest('button');
-      if (!btn) return;
-      pill.querySelectorAll('button').forEach(b => b.classList.remove('active'));
-      btn.classList.add('active');
-      const isYes = (btn.dataset.val === 'yes');
+    const onClick = (val) => {
+      const isYes = (val === 'yes');
       tq[k] = isYes;
-      if (isYes) {
-        statusLine.classList.remove('off');
-        statusLine.classList.add('on');
-        statusLine.textContent = '独立 · ' + dim;
-      } else {
-        statusLine.classList.remove('on');
-        statusLine.classList.add('off');
-        statusLine.textContent = statusLine.dataset.default;
-      }
+      noBtn.classList.toggle('is-on', !isYes);
+      yesBtn.classList.toggle('is-on', isYes);
+      noBtn.setAttribute('aria-pressed', !isYes ? 'true' : 'false');
+      yesBtn.setAttribute('aria-pressed', isYes ? 'true' : 'false');
+      status.textContent = isYes ? '独立 · ' + dim : '不独立';
       updateVerdict();
       autosave();
-    });
+    };
+    noBtn.addEventListener('click', () => onClick('no'));
+    yesBtn.addEventListener('click', () => onClick('yes'));
   });
-  sec.appendChild(list);
+  plate.appendChild(list);
 
-  // === Verdict 横条 ===
+  // === Verdict 横条（一行结论） ===
   const anyIndependent = !!(tq.customer || tq.channel || tq.brand);
+  const dims = [];
+  if (tq.customer) dims.push('客户');
+  if (tq.channel) dims.push('渠道');
+  if (tq.brand) dims.push('品牌');
+  const vText = el('span', {class:'v-text'}, anyIndependent
+    ? ('独立 SBU · ' + dims.join(' / '))
+    : '可能只是现有业务延伸'
+  );
+  const vBody = el('div', {class:'v-body'}, vText);
   const verdict = el('div', {class:'sbu-verdict', 'data-state': anyIndependent ? 'independent' : 'extension'},
-    el('span', {class:'v-label'}, '→ Verdict'),
-    el('span', {class:'v-text'}, ''),
+    el('span', {class:'v-label'}, '→ 结论'),
+    vBody,
     el('span', {class:'v-pill'}, anyIndependent ? 'Independent' : 'Extension')
   );
-  sec.appendChild(verdict);
+  plate.appendChild(verdict);
 
   function updateVerdict(){
     const any = !!(tq.customer || tq.channel || tq.brand);
-    const dims = [];
-    if (tq.customer) dims.push('客户');
-    if (tq.channel) dims.push('渠道');
-    if (tq.brand) dims.push('品牌');
+    const ds = [];
+    if (tq.customer) ds.push('客户');
+    if (tq.channel) ds.push('渠道');
+    if (tq.brand) ds.push('品牌');
     if (any) {
       verdict.dataset.state = 'independent';
       verdict.querySelector('.v-pill').textContent = 'Independent';
-      //verdict.querySelector('.v-text').textContent = '独立 SBU';
-      verdict.querySelector('.v-text').textContent = '独立 SBU · ' + dims.join(' / ') ;
-
+      verdict.querySelector('.v-text').textContent = '独立 SBU · ' + ds.join(' / ');
     } else {
       verdict.dataset.state = 'extension';
       verdict.querySelector('.v-pill').textContent = 'Extension';
@@ -527,6 +542,15 @@ Work1.render.sbu = function(sec){
     }
   }
   updateVerdict(); // 用与勾选后一致的逻辑初始化判定文案
+
+  // 监听三问按钮变化 → 同步 verdict 文字
+  plate.addEventListener('click', e => {
+    const btn = e.target.closest('button');
+    if (btn && (btn.textContent === 'YES' || btn.textContent === 'NO' ||
+        btn.textContent === '是' || btn.textContent === '不')) {
+      setTimeout(updateVerdict, 0);
+    }
+  });
 
   // === 边界声明 CALLOUT（沿用全局 .callout，新增 .sbu-callout 修饰） ===
   const callout = el('div', {class:'callout sbu-callout'},
@@ -537,29 +561,43 @@ Work1.render.sbu = function(sec){
       oninput: e => { d.boundary = e.target.value; autosave(); }
     }, d.boundary || '')
   );
-  sec.appendChild(callout);
+  plate.appendChild(callout);
 
   // === END 行 ===
-  sec.appendChild(el('p', {class:'sbu-end'}, 'END · STEP 1'));
+  plate.appendChild(el('p', {class:'sbu-end'}, 'END · STEP 1'));
 };
 
 /* ---------- STEP 2: ENVIRONMENT ---------- */
 /* ---------- 微笑曲线（Smile Curve）----------
    价值链 6 环节的 U 形附加值分布图: 研发/品牌两端的附加值最高,
-   制造/装配的附加值最低, 末端售后略回升。
+   中间制造/装配附加值最低, 末端售后略回升。
+   节点按 demo case 的 industry 动态选（demo-data.js 5 个 case 各自定义 valueChain.nodes）。
+   非 demo 模式 fallback 到通用节点。
    用纯 SVG, 无外部依赖, 自适应宽度 (viewBox 800x320)。 */
 Work1.renderSmileCurve = function(){
   const W=800, H=320, padL=60, padR=40, padT=30, padB=80;
   const cw=W-padL-padR, ch=H-padT-padB;
-  // 6 环节: 附加值 (0-10), 名字
-  const nodes = [
-    {label:'研发/设计',  v:8.5, tip:'IP/外观/功能定义 — 最高附加值'},
-    {label:'关键零部件', v:5.5, tip:'芯片/传感器/核心元器件'},
-    {label:'制造/装配', v:2.5, tip:'低附加值 — 微笑曲线谷底'},
-    {label:'物流/分销', v:4.0, tip:'履约/库存/渠道触达'},
-    {label:'营销/品牌', v:9.0, tip:'溢价/认知/复购 — 最高附加值'},
-    {label:'售后/服务', v:5.0, tip:'客户关系/续费/口碑'}
-  ];
+  // 6 环节: 按 demo case 选节点；非 demo 走通用 fallback
+  let nodes, curveLabel, curveTip;
+  const dc = (typeof state!=='undefined' && state.meta && state.meta.demoCase) || null;
+  if (dc && typeof DemoData!=='undefined' && DemoData.cases && DemoData.cases[dc] && DemoData.cases[dc].meta && DemoData.cases[dc].meta.valueChain){
+    const vc = DemoData.cases[dc].meta.valueChain;
+    nodes = vc.nodes;
+    curveLabel = vc.curve;
+    curveTip = '本案例价值链: ' + vc.curve + ' — 6 节点附加值按行业实际分布。';
+  } else {
+    // 通用 fallback（适合任何 B2C / B2B）
+    nodes = [
+      {label:'创意/概念',  v:7.5, tip:'商业模式/用户洞察/选题'},
+      {label:'研发/设计',  v:8.5, tip:'产品/课程/菜谱设计 — 高附加值'},
+      {label:'采购/生产',  v:4.0, tip:'原料/代工/中央厨房 — 微笑曲线谷底'},
+      {label:'渠道/触达',  v:5.0, tip:'渠道/媒介/平台/本地配送'},
+      {label:'品牌/营销',  v:9.0, tip:'品牌/口碑/内容 — 最高附加值'},
+      {label:'复购/服务',  v:6.0, tip:'客服/CRM/会员/续费'}
+    ];
+    curveLabel = '通用价值链';
+    curveTip = '微笑曲线 (Stan Shih, 1992): 创意/设计与品牌营销两端附加值最高, 中段采购/生产最低。';
+  }
   const xFor = (i) => padL + (i/(nodes.length-1))*cw;
   const yFor = (v) => padT + (1 - v/10) * ch;
   // 平滑路径 (Bezier)
@@ -593,7 +631,7 @@ Work1.renderSmileCurve = function(){
     return `
       <g>
         <circle cx="${x}" cy="${y}" r="5" fill="var(--color-ink)"/>
-        <text x="${x}" y="${labelY}" text-anchor="middle" font-family="var(--font-display)" font-style="italic" font-size="14" fill="var(--color-ink)">${n.label}</text>
+        <text x="${x}" y="${labelY}" text-anchor="middle" font-family="var(--font-display)" font-style="normal" font-size="14" fill="var(--color-ink)">${n.label}</text>
         <text x="${x}" y="${valueY}" text-anchor="middle" font-family="var(--font-mono)" font-size="11" fill="${valueColor}">附加值 ${n.v}</text>
         <title>${n.tip}</title>
       </g>`;
@@ -608,7 +646,7 @@ Work1.renderSmileCurve = function(){
   `;
   // 谷底提示
   const valley = `
-    <text x="${xFor(2)}" y="${H-padB+20}" text-anchor="middle" font-family="var(--font-mono)" font-size="10" fill="var(--color-accent)" font-style="italic">↑ 微笑曲线谷底: 最低附加值</text>
+    <text x="${xFor(2)}" y="${H-padB+20}" text-anchor="middle" font-family="var(--font-mono)" font-size="10" fill="var(--color-accent)" font-style="normal">↑ 微笑曲线谷底: 最低附加值</text>
   `;
   const svg = svgOpen + grad
     + `<path d="${areaPath}" fill="url(#smile-grad)"/>`
@@ -622,12 +660,13 @@ Work1.renderSmileCurve = function(){
   wrap.innerHTML = svg;
   // 标题 + 简短说明
   const cap = el('div', {class:'muted', style:'font-size:12px;line-height:1.6;margin-top:6px;color:var(--muted, #888)'},
-    '微笑曲线 (Stan Shih, 1992): 研发设计与品牌营销两端附加值最高, 制造装配最低。');
+    curveTip);
   wrap.appendChild(cap);
   return wrap;
 };
 
 Work1.render.environment = function(sec){
+  const plate = sec.querySelector('.plate');
   const d=state.work1.environment;
 
   // migrate legacy string competitors → drop into a fresh array
@@ -708,43 +747,43 @@ Work1.render.environment = function(sec){
       oninput:e=>{d[k]=e.target.value;autosave()}}, d[k]||''));
     grid.appendChild(item);
   });
-  sec.appendChild(el('h3',{},'PEST 宏观扫描'));
-  sec.appendChild(grid);
-  sec.appendChild(el('hr',{class:'rule'}));
+  plate.appendChild(el('h3',{},'PEST 宏观扫描'));
+  plate.appendChild(grid);
+  plate.appendChild(el('hr',{class:'rule'}));
 
   // —— 业务基本情况（Step 2：六维实况/目标）——
-  sec.appendChild(el('h3',{},'业务基本情况（实况 / 目标）'));
-  sec.appendChild(el('p',{class:'sbu-sub-lead'},'用六维表把业务现状结构化：规模与员工 / 业务范围 / 产品线 / 客户 / 供应链 / 最近业绩。每一维同时填实况（历史或当下数据）与目标（3-5 年期望值），概念阶段业务允许实况为空但目标必填。'));
+  plate.appendChild(el('h3',{},'业务基本情况（实况 / 目标）'));
+  plate.appendChild(el('p',{class:'sbu-sub-lead'},'用六维表把业务现状结构化：规模与员工 / 业务范围 / 产品线 / 客户 / 供应链 / 最近业绩。每一维同时填实况（历史或当下数据）与目标（3-5 年期望值），概念阶段业务允许实况为空但目标必填。'));
   const b=d.basics;
   const trio=(obj,phActual,phTarget)=>el('div',{class:'basics-trio'},
     el('input',{type:'text',value:obj.actual||'',placeholder:phActual||'实况',oninput:e=>{obj.actual=e.target.value;autosave()}}),
     el('input',{type:'text',value:obj.target||'',placeholder:phTarget||'目标',oninput:e=>{obj.target=e.target.value;autosave()}}));
   const basicsRow=(title,obj,phA,phT)=>el('div',{class:'basics-row'},
     el('span',{class:'basics-label'},title), trio(obj,phA,phT));
-  sec.appendChild(basicsRow('规模与员工（成立时间/面积/人数/资质）', b.scale));
-  sec.appendChild(basicsRow('业务范围（做什么 / 不做什么，排除项必写）', b.scope));
-  sec.appendChild(basicsRow('产品 / 业务线（SKU × 定价 × 场景 × 销量占比）', b.products));
-  sec.appendChild(basicsRow('客户（直接客户/渠道/与母公司差异）', b.customers));
-  sec.appendChild(basicsRow('供应链（来源/复用与新增/瓶颈）', b.supply));
-  sec.appendChild(el('div',{class:'basics-row'},
+  plate.appendChild(basicsRow('规模与员工（成立时间/面积/人数/资质）', b.scale));
+  plate.appendChild(basicsRow('业务范围（做什么 / 不做什么，排除项必写）', b.scope));
+  plate.appendChild(basicsRow('产品 / 业务线（SKU × 定价 × 场景 × 销量占比）', b.products));
+  plate.appendChild(basicsRow('客户（直接客户/渠道/与母公司差异）', b.customers));
+  plate.appendChild(basicsRow('供应链（来源/复用与新增/瓶颈）', b.supply));
+  plate.appendChild(el('div',{class:'basics-row'},
     el('span',{class:'basics-label'},'最近业绩 · 市场份额'), trio(b.performance.share)));
-  sec.appendChild(el('div',{class:'basics-row'},
+  plate.appendChild(el('div',{class:'basics-row'},
     el('span',{class:'basics-label'},'最近业绩 · ROI'), trio(b.performance.roi)));
-  sec.appendChild(el('div',{class:'basics-row'},
+  plate.appendChild(el('div',{class:'basics-row'},
     el('span',{class:'basics-label'},'最近业绩 · 年增长率'), trio(b.performance.growth)));
 
   // —— 竞争者与我们的资源盘点（Step 3：内部·我们）——
-  sec.appendChild(el('h3',{},'竞争者与资源盘点'));
-  //sec.appendChild(el('p',{class:'sbu-sub-lead'},
+  plate.appendChild(el('h3',{},'竞争者与资源盘点'));
+  //plate.appendChild(el('p',{class:'sbu-sub-lead'},
     //'先看外部（市场 / 竞品），再看内部 。'));
   const mkField=(label,value,onInput,rows,ph)=>el('div',{class:'field field-h'},
     el('label',{},label), el('textarea',{rows,placeholder:ph||'',oninput:onInput},value||''));
   // 3.1 市场格局 [外部·市场]
-  //sec.appendChild(el('h4',{class:'sub-section'},'3.1 市场格局 [外部·市场]'));
-  sec.appendChild(mkField('市场格局摘要', d.industry, e=>{d.industry=e.target.value;autosave()}, 4,
+  //plate.appendChild(el('h4',{class:'sub-section'},'3.1 市场格局 [外部·市场]'));
+  plate.appendChild(mkField('市场格局摘要', d.industry, e=>{d.industry=e.target.value;autosave()}, 4,
     '这个市场由谁主导（活跃品牌数 / 头部）？渗透到什么程度（增量/替换）？区域与价格带怎么分布？是否存在未被占领的垂直定位空白？'));
   // 3.2 竞品对标 [外部·竞品]
-  //sec.appendChild(el('h4',{class:'sub-section'},'3.2 竞品对标 [外部·竞品]'));
+  //plate.appendChild(el('h4',{class:'sub-section'},'3.2 竞品对标 [外部·竞品]'));
 
   // competitor table
   const tbl=el('table',{class:'data competitor-table'});
@@ -764,17 +803,17 @@ Work1.render.environment = function(sec){
     tbody.appendChild(tr);
   });
   tbl.appendChild(tbody);
-  sec.appendChild(tbl);
-  sec.appendChild(el('button',{class:'ghost',style:'margin:8px 0',onclick:()=>{
+  plate.appendChild(tbl);
+  plate.appendChild(el('button',{class:'ghost',style:'margin:8px 0',onclick:()=>{
     d.competitors.push({id:uid('c'),name:'',price:'',strengths:'',weaknesses:'',position:''});
     autosave(); Work1.rerender('environment');
   }},'+ 添加竞品'));
 
   // 外部（3.1 市场 + 3.2 竞品）→ 内部（3.3 资源盘点）的分界
-  sec.appendChild(el('hr',{class:'rule'}));
+  plate.appendChild(el('hr',{class:'rule'}));
 
   // 3.3 我们的资源盘点（4 步手风琴：5 维 → 3 段 → 收口 → 趋势）
-  sec.appendChild(el('h4',{},'资源盘点'));
+  plate.appendChild(el('h4',{},'资源盘点'));
   // 手风琴：4 步
   const cap = d.ourCapabilities;
   const capField = (label, key, ph, rows, extraClass) => {
@@ -814,7 +853,7 @@ Work1.render.environment = function(sec){
     return item;
   };
   // 第 1 步：5 维能力（默认展开）
-  sec.appendChild(el('div',{class:'cap-accordion'},
+  plate.appendChild(el('div',{class:'cap-accordion'},
     mkAccStep(1, '第 1 层 · 事实', '5 维能力', '我们有什么？客观描述家底清单，不需要下结论。', true, (body) => {
       body.appendChild(capField('交付', 'delivery', '产品或服务？我们能交付什么？'));
       body.appendChild(capField('核心', 'core', '别人没有的？能力/资源/关系？'));
@@ -824,7 +863,7 @@ Work1.render.environment = function(sec){
     })
   ));
   // 第 2 步：3 段判断
-  sec.appendChild(el('div',{class:'cap-accordion'},
+  plate.appendChild(el('div',{class:'cap-accordion'},
     mkAccStep(2, '第 2 层 · 提炼（依赖第 1 层）', '3 段判断', '什么是真本事、什么是软肋？不能空想，必须从第 1 层 5 维里"找出来"。', false, (body) => {
       body.appendChild(capField('防御性优势', 'defensive', '对手短期难复制的 1-2 点（最值钱）'));
       body.appendChild(capField('关键劣势', 'critical', '客户能直接感知的致命短板'));
@@ -835,7 +874,7 @@ Work1.render.environment = function(sec){
     })
   ));
   // 第 3 步：微笑曲线
-  sec.appendChild(el('div',{class:'cap-accordion'},
+  plate.appendChild(el('div',{class:'cap-accordion'},
     mkAccStep(3, '第 3 层 · 收敛（依赖第 2 层）', '微笑曲线收口', '优势/劣势落在价值链哪一端？这一句决定后续定位方向。', false, (body) => {
       // 微笑曲线图（SVG）: 价值链 6 环节, 左高-谷-右高的 U 形
       body.appendChild(Work1.renderSmileCurve());
@@ -855,7 +894,7 @@ Work1.render.environment = function(sec){
     })
   ));
   // 第 4 步：关键趋势
-  sec.appendChild(el('div',{class:'cap-accordion'},
+  plate.appendChild(el('div',{class:'cap-accordion'},
     mkAccStep(4, '第 4 层 · 变量（独立观察）', '关键趋势', '未来 12-24 个月要盯什么？与第 3 层定位方向关联。', false, (body) => {
       body.appendChild(capField('3 个值得追踪的方向', 'trends', '例：节气营销、可追溯供应链、KOC 内容种草、私域订阅', 3));
       // AI 按钮放在第 4 步末尾
@@ -909,16 +948,17 @@ Work1.render.environment = function(sec){
   }},'开始生成');
   action.appendChild(btn);
   ai.appendChild(action);
-  sec.appendChild(ai);
+  plate.appendChild(ai);
 };
 
 /* ---------- STEP 3: PERSONAS ---------- */
 Work1.render.personas = function(sec){
+  const plate = sec.querySelector('.plate');
   // —— Step 4：场景级感知价值矩阵（4×4）——
   if(!Array.isArray(state.work1.scenarios)) state.work1.scenarios=[];
   const sc=state.work1.scenarios;
-  sec.appendChild(el('h3',{},'场景级客户感知价值矩阵'));
-  sec.appendChild(el('p',{class:'muted italic',style:'font-size:13px'},
+  plate.appendChild(el('h3',{},'场景级客户感知价值矩阵'));
+  plate.appendChild(el('p',{class:'muted',style:'font-size:13px'},
     '客户感知价值 = 总利益（使用/服务/人员/形象）− 总成本（货币/时间/精力/心理）。按场景拆分（建议 2-4 个），每张矩阵勾选关联画像，并定位决定性短板（信任 / 易用 / 规模化成本）。'));
 
   const scList=el('div',{class:'scenario-list'});
@@ -929,7 +969,7 @@ Work1.render.personas = function(sec){
     const card=el('article',{class:'scenario-card'});
     const head=el('div',{class:'scenario-head'},
       el('input',{type:'text',value:s.name||'',placeholder:'场景名（如：自用购买 / 送礼 / 复购）',
-        style:{flex:'1',fontFamily:'var(--font-body)',fontSize:'18px',fontStyle:'italic',border:'none',borderBottom:'1px solid var(--color-rule)',background:'transparent'},
+        style:{flex:'1',fontFamily:'var(--font-body)',fontSize:'18px',fontStyle:'normal',border:'none',borderBottom:'1px solid var(--color-rule)',background:'transparent'},
         oninput:e=>{s.name=e.target.value;autosave();}}),
       el('button',{class:'ghost small',onclick:()=>{sc.splice(i,1);autosave();Work1.rerender('personas')}},'删除场景'));
     card.appendChild(head);
@@ -966,7 +1006,7 @@ Work1.render.personas = function(sec){
       el('input',{type:'text',value:s.decisiveGap||'',placeholder:'如：信任——客户无法验证产地真伪',oninput:e=>{s.decisiveGap=e.target.value;autosave()}})));
     scList.appendChild(card);
   });
-  sec.appendChild(scList);
+  plate.appendChild(scList);
   const scActions=el('div',{class:'ai-actions'},
     el('button',{class:'ghost',onclick:()=>{sc.push({id:uid('sc'),name:'',personaIds:[],benefits:{},costs:{},anchor:'',decisiveGap:''});autosave();Work1.rerender('personas')}},'+ 添加场景'));
   if(state.work1.personas.length){
@@ -986,16 +1026,16 @@ Work1.render.personas = function(sec){
     }},'用 AI 预填场景矩阵');
     ai.appendChild(aiBtn); scActions.appendChild(ai);
   }
-  sec.appendChild(scActions);
-  sec.appendChild(el('hr',{class:'rule'}));
+  plate.appendChild(scActions);
+  plate.appendChild(el('hr',{class:'rule'}));
 
   // —— 画像卡片（沿用现有模式，不动）——
-  sec.appendChild(el('h3',{},'客户画像'));
+  plate.appendChild(el('h3',{},'客户画像'));
   const d=state.work1.personas;
   const list=el('div',{id:'personaList'});
   d.forEach((p,i)=>list.appendChild(Work1.personaCard(p, i)));
-  sec.appendChild(list);
-  sec.appendChild(el('div',{class:'row',style:{marginTop:'16px'}},
+  plate.appendChild(list);
+  plate.appendChild(el('div',{class:'row',style:{marginTop:'16px'}},
     el('button',{onclick:()=>{
       d.push({id:uid('p'),name:'',gender:'',age:'',occupation:'',income:'',region:'',values:[],painPoints:'',channels:[],quote:'',traits:''});
       autosave(); Work1.renderStep('personas');
@@ -1139,16 +1179,17 @@ Work1.METRIC_TEMPLATES = [
 ];
 
 Work1.render.metrics = function(sec){
+  const plate = sec.querySelector('.plate');
   if(!state.work1.metrics) state.work1.metrics={dimensions:[]};
   const m=state.work1.metrics;
   if(!Array.isArray(m.dimensions)) m.dimensions=[];
 
   // 评分性质声明（5.4.4 必加）
-  sec.appendChild(el('div',{class:'notice disclaimer'},
+  plate.appendChild(el('div',{class:'notice disclaimer'},
     '评分性质说明：以下「首年预测分」「三年目标分」均为预测/目标值，非真实市场调研。完成 合成调研或导入真实问卷后，系统会用李克特 1-5 均值映射成 1-10 回填「实测分」，并保留预测值以对照偏差。'));
 
   // —— 评分标尺说明（解决"1-10 分到底怎么打"）——
-  sec.appendChild(el('div',{class:'metric-legend'},
+  plate.appendChild(el('div',{class:'metric-legend'},
     el('strong',{},'怎么打分：'),
     el('span',{},'1-3 = 行业中下游/明显短板；4-6 = 行业平均/基本达标；7-8 = 行业前列/优势；9-10 = 品类标杆/难以复制。'),
     el('br'),
@@ -1172,7 +1213,7 @@ Work1.render.metrics = function(sec){
         }}, '+ '+t.name));
     });
     sug.appendChild(chips);
-    sec.appendChild(sug);
+    plate.appendChild(sug);
   }
 
   // 评分表头
@@ -1192,7 +1233,7 @@ Work1.render.metrics = function(sec){
     const nameInput=el('input',{type:'text',value:dim.name||'',placeholder:'一级指标名称（如：品牌功效·产品）',
       title:'把同类测评点归到一个一级指标下，例如"品牌功效·产品"或"品牌形象·知名度"',
       oninput:e=>{dim.name=e.target.value;autosave();}});
-    Object.assign(nameInput.style,{fontFamily:'var(--font-body)',fontSize:'20px',fontStyle:'italic',width:'100%',border:'none',borderBottom:'1px solid var(--color-rule)',background:'transparent',padding:'4px 0'});
+    Object.assign(nameInput.style,{fontFamily:'var(--font-body)',fontSize:'20px',fontStyle:'normal',width:'100%',border:'none',borderBottom:'1px solid var(--color-rule)',background:'transparent',padding:'4px 0'});
     mid.appendChild(nameInput);
 
     // secondary scoring rows
@@ -1244,7 +1285,7 @@ Work1.render.metrics = function(sec){
     item.appendChild(right);
     list.appendChild(item);
   });
-  sec.appendChild(list);
+  plate.appendChild(list);
 
   // —— 完整性健康面板（比原来的一句话软校验更具体）——
   const issues=[];
@@ -1266,11 +1307,11 @@ Work1.render.metrics = function(sec){
   }else{
     health.appendChild(el('div',{class:'mh-ok'},'指标体系结构完整。运行合成调研后，实测分会自动回填并标出认知断点。'));
   }
-  sec.appendChild(health);
+  plate.appendChild(health);
 
   // 整组与单项汇总
   const sum=el('div',{class:'metric-summary'});
-  sec.appendChild(sum);
+  plate.appendChild(sum);
   sec._summaryEl=sum;
   Work1.renderMetricSummary(sum);
 
@@ -1288,8 +1329,8 @@ Work1.render.metrics = function(sec){
         }});
     }},'用 AI 起草指标体系'); return btn; })()
   );
-  sec.appendChild(el('hr',{class:'rule'}));
-  sec.appendChild(actions);
+  plate.appendChild(el('hr',{class:'rule'}));
+  plate.appendChild(actions);
 };
 
 // 汇总：按一级算整组均分 + 列单项偏差 extremes（避免单项拉高整组）
@@ -1310,7 +1351,7 @@ Work1.renderMetricSummary = function(box){
   rows.forEach(r=>{
     grid.appendChild(el('div',{class:'plate',style:{padding:'10px 12px'}},
       el('div',{class:'mono',style:'font-size:11px;color:var(--color-ink-2)'},r.name),
-      el('div',{style:'font-size:22px;font-family:var(--font-body);font-style:italic'},r.avg!=null?r.avg.toFixed(1):'—'),
+      el('div',{style:'font-size:22px;font-family:var(--font-body);font-style:normal'},r.avg!=null?r.avg.toFixed(1):'—'),
       el('div',{class:'mono',style:'font-size:10px;color:var(--color-ink-2)'},r.n+' 个预测分')));
   });
   box.appendChild(grid);
@@ -1321,7 +1362,7 @@ Work1.renderMetricSummary = function(box){
     box.appendChild(el('p',{class:'muted',style:'font-size:13px;margin-top:8px'},
       '实测偏差最大：'+(worst.actual-worst.forecast>0?'':'')+(worst.actual-worst.forecast).toFixed(1)+'（'+worst.name+'）；表现最好：+'+(best.actual-best.forecast).toFixed(1)+'（'+best.name+'）。|Δ|>1.5 为认知断点。'));
   }else{
-    box.appendChild(el('p',{class:'muted italic',style:'font-size:13px;margin-top:8px'},'尚无实测分——运行  合成调研并完成  分析后，这里会显示回填偏差。'));
+    box.appendChild(el('p',{class:'muted',style:'font-size:13px;margin-top:8px'},'尚无实测分——运行  合成调研并完成  分析后，这里会显示回填偏差。'));
   }
 };
 Work1.updateMetricSummary = function(){
@@ -1331,13 +1372,14 @@ Work1.updateMetricSummary = function(){
 
 /* ---------- STEP 5: SURVEY ---------- */
 Work1.render.survey = function(sec){
+  const plate = sec.querySelector('.plate');
   const s=state.work1.survey;
   if(!state.work1.personas.length){
-    sec.appendChild(el('div',{class:'warning'},'请先在「客户画像」步骤至少添加一个画像。'));
+    plate.appendChild(el('div',{class:'warning'},'请先在「客户画像」步骤至少添加一个画像。'));
     return;
   }
   // Survey responses are AI-synthesized; responses are not directly editable.
-  sec.appendChild(el('h3',{},'问卷设计'));
+  plate.appendChild(el('h3',{},'问卷设计'));
 
   const ensureAnchors=q=>{ if(!Array.isArray(q.anchors)||q.anchors.length!==5) q.anchors=[...LIKERT5]; };
 
@@ -1397,7 +1439,7 @@ Work1.render.survey = function(sec){
     card.appendChild(ac);
     list.appendChild(card);
   });
-  sec.appendChild(list);
+  plate.appendChild(list);
 
   // actions: generate from metrics + add blank
   const designerActions=el('div',{class:'ai-actions'});
@@ -1421,38 +1463,41 @@ Work1.render.survey = function(sec){
     s.questions.push({id:uid('q'),type:'likert',text:'',options:[],anchors:[...LIKERT5],sourceIndicatorId:null});
     autosave(); Work1.rerender('survey');
   }},'+ 添加题目'));
-  sec.appendChild(designerActions);
+  plate.appendChild(designerActions);
 
-  sec.appendChild(el('hr',{class:'rule'}));
-  sec.appendChild(el('h3',{},'运行合成调研'));
+  plate.appendChild(el('hr',{class:'rule'}));
+  plate.appendChild(el('h3',{},'运行合成调研'));
 
   // —— 调研密度三档（少量/标准/丰富）——
   // n = 每位画像重复回答的轮数。总回答数 = 画像数 × n。
   // 异质性预期依据 JM2025 Study 2：更多轮 + few-shot 能改善异质性与内部一致性。
   const TIERS=[
-    {n:1, name:'少量', desc:'快速看方向', time:'约 10–20 秒', het:'异质性较低，仅看大致方向', tok:'约 3–6k'},
-    {n:2, name:'标准', desc:'推荐默认',   time:'约 20–40 秒', het:'异质性较好，足够回填指标', tok:'约 6–12k'},
-    {n:4, name:'丰富', desc:'更稳分布',   time:'约 40–90 秒', het:'异质性与一致性最好，成本更高', tok:'约 12–25k'},
+    {n:1, name:'少量', desc:'快速看方向', time:'约 10–20 秒', het:'异质性较低，仅看大致方向', tok:'约 3–6k', badge:''},
+    {n:2, name:'标准', desc:'推荐默认',   time:'约 20–40 秒', het:'异质性较好，足够回填指标', tok:'约 6–12k', badge:'推荐'},
+    {n:4, name:'丰富', desc:'更稳分布',   time:'约 40–90 秒', het:'异质性与一致性最好，成本更高', tok:'约 12–25k', badge:''},
   ];
   if(!s.n) s.n=2;
   const personaCount=state.work1.personas.length;
   const tierGrid=el('div',{class:'tier-grid'});
   TIERS.forEach(t=>{
     const total=Math.max(1,personaCount)*t.n;
-    const card=el('div',{class:'tier-card'+(s.n===t.n?' active':''),type:'button',
+    const card=el('div',{class:'tier-card'+(s.n===t.n?' active':''),type:'button',role:'radio','aria-checked':s.n===t.n?'true':'false',
       onclick:()=>{ s.n=t.n; autosave(); Work1.rerender('survey'); }},
-      el('div',{class:'tier-card-name'},t.name),
+      el('div',{class:'tier-card-head'},
+        el('span',{class:'tier-card-name'},t.name),
+        t.badge ? el('span',{class:'tier-card-badge'},t.badge) : null
+      ),
       el('div',{class:'tier-card-meta'}, t.desc+' · 共 '+total+' 份回答'),
       el('div',{class:'tier-est'},
-        el('div',{}, el('b',{},'时间：'), t.time),
-        el('div',{}, el('b',{},'异质性：'), t.het),
-        el('div',{}, el('b',{},'预估 token：'), t.tok)
+        el('div',{}, el('b',{},'时间'), ' '+t.time),
+        el('div',{}, el('b',{},'异质性'), ' '+t.het),
+        el('div',{}, el('b',{},'token'), ' '+t.tok)
       )
     );
     tierGrid.appendChild(card);
   });
-  sec.appendChild(UI.field('调研密度', tierGrid));
-  sec.appendChild(el('p',{class:'muted',style:'font-size:12px;margin:-4px 0 12px'},
+  plate.appendChild(UI.field('调研密度', tierGrid));
+  plate.appendChild(el('p',{class:'muted',style:'font-size:12px;margin:-4px 0 12px'},
     '总回答数 = 客户画像数（'+Math.max(1,personaCount)+'）× 每位画像重复轮数（'+s.n+'）。这些是 AI 合成受访者的模拟回答，不是真人问卷。'));
 
   const options=el('div',{class:'grid3'},
@@ -1470,21 +1515,21 @@ Work1.render.survey = function(sec){
     })()),
     UI.field('RAG 上下文（可选）', el('textarea',{rows:2,placeholder:'粘贴行业资料、评测数据等作为答题参考',oninput:e=>{s.ragContext=e.target.value;autosave()}},s.ragContext||''))
   );
-  sec.appendChild(options);
+  plate.appendChild(options);
 
   // progress & actions
   const bar=el('div',{class:'progress-bar'}, el('div',{style:{transform:'scaleX('+(s.progress.total? s.progress.done/s.progress.total:0)+')'}}));
-  sec.appendChild(bar);
+  plate.appendChild(bar);
   const statusLine=el('p',{class:'mono',style:'font-size:11px;color:var(--color-ink-2)'}, Work1.surveyStatus());
-  sec.appendChild(statusLine);
+  plate.appendChild(statusLine);
   const runBtn=el('button',{class:'primary',onclick:e=>Work1.runSurvey(e.currentTarget)},
     (s.status==='paused'||s.status==='aborted')?'继续合成调研':'运行合成调研');
   const actions=el('div',{class:'ai-actions'}, runBtn,
     el('button',{class:'ghost',onclick:()=>Work1.analyzeResponses()},'重新分析'),
     el('button',{class:'ghost',onclick:()=>{ if(confirm('清空已有回答？')){s.responses=[];s._doneKeys=[];s.status='idle';s.likertStats={};s.openThemes=[];autosave();Work1.rerender('survey');}}},'清空回答')
   );
-  sec.appendChild(actions);
-  if(s.error) sec.appendChild(el('div',{class:'warning'},s.error));
+  plate.appendChild(actions);
+  if(s.error) plate.appendChild(el('div',{class:'warning'},s.error));
 };
 Work1.surveyStatus = function(){
   const s=state.work1.survey;
@@ -1607,10 +1652,11 @@ Work1.analyzeResponses = function(){
 
 /* ---------- STEP 6: ANALYSIS ---------- */
 Work1.render.analysis = function(sec){
+  const plate = sec.querySelector('.plate');
   const a=state.work1.analysis; const s=state.work1.survey;
-  if(!s.responses.length){ sec.appendChild(el('div',{class:'warning'},'尚无调研数据，请先运行合成调研。')); return; }
+  if(!s.responses.length){ plate.appendChild(el('div',{class:'warning'},'尚无调研数据，请先运行合成调研。')); return; }
 
-  sec.appendChild(el('h3',{},'Likert 题项分布'));
+  plate.appendChild(el('h3',{},'Likert 题项分布'));
   s.questions.filter(q=>q.type==='likert').forEach(q=>{
     const stat=a.likertStats[q.id]; if(!stat) return;
     const an=Array.isArray(q.anchors)&&q.anchors.length===5?q.anchors:LIKERT5;
@@ -1622,22 +1668,22 @@ Work1.render.analysis = function(sec){
           {label:'4 '+an[3],count:Math.round(stat.dist[3]/stat.n*100),color:'#3a3a3a'},
           {label:'3 '+an[2],count:Math.round(stat.dist[2]/stat.n*100),color:'#7a7a7a'},
           {label:'2 '+an[1],count:Math.round(stat.dist[1]/stat.n*100),color:'#bababa'},
-          {label:'1 '+an[0],count:Math.round(stat.dist[0]/stat.n*100),color:'#E8DFD8'},
+          {label:'1 '+an[0],count:Math.round(stat.dist[0]/stat.n*100),color:'#e0e0e0'},
         ]); return c;})(),
         el('div',{},
           el('p',{class:'mono',style:'font-size:12px'},`n=${stat.n} · 均值 ${stat.mean.toFixed(2)} · SD ${stat.sd.toFixed(2)}`),
-          el('p',{class:'italic muted',style:'font-size:13px'},q.text)
+          el('p',{class:'muted',style:'font-size:13px'},q.text)
         )
       )
     );
-    sec.appendChild(plate);
+    plate.appendChild(plate);
   });
 
-  sec.appendChild(el('h3',{},'指标均值排名'));
+  plate.appendChild(el('h3',{},'指标均值排名'));
   const barPlate=el('section',{class:'plate'}, el('span',{class:'plate-label'},'F5 · TICK ROWS · 指标均值'));
   const barC=el('div');
   renderBarChart(barC, a.indicatorMeans.slice().sort((x,y)=>y.value-x.value), {unit:''});
-  barPlate.appendChild(barC); sec.appendChild(barPlate);
+  barPlate.appendChild(barC); plate.appendChild(barPlate);
 
   // 预测/实测对照（Step 5 双列评分 + 回填偏差）
   const scored=[];
@@ -1645,7 +1691,7 @@ Work1.render.analysis = function(sec){
     if(s2.forecast!=null || s2.actual!=null) scored.push({dim:dim.name, ...s2});
   }));
   if(scored.length){
-    sec.appendChild(el('h3',{},'预测/实测回填'));
+    plate.appendChild(el('h3',{},'预测/实测回填'));
     const tbl=el('table',{class:'data'});
     tbl.appendChild(el('thead',{}, el('tr',{}, ...['一级指标','测评点','首年预测','三年目标','实测(1-10)','Δ(实测−预测)'].map(h=>el('th',{},h)))));
     const tb=el('tbody');
@@ -1658,13 +1704,13 @@ Work1.render.analysis = function(sec){
         el('td',{class:'mono'},s2.forecast??'—'), el('td',{class:'mono'},s2.target??'—'),
         el('td',{class:'mono'},s2.actual!=null?s2.actual.toFixed(1):'—'), dc));
     });
-    tbl.appendChild(tb); sec.appendChild(el('section',{class:'plate'},
+    tbl.appendChild(tb); plate.appendChild(el('section',{class:'plate'},
       el('span',{class:'plate-label'},'BACKFILL · 李克特 1-5 映射为 1-10'), tbl));
   }
 
   // open-ended with AI theme extraction (work1 默认全李克特，仅当存在开放题时显示)
   if(a.openThemes && a.openThemes.length){
-  sec.appendChild(el('h3',{},'开放题主题'));
+  plate.appendChild(el('h3',{},'开放题主题'));
   const hmList = el('div',{class:'hallmark-list'});
   a.openThemes.forEach((ot, i)=>{
     const num = String(i+1).padStart(2, '0');
@@ -1706,11 +1752,11 @@ Work1.render.analysis = function(sec){
 
     hmList.appendChild(item);
   });
-  sec.appendChild(hmList);
+  plate.appendChild(hmList);
   }
 
-  sec.appendChild(el('h3',{},'综合洞察'));
-  sec.appendChild(UI.field('AI 或自己撰写的综合洞察', el('textarea',{rows:6,oninput:e=>{a.insights=e.target.value;autosave()}},a.insights)));
+  plate.appendChild(el('h3',{},'综合洞察'));
+  plate.appendChild(UI.field('AI 或自己撰写的综合洞察', el('textarea',{rows:6,oninput:e=>{a.insights=e.target.value;autosave()}},a.insights)));
   const insightAi=el('div',{class:'ai-box'});
   const insightBtn=el('button',{class:'primary',onclick:()=>{
     API.aiButton({
@@ -1721,7 +1767,7 @@ Work1.render.analysis = function(sec){
     });
   }},'用 AI 综合洞察');
   insightAi.appendChild(insightBtn);
-  sec.appendChild(insightAi);
+  plate.appendChild(insightAi);
 };
 Work1.surveyDigest = function(){
   const s=state.work1.survey, a=state.work1.analysis;
@@ -1751,6 +1797,7 @@ Work1.extractThemes = function(ot, btn, plate){
 
 /* ---------- STEP 7: VALUES ---------- */
 Work1.render.values = function(sec){
+  const plate = sec.querySelector('.plate');
   const v=state.work1.values;
   // Normalize: some AI drafts return [{value,evidence,priority}], but the
   // tags editor (UI.tagsInput) expects plain string[]. Coerce on render.
@@ -1813,10 +1860,10 @@ Work1.render.values = function(sec){
 
     list.appendChild(item);
   });
-  sec.appendChild(list);
+  plate.appendChild(list);
 
-  sec.appendChild(el('hr',{class:'rule'}));
-  sec.appendChild(el('h3',{},'选定的三层核心价值'));
+  plate.appendChild(el('hr',{class:'rule'}));
+  plate.appendChild(el('h3',{},'选定的三层核心价值'));
 
   // Helper for the four large-style fields below
   const mkH = (label, value, onInput, ph, isTA) => {
@@ -1829,10 +1876,10 @@ Work1.render.values = function(sec){
     }
     return wrap;
   };
-  sec.appendChild(mkH('功能主轴', v.chosenFunctional, e=>{v.chosenFunctional=e.target.value;autosave()}, '例：可追溯原产地 · 节气限定'));
-  sec.appendChild(mkH('情感主轴', v.chosenEmotional,  e=>{v.chosenEmotional=e.target.value;autosave()},  '例：慢生活仪式感 · 文化亲近'));
-  sec.appendChild(mkH('社会主轴', v.chosenSocial,    e=>{v.chosenSocial=e.target.value;autosave()},    '例：高品位送礼场景 · 文化身份认同'));
-  sec.appendChild(mkH('取舍理由', v.rationale,       e=>{v.rationale=e.target.value;autosave()},       '为什么是这三条？为什么放弃了另两条？', true));
+  plate.appendChild(mkH('功能主轴', v.chosenFunctional, e=>{v.chosenFunctional=e.target.value;autosave()}, '例：可追溯原产地 · 节气限定'));
+  plate.appendChild(mkH('情感主轴', v.chosenEmotional,  e=>{v.chosenEmotional=e.target.value;autosave()},  '例：慢生活仪式感 · 文化亲近'));
+  plate.appendChild(mkH('社会主轴', v.chosenSocial,    e=>{v.chosenSocial=e.target.value;autosave()},    '例：高品位送礼场景 · 文化身份认同'));
+  plate.appendChild(mkH('取舍理由', v.rationale,       e=>{v.rationale=e.target.value;autosave()},       '为什么是这三条？为什么放弃了另两条？', true));
 
   const ai=el('div',{class:'ai-box'});
   const btn=el('button',{class:'primary',onclick:()=>{
@@ -1847,11 +1894,12 @@ Work1.render.values = function(sec){
       }
     });
   }},'用 AI 起草价值框架');
-  ai.appendChild(btn); sec.appendChild(ai);
+  ai.appendChild(btn); plate.appendChild(ai);
 };
 
 /* ---------- STEP 8: RECOMMENDATIONS ---------- */
 Work1.render.recommendations = function(sec){
+  const plate = sec.querySelector('.plate');
   const r=state.work1.recommendations;
   // Hallmark layout: 4 rows (short / mid / long / risks), NO hairlines, NO color change
   const list = el('div',{class:'rec-list'});
@@ -1888,7 +1936,7 @@ Work1.render.recommendations = function(sec){
   risksItem.appendChild(risksMid);
   risksItem.appendChild(el('div',{class:'hallmark-right'}));
   list.appendChild(risksItem);
-  sec.appendChild(list);
+  plate.appendChild(list);
 
   const ai=el('div',{class:'ai-box'});
   const btn=el('button',{class:'primary',onclick:()=>{
@@ -1904,7 +1952,7 @@ Work1.render.recommendations = function(sec){
       }
     });
   }},'用 AI 起草建议');
-  ai.appendChild(btn); sec.appendChild(ai);
+  ai.appendChild(btn); plate.appendChild(ai);
 };
 
 /* ---------- DYNAMIC REFRESH (preserve input focus where possible) ---------- */

@@ -55,8 +55,16 @@ Work3.renderStep = function(id){
   if(!sec) return;
   if(sec.dataset.rendered==='1'){ Work3.refreshDynamic(id); return; }
   sec.innerHTML='';
-  sec.appendChild(UI.stepHeader('STEP '+(Work3.steps.findIndex(s=>s.id===id)+1),
-    Work3.titles[id], Work3.subtitles[id]));
+  const idx3 = Work3.steps.findIndex(s=>s.id===id);
+  sec.appendChild(el('div',{class:'sub-head'},
+    el('span',{class:'num'},'3.'+(idx3+1)),
+    el('h3',{}, Work3.titles[id])
+  ));
+  const subEl3 = Work3.subtitles && Work3.subtitles[id];
+  if(subEl3){
+    sec.appendChild(el('p',{class:'lede', style:{fontFamily:'var(--font-display)', fontStyle:'normal', fontSize:'1.125rem', lineHeight:1.5, color:'var(--color-ink)', maxWidth:'62ch', margin:'0 0 28px'}}, subEl3));
+  }
+  sec.appendChild(el('div',{class:'plate plate--empty'}));
   const dn=UI.demoNote(3,id); if(dn) sec.appendChild(dn);
   // 工具栏「随机生成示例」只挂在 context step-header
   // 顶栏"演示案例"菜单接管样本注入；Work 3 不再单独挂"随机生成示例"按钮。
@@ -125,6 +133,7 @@ Work3.render={};
 
 /* ---------- CONTEXT ---------- */
 Work3.render.context = function(sec){
+  const plate = sec.querySelector('.plate');
   const c=state.work3.context;
   c.sbuName = state.work1.sbu.name;
   const selMkt = state.work2.markets.find(m=>m.id===state.work2.matrix.selectedMarketId);
@@ -135,25 +144,26 @@ Work3.render.context = function(sec){
   const bar=el('div',{class:'callout'},
     el('span',{class:'callout-title'},'UPSTREAM CONTEXT'),
     el('div',{class:'grid3',style:{marginTop:'8px'}},
-      el('div',{}, el('div',{class:'hint'},'SBU'), el('div',{style:{'font-family':'var(--font-display)','font-style':'italic','font-size':'18px'}}, c.sbuName||'—')),
-      el('div',{}, el('div',{class:'hint'},'目标市场'), el('div',{style:{'font-family':'var(--font-display)','font-style':'italic','font-size':'18px'}}, c.targetMarket||'— 请在 Work 2 选择')),
+      el('div',{}, el('div',{class:'hint'},'SBU'), el('div',{style:{'font-family':'var(--font-display)','font-style':'normal','font-size':'18px'}}, c.sbuName||'—')),
+      el('div',{}, el('div',{class:'hint'},'目标市场'), el('div',{style:{'font-family':'var(--font-display)','font-style':'normal','font-size':'18px'}}, c.targetMarket||'— 请在 Work 2 选择')),
       el('div',{}, el('div',{class:'hint'},'客户画像 / 合成调研'),
         el('div',{class:'mono',style:{'font-size':'12px'}},`${c.personas.length} 位画像 · ${c.hasSurvey?'调研已完成':'调研未完成（将用 AI 直接评分）'}`))
     )
   );
-  sec.appendChild(bar);
+  plate.appendChild(bar);
   if(!c.hasSurvey){
-    sec.appendChild(el('div',{class:'warning'},'Work 1 没有合成调研数据。合意性评分将回退到「AI 直接打分」模式（无逐 persona 子分）。'));
+    plate.appendChild(el('div',{class:'warning'},'Work 1 没有合成调研数据。合意性评分将回退到「AI 直接打分」模式（无逐 persona 子分）。'));
   }
-  sec.appendChild(el('p',{class:'muted italic'},'本步骤的内容由上游自动同步，无需填写。点击顶栏的标签可跳转回 Work 1/2 修改。'));
+  plate.appendChild(el('p',{class:'muted'},'本步骤的内容由上游自动同步，无需填写。点击顶栏的标签可跳转回 Work 1/2 修改。'));
 };
 
 /* ---------- MINING ---------- */
 Work3.render.mining = function(sec){
+  const plate = sec.querySelector('.plate');
   const m=state.work3.mining;
 
   // Document input
-  sec.appendChild(el('h3',{},'语料输入'));
+  plate.appendChild(el('h3',{},'语料输入'));
   const docsCard=el('div',{class:'plate'});
   docsCard.appendChild(el('span',{class:'plate-label'},`${m.documents.length} 条文档`));
   const docList=el('div',{style:{maxHeight:'180px',overflow:'auto',marginBottom:'10px'}});
@@ -185,7 +195,7 @@ Work3.render.mining = function(sec){
     ),
     el('button',{class:'ghost',onclick:()=>{ if(confirm('清空全部语料？')){m.documents=[];autosave();renderDocs();}}},'清空')
   ));
-  sec.appendChild(docsCard);
+  plate.appendChild(docsCard);
 
   // Include Work 1
   const inc1=el('label',{style:{display:'flex',gap:'8px','align-items':'center','font-family':'var(--font-body)','text-transform':'none','letter-spacing':0}},
@@ -194,10 +204,10 @@ Work3.render.mining = function(sec){
   const inc2=el('label',{style:{display:'flex',gap:'8px','align-items':'center','font-family':'var(--font-body)','text-transform':'none','letter-spacing':0}},
     el('input',{type:'checkbox',checked:m.includeWork1Themes,onchange:e=>{m.includeWork1Themes=e.target.checked;autosave()}}),
     '包含 Work 1 主题文本');
-  sec.appendChild(el('div',{class:'row',style:{'max-width':'500px'}}, inc1, inc2));
+  plate.appendChild(el('div',{class:'row',style:{'max-width':'500px'}}, inc1, inc2));
 
   // LDA params
-  sec.appendChild(el('h3',{},'LDA 参数'));
+  plate.appendChild(el('h3',{},'LDA 参数'));
   const p=m.ldaParams;
   const paramGrid=el('div',{class:'grid4'},
     UI.field('K 主题数', el('input',{type:'number',min:2,max:15,value:p.k,oninput:e=>{p.k=parseInt(e.target.value);autosave()}})),
@@ -205,20 +215,20 @@ Work3.render.mining = function(sec){
     UI.field('iterations', el('input',{type:'number',min:10,max:500,value:p.iterations,oninput:e=>{p.iterations=parseInt(e.target.value);autosave()}})),
     UI.field('no_below', el('input',{type:'number',min:1,max:20,value:p.no_below,oninput:e=>{p.no_below=parseInt(e.target.value);autosave()}}))
   );
-  sec.appendChild(paramGrid);
-  sec.appendChild(UI.field('no_above', el('input',{type:'number',min:0.1,max:1,step:0.05,value:p.no_above,oninput:e=>{p.no_above=parseFloat(e.target.value);autosave()}})));
+  plate.appendChild(paramGrid);
+  plate.appendChild(UI.field('no_above', el('input',{type:'number',min:0.1,max:1,step:0.05,value:p.no_above,oninput:e=>{p.no_above=parseFloat(e.target.value);autosave()}})));
 
   const ai=el('div',{class:'ai-box'});
   const runBtn=el('button',{class:'primary',onclick:()=>Work3.runLDA(runBtn,ai)}, backendOnline?'运行 LDA（本地服务）':'运行 LDA（本地服务未连接，将用 LLM 模拟）');
   ai.appendChild(runBtn);
-  sec.appendChild(ai);
+  plate.appendChild(ai);
 
-  if(m.ldaError) sec.appendChild(el('div',{class:'warning'},m.ldaError));
+  if(m.ldaError) plate.appendChild(el('div',{class:'warning'},m.ldaError));
 
   // Results
   if(m.stats){
-    sec.appendChild(el('hr',{class:'rule'}));
-    sec.appendChild(el('h3',{},'LDA 结果'));
+    plate.appendChild(el('hr',{class:'rule'}));
+    plate.appendChild(el('h3',{},'LDA 结果'));
     const st=el('div',{class:'grid4'});
     [['原始文档',m.stats.raw_count],['有效文档',m.stats.valid_count],['总词数',m.stats.total_words],['词典大小',m.stats.vocab_size]].forEach(([k,v])=>{
       st.appendChild(el('div',{class:'card',style:{padding:'12px'}},
@@ -228,25 +238,25 @@ Work3.render.mining = function(sec){
     if(m.stats.coherence!=null) st.appendChild(el('div',{class:'card',style:{padding:'12px'}},
       el('div',{class:'hint'},'Coherence c_v'),
       el('div',{class:'mono',style:{'font-size':'22px','color':'var(--color-accent)'}}, m.stats.coherence)));
-    sec.appendChild(st);
+    plate.appendChild(st);
 
     // word freq
     if(m.wordFreqTop && m.wordFreqTop.length){
-      sec.appendChild(el('h4',{},'Top 25 高频词'));
+      plate.appendChild(el('h4',{},'Top 25 高频词'));
       const wf=el('section',{class:'plate'}, el('span',{class:'plate-label'},'F5 · TICK ROWS · 词频'));
       renderBarChart(wf, m.wordFreqTop.slice(0,15).map(w=>({label:w.word,value:w.count})),{});
-      sec.appendChild(wf);
+      plate.appendChild(wf);
     }
 
     // topics
-    sec.appendChild(el('h4',{},`${m.topics.length} 个主题`));
+    plate.appendChild(el('h4',{},`${m.topics.length} 个主题`));
     const topicsGrid=el('div',{});
     m.topics.forEach(t=>{
       const card=el('div',{class:'card',style:{'margin-bottom':'12px'}});
       card.appendChild(el('div',{style:{display:'flex','justify-content':'space-between','align-items':'baseline'}},
         el('div',{},
           el('input',{type:'text',value:t.label||('主题 '+(t.id+1)),oninput:e=>{t.label=e.target.value;autosave()},
-            style:{'font-family':'var(--font-display)','font-style':'italic','font-size':'18px','border-bottom':'1px solid var(--color-rule)'}}),
+            style:{'font-family':'var(--font-display)','font-style':'normal','font-size':'18px','border-bottom':'1px solid var(--color-rule)'}}),
           el('span',{class:'tag',style:{'margin-left':'8px'}}, '占比 '+t.share+'%')
         )
       ));
@@ -261,22 +271,22 @@ Work3.render.mining = function(sec){
       }
       topicsGrid.appendChild(card);
     });
-    sec.appendChild(topicsGrid);
+    plate.appendChild(topicsGrid);
 
     // name topics with AI
     const nameAi=el('div',{class:'ai-box'});
     const nameBtn=el('button',{class:'primary',onclick:()=>Work3.nameTopics(nameBtn,nameAi)},'用 AI 命名主题');
     nameAi.appendChild(nameBtn);
-    sec.appendChild(nameAi);
+    plate.appendChild(nameAi);
   }
 
   // Pain map
-  sec.appendChild(el('hr',{class:'rule'}));
-  sec.appendChild(el('h3',{},'痛点地图'));
+  plate.appendChild(el('hr',{class:'rule'}));
+  plate.appendChild(el('h3',{},'痛点地图'));
   const painAi=el('div',{class:'ai-box'});
   const painBtn=el('button',{class:'primary',onclick:()=>Work3.makePainMap(painBtn,painAi)},'用 AI 生成痛点地图');
   painAi.appendChild(painBtn);
-  sec.appendChild(painAi);
+  plate.appendChild(painAi);
 
   if(m.painMap.length){
     const table=el('div',{class:'table-wrap'});
@@ -298,8 +308,8 @@ Work3.render.mining = function(sec){
       tr.appendChild(el('td',{},el('button',{class:'ghost small',onclick:()=>{m.painMap.splice(i,1);autosave();Work3.renderStep('mining')}},'×')));
       tb.appendChild(tr);
     });
-    t.appendChild(tb);table.appendChild(t);sec.appendChild(table);
-    sec.appendChild(el('button',{onclick:()=>{m.painMap.push({id:uid('pain'),pain:'',evidence:'',frequency:'中',linkedNeeds:[],type:'痛点'});autosave();Work3.renderStep('mining')}},'+ 添加痛点'));
+    t.appendChild(tb);table.appendChild(t);plate.appendChild(table);
+    plate.appendChild(el('button',{onclick:()=>{m.painMap.push({id:uid('pain'),pain:'',evidence:'',frequency:'中',linkedNeeds:[],type:'痛点'});autosave();Work3.renderStep('mining')}},'+ 添加痛点'));
   }
 };
 
@@ -401,6 +411,7 @@ Work3.makePainMap = function(btn, container){
 
 /* ---------- CANDIDATES ---------- */
 Work3.render.candidates = function(sec){
+  const plate = sec.querySelector('.plate');
   const cs=state.work3.candidates;
   const table=el('div',{class:'table-wrap'});
   const t=el('table',{class:'data'});
@@ -419,8 +430,8 @@ Work3.render.candidates = function(sec){
     tr.appendChild(el('td',{},el('button',{class:'ghost small',onclick:()=>{cs.splice(i,1);autosave();Work3.renderStep('candidates')}},'删除')));
     tb.appendChild(tr);
   });
-  t.appendChild(tb);table.appendChild(t);sec.appendChild(table);
-  sec.appendChild(el('div',{class:'ai-actions'},
+  t.appendChild(tb);table.appendChild(t);plate.appendChild(table);
+  plate.appendChild(el('div',{class:'ai-actions'},
     el('button',{onclick:()=>{cs.push({id:uid('c'),name:'',pain:'',description:'',evidence:'待验证',desirabilityScores:{},extraDims:{}});autosave();Work3.renderStep('candidates')}},'+ 添加卖点'),
   ));
   const ai=el('div',{class:'ai-box'});
@@ -436,7 +447,7 @@ Work3.render.candidates = function(sec){
       }
     });
   }},'用 AI 生成备选卖点');
-  ai.appendChild(btn); sec.appendChild(ai);
+  ai.appendChild(btn); plate.appendChild(ai);
 };
 
 /* ---------- MATRIX ---------- */
@@ -470,15 +481,16 @@ Work3.isInSector = function(x,y){
   return rho>=m.sectorRadius && Math.abs(phi-45)<=m.sectorAngle/2;
 };
 Work3.render.matrix = function(sec){
+  const plate = sec.querySelector('.plate');
   const cs=state.work3.candidates;
-  if(!cs.length){ sec.appendChild(el('div',{class:'warning'},'请先在「备选卖点」添加卖点。')); return; }
+  if(!cs.length){ plate.appendChild(el('div',{class:'warning'},'请先在「备选卖点」添加卖点。')); return; }
 
   // scoring controls
-  sec.appendChild(el('h3',{},'评分'));
+  plate.appendChild(el('h3',{},'评分'));
   const ai=el('div',{class:'ai-box'});
   ai.appendChild(el('button',{class:'primary',onclick:e=>Work3.scoreDesirability(e.currentTarget)}, state.work3.context.hasSurvey?'逐 persona 评合意性':'AI 直接评合意性'));
   ai.appendChild(el('button',{onclick:e=>Work3.scoreImplementability(e.currentTarget)},'AI 评可实施性'));
-  sec.appendChild(ai);
+  plate.appendChild(ai);
 
   // scoring table (collapsible details)
   const det=el('details');
@@ -494,7 +506,7 @@ Work3.render.matrix = function(sec){
   const tb=el('tbody');
   cs.forEach(c=>{
     const tr=el('tr');
-    tr.appendChild(el('td',{style:{'font-style':'italic'}},c.name));
+    tr.appendChild(el('td',{style:{'font-style':'normal'}},c.name));
     if(state.work3.context.hasSurvey){
       const td=el('td',{class:'mono',style:{'font-size':'11px'}});
       const pMeans=state.work3.context.personas.map(p=>{
@@ -516,10 +528,10 @@ Work3.render.matrix = function(sec){
     });
     tb.appendChild(tr);
   });
-  t.appendChild(tb); table.appendChild(t); det.appendChild(table); sec.appendChild(det);
+  t.appendChild(tb); table.appendChild(t); det.appendChild(table); plate.appendChild(det);
 
   // matrix parameters
-  sec.appendChild(el('hr',{class:'rule'}));
+  plate.appendChild(el('hr',{class:'rule'}));
   const params=el('div',{class:'grid3'},
     UI.field('显示扇面', (()=>{
       const c=el('input',{type:'checkbox',checked:state.work3.matrix.showSector,onchange:e=>{state.work3.matrix.showSector=e.target.checked;autosave();Work3.renderStep('matrix')}});
@@ -530,7 +542,7 @@ Work3.render.matrix = function(sec){
     UI.field('内半径 r ('+state.work3.matrix.sectorRadius+')',
       el('input',{type:'range',min:4,max:16,step:1,value:state.work3.matrix.sectorRadius,oninput:e=>{state.work3.matrix.sectorRadius=parseInt(e.target.value);autosave();Work3.renderStep('matrix')}}))
   );
-  sec.appendChild(params);
+  plate.appendChild(params);
 
   // matrix
   const pts=Work3.computeMatrix();
@@ -547,12 +559,11 @@ Work3.render.matrix = function(sec){
   // save selected to proposition
   state.work3.proposition.coreValueIds = pts.filter(p=>p.selected).map(p=>p.id);
 
-  const plate=el('section',{class:'plate'},
+  const scatterPlate=el('section',{class:'plate'},
     el('span',{class:'plate-label'},'F8 · PLUMB SCATTER · 客户合意性 × 企业可实施性')
   );
-  sec.appendChild(plate);
   renderMatrix({
-    container:plate, points:pts.map(p=>({id:p.id,label:p.name,x:p.x,y:p.y})),
+    container:scatterPlate, points:pts.map(p=>({id:p.id,label:p.name,x:p.x,y:p.y})),
     xLabel:'企业可实施性', yLabel:'客户合意性',
     xCut:state.work3.matrix.xCut, yCut:state.work3.matrix.yCut,
     showSector:state.work3.matrix.showSector,
@@ -569,7 +580,7 @@ Work3.render.matrix = function(sec){
   });
 
   // ranking table
-  sec.appendChild(el('h4',{},'卖点排名'));
+  plate.appendChild(el('h4',{},'卖点排名'));
   const table2=el('div',{class:'table-wrap'});
   const t2=el('table',{class:'data'});
   t2.innerHTML='<thead><tr><th>#</th><th>卖点</th><th>合意性</th><th>可实施性</th><th>象限</th><th>扇面</th><th>入选</th></tr></thead>';
@@ -581,7 +592,7 @@ Work3.render.matrix = function(sec){
     const inside=Work3.isInSector(p.x,p.y);
     const tr=el('tr',{},
       el('td',{},String(i+1)),
-      el('td',{style:{'font-style':'italic'}},p.name),
+      el('td',{style:{'font-style':'normal'}},p.name),
       el('td',{class:'mono'},p.y.toFixed(2)),
       el('td',{class:'mono'},p.x.toFixed(2)),
       el('td',{},el('span',{class:'tag '+(q==='明星'?'maroon':'')},q)),
@@ -600,27 +611,27 @@ Work3.render.matrix = function(sec){
     );
     tb2.appendChild(tr);
   });
-  t2.appendChild(tb2); table2.appendChild(t2); sec.appendChild(table2);
+  t2.appendChild(tb2); table2.appendChild(t2); plate.appendChild(table2);
 
   // migration
-  sec.appendChild(el('hr',{class:'rule'}));
-  sec.appendChild(el('h3',{},'迁移路径（扇面外卖点）'));
+  plate.appendChild(el('hr',{class:'rule'}));
+  plate.appendChild(el('h3',{},'迁移路径（扇面外卖点）'));
   const outside=pts.filter(p=>!Work3.isInSector(p.x,p.y));
-  if(!outside.length){ sec.appendChild(el('p',{class:'muted italic'},'所有卖点都在扇面内，无需迁移分析。')); }
+  if(!outside.length){ plate.appendChild(el('p',{class:'muted'},'所有卖点都在扇面内，无需迁移分析。')); }
   else{
     const mAi=el('div',{class:'ai-box'});
     const mBtn=el('button',{class:'primary',onclick:()=>Work3.generateMigration(mBtn,mAi,outside)},'为扇面外卖点生成迁移路径');
-    mAi.appendChild(mBtn); sec.appendChild(mAi);
+    mAi.appendChild(mBtn); plate.appendChild(mAi);
     if(state.work3.migration.analyses.length){
       state.work3.migration.analyses.forEach(a=>{
         const c=state.work3.candidates.find(x=>x.id===a.candidateId);
         const card=el('div',{class:'card',style:{'margin-bottom':'12px'}},
-          el('div',{style:{'font-style':'italic','font-size':'18px','color':'var(--color-accent)'}}, c?.name||'已删除卖点'),
+          el('div',{style:{'font-style':'normal','font-size':'18px','color':'var(--color-accent)'}}, c?.name||'已删除卖点'),
           el('p',{}, a.diagnosis),
           el('div',{}, (a.actions||[]).map((x,i)=>el('div',{style:{padding:'4px 0',borderBottom:'1px solid var(--color-rule)'}}, (i+1)+'. '+x))),
           a.targetScores && el('p',{class:'hint'}, '目标分数：合意性 '+(a.targetScores.desirability||'—')+' / 可实施性 '+(a.targetScores.implementability||'—'))
         );
-        sec.appendChild(card);
+        plate.appendChild(card);
       });
     }
   }
@@ -717,19 +728,20 @@ Work3.refreshDynamic=function(){};
 
 /* ---------- PROPOSITION ---------- */
 Work3.render.proposition = function(sec){
+  const plate = sec.querySelector('.plate');
   const p=state.work3.proposition;
   const selected=state.work3.candidates.filter(c=>p.coreValueIds.includes(c.id) || c.selected);
 
-  sec.appendChild(el('h3',{},'入选核心卖点'));
-  if(!selected.length) sec.appendChild(el('div',{class:'warning'},'尚未在矩阵中选择卖点。'));
+  plate.appendChild(el('h3',{},'入选核心卖点'));
+  if(!selected.length) plate.appendChild(el('div',{class:'warning'},'尚未在矩阵中选择卖点。'));
   else{
     const list=el('div',{class:'chip-row'});
     selected.forEach(c=>list.appendChild(el('span',{class:'chip maroon'},c.name)));
-    sec.appendChild(list);
+    plate.appendChild(list);
   }
 
-  sec.appendChild(el('hr',{class:'rule'}));
-  sec.appendChild(el('h3',{},'价值主张备选'));
+  plate.appendChild(el('hr',{class:'rule'}));
+  plate.appendChild(el('h3',{},'价值主张备选'));
   const altBox=el('div',{});
   p.alternatives.forEach((a,i)=>{
     const card=el('div',{class:'card'+(a.id===p.chosenValueText?' selected':'')},
@@ -743,7 +755,7 @@ Work3.render.proposition = function(sec){
     );
     altBox.appendChild(card);
   });
-  sec.appendChild(altBox);
+  plate.appendChild(altBox);
   const vpAi=el('div',{class:'ai-box'});
   const vpBtn=el('button',{class:'primary',onclick:()=>{
     API.aiButton({
@@ -757,32 +769,32 @@ Work3.render.proposition = function(sec){
       }
     });
   }},'用 AI 生成价值主张');
-  vpAi.appendChild(vpBtn); sec.appendChild(vpAi);
+  vpAi.appendChild(vpBtn); plate.appendChild(vpAi);
 
   // positioning
-  sec.appendChild(el('hr',{class:'rule'}));
-  sec.appendChild(el('h3',{},'定位句（填空式）'));
+  plate.appendChild(el('hr',{class:'rule'}));
+  plate.appendChild(el('h3',{},'定位句（填空式）'));
   p.positioning.brand=p.positioning.brand||state.work1.sbu.name;
   const posGrid=el('div',{class:'grid2'},
     UI.field('品牌', el('input',{value:p.positioning.brand,oninput:e=>{p.positioning.brand=e.target.value;autosave();Work3.updatePositioning()}})),
     UI.field('品类', el('input',{value:p.positioning.category,oninput:e=>{p.positioning.category=e.target.value;autosave();Work3.updatePositioning()}}))
   );
-  sec.appendChild(posGrid);
-  sec.appendChild(UI.field('目标客群', el('input',{value:p.positioning.audience,oninput:e=>{p.positioning.audience=e.target.value;autosave();Work3.updatePositioning()}})));
-  sec.appendChild(UI.field('核心价值', el('textarea',{rows:2,oninput:e=>{p.positioning.coreValue=e.target.value;autosave();Work3.updatePositioning()}},p.positioning.coreValue)));
-  sec.appendChild(el('div',{class:'callout'},
+  plate.appendChild(posGrid);
+  plate.appendChild(UI.field('目标客群', el('input',{value:p.positioning.audience,oninput:e=>{p.positioning.audience=e.target.value;autosave();Work3.updatePositioning()}})));
+  plate.appendChild(UI.field('核心价值', el('textarea',{rows:2,oninput:e=>{p.positioning.coreValue=e.target.value;autosave();Work3.updatePositioning()}},p.positioning.coreValue)));
+  plate.appendChild(el('div',{class:'callout'},
     el('span',{class:'callout-title'},'定位句预览'),
-    el('p',{id:'posPreview',style:{'font-family':'var(--font-display)','font-style':'italic','font-size':'20px'}}, '')
+    el('p',{id:'posPreview',style:{'font-family':'var(--font-display)','font-style':'normal','font-size':'20px'}}, '')
   ));
   Work3.updatePositioning();
 
   // brand personality
-  sec.appendChild(el('hr',{class:'rule'}));
-  sec.appendChild(el('h3',{},'品牌人格'));
-  sec.appendChild(UI.field('MBTI 类型', el('input',{value:p.mbti,oninput:e=>{p.mbti=e.target.value;autosave()}})));
+  plate.appendChild(el('hr',{class:'rule'}));
+  plate.appendChild(el('h3',{},'品牌人格'));
+  plate.appendChild(UI.field('MBTI 类型', el('input',{value:p.mbti,oninput:e=>{p.mbti=e.target.value;autosave()}})));
   const traits=UI.tagsInput(p.personalityTraits||[]);
   traits.el.querySelector('input').addEventListener('blur',()=>{p.personalityTraits=traits.get();autosave()});
-  sec.appendChild(UI.field('人格特质关键词', traits.el));
+  plate.appendChild(UI.field('人格特质关键词', traits.el));
   const persAi=el('div',{class:'ai-box'});
   const persBtn=el('button',{class:'primary',onclick:()=>{
     API.aiButton({
@@ -797,11 +809,11 @@ Work3.render.proposition = function(sec){
       }
     });
   }},'用 AI 推荐人格');
-  persAi.appendChild(persBtn); sec.appendChild(persAi);
+  persAi.appendChild(persBtn); plate.appendChild(persAi);
 
   // slogan
-  sec.appendChild(el('hr',{class:'rule'}));
-  sec.appendChild(el('h3',{},'Slogan'));
+  plate.appendChild(el('hr',{class:'rule'}));
+  plate.appendChild(el('h3',{},'Slogan'));
   const slogBox=el('div',{});
   p.sloganOptions.forEach((s,i)=>{
     const card=el('div',{class:'card'+(s===p.chosenSlogan?' selected':'')},
@@ -814,7 +826,7 @@ Work3.render.proposition = function(sec){
     );
     slogBox.appendChild(card);
   });
-  sec.appendChild(slogBox);
+  plate.appendChild(slogBox);
   const slAi=el('div',{class:'ai-box'});
   const slBtn=el('button',{class:'primary',onclick:()=>{
     API.aiButton({
@@ -828,7 +840,7 @@ Work3.render.proposition = function(sec){
       }
     });
   }},'用 AI 生成 slogan');
-  slAi.appendChild(slBtn); sec.appendChild(slAi);
+  slAi.appendChild(slBtn); plate.appendChild(slAi);
 };
 Work3.updatePositioning = function(){
   const p=state.work3.proposition.positioning;

@@ -58,8 +58,16 @@ Work4.renderStep = function(id){
   Work4.syncBodyAttrs();
   if(sec.dataset.rendered===Work4.RENDER_VERSION){ Work4.refreshDynamic(id); return; }
   sec.innerHTML='';
-  sec.appendChild(UI.stepHeader('STEP '+(Work4.steps.findIndex(s=>s.id===id)+1),
-    Work4.titles[id], Work4.subtitles[id]));
+  const idx4 = Work4.steps.findIndex(s=>s.id===id);
+  sec.appendChild(el('div',{class:'sub-head'},
+    el('span',{class:'num'},'4.'+(idx4+1)),
+    el('h3',{}, Work4.titles[id])
+  ));
+  const subEl4 = Work4.subtitles && Work4.subtitles[id];
+  if(subEl4){
+    sec.appendChild(el('p',{class:'lede', style:{fontFamily:'var(--font-display)', fontStyle:'normal', fontSize:'1.125rem', lineHeight:1.5, color:'var(--color-ink)', maxWidth:'62ch', margin:'0 0 28px'}}, subEl4));
+  }
+  sec.appendChild(el('div',{class:'plate plate--empty'}));
   const dn=UI.demoNote(4,id); if(dn) sec.appendChild(dn);
   // 工具栏「随机生成示例」只挂在 route step-header
   // 顶栏"演示案例"菜单接管样本注入；Work 4 不再单独挂"随机生成示例"按钮。
@@ -159,35 +167,36 @@ Work4.render={};
 
 /* ---------- ROUTE ---------- */
 Work4.render.route = function(sec){
+  const plate = sec.querySelector('.plate');
   const r=state.work4.route;
 
   // 0. Market scope
-  sec.appendChild(el('h4',{},'市场范围'));
+  plate.appendChild(el('h4',{},'市场范围'));
   const scopeRow=el('div',{class:'grid2'});
   [['global','出海 / 跨国经营'],['domestic','本阶段聚焦国内市场']].forEach(([v,label])=>{
     scopeRow.appendChild(el('div',{class:'card'+(r.scope===v?' selected':'')},
-      el('label',{style:{display:'flex',gap:'8px','align-items':'center','font-family':'var(--font-display)','font-style':'italic','font-size':'16px','text-transform':'none','letter-spacing':0,'color':'var(--color-ink)'}},
+      el('label',{style:{display:'flex',gap:'8px','align-items':'center','font-family':'var(--font-display)','font-style':'normal','font-size':'16px','text-transform':'none','letter-spacing':0,'color':'var(--color-ink)'}},
         el('input',{type:'radio',name:'w4scope',checked:r.scope===v,onchange:()=>{r.scope=v;autosave();Work4.syncBodyAttrs();Work4.renderStep('route')}}), label)));
   });
-  sec.appendChild(scopeRow);
+  plate.appendChild(scopeRow);
 
   if(r.scope==='domestic'){
-    sec.appendChild(el('div',{class:'callout'},
+    plate.appendChild(el('div',{class:'callout'},
       el('span',{class:'callout-title'},'国内模式'),
       el('p',{class:'muted',style:{'font-size':'13px',margin:'4px 0 0'}},'聚焦单一国内市场时，跨文化调适字段已隐藏。后面的 4P 作为常规营销组合填写即可；如业务转向出海，回到本页切换即可恢复全部字段。')));
     // Domestic still needs the OEM positioning judgment for the Promotion warning
-    sec.appendChild(el('h4',{},'业务在微笑曲线上的位置'));
+    plate.appendChild(el('h4',{},'业务在微笑曲线上的位置'));
     Work4.oemCards(sec, r);
     return;
   }
 
   // 1. OEM/ODM/OBM/EMS — positioning judgment
-  sec.appendChild(el('h4',{},'业务在微笑曲线上的位置'));
+  plate.appendChild(el('h4',{},'业务在微笑曲线上的位置'));
   Work4.oemCards(sec, r);
 
   // 2. Entry mode
-  sec.appendChild(el('h4',{},'国际市场进入模式'));
-  sec.appendChild(el('p',{class:'muted',style:{'font-size':'12px',margin:'0 0 10px'}},
+  plate.appendChild(el('h4',{},'国际市场进入模式'));
+  plate.appendChild(el('p',{class:'muted',style:{'font-size':'12px',margin:'0 0 10px'}},
     '从左到右：资源承诺与风险递增、企业控制权递增。'));
   const modes=[
     ['export','出口','生产留在母国，直接/间接销往海外','低','弱'],
@@ -210,10 +219,10 @@ Work4.render.route = function(sec){
       el('td',{class:'mono',style:{'font-size':'11px'}},ctrl));
     tb.appendChild(tr);
   });
-  t.appendChild(tb); sec.appendChild(t);
+  t.appendChild(tb); plate.appendChild(t);
 
   // 3. Lightweight tactics (multi-select)
-  sec.appendChild(el('h4',{},'轻量化出海打法（可多选）'));
+  plate.appendChild(el('h4',{},'轻量化出海打法（可多选）'));
   const tactics=[
     ['single-point','单点突破','只打透一个细分市场/场景/人群，用未被满足的需求而非市场热门选卖点（海尔小冰箱、传音非洲）'],
     ['borrow-boat','借船出海','借平台（Amazon/TikTok Shop）、渠道（本地经销商）、生态（产业带）和本地伙伴，先借后建'],
@@ -226,11 +235,11 @@ Work4.render.route = function(sec){
       r.light=r.light||[]; const i=r.light.indexOf(v); if(i>=0)r.light.splice(i,1); else r.light.push(v);
       autosave();Work4.renderStep('route');
     }},
-      el('label',{style:{display:'flex',gap:'8px','align-items':'flex-start','font-family':'var(--font-display)','font-style':'italic','font-size':'16px','text-transform':'none','letter-spacing':0,'color':'var(--color-ink)'}},
+      el('label',{style:{display:'flex',gap:'8px','align-items':'flex-start','font-family':'var(--font-display)','font-style':'normal','font-size':'16px','text-transform':'none','letter-spacing':0,'color':'var(--color-ink)'}},
         el('input',{type:'checkbox',checked:on,style:{marginTop:'3px'}}),
         el('div',{},el('div',{},label),el('div',{class:'muted',style:{'font-family':'var(--font-body)','font-style':'normal','font-size':'12px',marginTop:'4px'}},desc)))));
   });
-  sec.appendChild(lw);
+  plate.appendChild(lw);
 
   // 4. Soft coupling warnings
   const emLabel={export:'出口',licensing:'许可贸易',franchise:'特许经营','contract-mfg':'合同制造',jv:'合资',acquisition:'并购',greenfield:'绿地投资'};
@@ -245,21 +254,22 @@ Work4.render.route = function(sec){
     warns.push([r.oemType+' 模式下品牌传播由谁负责','非 OBM（自有品牌）模式下，面向 C 端的品牌广告/PR/CRM 主要由委托方负责。可做企业级 B2B 传播（能力、认证、供应链），但消费者品牌资产不会沉淀到你这里。']);
   }
   warns.forEach(([title,body])=>{
-    sec.appendChild(el('div',{class:'warning',style:{'font-size':'13px'}},
+    plate.appendChild(el('div',{class:'warning',style:{'font-size':'13px'}},
       el('strong',{},title),el('div',{class:'muted',style:{marginTop:'4px'}},body)));
   });
 
   // 5. Political power — only for high-control entry modes
   if(['jv','acquisition','greenfield'].includes(r.entryMode)){
-    sec.appendChild(el('h4',{},'政企关系与合规（Political Power）'));
-    sec.appendChild(el('p',{class:'muted',style:{'font-size':'12px',margin:'0 0 6px'}},
+    plate.appendChild(el('h4',{},'政企关系与合规（Political Power）'));
+    plate.appendChild(el('p',{class:'muted',style:{'font-size':'12px',margin:'0 0 6px'}},
       '合资/并购/绿地直接面对当地监管与政策环境。记录政府关系、准入许可、合规要点。'));
-    sec.appendChild(UI.field('政企关系 / 合规要点',
+    plate.appendChild(UI.field('政企关系 / 合规要点',
       el('textarea',{rows:3,oninput:e=>{r.politicalPower=e.target.value;autosave()}},r.politicalPower||'')));
   }
 };
 
 Work4.oemCards = function(sec, r){
+  const plate = (sec && sec.querySelector) ? sec.querySelector('.plate') : sec;
   const types=[
     ['OEM','代工生产','按委托方规格制造，无自有品牌；微笑曲线底部'],
     ['ODM','设计+制造','有设计能力，但产品贴委托方品牌'],
@@ -269,32 +279,33 @@ Work4.oemCards = function(sec, r){
   const row=el('div',{class:'grid2'});
   types.forEach(([v,label,desc])=>{
     row.appendChild(el('div',{class:'card'+(r.oemType===v?' selected':'')},
-      el('label',{style:{display:'flex',gap:'8px','align-items':'center','font-family':'var(--font-display)','font-style':'italic','font-size':'16px','text-transform':'none','letter-spacing':0,'color':'var(--color-ink)'}},
+      el('label',{style:{display:'flex',gap:'8px','align-items':'center','font-family':'var(--font-display)','font-style':'normal','font-size':'16px','text-transform':'none','letter-spacing':0,'color':'var(--color-ink)'}},
         el('input',{type:'radio',name:'w4oem',checked:r.oemType===v,onchange:()=>{r.oemType=v;autosave();Work4.syncBodyAttrs();Work4.renderStep('route')}}), label),
       el('p',{class:'muted',style:{'font-size':'12px',margin:'6px 0 0'}},desc)
     ));
   });
-  sec.appendChild(row);
+  plate.appendChild(row);
 };
 
 /* ---------- PRODUCT ---------- */
 Work4.render.product = function(sec){
+  const plate = sec.querySelector('.plate');
   const p=state.work4.product;
-  sec.appendChild(UI.field('产品名称', el('input',{value:p.name,oninput:e=>{p.name=e.target.value;autosave()}})));
-  sec.appendChild(UI.field('产品线一句话描述', el('textarea',{rows:2,oninput:e=>{p.description=e.target.value;autosave()}},p.description)));
+  plate.appendChild(UI.field('产品名称', el('input',{value:p.name,oninput:e=>{p.name=e.target.value;autosave()}})));
+  plate.appendChild(UI.field('产品线一句话描述', el('textarea',{rows:2,oninput:e=>{p.description=e.target.value;autosave()}},p.description)));
 
   // Business type (drives 7P fields)
-  sec.appendChild(el('h4',{},'业务类型'));
+  plate.appendChild(el('h4',{},'业务类型'));
   const bRow=el('div',{class:'grid3'});
   [['physical','实体产品'],['service','服务'],['hybrid','产品+服务']].forEach(([v,label])=>{
     bRow.appendChild(el('div',{class:'card'+(p.businessType===v?' selected':'')},
-      el('label',{style:{display:'flex',gap:'8px','align-items':'center','font-family':'var(--font-display)','font-style':'italic','font-size':'16px','text-transform':'none','letter-spacing':0,'color':'var(--color-ink)'}},
+      el('label',{style:{display:'flex',gap:'8px','align-items':'center','font-family':'var(--font-display)','font-style':'normal','font-size':'16px','text-transform':'none','letter-spacing':0,'color':'var(--color-ink)'}},
         el('input',{type:'radio',name:'w4biz',checked:p.businessType===v,onchange:()=>{p.businessType=v;autosave();Work4.syncBodyAttrs();Work4.renderStep('product')}}), label)));
   });
-  sec.appendChild(bRow);
+  plate.appendChild(bRow);
 
   // SKUs
-  sec.appendChild(el('h4',{},'SKU 表'));
+  plate.appendChild(el('h4',{},'SKU 表'));
   Work4.simpleTable(sec, p.skus, [
     {key:'name',label:'SKU 名称',type:'text'},
     {key:'specs',label:'规格',type:'text'},
@@ -303,20 +314,20 @@ Work4.render.product = function(sec){
   ], 'skus');
 
   // differentiators
-  sec.appendChild(el('h4',{},'核心差异化'));
+  plate.appendChild(el('h4',{},'核心差异化'));
   const diff=UI.tagsInput(p.coreDifferentiators||[]);
   diff.el.querySelector('input').addEventListener('blur',()=>{p.coreDifferentiators=diff.get();autosave()});
-  sec.appendChild(diff.el);
-  sec.appendChild(el('button',{class:'small ghost',onclick:()=>{
+  plate.appendChild(diff.el);
+  plate.appendChild(el('button',{class:'small ghost',onclick:()=>{
     state.work3.candidates.filter(c=>c.selected).forEach(c=>{
       if(!p.coreDifferentiators.includes(c.name)) p.coreDifferentiators.push(c.name);
     });
     autosave(); Work4.renderStep('product');
   }},'从 Work 3 入选卖点导入'));
 
-  sec.appendChild(UI.field('物理特征 / 技术规格', el('textarea',{rows:3,oninput:e=>{p.physicalFeatures=e.target.value;autosave()}},p.physicalFeatures)));
-  sec.appendChild(UI.field('服务承诺（售后、保修、安装、培训）', el('textarea',{rows:2,oninput:e=>{p.serviceOffering=e.target.value;autosave()}},p.serviceOffering)));
-  sec.appendChild(UI.field('技术护城河（专利、独有工艺、供应链）', el('textarea',{rows:2,oninput:e=>{p.technologyMoat=e.target.value;autosave()}},p.technologyMoat)));
+  plate.appendChild(UI.field('物理特征 / 技术规格', el('textarea',{rows:3,oninput:e=>{p.physicalFeatures=e.target.value;autosave()}},p.physicalFeatures)));
+  plate.appendChild(UI.field('服务承诺（售后、保修、安装、培训）', el('textarea',{rows:2,oninput:e=>{p.serviceOffering=e.target.value;autosave()}},p.serviceOffering)));
+  plate.appendChild(UI.field('技术护城河（专利、独有工艺、供应链）', el('textarea',{rows:2,oninput:e=>{p.technologyMoat=e.target.value;autosave()}},p.technologyMoat)));
 
   // Cross-cultural product adaptation (global only)
   const xc=el('div',{class:'x-culture'});
@@ -324,7 +335,7 @@ Work4.render.product = function(sec){
   xc.appendChild(UI.field('市场准入认证（CE/FCC/FDA/CCC/halal 等）', el('textarea',{rows:2,oninput:e=>{p.certifications=e.target.value;autosave()}},p.certifications||'')));
   xc.appendChild(UI.field('本地化适配（功能、审美/颜色、包装规格）', el('textarea',{rows:3,oninput:e=>{p.localization=e.target.value;autosave()}},p.localization||'')));
   xc.appendChild(UI.field('服务本地化（售后网络、本地语言、安装培训）', el('textarea',{rows:2,oninput:e=>{p.serviceLocalization=e.target.value;autosave()}},p.serviceLocalization||'')));
-  sec.appendChild(xc);
+  plate.appendChild(xc);
 
   // 7P service extension (service/hybrid only)
   const xs=el('div',{class:'x-service'});
@@ -332,21 +343,22 @@ Work4.render.product = function(sec){
   xs.appendChild(UI.field('People 人员（前台、客服、技师的形象与能力）', el('textarea',{rows:2,oninput:e=>{p.people=e.target.value;autosave()}},p.people||'')));
   xs.appendChild(UI.field('Process 服务流程（交付步骤、响应时效）', el('textarea',{rows:2,oninput:e=>{p.process=e.target.value;autosave()}},p.process||'')));
   xs.appendChild(UI.field('Physical Evidence 有形展示（门店、物料、界面、评价）', el('textarea',{rows:2,oninput:e=>{p.physicalEvidence=e.target.value;autosave()}},p.physicalEvidence||'')));
-  sec.appendChild(xs);
+  plate.appendChild(xs);
 
   Work4.aiBox(sec,'product',
     `你是产品营销专家。基于以下信息，为产品提炼三段卖点：功能卖点 3-5 条；情感卖点 2-3 条；服务承诺 1-2 条。每条不超过 30 字。用 Markdown。\n\nSBU:${state.work1.sbu.name}\n产品:${p.name} ${p.description}\n核心差异化:${(p.coreDifferentiators||[]).join('、')}\n价值主张:${state.work3.proposition.chosenValueText}\n目标市场:${(state.work2.markets.find(m=>m.id===state.work2.matrix.selectedMarketId)||{}).name||''}${p.certifications?`\n准入认证:${p.certifications}`:''}${p.localization?`\n本地化适配:${p.localization}`:''}`,
     text=>{ p.aiResult=text; autosave(); Work4.renderStep('product'); }
   );
-  if(p.aiResult) sec.appendChild(el('div',{class:'plate'},
+  if(p.aiResult) plate.appendChild(el('div',{class:'plate'},
     el('span',{class:'plate-label'},'PRODUCT COPY'),
     el('div',{style:{'white-space':'pre-wrap'}},p.aiResult)));
 };
 
 /* ---------- PRICE ---------- */
 Work4.render.price = function(sec){
+  const plate = sec.querySelector('.plate');
   const p=state.work4.price;
-  sec.appendChild(el('h4',{},'定价策略'));
+  plate.appendChild(el('h4',{},'定价策略'));
   const strategies=[
     ['cost-plus','成本加成','在成本基础上增加固定比例；适合成熟品类、价格敏感客户。'],
     ['value','价值定价','基于客户感知价值；适合差异化强、情感价值高的品牌。'],
@@ -357,16 +369,16 @@ Work4.render.price = function(sec){
   const row=el('div',{class:'grid3'});
   strategies.forEach(([v,label,desc])=>{
     const card=el('div',{class:'card'+(p.strategy===v?' selected':'')},
-      el('label',{style:{display:'flex',gap:'8px','align-items':'center','font-family':'var(--font-display)','font-style':'italic','font-size':'16px','text-transform':'none','letter-spacing':0,'color':'var(--color-ink)'}},
+      el('label',{style:{display:'flex',gap:'8px','align-items':'center','font-family':'var(--font-display)','font-style':'normal','font-size':'16px','text-transform':'none','letter-spacing':0,'color':'var(--color-ink)'}},
         el('input',{type:'radio',name:'prStrat',checked:p.strategy===v,onchange:()=>{p.strategy=v;autosave();Work4.renderStep('price')}}), label),
       el('p',{class:'muted',style:{'font-size':'12px'}},desc)
     );
     row.appendChild(card);
   });
-  sec.appendChild(row);
-  sec.appendChild(UI.field('选择理由', el('textarea',{rows:2,oninput:e=>{p.strategyNote=e.target.value;autosave()}},p.strategyNote)));
+  plate.appendChild(row);
+  plate.appendChild(UI.field('选择理由', el('textarea',{rows:2,oninput:e=>{p.strategyNote=e.target.value;autosave()}},p.strategyNote)));
 
-  sec.appendChild(el('h4',{},'价格档位'));
+  plate.appendChild(el('h4',{},'价格档位'));
   Work4.simpleTable(sec, p.tiers, [
     {key:'name',label:'档位名',type:'text'},
     {key:'targetSegment',label:'目标客群',type:'text'},
@@ -375,68 +387,69 @@ Work4.render.price = function(sec){
     {key:'notes',label:'备注',type:'text'}
   ], 'tiers');
 
-  sec.appendChild(el('h4',{},'渠道差异化定价'));
+  plate.appendChild(el('h4',{},'渠道差异化定价'));
   Work4.simpleTable(sec, p.channelPricing, [
     {key:'channel',label:'渠道',type:'text'},
     {key:'priceAdjustment',label:'价格调整',type:'text'},
     {key:'rationale',label:'理由',type:'text'}
   ], 'channelPricing');
 
-  sec.appendChild(el('h4',{},'促销节奏'));
+  plate.appendChild(el('h4',{},'促销节奏'));
   Work4.simpleTable(sec, p.promotions, [
     {key:'occasion',label:'节点',type:'text'},
     {key:'discount',label:'折扣/机制',type:'text'},
     {key:'period',label:'时段',type:'text'}
   ], 'promotions');
 
-  sec.appendChild(UI.field('竞品价格信息（粘贴）', el('textarea',{rows:3,oninput:e=>{p.competitorPrices=e.target.value;autosave()}},p.competitorPrices)));
+  plate.appendChild(UI.field('竞品价格信息（粘贴）', el('textarea',{rows:3,oninput:e=>{p.competitorPrices=e.target.value;autosave()}},p.competitorPrices)));
 
   const xc=el('div',{class:'x-culture'});
   xc.appendChild(el('h4',{},'跨文化定价'));
   xc.appendChild(UI.field('购买力 / PPP 校准', el('textarea',{rows:2,placeholder:'目标市场可支配收入、价格敏感度、与母国市场的价差',oninput:e=>{p.ppp=e.target.value;autosave()}},p.ppp||'')));
   xc.appendChild(UI.field('数字 / 尾数 / 税（吉庆数字、.99 习惯、关税增值税）', el('textarea',{rows:2,oninput:e=>{p.pricingNumbers=e.target.value;autosave()}},p.pricingNumbers||'')));
   xc.appendChild(UI.field('汇率敏感度 / 本币结算', el('textarea',{rows:2,oninput:e=>{p.fxSensitivity=e.target.value;autosave()}},p.fxSensitivity||'')));
-  sec.appendChild(xc);
+  plate.appendChild(xc);
 
   if(p.tiers.length){
-    sec.appendChild(el('h4',{},'价格档位图'));
-    const plate=el('section',{class:'plate'},el('span',{class:'plate-label'},'F5 · TICK ROWS · 价格档位'));
-    renderBarChart(plate, p.tiers.filter(t=>t.price).map(t=>({label:t.name,value:Number(t.price)})),{unit:''});
-    sec.appendChild(plate);
+    plate.appendChild(el('h4',{},'价格档位图'));
+    const chartPlate=el('section',{class:'plate'},el('span',{class:'plate-label'},'F5 · TICK ROWS · 价格档位'));
+    renderBarChart(chartPlate, p.tiers.filter(t=>t.price).map(t=>({label:t.name,value:Number(t.price)})),{unit:''});
+    // chartPlate already has the chart appended via renderBarChart/Work4.renderChannelTree
   }
 
   Work4.aiBox(sec,'price',
     `你是定价策略顾问。业务"${state.work1.sbu.name}"面向"${(state.work2.markets.find(m=>m.id===state.work2.matrix.selectedMarketId)||{}).name||''}"，采用${p.strategy||'（未选）'}策略。竞品价格：${p.competitorPrices||'未提供'}。价值主张：${state.work3.proposition.chosenValueText}。价格档位：${JSON.stringify(p.tiers)}。请给出：1) 推荐价格区间及理由；2) 各档位建议定价；3) 渠道差异化建议；4) 促销节奏。用 Markdown。`,
     text=>{ p.aiResult=text; autosave(); Work4.renderStep('price'); }
   );
-  if(p.aiResult) sec.appendChild(el('div',{class:'plate'},el('span',{class:'plate-label'},'PRICE STRATEGY'),el('div',{style:{'white-space':'pre-wrap'}},p.aiResult)));
+  if(p.aiResult) plate.appendChild(el('div',{class:'plate'},el('span',{class:'plate-label'},'PRICE STRATEGY'),el('div',{style:{'white-space':'pre-wrap'}},p.aiResult)));
 };
 
 /* ---------- PLACE ---------- */
 Work4.render.place = function(sec){
+  const plate = sec.querySelector('.plate');
   const p=state.work4.place;
-  sec.appendChild(el('h4',{},'线上渠道'));
-  sec.appendChild(UI.field('自营（官网、独立站、App、小程序等）', Work4.tagBox(p.onlineSelf, v=>{p.onlineSelf=v;autosave()})));
-  sec.appendChild(UI.field('第三方平台（Amazon、TikTok Shop、Shopee、Lazada 等）', Work4.tagBox(p.onlineThird, v=>{p.onlineThird=v;autosave()})));
-  sec.appendChild(UI.field('线上备注', el('textarea',{rows:2,oninput:e=>{p.onlineNotes=e.target.value;autosave()}},p.onlineNotes)));
+  plate.appendChild(el('h4',{},'线上渠道'));
+  plate.appendChild(UI.field('自营（官网、独立站、App、小程序等）', Work4.tagBox(p.onlineSelf, v=>{p.onlineSelf=v;autosave()})));
+  plate.appendChild(UI.field('第三方平台（Amazon、TikTok Shop、Shopee、Lazada 等）', Work4.tagBox(p.onlineThird, v=>{p.onlineThird=v;autosave()})));
+  plate.appendChild(UI.field('线上备注', el('textarea',{rows:2,oninput:e=>{p.onlineNotes=e.target.value;autosave()}},p.onlineNotes)));
 
-  sec.appendChild(el('h4',{},'线下渠道'));
-  sec.appendChild(UI.field('直营门店 / 专柜', Work4.tagBox(p.offlineDirect, v=>{p.offlineDirect=v;autosave()})));
-  sec.appendChild(UI.field('经销商 / 代理商', Work4.tagBox(p.offlineDistrib, v=>{p.offlineDistrib=v;autosave()})));
-  sec.appendChild(UI.field('超市 / KA / 零售', Work4.tagBox(p.offlineRetail, v=>{p.offlineRetail=v;autosave()})));
-  sec.appendChild(UI.field('线下备注', el('textarea',{rows:2,oninput:e=>{p.offlineNotes=e.target.value;autosave()}},p.offlineNotes)));
+  plate.appendChild(el('h4',{},'线下渠道'));
+  plate.appendChild(UI.field('直营门店 / 专柜', Work4.tagBox(p.offlineDirect, v=>{p.offlineDirect=v;autosave()})));
+  plate.appendChild(UI.field('经销商 / 代理商', Work4.tagBox(p.offlineDistrib, v=>{p.offlineDistrib=v;autosave()})));
+  plate.appendChild(UI.field('超市 / KA / 零售', Work4.tagBox(p.offlineRetail, v=>{p.offlineRetail=v;autosave()})));
+  plate.appendChild(UI.field('线下备注', el('textarea',{rows:2,oninput:e=>{p.offlineNotes=e.target.value;autosave()}},p.offlineNotes)));
 
-  sec.appendChild(UI.field('关键合作伙伴', Work4.tagBox(p.keyPartners, v=>{p.keyPartners=v;autosave()})));
-  sec.appendChild(UI.field('渠道激励机制', el('textarea',{rows:3,oninput:e=>{p.channelIncentives=e.target.value;autosave()}},p.channelIncentives)));
+  plate.appendChild(UI.field('关键合作伙伴', Work4.tagBox(p.keyPartners, v=>{p.keyPartners=v;autosave()})));
+  plate.appendChild(UI.field('渠道激励机制', el('textarea',{rows:3,oninput:e=>{p.channelIncentives=e.target.value;autosave()}},p.channelIncentives)));
 
   const xc=el('div',{class:'x-culture'});
   xc.appendChild(el('h4',{},'本地渠道关系'));
   xc.appendChild(UI.field('本地经销商/代理合作模式、账期、返点与关系维护',
     el('textarea',{rows:3,oninput:e=>{p.localChannelRelations=e.target.value;autosave()}},p.localChannelRelations||'')));
-  sec.appendChild(xc);
+  plate.appendChild(xc);
 
   // channel structure
-  sec.appendChild(el('h4',{},'渠道结构（销售占比）'));
+  plate.appendChild(el('h4',{},'渠道结构（销售占比）'));
   if(!p.structure.length){
     p.structure=[
       {name:'线上', children:[{name:'自营',share:20},{name:'第三方平台',share:80}]},
@@ -450,7 +463,7 @@ Work4.render.place = function(sec){
   p.structure.forEach((grp,gi)=>{
     grp.children.forEach((ch,ci)=>{
       const tr=el('tr');
-      if(ci===0) tr.appendChild(el('td',{rowspan:grp.children.length,style:{'font-style':'italic','vertical-align':'top'}},
+      if(ci===0) tr.appendChild(el('td',{rowspan:grp.children.length,style:{'font-style':'normal','vertical-align':'top'}},
         el('input',{value:grp.name,oninput:e=>{grp.name=e.target.value;autosave()}})));
       tr.appendChild(el('td',{},el('input',{value:ch.name,oninput:e=>{ch.name=e.target.value;autosave()}})));
       tr.appendChild(el('td',{},el('input',{type:'number',min:0,max:100,value:ch.share,oninput:e=>{ch.share=parseInt(e.target.value)||0;autosave()}})));
@@ -458,18 +471,18 @@ Work4.render.place = function(sec){
       tb.appendChild(tr);
     });
   });
-  t.appendChild(tb); table.appendChild(t); sec.appendChild(table);
-  sec.appendChild(el('div',{class:'row'},
+  t.appendChild(tb); table.appendChild(t); plate.appendChild(table);
+  plate.appendChild(el('div',{class:'row'},
     el('button',{class:'small',onclick:()=>{p.structure[0].children.push({name:'',share:0});autosave();Work4.renderStep('place')}},'+ 线上二级'),
     el('button',{class:'small',onclick:()=>{p.structure[1].children.push({name:'',share:0});autosave();Work4.renderStep('place')}},'+ 线下二级')
   ));
 
   // charts
   if(p.structure.length){
-    sec.appendChild(el('h4',{},'渠道占比图'));
-    const plate=el('section',{class:'plate'},el('span',{class:'plate-label'},'G7 · TREE LR / F13 · NESTED TREEMAP'));
-    Work4.renderChannelTree(plate, p.structure);
-    sec.appendChild(plate);
+    plate.appendChild(el('h4',{},'渠道占比图'));
+    const chartPlate=el('section',{class:'plate'},el('span',{class:'plate-label'},'G7 · TREE LR / F13 · NESTED TREEMAP'));
+    Work4.renderChannelTree(chartPlate, p.structure);
+    // chartPlate already has the chart appended via renderBarChart/Work4.renderChannelTree
   }
 
   Work4.aiBox(sec,'place',
@@ -482,7 +495,7 @@ Work4.render.place = function(sec){
       Work4.renderStep('place');
     }
   );
-  if(p.aiResult) sec.appendChild(el('div',{class:'plate'},el('span',{class:'plate-label'},'PLACE STRATEGY'),el('div',{style:{'white-space':'pre-wrap'}},p.aiResult)));
+  if(p.aiResult) plate.appendChild(el('div',{class:'plate'},el('span',{class:'plate-label'},'PLACE STRATEGY'),el('div',{style:{'white-space':'pre-wrap'}},p.aiResult)));
 };
 
 Work4.renderChannelTree=function(container, structure){
@@ -493,7 +506,7 @@ Work4.renderChannelTree=function(container, structure){
     const gh=Math.max(1,grp.children.length)*34;
     const gx=80, gy=y+gh/2;
     svg+=`<rect x="20" y="${y}" width="120" height="${gh}" fill="var(--color-paper-2)" stroke="var(--color-ink)"/>`;
-    svg+=`<text x="80" y="${gy+4}" text-anchor="middle" font-family="Playfair Display" font-style="italic" font-size="14" fill="var(--color-ink)">${esc(grp.name)}</text>`;
+    svg+=`<text x="80" y="${gy+4}" text-anchor="middle" font-family="Playfair Display" font-style="normal" font-size="14" fill="var(--color-ink)">${esc(grp.name)}</text>`;
     grp.children.forEach((ch,ci)=>{
       const cy=y+ci*34+17;
       const cw=10+String(ch.share)+4;
@@ -511,16 +524,17 @@ Work4.renderChannelTree=function(container, structure){
 
 /* ---------- PROMOTION ---------- */
 Work4.render.promotion = function(sec){
+  const plate = sec.querySelector('.plate');
   const p=state.work4.promotion;
   const r=state.work4.route;
   if(r.oemType && r.oemType!=='OBM'){
-    sec.appendChild(el('div',{class:'warning',style:{'font-size':'13px'}},
+    plate.appendChild(el('div',{class:'warning',style:{'font-size':'13px'}},
       el('strong',{},r.oemType+' 模式提示：'),
       el('span',{},' 此模式下面向 C 端的品牌广告/PR 主要由委托方负责。下表内容可用于企业级 B2B 传播（能力、认证、供应链），消费者品牌资产不会沉淀到本企业。')));
   }
-  sec.appendChild(UI.field('传播主题（一句话）', el('input',{value:p.theme,oninput:e=>{p.theme=e.target.value;autosave()}})));
+  plate.appendChild(UI.field('传播主题（一句话）', el('input',{value:p.theme,oninput:e=>{p.theme=e.target.value;autosave()}})));
 
-  sec.appendChild(el('h4',{},'广告 / 媒介投放'));
+  plate.appendChild(el('h4',{},'广告 / 媒介投放'));
   Work4.simpleTable(sec, p.advertising, [
     {key:'media',label:'媒介',type:'text'},
     {key:'budgetShare',label:'预算占比%',type:'number'},
@@ -530,37 +544,37 @@ Work4.render.promotion = function(sec){
 
   // budget chart
   if(p.advertising.length && p.advertising.some(a=>a.budgetShare)){
-    sec.appendChild(el('h4',{},'媒介预算'));
-    const plate=el('section',{class:'plate'},el('span',{class:'plate-label'},'L14 · HUNDRED FIELD · 媒介预算'));
+    plate.appendChild(el('h4',{},'媒介预算'));
+    const chartPlate=el('section',{class:'plate'},el('span',{class:'plate-label'},'L14 · HUNDRED FIELD · 媒介预算'));
     const total=p.advertising.reduce((a,b)=>a+(Number(b.budgetShare)||0),0);
     const seg=p.advertising.filter(a=>a.budgetShare).map((a,i)=>({label:a.media, count:Math.round(Number(a.budgetShare)/total*100), color:['#1a1a1a','#3a3a3a','#5a5a5a','#7a7a7a','#9a9a9a','#bababa'][i%6]}));
     const hf=el('div'); renderHundredField(hf, seg);
-    plate.appendChild(hf);
-    sec.appendChild(plate);
+    chartPlate.appendChild(hf);
+    // chartPlate already has the chart appended via renderBarChart/Work4.renderChannelTree
   }
 
-  sec.appendChild(el('h4',{},'公关事件'));
+  plate.appendChild(el('h4',{},'公关事件'));
   Work4.simpleTable(sec, p.pr, [
     {key:'event',label:'事件',type:'text'},
     {key:'timing',label:'时机',type:'text'},
     {key:'expectedReach',label:'预期触达',type:'text'}
   ], 'pr');
 
-  sec.appendChild(el('h4',{},'销售促进'));
+  plate.appendChild(el('h4',{},'销售促进'));
   Work4.simpleTable(sec, p.salesPromotion, [
     {key:'tactic',label:'手段',type:'text'},
     {key:'mechanic',label:'机制',type:'text'},
     {key:'period',label:'时段',type:'text'}
   ], 'salesPromotion');
 
-  sec.appendChild(el('h4',{},'CRM 与复购'));
-  sec.appendChild(el('div',{class:'grid2'},
+  plate.appendChild(el('h4',{},'CRM 与复购'));
+  plate.appendChild(el('div',{class:'grid2'},
     UI.field('CRM 工具', el('input',{value:p.crm.tool,oninput:e=>{p.crm.tool=e.target.value;autosave()}})),
     UI.field('会员体系', el('input',{value:p.crm.membership,oninput:e=>{p.crm.membership=e.target.value;autosave()}}))
   ));
-  sec.appendChild(UI.field('复购激励', el('input',{value:p.crm.repurchase,oninput:e=>{p.crm.repurchase=e.target.value;autosave()}})));
-  sec.appendChild(UI.field('CRM 备注', el('textarea',{rows:2,oninput:e=>{p.crm.notes=e.target.value;autosave()}},p.crm.notes)));
-  sec.appendChild(UI.field('内容策略（KOL/KOC、UGC、品牌叙事节奏）', el('textarea',{rows:3,oninput:e=>{p.contentStrategy=e.target.value;autosave()}},p.contentStrategy)));
+  plate.appendChild(UI.field('复购激励', el('input',{value:p.crm.repurchase,oninput:e=>{p.crm.repurchase=e.target.value;autosave()}})));
+  plate.appendChild(UI.field('CRM 备注', el('textarea',{rows:2,oninput:e=>{p.crm.notes=e.target.value;autosave()}},p.crm.notes)));
+  plate.appendChild(UI.field('内容策略（KOL/KOC、UGC、品牌叙事节奏）', el('textarea',{rows:3,oninput:e=>{p.contentStrategy=e.target.value;autosave()}},p.contentStrategy)));
 
   const xc=el('div',{class:'x-culture'});
   xc.appendChild(el('h4',{},'跨文化传播'));
@@ -568,7 +582,7 @@ Work4.render.promotion = function(sec){
   xc.appendChild(UI.field('禁忌与本地节日（宗教、颜色、符号、性别表达、营销节点）', el('textarea',{rows:2,oninput:e=>{p.taboos=e.target.value;autosave()}},p.taboos||'')));
   xc.appendChild(UI.field('KOL/KOC 分层（头部/腰部/素人及平台选择）', el('textarea',{rows:2,oninput:e=>{p.kolTiers=e.target.value;autosave()}},p.kolTiers||'')));
   xc.appendChild(UI.field('语言/翻译/本地代言', el('textarea',{rows:2,oninput:e=>{p.language=e.target.value;autosave()}},p.language||'')));
-  sec.appendChild(xc);
+  plate.appendChild(xc);
 
   Work4.aiBox(sec,'promotion',
     `你是整合营销传播专家。"${state.work1.sbu.name}"进入"${(state.work2.markets.find(m=>m.id===state.work2.matrix.selectedMarketId)||{}).name||''}"，价值主张"${state.work3.proposition.chosenValueText}"，品牌人格 ${state.work3.proposition.mbti}，slogan"${state.work3.proposition.chosenSlogan}"，渠道 ${JSON.stringify(state.work4.place.structure)}。请给出：1) 传播主题；2) 媒介组合及预算占比；3) 内容节奏（上市/成长/成熟期）；4) 2-3 个公关事件创意；5) 销售促进机制；6) CRM 与复购激励。用 Markdown。媒介组合部分用 JSON 数组：[{"media":"","share":0,"message":"","kpi":""}]，share 总和 100。`,
@@ -579,14 +593,15 @@ Work4.render.promotion = function(sec){
       Work4.renderStep('promotion');
     }
   );
-  if(p.aiResult) sec.appendChild(el('div',{class:'plate'},el('span',{class:'plate-label'},'PROMOTION PLAN'),el('div',{style:{'white-space':'pre-wrap'}},p.aiResult)));
+  if(p.aiResult) plate.appendChild(el('div',{class:'plate'},el('span',{class:'plate-label'},'PROMOTION PLAN'),el('div',{style:{'white-space':'pre-wrap'}},p.aiResult)));
 };
 
 /* ---------- SUMMARY ---------- */
 Work4.render.summary = function(sec){
+  const plate = sec.querySelector('.plate');
   const p=state.work4, r=p.route;
   const global = r.scope!=='domestic';
-  sec.appendChild(el('h3',{},'路径与 4P 一致性核对'));
+  plate.appendChild(el('h3',{},'路径与 4P 一致性核对'));
   const checks=[
     [global?'出海范围已确定？':'市场范围已确定？', !!r.scope],
     [global?'进入模式已选择？':'微笑曲线位置已判断？', global ? !!r.entryMode : !!r.oemType],
@@ -599,23 +614,23 @@ Work4.render.summary = function(sec){
     checks.push(['政企关系/合规已记录？', !!r.politicalPower]);
   }
   checks.forEach(([q,ok])=>{
-    sec.appendChild(el('div',{style:{display:'flex',gap:'10px',alignItems:'center',padding:'8px 0',borderBottom:'1px solid var(--color-rule)'}},
+    plate.appendChild(el('div',{style:{display:'flex',gap:'10px',alignItems:'center',padding:'8px 0',borderBottom:'1px solid var(--color-rule)'}},
       el('span',{class:'tag '+(ok?'maroon':'')}, ok?'达成':'待补'),
       el('span',{},q)));
   });
 
-  sec.appendChild(el('hr',{class:'rule'}));
+  plate.appendChild(el('hr',{class:'rule'}));
   // Route plate
-  sec.appendChild(el('h3',{},'出海路径'));
-  sec.appendChild(el('div',{class:'plate'},el('span',{class:'plate-label'},'ROUTE'),
+  plate.appendChild(el('h3',{},'出海路径'));
+  plate.appendChild(el('div',{class:'plate'},el('span',{class:'plate-label'},'ROUTE'),
     el('div',{style:{'white-space':'pre-wrap'}}, Work4.summaryText('route'))));
 
   [['product','产品'],['price','价格'],['place','渠道'],['promotion','促销']].forEach(([k,label])=>{
-    sec.appendChild(el('h3',{},label));
-    sec.appendChild(el('div',{class:'plate'},el('span',{class:'plate-label'},(p[k].aiResult?'AI ':'')+label.toUpperCase()),
+    plate.appendChild(el('h3',{},label));
+    plate.appendChild(el('div',{class:'plate'},el('span',{class:'plate-label'},(p[k].aiResult?'AI ':'')+label.toUpperCase()),
       el('div',{style:{'white-space':'pre-wrap'}}, p[k].aiResult||Work4.summaryText(k))));
   });
-  sec.appendChild(el('div',{class:'row',style:{'margin-top':'20px'}},
+  plate.appendChild(el('div',{class:'row',style:{'margin-top':'20px'}},
     el('button',{class:'primary',onclick:()=>{
       state.work5.ch4_mix.route=Work4.summaryText('route');
       state.work5.ch4_mix.product=Work4.summaryText('product');
@@ -704,6 +719,7 @@ Work4.summaryText=function(k){
 
 /* ---------- HELPERS ---------- */
 Work4.simpleTable=function(sec, arr, cols, keyName){
+  const plate = (sec && sec.querySelector) ? sec.querySelector('.plate') : sec;
   const table=el('div',{class:'table-wrap'});
   const t=el('table',{class:'data'});
   t.innerHTML='<thead><tr>'+cols.map(c=>`<th>${c.label}</th>`).join('')+'<th style="width:50px"></th></tr></thead>';
@@ -724,15 +740,16 @@ Work4.simpleTable=function(sec, arr, cols, keyName){
     tr.appendChild(el('td',{},el('button',{class:'ghost small',onclick:()=>{arr.splice(i,1);autosave();Work4.renderStep(Work4.currentStepId());}},'删除')));
     tb.appendChild(tr);
   });
-  t.appendChild(tb); table.appendChild(t); sec.appendChild(table);
-  sec.appendChild(el('button',{class:'small',onclick:()=>{
+  t.appendChild(tb); table.appendChild(t); plate.appendChild(table);
+  plate.appendChild(el('button',{class:'small',onclick:()=>{
     const blank={}; cols.forEach(c=>blank[c.key]= c.type==='number'?null:'');
     arr.push(blank);
     autosave(); Work4.renderStep(Work4.currentStepId());
   }},'+ 添加'));
 };
 Work4.currentStepId=function(){
-  const t=document.querySelector('.subtabs .subtab.active');
+  // long-doc mode: no subtabs; identify current step by .step.active container
+  const t=document.querySelector('#steps4 .step.active');
   return t?t.dataset.step:null;
 };
 Work4.tagBox=function(arr, onChange){
@@ -741,6 +758,7 @@ Work4.tagBox=function(arr, onChange){
   return ti.el;
 };
 Work4.aiBox=function(sec,key,userPrompt,onResult){
+  const plate = (sec && sec.querySelector) ? sec.querySelector('.plate') : sec;
   const ai=el('div',{class:'ai-box'});
   const btn=el('button',{class:'primary',onclick:()=>{
     API.aiButton({
@@ -749,7 +767,7 @@ Work4.aiBox=function(sec,key,userPrompt,onResult){
       onResult:(r,raw)=>{ onResult(typeof r==='string'?r:raw); }
     });
   }},'用 AI 起草');
-  ai.appendChild(btn); sec.appendChild(ai);
+  ai.appendChild(btn); plate.appendChild(ai);
 };
 Work4.refreshDynamic=function(){};
 

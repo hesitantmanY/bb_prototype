@@ -43,10 +43,16 @@ Work2.renderStep = function(id){
   if(!sec) return;
   if(sec.dataset.rendered==='1'){ Work2.refreshDynamic(id); return; }
   sec.innerHTML='';
-  sec.appendChild(UI.stepHeader(
-    'STEP '+(Work2.steps.findIndex(s=>s.id===id)+1),
-    Work2.titles[id], Work2.subtitles[id]
+  const idx2 = Work2.steps.findIndex(s=>s.id===id);
+  sec.appendChild(el('div',{class:'sub-head'},
+    el('span',{class:'num'},'2.'+(idx2+1)),
+    el('h3',{}, Work2.titles[id])
   ));
+  const subEl2 = Work2.subtitles && Work2.subtitles[id];
+  if(subEl2){
+    sec.appendChild(el('p',{class:'lede', style:{fontFamily:'var(--font-display)', fontStyle:'normal', fontSize:'1.125rem', lineHeight:1.5, color:'var(--color-ink)', maxWidth:'62ch', margin:'0 0 28px'}}, subEl2));
+  }
+  sec.appendChild(el('div',{class:'plate plate--empty'}));
   const dn=UI.demoNote(2,id); if(dn) sec.appendChild(dn);
   // 工具栏「随机生成示例」只挂在 scope step-header 上（用户点哪个 tab 看到的都是它）
   // 顶栏"演示案例"菜单接管样本注入；Work 2 不再单独挂"随机生成示例"按钮。
@@ -131,17 +137,19 @@ Work2.render={};
 
 /* ---------- SCOPE ---------- */
 Work2.render.scope = function(sec){
+  const plate = sec.querySelector('.plate');
   const d=state.work2.scope;
-  sec.appendChild(UI.field('决策问题', el('input',{type:'text',value:d.question,oninput:e=>{d.question=e.target.value;autosave()}})));
-  sec.appendChild(UI.field('时间窗口', el('input',{type:'text',value:d.timeframe,oninput:e=>{d.timeframe=e.target.value;autosave()}})));
-  sec.appendChild(UI.field('约束条件（预算、品牌资产、合规等）', el('textarea',{rows:3,oninput:e=>{d.constraints=e.target.value;autosave()}},d.constraints)));
-  sec.appendChild(UI.field('候选市场数量', el('input',{type:'number',min:2,max:12,value:d.candidateCount,oninput:e=>{d.candidateCount=parseInt(e.target.value);autosave()}})));
+  plate.appendChild(UI.field('决策问题', el('input',{type:'text',value:d.question,oninput:e=>{d.question=e.target.value;autosave()}})));
+  plate.appendChild(UI.field('时间窗口', el('input',{type:'text',value:d.timeframe,oninput:e=>{d.timeframe=e.target.value;autosave()}})));
+  plate.appendChild(UI.field('约束条件（预算、品牌资产、合规等）', el('textarea',{rows:3,oninput:e=>{d.constraints=e.target.value;autosave()}},d.constraints)));
+  plate.appendChild(UI.field('候选市场数量', el('input',{type:'number',min:2,max:12,value:d.candidateCount,oninput:e=>{d.candidateCount=parseInt(e.target.value);autosave()}})));
 };
 
 /* ---------- INDICATORS ---------- */
 Work2.render.indicators = function(sec){
+  const plate = sec.querySelector('.plate');
   ['attractiveness','competitiveness'].forEach(k=>{
-    sec.appendChild(el('h3',{}, k==='attractiveness'?'市场吸引力指标':'企业竞争力指标'));
+    plate.appendChild(el('h3',{}, k==='attractiveness'?'市场吸引力指标':'企业竞争力指标'));
     const obj=state.work2[k];
     const table=el('div',{class:'table-wrap'});
     const t=el('table',{class:'data'});
@@ -156,8 +164,8 @@ Work2.render.indicators = function(sec){
       tr.appendChild(el('td',{}, el('button',{class:'ghost small',onclick:()=>{obj.indicators.splice(i,1);autosave();Work2.renderStep('indicators')}},'删除')));
       tb.appendChild(tr);
     });
-    t.appendChild(tb); table.appendChild(t); sec.appendChild(table);
-    sec.appendChild(el('div',{class:'row',style:{marginBottom:'20px'}},
+    t.appendChild(tb); table.appendChild(t); plate.appendChild(table);
+    plate.appendChild(el('div',{class:'row',style:{marginBottom:'20px'}},
       el('button',{onclick:()=>{obj.indicators.push({id:uid('ind'),name:'',rubric:{high:'',mid:'',low:''},weight:0,support:0,source:'user'});autosave();Work2.renderStep('indicators');}},'+ 添加指标')
     ));
   });
@@ -177,58 +185,59 @@ Work2.render.indicators = function(sec){
       }
     });
   }},'用 AI 生成指标体系');
-  ai.appendChild(btn); sec.appendChild(ai);
+  ai.appendChild(btn); plate.appendChild(ai);
 };
 
 /* ---------- DELPHI ---------- */
 Work2.render.delphi = function(sec){
+  const plate = sec.querySelector('.plate');
   const d=state.work2.delphi;
   const inds=[...state.work2.attractiveness.indicators,...state.work2.competitiveness.indicators];
-  if(inds.length<2){ sec.appendChild(el('div',{class:'warning'},'请先在「指标体系」步骤至少添加两个指标。')); return; }
+  if(inds.length<2){ plate.appendChild(el('div',{class:'warning'},'请先在「指标体系」步骤至少添加两个指标。')); return; }
 
   // panel avatars
-  sec.appendChild(el('h3',{},'专家团'));
+  plate.appendChild(el('h3',{},'专家团'));
   const panel=el('div',{class:'plate'});
   d.panel.forEach(ex=>{
     const status = d.status==='running' ? 'thinking' : (ex.round1?'done':'');
     const row=el('div',{class:'expert-row'},
       el('div',{class:'expert-avatar '+status}, ex.initial),
       el('div',{},
-        el('div',{style:'font-family:var(--font-display);font-style:italic;font-size:18px'}, ex.name),
+        el('div',{style:'font-family:var(--font-display);font-style:normal;font-size:18px'}, ex.name),
         el('div',{class:'hint'}, ex.focus)
       )
     );
     panel.appendChild(row);
   });
-  sec.appendChild(panel);
+  plate.appendChild(panel);
 
   // controls
   const bar=el('div',{class:'progress-bar'}, el('div'));
-  sec.appendChild(bar);
+  plate.appendChild(bar);
   const statusText=el('p',{class:'mono',style:'font-size:11px;color:var(--color-ink-2)'}, Work2.delphiStatus());
-  sec.appendChild(statusText);
+  plate.appendChild(statusText);
   const delphiBtn=el('button',{class:'primary',onclick:e=>Work2.runDelphi(e.currentTarget)},
     ({round1:'重新运行 Delphi',synthesis:'继续 Delphi',round2:'继续 Delphi',paused:'继续 Delphi',aborted:'继续 Delphi'})[d.status] || '运行 Delphi 两轮');
   const actions=el('div',{class:'ai-actions'}, delphiBtn);
-  sec.appendChild(actions);
+  plate.appendChild(actions);
 
   // results
   if(d.weights){
-    sec.appendChild(el('hr',{class:'rule'}));
-    sec.appendChild(el('h3',{},'最终权重'));
+    plate.appendChild(el('hr',{class:'rule'}));
+    plate.appendChild(el('h3',{},'最终权重'));
     ['attractiveness','competitiveness'].forEach(k=>{
-      sec.appendChild(el('h4',{}, k==='attractiveness'?'市场吸引力':'企业竞争力'));
+      plate.appendChild(el('h4',{}, k==='attractiveness'?'市场吸引力':'企业竞争力'));
       const items=state.work2[k].indicators.map(ind=>({
         label:ind.name, value:(d.weights[k]?.[ind.id]||0)*100
       })).sort((a,b)=>b.value-a.value);
       const c=el('section',{class:'plate'});
       renderBarChart(c, items, {unit:'%'});
-      sec.appendChild(c);
+      plate.appendChild(c);
     });
   }
   if(d.finalSynthesis){
-    sec.appendChild(el('h3',{},'主持人综合'));
-    sec.appendChild(el('div',{class:'callout'},
+    plate.appendChild(el('h3',{},'主持人综合'));
+    plate.appendChild(el('div',{class:'callout'},
       el('span',{class:'callout-title'},'HOST SYNTHESIS'),
       d.finalSynthesis));
   }
@@ -348,6 +357,7 @@ Work2.refreshDynamic=function(id){
 
 /* ---------- MARKETS ---------- */
 Work2.render.markets = function(sec){
+  const plate = sec.querySelector('.plate');
   const m=state.work2.markets;
   const table=el('div',{class:'table-wrap'});
   const t=el('table',{class:'data'});
@@ -363,8 +373,8 @@ Work2.render.markets = function(sec){
     tr.appendChild(el('td',{},el('button',{class:'ghost small',onclick:()=>{m.splice(i,1);autosave();Work2.renderStep('markets')},},'删除')));
     tb.appendChild(tr);
   });
-  t.appendChild(tb); table.appendChild(t); sec.appendChild(table);
-  sec.appendChild(el('div',{class:'row'},
+  t.appendChild(tb); table.appendChild(t); plate.appendChild(table);
+  plate.appendChild(el('div',{class:'row'},
     el('button',{onclick:()=>{m.push({id:uid('m'),name:'',region:'',population:'',gdpPerCapita:'',notes:'',scores:{}});autosave();Work2.renderStep('markets')}},'+ 添加市场'),
   ));
 
@@ -382,24 +392,25 @@ Work2.render.markets = function(sec){
       }
     });
   }},'用 AI 生成候选市场');
-  ai.appendChild(btn); sec.appendChild(ai);
+  ai.appendChild(btn); plate.appendChild(ai);
 };
 
 /* ---------- SCORING ---------- */
 Work2.render.scoring = function(sec){
+  const plate = sec.querySelector('.plate');
   const mks=state.work2.markets;
   const aInd=state.work2.attractiveness.indicators, cInd=state.work2.competitiveness.indicators;
-  if(!mks.length){ sec.appendChild(el('div',{class:'warning'},'请先添加候选市场。')); return; }
-  if(!aInd.length||!cInd.length){ sec.appendChild(el('div',{class:'warning'},'请先完成指标体系。')); return; }
+  if(!mks.length){ plate.appendChild(el('div',{class:'warning'},'请先添加候选市场。')); return; }
+  if(!aInd.length||!cInd.length){ plate.appendChild(el('div',{class:'warning'},'请先完成指标体系。')); return; }
 
   // controls
   const ai=el('div',{class:'ai-box'});
   const allBtn=el('button',{class:'primary',onclick:()=>Work2.aiScoreAll(allBtn,ai)},'AI 一键全部评分');
   ai.appendChild(allBtn);
-  sec.appendChild(ai);
+  plate.appendChild(ai);
 
   ['attractiveness','competitiveness'].forEach((axis,idx)=>{
-    sec.appendChild(el('h3',{}, idx===0?'市场吸引力':'企业竞争力'));
+    plate.appendChild(el('h3',{}, idx===0?'市场吸引力':'企业竞争力'));
     const inds = axis==='attractiveness'?aInd:cInd;
     const table=el('div',{class:'table-wrap'});
     const t=el('table',{class:'data'});
@@ -410,7 +421,7 @@ Work2.render.scoring = function(sec){
     const tb=el('tbody');
     mks.forEach(mk=>{
       const tr=el('tr');
-      tr.appendChild(el('td',{style:{'font-family':'var(--font-display)','font-style':'italic'}}, mk.name));
+      tr.appendChild(el('td',{style:{'font-family':'var(--font-display)','font-style':'normal'}}, mk.name));
       inds.forEach(ind=>{
         const val=mk.scores[ind.id];
         const src=mk['src_'+ind.id];
@@ -430,7 +441,7 @@ Work2.render.scoring = function(sec){
       });
       tb.appendChild(tr);
     });
-    t.appendChild(tb); table.appendChild(t); sec.appendChild(table);
+    t.appendChild(tb); table.appendChild(t); plate.appendChild(table);
   });
 };
 Work2.aiScoreAll = function(btn, container){
@@ -480,14 +491,14 @@ Work2.computeMatrix = function(){
   });
 };
 Work2.render.matrix = function(sec){
+  const plate = sec.querySelector('.plate');
   const pts=Work2.computeMatrix();
-  if(!pts.length){ sec.appendChild(el('div',{class:'warning'},'请先完成候选市场与评分。')); return; }
-  const plate=el('section',{class:'plate'},
+  if(!pts.length){ plate.appendChild(el('div',{class:'warning'},'请先完成候选市场与评分。')); return; }
+  const scatterPlate=el('section',{class:'plate'},
     el('span',{class:'plate-label'},'F8 · PLUMB SCATTER · 吸引力 × 竞争力')
   );
-  sec.appendChild(plate);
   renderMatrix({
-    container:plate, points:pts.map(p=>({id:p.id,label:p.name,x:p.x,y:p.y})),
+    container:scatterPlate, points:pts.map(p=>({id:p.id,label:p.name,x:p.x,y:p.y})),
     xLabel:'企业竞争力（加权）', yLabel:'市场吸引力（加权）',
     xCut:state.work2.matrix.xCut, yCut:state.work2.matrix.yCut,
     selectedId:state.work2.matrix.selectedMarketId,
@@ -497,14 +508,14 @@ Work2.render.matrix = function(sec){
   });
 
   // controls
-  sec.appendChild(el('div',{class:'grid3',style:{marginTop:'14px'}},
+  plate.appendChild(el('div',{class:'grid3',style:{marginTop:'14px'}},
     UI.field('X 轴切分线（留空=中位数）', el('input',{type:'number',min:0,max:10,step:0.1,value:state.work2.matrix.xCut??'',oninput:e=>{state.work2.matrix.xCut=e.target.value===''?null:parseFloat(e.target.value);autosave();Work2.renderStep('matrix')}})),
     UI.field('Y 轴切分线（留空=中位数）', el('input',{type:'number',min:0,max:10,step:0.1,value:state.work2.matrix.yCut??'',oninput:e=>{state.work2.matrix.yCut=e.target.value===''?null:parseFloat(e.target.value);autosave();Work2.renderStep('matrix')}})),
     UI.field('矩阵备注', el('input',{type:'text',value:state.work2.matrix.notes,oninput:e=>{state.work2.matrix.notes=e.target.value;autosave()}}))
   ));
 
   // ranking table
-  sec.appendChild(el('h3',{},'排名'));
+  plate.appendChild(el('h3',{},'排名'));
   const table=el('div',{class:'table-wrap'});
   const t=el('table',{class:'data'});
   t.innerHTML='<thead><tr><th>#</th><th>市场</th><th>吸引力</th><th>竞争力</th><th>象限</th><th>合计</th></tr></thead>';
@@ -515,7 +526,7 @@ Work2.render.matrix = function(sec){
     const q=p.x>=xCut&&p.y>=yCut?'明星':p.x<xCut&&p.y>=yCut?'潜力':p.x>=xCut&&p.y<yCut?'产能':'放弃';
     const tr=el('tr',{},
       el('td',{},String(i+1)),
-      el('td',{style:{'font-style':'italic'}},p.name+(p.id===state.work2.matrix.selectedMarketId?' *':'')) ,
+      el('td',{style:{'font-style':'normal'}},p.name+(p.id===state.work2.matrix.selectedMarketId?' *':'')) ,
       el('td',{class:'mono'},p.y.toFixed(2)),
       el('td',{class:'mono'},p.x.toFixed(2)),
       el('td',{},el('span',{class:'tag '+(q==='明星'?'maroon':'')},q)),
@@ -523,23 +534,24 @@ Work2.render.matrix = function(sec){
     );
     tb.appendChild(tr);
   });
-  t.appendChild(tb); table.appendChild(t); sec.appendChild(table);
+  t.appendChild(tb); table.appendChild(t); plate.appendChild(table);
 };
 
 /* ---------- DECISION ---------- */
 Work2.render.decision = function(sec){
+  const plate = sec.querySelector('.plate');
   const d=state.work2.decision;
   const sel=state.work2.markets.find(m=>m.id===state.work2.matrix.selectedMarketId);
-  sec.appendChild(el('div',{class:'callout'},
+  plate.appendChild(el('div',{class:'callout'},
     el('span',{class:'callout-title'},'已选目标市场'),
     sel?sel.name+' · '+ (sel.region||''):'尚未在矩阵中选择市场'
   ));
-  sec.appendChild(UI.field('选择理由 / 战略契合度', el('textarea',{rows:4,oninput:e=>{d.rationale=e.target.value;autosave()}},d.rationale)));
-  sec.appendChild(UI.field('进入次序（如有多个市场）', el('input',{type:'text',value:d.sequence,oninput:e=>{d.sequence=e.target.value;autosave()}})));
+  plate.appendChild(UI.field('选择理由 / 战略契合度', el('textarea',{rows:4,oninput:e=>{d.rationale=e.target.value;autosave()}},d.rationale)));
+  plate.appendChild(UI.field('进入次序（如有多个市场）', el('input',{type:'text',value:d.sequence,oninput:e=>{d.sequence=e.target.value;autosave()}})));
   const risks=UI.tagsInput(d.risks||[]);
   risks.el.querySelector('input').addEventListener('blur',()=>{d.risks=risks.get();autosave()});
-  sec.appendChild(UI.field('关键风险与对冲方式', risks.el));
-  sec.appendChild(UI.field('下一步行动', el('textarea',{rows:3,oninput:e=>{d.nextSteps=e.target.value;autosave()}},d.nextSteps)));
+  plate.appendChild(UI.field('关键风险与对冲方式', risks.el));
+  plate.appendChild(UI.field('下一步行动', el('textarea',{rows:3,oninput:e=>{d.nextSteps=e.target.value;autosave()}},d.nextSteps)));
 
   const ai=el('div',{class:'ai-box'});
   const btn=el('button',{class:'primary',onclick:()=>{
@@ -556,7 +568,7 @@ Work2.render.decision = function(sec){
       }
     });
   }},'用 AI 起草决策说明');
-  ai.appendChild(btn); sec.appendChild(ai);
+  ai.appendChild(btn); plate.appendChild(ai);
 };
 
 /* ---------- EXPORT ---------- */

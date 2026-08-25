@@ -35,8 +35,8 @@ intent only and should NOT be used in code.
 
 ## Typography
 
-- Display: Playfair Display 700/900 (Latin) · ChillDuanCN 700 (CJK, web font) — display headings roman, italic reserved for body emphasis only
-- Body:    Lora 400/500 (Latin) · ChillDuanCN 400 (CJK) — paragraphs, field labels in italic when used as sentence labels
+- Display: Playfair Display 700/900 (Latin) · ChillDuanCN 700 (CJK, web font) — display headings roman（全站禁斜体：所有文字一律 font-style: normal，包括 em / 标签 / 图表 SVG 文本）
+- Body:    Lora 400/500 (Latin) · ChillDuanCN 400 (CJK) — paragraphs, field labels（同样禁斜体，用字重/颜色区分层级）
 - Mono:    JetBrains Mono 400/500 (Latin) · ChillDuanCN 400 (CJK) — eyebrows, tags, table headers, monospaced data
 - Display tracking: -0.01em
 - Type scale anchor:
