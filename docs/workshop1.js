@@ -51,8 +51,9 @@ Work1.defaultData = () => ({
       compliance:'',  // 合规：监管/资质/门槛
       // 3 段总结
       defensive:'', critical:'', structural:'',
-      // 微笑曲线收口
+      // 微笑曲线收口（曲线节点变化时自动推导，可手改；_vcSig 记录推导时的节点签名）
       smileCurve:'',
+      _vcSig:'',
       // 关键趋势
       trends:''
     }
@@ -569,100 +570,281 @@ Work1.render.sbu = function(sec){
 
 /* ---------- STEP 2: ENVIRONMENT ---------- */
 /* ---------- 微笑曲线（Smile Curve）----------
-   价值链 6 环节的 U 形附加值分布图: 研发/品牌两端的附加值最高,
-   中间制造/装配附加值最低, 末端售后略回升。
-   节点按 demo case 的 industry 动态选（demo-data.js 5 个 case 各自定义 valueChain.nodes）。
-   非 demo 模式 fallback 到通用节点。
+   价值链 6 环节的 U 形附加值分布图。
+   数据源优先级：
+   1) d.valueChain（AI 起草推导 / 用户手动调整，含 reason 依据）
+   2) demo case 预设（demo-data.js 各 case 的 valueChain.nodes）
+   3) 通用 fallback（理论曲线）
+   节点点击 → 行内改分（0-10），hover 显示分数依据（reason / tip）。
+   曲线收口（ourCapabilities.smileCurve）随节点变化自动推导，可手改，
+   供 Work3 定位 / Work5 策划书引用 —— 曲线是辅助，结论才是产出。
    用纯 SVG, 无外部依赖, 自适应宽度 (viewBox 800x320)。 */
-Work1.renderSmileCurve = function(){
-  const W=800, H=320, padL=60, padR=40, padT=30, padB=80;
-  const cw=W-padL-padR, ch=H-padT-padB;
-  // 6 环节: 按 demo case 选节点；非 demo 走通用 fallback
-  let nodes, curveLabel, curveTip;
+Work1.smileCurveData = function(){
+  const d = state.work1.environment;
+  // 1) 用户/AI 推导数据
+  if(Array.isArray(d.valueChain) && d.valueChain.length){
+    return {nodes: d.valueChain, curveLabel:'我的价值链',
+      curveTip:'AI 依据你的实况/竞品/资源盘点推导的附加值分布；点节点调整分数，改完自动更新下方结论。'};
+  }
+  // 2) demo case 预设
   const dc = (typeof state!=='undefined' && state.meta && state.meta.demoCase) || null;
   if (dc && typeof DemoData!=='undefined' && DemoData.cases && DemoData.cases[dc] && DemoData.cases[dc].meta && DemoData.cases[dc].meta.valueChain){
     const vc = DemoData.cases[dc].meta.valueChain;
-    nodes = vc.nodes;
-    curveLabel = vc.curve;
-    curveTip = '本案例价值链: ' + vc.curve + ' — 6 节点附加值按行业实际分布。';
-  } else {
-    // 通用 fallback（适合任何 B2C / B2B）
-    nodes = [
-      {label:'创意/概念',  v:7.5, tip:'商业模式/用户洞察/选题'},
-      {label:'研发/设计',  v:8.5, tip:'产品/课程/菜谱设计 — 高附加值'},
-      {label:'采购/生产',  v:4.0, tip:'原料/代工/中央厨房 — 微笑曲线谷底'},
-      {label:'渠道/触达',  v:5.0, tip:'渠道/媒介/平台/本地配送'},
-      {label:'品牌/营销',  v:9.0, tip:'品牌/口碑/内容 — 最高附加值'},
-      {label:'复购/服务',  v:6.0, tip:'客服/CRM/会员/续费'}
-    ];
-    curveLabel = '通用价值链';
-    curveTip = '微笑曲线 (Stan Shih, 1992): 创意/设计与品牌营销两端附加值最高, 中段采购/生产最低。';
+    return {nodes: vc.nodes, curveLabel: vc.curve,
+      curveTip:'本案例价值链: ' + vc.curve + ' — 6 节点附加值按行业实际分布。'};
   }
-  const xFor = (i) => padL + (i/(nodes.length-1))*cw;
-  const yFor = (v) => padT + (1 - v/10) * ch;
-  // 平滑路径 (Bezier)
-  let path = `M ${xFor(0)} ${yFor(nodes[0].v)}`;
-  for(let i=1; i<nodes.length; i++){
-    const px = xFor(i-1), py = yFor(nodes[i-1].v);
-    const x = xFor(i), y = yFor(nodes[i].v);
-    const cx1 = px + (x-px)*0.5, cy1 = py;
-    const cx2 = px + (x-px)*0.5, cy2 = y;
-    path += ` C ${cx1} ${cy1}, ${cx2} ${cy2}, ${x} ${y}`;
+  // 3) 通用 fallback（适合任何 B2C / B2B）
+  return {nodes:[
+    {label:'创意/概念',  v:7.5, tip:'商业模式/用户洞察/选题'},
+    {label:'研发/设计',  v:8.5, tip:'产品/课程/菜谱设计 — 高附加值'},
+    {label:'采购/生产',  v:4.0, tip:'原料/代工/中央厨房 — 微笑曲线谷底'},
+    {label:'渠道/触达',  v:5.0, tip:'渠道/媒介/平台/本地配送'},
+    {label:'品牌/营销',  v:9.0, tip:'品牌/口碑/内容 — 最高附加值'},
+    {label:'复购/服务',  v:6.0, tip:'客服/CRM/会员/续费'}
+  ], curveLabel:'通用价值链',
+    curveTip:'微笑曲线 (Stan Shih, 1992): 创意/设计与品牌营销两端附加值最高, 中段采购/生产最低。'};
+};
+
+// 曲线收口：从节点自动推导一句话结论（图只是辅助，结论才是给后续步骤的输入）
+Work1.smileConclusion = function(){
+  const nodes = (Work1.smileCurveData().nodes||[]).filter(n=>n && typeof n.v==='number');
+  if(!nodes.length) return '';
+  const min = nodes.reduce((a,b)=>a.v<=b.v?a:b);
+  const max = nodes.reduce((a,b)=>a.v>=b.v?a:b);
+  if(min.label===max.label || min.v===max.v){
+    return `各环节附加值差异不大，建议从「${max.label}」环节（${max.v} 分）寻找差异化突破口。`;
   }
-  // 构造 SVG 字符串 (用 innerHTML 注入; 不需要 appendChild 链)
-  const svgOpen = `<svg viewBox="0 0 ${W} ${H}" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg" style="width:100%;height:auto;max-height:380px;display:block;margin:0 auto">`;
-  const grad = `<defs>
-    <linearGradient id="smile-grad" x1="0" y1="0" x2="0" y2="1">
-      <stop offset="0%" stop-color="var(--color-ink)" stop-opacity="0.18"/>
-      <stop offset="100%" stop-color="var(--color-ink)" stop-opacity="0.02"/>
-    </linearGradient>
-  </defs>`;
-  // 区域填充
-  const baseY = yFor(0);
-  const areaPath = path + ` L ${xFor(nodes.length-1)} ${baseY} L ${xFor(0)} ${baseY} Z`;
-  // 标签
-  const labels = nodes.map((n,i) => {
-    const x = xFor(i), y = yFor(n.v);
-    // 名字在上方（高值时）或下方（低值时）
-    const isHigh = n.v >= 6;
-    const labelY = isHigh ? y - 16 : y + 24;
-    const valueY = isHigh ? y - 4 : y + 36;
-    const valueColor = n.v >= 7 ? 'var(--color-accent)' : (n.v <= 3 ? 'var(--color-ink-2)' : 'var(--color-ink)');
-    return `
-      <g>
-        <circle cx="${x}" cy="${y}" r="5" fill="var(--color-ink)"/>
-        <text x="${x}" y="${labelY}" text-anchor="middle" font-family="var(--font-display)" font-style="normal" font-size="14" fill="var(--color-ink)">${n.label}</text>
-        <text x="${x}" y="${valueY}" text-anchor="middle" font-family="var(--font-mono)" font-size="11" fill="${valueColor}">附加值 ${n.v}</text>
-        <title>${n.tip}</title>
-      </g>`;
-  }).join('');
-  // 价值链底轴
-  const axisY = yFor(0);
-  const axis = `
-    <line x1="${padL}" y1="${axisY}" x2="${W-padR}" y2="${axisY}" stroke="var(--color-rule)" stroke-width="1" stroke-dasharray="3,3"/>
-    <text x="${padL-8}" y="${axisY+4}" text-anchor="end" font-family="var(--font-mono)" font-size="10" fill="var(--color-ink-2)">低</text>
-    <text x="${padL-8}" y="${padT+10}" text-anchor="end" font-family="var(--font-mono)" font-size="10" fill="var(--color-ink-2)">高</text>
-    <text x="${W-padR+8}" y="${axisY+4}" text-anchor="start" font-family="var(--font-mono)" font-size="10" fill="var(--color-ink-2)">价值链 →</text>
-  `;
-  // 谷底提示
-  const valley = `
-    <text x="${xFor(2)}" y="${H-padB+20}" text-anchor="middle" font-family="var(--font-mono)" font-size="10" fill="var(--color-accent)" font-style="normal">↑ 微笑曲线谷底: 最低附加值</text>
-  `;
-  const svg = svgOpen + grad
-    + `<path d="${areaPath}" fill="url(#smile-grad)"/>`
-    + `<path d="${path}" fill="none" stroke="var(--color-ink)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>`
-    + axis
-    + labels
-    + valley
-    + `<text x="${W/2}" y="${H-10}" text-anchor="middle" font-family="var(--font-mono)" font-size="10" fill="var(--color-ink-2)" letter-spacing="0.15em">SMILE CURVE · 价值链附加值分布</text>`
-    + `</svg>`;
+  return `当前价值链重心在「${min.label}」（${min.v} 分，全链最低），建议向「${max.label}」（${max.v} 分，全链最高）移动：把资源从低附加环节逐步挪向高附加环节，提升整体利润弹性。`;
+};
+
+// 按分数档位即时生成解释（拖动节点时本地给出"为什么是这个分"）。
+// 阈值：高附加 ≥7、中段 4-6.9、低附加 ≤3.9
+Work1.smileLocalReason = function(label, v){
+  if(v >= 7)  return `${label} 处于高附加值区（${v}）：资源/能力/认知/价格力表现突出，是利润核心，建议持续投入并对外强化。`;
+  if(v >= 4)  return `${label} 处于中段（${v}）：提供基础支撑，但难以独立溢价，需配合上下游环节放大价值。`;
+  return `${label} 处于低附加值区（${v}）：标准品化或被替代风险高，外部采购/外包/数字化往往比自建更划算。`;
+};
+
+// 把 value 吸附到 0.5 步长
+Work1._snapV = function(v){
+  const s = Math.round(v / 0.5) * 0.5;
+  return Math.max(0, Math.min(10, s));
+};
+
+Work1._vcSig = function(nodes){
+  return (nodes||[]).map(n=>n.label+'#'+n.v).join('|');
+};
+
+Work1.renderSmileCurve = function(){
+  const d = state.work1.environment;
+  const cap = d.ourCapabilities || (d.ourCapabilities = {});
+  const W=800, H=320, padL=60, padR=40, padT=30, padB=80;
+  const cw=W-padL-padR, ch=H-padT-padB;
+  const selNodes = () => Work1.smileCurveData().nodes;
+  // SVG 几何：可重复调用的纯函数
+  const xFor = (i) => padL + (i/(Math.max(1,(selNodes().length-1))))*cw;
+  const yFor = (v) => padT + (1 - Math.max(0,Math.min(10,v)) / 10) * ch;
+  const vForY = (y) => {  // 反推：pixel y → 分数 0-10
+    const v = (1 - (y - padT) / ch) * 10;
+    return Work1._snapV(v);
+  };
+  // 实时改分（不重绘，只更新该节点的圆+文字+title+线段），用于拖拽中
+  const liveSetNode = (i, newV) => {
+    const svg = wrap.querySelector('svg');
+    if(!svg) return;
+    const nodes = selNodes();
+    nodes[i].v = newV;
+    const cx = xFor(i), cy = yFor(newV);
+    const c = svg.querySelector('circle.smile-node[data-idx="'+i+'"]');
+    const tx = svg.querySelector('text[data-label-idx="'+i+'"]');
+    const tv = svg.querySelector('text[data-value-idx="'+i+'"]');
+    if(c){ c.setAttribute('cy', cy); c.setAttribute('r', 9); }  // 拖拽中放大
+    if(tx){
+      const labelY = newV >= 6 ? cy - 16 : cy + 24;
+      tx.setAttribute('y', labelY);
+    }
+    if(tv){
+      const valueY = newV >= 6 ? cy - 4 : cy + 36;
+      tv.setAttribute('y', valueY);
+      tv.textContent = '附加值 ' + newV;
+    }
+    // 重建曲线 path（节点圆心变了）
+    const path = 'M ' + xFor(0) + ' ' + yFor(nodes[0].v) + nodes.slice(1).map((n,j)=>{
+      const px = xFor(j), py = yFor(nodes[j].v), x = xFor(j+1), y = yFor(n.v);
+      return ' C ' + (px+(x-px)*0.5) + ' ' + py + ', ' + (px+(x-px)*0.5) + ' ' + y + ', ' + x + ' ' + y;
+    }).join('');
+    const linePath = svg.querySelector('path.smile-line');
+    const areaPath = svg.querySelector('path.smile-area');
+    if(linePath) linePath.setAttribute('d', path);
+    if(areaPath){
+      const baseY = yFor(0);
+      areaPath.setAttribute('d', path + ' L ' + xFor(nodes.length-1) + ' ' + baseY + ' L ' + xFor(0) + ' ' + baseY + ' Z');
+    }
+  };
+  const buildSvg = (nodes) => {
+    let path = `M ${xFor(0)} ${yFor(nodes[0].v)}`;
+    for(let i=1; i<nodes.length; i++){
+      const px = xFor(i-1), py = yFor(nodes[i-1].v);
+      const x = xFor(i), y = yFor(nodes[i].v);
+      const cx1 = px + (x-px)*0.5, cy1 = py;
+      const cx2 = px + (x-px)*0.5, cy2 = y;
+      path += ` C ${cx1} ${cy1}, ${cx2} ${cy2}, ${x} ${y}`;
+    }
+    const svgOpen = `<svg viewBox="0 0 ${W} ${H}" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg" style="width:100%;height:auto;max-height:380px;display:block;margin:0 auto">`;
+    const grad = `<defs>
+      <linearGradient id="smile-grad" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0%" stop-color="var(--color-ink)" stop-opacity="0.18"/>
+        <stop offset="100%" stop-color="var(--color-ink)" stop-opacity="0.02"/>
+      </linearGradient>
+    </defs>`;
+    const baseY = yFor(0);
+    const areaPath = path + ` L ${xFor(nodes.length-1)} ${baseY} L ${xFor(0)} ${baseY} Z`;
+    const labels = nodes.map((n,i) => {
+      const x = xFor(i), y = yFor(n.v);
+      const isHigh = n.v >= 6;
+      const labelY = isHigh ? y - 16 : y + 24;
+      const valueY = isHigh ? y - 4 : y + 36;
+      const valueColor = n.v >= 7 ? 'var(--color-accent)' : (n.v <= 3 ? 'var(--color-ink-2)' : 'var(--color-ink)');
+      const why = n.reason || n.tip || '';
+      return `
+        <g>
+          <circle class="smile-node" data-idx="${i}" cx="${x}" cy="${y}" r="6" fill="var(--color-ink)"/>
+          <text data-label-idx="${i}" x="${x}" y="${labelY}" text-anchor="middle" font-family="var(--font-display)" font-style="normal" font-size="14" fill="var(--color-ink)">${n.label}</text>
+          <text data-value-idx="${i}" x="${x}" y="${valueY}" text-anchor="middle" font-family="var(--font-mono)" font-size="11" fill="${valueColor}">附加值 ${n.v}</text>
+          <title>${n.label} · ${n.v} 分\n${why}</title>
+        </g>`;
+    }).join('');
+    const axisY = yFor(0);
+    const axis = `
+      <line x1="${padL}" y1="${axisY}" x2="${W-padR}" y2="${axisY}" stroke="var(--color-rule)" stroke-width="1" stroke-dasharray="3,3"/>
+      <text x="${padL-8}" y="${axisY+4}" text-anchor="end" font-family="var(--font-mono)" font-size="10" fill="var(--color-ink-2)">低</text>
+      <text x="${padL-8}" y="${padT+10}" text-anchor="end" font-family="var(--font-mono)" font-size="10" fill="var(--color-ink-2)">高</text>
+      <text x="${W-padR+8}" y="${axisY+4}" text-anchor="start" font-family="var(--font-mono)" font-size="10" fill="var(--color-ink-2)">价值链 →</text>
+    `;
+    const valley = `
+      <text x="${xFor(2)}" y="${H-padB+20}" text-anchor="middle" font-family="var(--font-mono)" font-size="10" fill="var(--color-accent)" font-style="normal">↑ 微笑曲线谷底: 最低附加值</text>
+    `;
+    return svgOpen + grad
+      + `<path class="smile-area" d="${areaPath}" fill="url(#smile-grad)"/>`
+      + `<path class="smile-line" d="${path}" fill="none" stroke="var(--color-ink)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>`
+      + axis + labels + valley
+      + `<text x="${W/2}" y="${H-10}" text-anchor="middle" font-family="var(--font-mono)" font-size="10" fill="var(--color-ink-2)" letter-spacing="0.15em">SMILE CURVE · 价值链附加值分布</text>`
+      + `</svg>`;
+  };
   const wrap = el('div', {class:'smile-curve-wrap', style:'margin:12px 0 18px;padding:12px 16px;background:var(--color-paper-2);border:1px solid var(--color-rule)'});
-  wrap.innerHTML = svg;
-  // 标题 + 简短说明
-  const cap = el('div', {class:'muted', style:'font-size:12px;line-height:1.6;margin-top:6px;color:var(--muted, #888)'},
-    curveTip);
-  wrap.appendChild(cap);
+  const capEl = el('div', {class:'muted', style:'font-size:12px;line-height:1.6;margin-top:6px;color:var(--muted, #888)'});
+  const concEl = el('div', {style:'margin-top:10px;padding:10px 12px;border-left:3px solid var(--color-accent);background:var(--color-paper);font-size:13px;line-height:1.7',
+    contenteditable:'true',
+    oninput:e=>{
+      cap.smileCurve = e.target.textContent;
+      d._vcSig = Work1._vcSig(selNodes());  // 手改后签名对齐，节点不变则不再重算
+      autosave();
+    }}, '');
+
+  // 拖拽：把节点绑定 pointer events。SVG viewBox 内的 y 直接映射到分数
+  const bindDrag = () => {
+    const svg = wrap.querySelector('svg');
+    if(!svg) return;
+    const nodes = svg.querySelectorAll('circle.smile-node');
+    nodes.forEach(c => {
+      c.style.cursor = 'ns-resize';
+      let dragging = false, idx = -1;
+      const getY = (e) => {
+        // 把 clientY 换算到 viewBox y
+        const r = svg.getBoundingClientRect();
+        const ratio = H / r.height;
+        return (e.clientY - r.top) * ratio;
+      };
+      const onDown = (e) => {
+        e.preventDefault();
+        dragging = true; idx = Number(c.dataset.idx);
+        c.setPointerCapture && c.setPointerCapture(e.pointerId);
+        c.setAttribute('r', 9);
+      };
+      const onMove = (e) => {
+        if(!dragging) return;
+        const y = Math.max(padT, Math.min(padT + ch, getY(e)));
+        const v = vForY(y);
+        liveSetNode(idx, v);
+        // 实时更新收口结论（拖拽中：仅更新收口，不落盘 + 不重写 svg）
+        const derived = Work1.smileConclusion();
+        concEl.textContent = derived;
+        // hover 状态：拖动时强制显示解释（即使光标不在节点上）
+        const cur = selNodes()[idx];
+        if(cur) c.querySelector('title') && (c.querySelector('title').textContent = cur.label + ' · ' + cur.v + ' 分\n' + Work1.smileLocalReason(cur.label, cur.v));
+      };
+      const onUp = () => {
+        if(!dragging) return;
+        dragging = false;
+        c.setAttribute('r', 6);
+        // 把改动写回 valueChain（首次拖动前可能还在用预设/通用曲线）
+        const cur = selNodes()[idx];
+        if(!cur) return;
+        if(!Array.isArray(d.valueChain) || !d.valueChain.length){
+          d.valueChain = selNodes().map(n=>({label:n.label, v:n.v, reason:n.reason||n.tip||''}));
+        } else if(!d.valueChain[idx]){
+          d.valueChain[idx] = {label:cur.label, v:cur.v, reason:cur.reason||cur.tip||''};
+        } else {
+          d.valueChain[idx].v = cur.v;
+        }
+        d._vcSig = '';  // 节点变了 → 下次 build 重算收口
+        autosave();
+        // 重建：把 title 还原为"现在分数"对应的本地解释（让 hover 看到新解读）
+        const n = selNodes()[idx];
+        const title = svg.querySelector('circle.smile-node[data-idx="'+idx+'"] title');
+        if(title){ title.textContent = n.label + ' · ' + n.v + ' 分\n' + Work1.smileLocalReason(n.label, n.v); }
+        // 收口文本落定
+        concEl.textContent = cap.smileCurve && d._vcSig === Work1._vcSig(selNodes()) ? cap.smileCurve : (cap.smileCurve = Work1.smileConclusion());
+        d._vcSig = Work1._vcSig(selNodes());
+        autosave();
+      };
+      c.addEventListener('pointerdown', onDown);
+      c.addEventListener('pointermove', onMove);
+      c.addEventListener('pointerup', onUp);
+      c.addEventListener('pointercancel', onUp);
+    });
+  };
+
+  const build = () => {
+    const sig = Work1._vcSig(selNodes());
+    if(sig !== d._vcSig || !(cap.smileCurve||'').trim()){
+      const derived = Work1.smileConclusion();
+      if(derived && (cap.smileCurve||'').trim() !== derived){
+        cap.smileCurve = derived;
+      }
+      d._vcSig = sig;
+    }
+    const sel = Work1.smileCurveData();
+    wrap.innerHTML = '';
+    wrap.appendChild(el('div', {html: buildSvg(sel.nodes)}));
+    capEl.textContent = sel.curveTip;
+    concEl.textContent = cap.smileCurve || Work1.smileConclusion();
+    wrap.appendChild(capEl);
+    wrap.appendChild(el('div', {style:'margin-top:12px;font-size:11px;letter-spacing:.16em;color:var(--color-ink-2)'},
+      '曲线收口 · 自动推导（可编辑，供 Work3 定位 / Work5 策划书引用）'));
+    wrap.appendChild(concEl);
+    // 拖拽使用提示
+    wrap.appendChild(el('div', {style:'font-size:11px;color:var(--color-ink-2);margin-top:6px;letter-spacing:.02em'},
+      '↑↓ 拖动节点调整分数（0-10，步长 0.5）；hover 看新解释'));
+    bindDrag();
+  };
+  build();
   return wrap;
+};
+
+// 微笑曲线"必须先 AI 起草"门禁：无自定义曲线且非演示时显示占位 + 起草按钮
+Work1.renderSmileCurveGate = function(){
+  const d = state.work1.environment;
+  const hasUserCurve = Array.isArray(d.valueChain) && d.valueChain.length>0;
+  const inDemo = state.meta && state.meta.isDemo && state.meta.demoCase;
+  if(hasUserCurve || inDemo) return Work1.renderSmileCurve();
+  return el('div', {style:'margin:12px 0 18px;padding:24px 18px;background:var(--color-paper-2);border:1px dashed var(--color-rule);text-align:center'},
+    el('div', {style:'font-size:13px;letter-spacing:.16em;color:var(--color-ink-2);margin-bottom:12px'},
+      '微笑曲线 · 待起草'),
+    el('p', {style:'font-size:13px;line-height:1.7;color:var(--color-ink-2);max-width:520px;margin:0 auto 16px'},
+      'AI 会根据你的 SBU（业务、品类、阶段、实况）和前面填的 PEST/竞品推导一条属于你的微笑曲线；之后你可以在图上拖动节点修改分数。'),
+    el('button', {class:'primary', id:'smile-draft-trigger'}, '让 AI 起草我的微笑曲线')
+  );
 };
 
 Work1.render.environment = function(sec){
@@ -725,6 +907,68 @@ Work1.render.environment = function(sec){
   // 兼容旧数据：环境顶层的 trends → 迁移到 ourCapabilities.trends
   if(d.trends && !d.ourCapabilities.trends) d.ourCapabilities.trends = d.trends;
 
+  // —— AI 起草入口（step 开头，PEST 之前）——
+  const aiWrap = el('div',{class:'ai-draft'});
+  const aiBtn = el('button',{type:'button',class:'ai-draft-btn',
+    onclick:()=>{
+      API.aiButton({
+        button:aiBtn, container:aiWrap, aiScope:'work1.environment',
+        label:'起草环境与竞争分析',
+        buildPrompt:()=>{
+          // 实况（业务基本情况）作为 AI 起草的依据；目标可空不强制
+          const basicsText=(()=>{
+            const bb=d.basics||{};
+            const kv=(label,obj)=> (obj && obj.actual && String(obj.actual).trim()) ? label+'='+obj.actual.trim() : null;
+            const parts=[
+              kv('规模',bb.scale), kv('范围',bb.scope), kv('产品',bb.products),
+              kv('客户',bb.customers), kv('供应链',bb.supply),
+              kv('市占',bb.performance&&bb.performance.share),
+              kv('ROI',bb.performance&&bb.performance.roi),
+              kv('年增',bb.performance&&bb.performance.growth)
+            ].filter(Boolean);
+            return parts.length ? '\n业务实况: '+parts.join('；') : '';
+          })();
+          return [{role:'system',content:'你是全球品牌战略顾问。基于 SBU 生成结构化市场分析。输出 JSON：{"political":"","economic":"","social":"","technological":"","industry":"市场格局摘要（活跃品牌/渗透率/价格带/垂直空白）","competitors":[{"name":"","price":"","strengths":"","weaknesses":"","position":""}],"ourCapabilities":{"delivery":"产品/服务交付能力（能交付什么？怎么交付？标准化？）","core":"核心能力/资源/关系（别人短期追不上的）","brand":"品牌资产/知名度/溢价能力","customer":"客户触达/渠道/关系","compliance":"监管/资质/准入门槛","defensive":"防御性优势（对手短期难复制的 1-2 点）","critical":"关键劣势（客户能直接感知的致命短板）","structural":"结构性劣势（受资源/位置限制、宜绕开）","smileCurve":"优势/劣势落在价值链哪一端、决定后续定位方向","trends":"3 个值得追踪的方向"},"valueChain":[{"label":"价值链环节名","v":0-10的分数,"reason":"为什么是这个分数——必须引用用户业务实况/竞品/资源盘点的具体事实作为依据"}]}。competitors 给 5-7 家同价位同场景直接竞品。valueChain 给 5-6 个环节（按该业务实际价值链命名，如：配方研发/原料采购/OEM代工/电商履约/品牌营销/客服会员），v 反映该环节对本业务的附加值高低，reason 必须基于用户提供的业务实况与能力盘点推导。'},
+            {role:'user',content:`SBU: ${state.work1.sbu.name}\n品类: ${state.work1.sbu.category}\n阶段: ${state.work1.sbu.stage}\n范围: ${state.work1.sbu.scope}\n概述: ${state.work1.sbu.summary}${basicsText}`}];
+        },
+        onResult:r=>{
+          if(!r){ showToast('解析失败'); return; }
+          // 只填空白：用户已填的字段保留，AI 只补空缺
+          ['political','economic','social','technological','industry'].forEach(k=>{ if(r[k] && !(d[k]||'').trim()) d[k]=r[k]; });
+          if(Array.isArray(r.competitors) && r.competitors.length && !d.competitors.length){
+            d.competitors=r.competitors.map(c=>({id:uid('c'),name:c.name||'',price:c.price||'',strengths:c.strengths||'',weaknesses:c.weaknesses||'',position:c.position||''}));
+          }
+          // 微笑曲线：AI 推导的 valueChain（仅在用户没有自定义曲线时写入）
+          if(Array.isArray(r.valueChain) && r.valueChain.length && !(Array.isArray(d.valueChain) && d.valueChain.length)){
+            d.valueChain = r.valueChain.map(x=>({
+              label:String(x.label||'').trim()||'环节',
+              v:Math.max(0,Math.min(10,Number(x.v)||0)),
+              reason:String(x.reason||'').trim()
+            }));
+          }
+          const cap = r.ourCapabilities || r.edges;
+          if(cap && typeof cap==='object'){
+            if(!d.ourCapabilities) d.ourCapabilities={};
+            const oldToNew = {manufacturing:'delivery', technology:'core', channel:'customer'};
+            Object.keys(cap).forEach(k=>{
+              if(cap[k]!=null){
+                const newKey = oldToNew[k] || k;
+                if(!(d.ourCapabilities[newKey]||'').trim()) d.ourCapabilities[newKey] = cap[k];
+              }
+            });
+          }
+          autosave(); Work1.rerender('environment');
+        }
+      });
+    }},
+    el('span',{class:'ai-draft-title'},'用 AI 起草环境与竞争分析'),
+    el('span',{class:'ai-draft-arrow'},'→')
+  );
+  aiWrap.appendChild(aiBtn);
+  aiWrap.appendChild(el('p',{class:'ai-draft-hint'},
+    '基于 SBU 一键生成 PEST 四维 · 市场格局 · 竞品 · 资源盘点 · 价值链。只填充空白项，已填内容不会被覆盖。'));
+  plate.appendChild(aiWrap);
+
   // —— PEST ——
   const pest=[
     ['political',  'P', '政治 / 政策 / 法规'],
@@ -753,24 +997,38 @@ Work1.render.environment = function(sec){
 
   // —— 业务基本情况（Step 2：六维实况/目标）——
   plate.appendChild(el('h3',{},'业务基本情况（实况 / 目标）'));
-  plate.appendChild(el('p',{class:'sbu-sub-lead'},'用六维表把业务现状结构化：规模与员工 / 业务范围 / 产品线 / 客户 / 供应链 / 最近业绩。每一维同时填实况（历史或当下数据）与目标（3-5 年期望值），概念阶段业务允许实况为空但目标必填。'));
+  plate.appendChild(el('p',{class:'sbu-sub-lead'},'用六维表把业务现状结构化。实况（当下或历史数据）是 AI 起草的依据，尽量填；目标（3-5 年期望值）定不下可以留空，不阻塞流程。'));
+  // 表头：列名（实况建议填 / 目标可空）
+  plate.appendChild(el('div',{class:'basics-head'},
+    el('span',{class:'basics-head-label'},'维度'),
+    el('span',{class:'basics-head-col'},'实况 · 当下/历史 · 建议填'),
+    el('span',{class:'basics-head-col'},'目标 · 3-5 年期望 · 可空')
+  ));
   const b=d.basics;
   const trio=(obj,phActual,phTarget)=>el('div',{class:'basics-trio'},
-    el('input',{type:'text',value:obj.actual||'',placeholder:phActual||'实况',oninput:e=>{obj.actual=e.target.value;autosave()}}),
-    el('input',{type:'text',value:obj.target||'',placeholder:phTarget||'目标',oninput:e=>{obj.target=e.target.value;autosave()}}));
+    el('input',{type:'text',value:obj.actual||'',placeholder:phActual||'实况（建议填）',oninput:e=>{obj.actual=e.target.value;autosave()}}),
+    el('input',{type:'text',value:obj.target||'',placeholder:phTarget||'目标（可空）',oninput:e=>{obj.target=e.target.value;autosave()}}));
   const basicsRow=(title,obj,phA,phT)=>el('div',{class:'basics-row'},
     el('span',{class:'basics-label'},title), trio(obj,phA,phT));
-  plate.appendChild(basicsRow('规模与员工（成立时间/面积/人数/资质）', b.scale));
-  plate.appendChild(basicsRow('业务范围（做什么 / 不做什么，排除项必写）', b.scope));
-  plate.appendChild(basicsRow('产品 / 业务线（SKU × 定价 × 场景 × 销量占比）', b.products));
-  plate.appendChild(basicsRow('客户（直接客户/渠道/与母公司差异）', b.customers));
-  plate.appendChild(basicsRow('供应链（来源/复用与新增/瓶颈）', b.supply));
+  plate.appendChild(basicsRow('规模与员工', b.scale,
+    '例：2019 年成立 · 120 人 · 深圳+东莞', '例：500 人 · 东南亚 3 国'));
+  plate.appendChild(basicsRow('业务范围', b.scope,
+    '例：ODM 代工 + 自有品牌出海', '例：自有品牌占比 60%'));
+  plate.appendChild(basicsRow('产品 / 业务线', b.products,
+    '例：3 条线 · 均价 $30-80 · 主销欧美', '例：8 条线 · SKU 破百'));
+  plate.appendChild(basicsRow('客户', b.customers,
+    '例：Amazon 卖家 + 区域经销商', '例：DTC 占比 40%'));
+  plate.appendChild(basicsRow('供应链', b.supply,
+    '例：华南代工厂 · 模具自研', '例：海外仓 + 本地组装'));
   plate.appendChild(el('div',{class:'basics-row'},
-    el('span',{class:'basics-label'},'最近业绩 · 市场份额'), trio(b.performance.share)));
+    el('span',{class:'basics-label'},'最近业绩 · 市场份额'), trio(b.performance.share,
+      '例：2024 营收 ¥8,000w · 市占 3%', '例：市占 8%')));
   plate.appendChild(el('div',{class:'basics-row'},
-    el('span',{class:'basics-label'},'最近业绩 · ROI'), trio(b.performance.roi)));
+    el('span',{class:'basics-label'},'最近业绩 · ROI'), trio(b.performance.roi,
+      '例：营销 ROI 2.5', '例：ROI 4+')));
   plate.appendChild(el('div',{class:'basics-row'},
-    el('span',{class:'basics-label'},'最近业绩 · 年增长率'), trio(b.performance.growth)));
+    el('span',{class:'basics-label'},'最近业绩 · 年增长率'), trio(b.performance.growth,
+      '例：+35% YoY', '例：+50% YoY')));
 
   // —— 竞争者与我们的资源盘点（Step 3：内部·我们）——
   plate.appendChild(el('h3',{},'竞争者与资源盘点'));
@@ -785,25 +1043,35 @@ Work1.render.environment = function(sec){
   // 3.2 竞品对标 [外部·竞品]
   //plate.appendChild(el('h4',{class:'sub-section'},'3.2 竞品对标 [外部·竞品]'));
 
-  // competitor table
+  // competitor table —— 语义定宽（窄列：竞品/价位；宽列：优势/劣势/相对位置），
+  // 列宽固定不随内容变化；长文本列用自动增高 textarea，格内换行（Excel 式）。
+  const autosize=ta=>{ ta.style.height='auto'; ta.style.height=ta.scrollHeight+'px'; };
   const tbl=el('table',{class:'data competitor-table'});
+  tbl.appendChild(el('colgroup',{},
+    el('col',{class:'c-name'}), el('col',{class:'c-price'}),
+    el('col',{class:'c-str'}), el('col',{class:'c-weak'}),
+    el('col',{class:'c-pos'}), el('col',{class:'c-del'})));
   tbl.appendChild(el('thead',{}, el('tr',{}, ...['竞品','价位','优势','劣势','我们的相对位置',''].map(h=>el('th',{},h)))));
   const tbody=el('tbody');
   d.competitors.forEach((c,i)=>{
     const inp=(key,ph)=>el('input',{type:'text',value:c[key]||'',placeholder:ph,
       oninput:e=>{c[key]=e.target.value;autosave()}});
+    const txa=(key,ph)=>el('textarea',{rows:1,class:'cell-grow',placeholder:ph,
+      oninput:e=>{c[key]=e.target.value;autosize(e.target);autosave()}},c[key]||'');
     const tr=el('tr',{},
-      el('td',{}, inp('name','竞品名称')),
+      el('td',{}, txa('name','竞品名称')),
       el('td',{}, inp('price','价位')),
-      el('td',{}, inp('strengths','优势')),
-      el('td',{}, inp('weaknesses','劣势')),
-      el('td',{}, inp('position','相对位置')),
+      el('td',{}, txa('strengths','优势')),
+      el('td',{}, txa('weaknesses','劣势')),
+      el('td',{}, txa('position','相对位置')),
       el('td',{}, el('button',{class:'ghost small',onclick:()=>{d.competitors.splice(i,1);autosave();Work1.rerender('environment')}},'×'))
     );
     tbody.appendChild(tr);
   });
   tbl.appendChild(tbody);
   plate.appendChild(tbl);
+  // 挂载后再按内容设置初始高度（scrollHeight 需要布局完成）
+  setTimeout(()=>tbl.querySelectorAll('textarea.cell-grow').forEach(autosize), 0);
   plate.appendChild(el('button',{class:'ghost',style:'margin:8px 0',onclick:()=>{
     d.competitors.push({id:uid('c'),name:'',price:'',strengths:'',weaknesses:'',position:''});
     autosave(); Work1.rerender('environment');
@@ -877,7 +1145,18 @@ Work1.render.environment = function(sec){
   plate.appendChild(el('div',{class:'cap-accordion'},
     mkAccStep(3, '第 3 层 · 收敛（依赖第 2 层）', '微笑曲线收口', '优势/劣势落在价值链哪一端？这一句决定后续定位方向。', false, (body) => {
       // 微笑曲线图（SVG）: 价值链 6 环节, 左高-谷-右高的 U 形
-      body.appendChild(Work1.renderSmileCurve());
+      // 门禁：先 AI 起草（写入 d.valueChain）才显示曲线 + 拖拽；演示案例跳过
+      const gate = Work1.renderSmileCurveGate();
+      body.appendChild(gate);
+      const draftBtn = gate.querySelector && gate.querySelector('#smile-draft-trigger');
+      if(draftBtn){
+        draftBtn.addEventListener('click', ()=>{
+          // 委托给页面顶部的 AI 起草按钮（包含实况/竞品/资源盘点完整 prompt）
+          const top = document.querySelector('button.ai-draft-btn');
+          if(!top){ showToast('顶部 AI 起草入口未就绪'); return; }
+          top.click();
+        });
+      }
       const callout = el('div',{class:'cap-field'});
       const labelDiv = el('div',{class:'cap-field-label'}, '一句话定位',
         el('span',{class:'zh'}, '优势/劣势落在价值链哪一端？'));
@@ -901,54 +1180,12 @@ Work1.render.environment = function(sec){
       body.appendChild(el('button',{class:'cap-ai-btn', onclick:()=>{
         // AI 一键生成：基于 SBU + 5 维 → 3 段 + 收口 + 趋势
         // 实际 AI 调用在下方 AI 盒子统一处理（防止重复按钮）
-        showToast('请使用下方"用 AI 起草"按钮');
+        showToast('请使用顶部"用 AI 起草环境与竞争分析"按钮');
       }}, '用 AI 起草（基于 5 维 → 生成 3 段 + 收口 + 趋势）'));
       body.appendChild(el('div',{class:'cap-ai-hint'}, '必须先填第 1 层 5 维，AI 才有素材生成第 2/3/4 层。'));
     })
   ));
 
-  // —— AI ——
-  const ai=el('div',{class:'ai-box ai-box-step1'});
-  const top=el('div',{class:'ai-box-top'});
-  const meta=el('div',{class:'ai-box-meta'});
-  meta.appendChild(el('span',{class:'ai-box-meta-tip'},'提示'));
-  meta.appendChild(el('span',{class:'ai-box-meta-text'},'请先绑定 LLM'));
-  meta.appendChild(el('span',{class:'ai-box-meta-sep'},'·'));
-  meta.appendChild(el('span',{class:'ai-box-meta-draft'},'DRAFT WITH AI'));
-  top.appendChild(meta);
-  top.appendChild(el('h4',{class:'ai-box-headline'},'用 AI 起草环境与竞争分析'));
-  top.appendChild(el('p',{class:'ai-box-hint'},'基于 SBU，生成 PEST、行业格局、5-7 家竞品对标行、我们的资源盘点（5 维 + 3 段 + 收口 + 趋势）。'));
-  ai.appendChild(top);
-  const action=el('div',{class:'ai-box-action'});
-  const btn=el('button',{class:'primary',onclick:()=>{
-    API.aiButton({
-      button:btn, container:ai, aiScope:'work1.environment',
-      buildPrompt:()=>[{role:'system',content:'你是全球品牌战略顾问。基于 SBU 生成结构化市场分析。输出 JSON：{"political":"","economic":"","social":"","technological":"","industry":"市场格局摘要（活跃品牌/渗透率/价格带/垂直空白）","competitors":[{"name":"","price":"","strengths":"","weaknesses":"","position":""}],"ourCapabilities":{"delivery":"产品/服务交付能力（能交付什么？怎么交付？标准化？）","core":"核心能力/资源/关系（别人短期追不上的）","brand":"品牌资产/知名度/溢价能力","customer":"客户触达/渠道/关系","compliance":"监管/资质/准入门槛","defensive":"防御性优势（对手短期难复制的 1-2 点）","critical":"关键劣势（客户能直接感知的致命短板）","structural":"结构性劣势（受资源/位置限制、宜绕开）","smileCurve":"优势/劣势落在价值链哪一端、决定后续定位方向","trends":"3 个值得追踪的方向"}}。competitors 给 5-7 家同价位同场景直接竞品。'},
-        {role:'user',content:`SBU: ${state.work1.sbu.name}\n品类: ${state.work1.sbu.category}\n阶段: ${state.work1.sbu.stage}\n范围: ${state.work1.sbu.scope}\n概述: ${state.work1.sbu.summary}`}],
-      onResult:r=>{
-        if(!r){ showToast('解析失败'); return; }
-        ['political','economic','social','technological','industry'].forEach(k=>{ if(r[k]) d[k]=r[k]; });
-        if(Array.isArray(r.competitors)) d.competitors=r.competitors.map(c=>({id:uid('c'),name:c.name||'',price:c.price||'',strengths:c.strengths||'',weaknesses:c.weaknesses||'',position:c.position||''}));
-        // 兼容：AI 返回 ourCapabilities（新版）或 edges（旧版）
-        const cap = r.ourCapabilities || r.edges;
-        if(cap && typeof cap==='object'){
-          if(!d.ourCapabilities) d.ourCapabilities={};
-          // 通用 5 维：旧字段名 → 新字段名（AI 偶发回退兼容）
-          const oldToNew = {manufacturing:'delivery', technology:'core', channel:'customer'};
-          Object.keys(cap).forEach(k=>{
-            if(cap[k]!=null){
-              const newKey = oldToNew[k] || k;
-              d.ourCapabilities[newKey] = cap[k];
-            }
-          });
-        }
-        autosave(); Work1.rerender('environment');
-      }
-    });
-  }},'开始生成');
-  action.appendChild(btn);
-  ai.appendChild(action);
-  plate.appendChild(ai);
 };
 
 /* ---------- STEP 3: PERSONAS ---------- */
