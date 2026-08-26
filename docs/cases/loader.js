@@ -17,9 +17,6 @@
  // and add a `__case_<brand>` window global in its index.js. Then add the
  // brand key here.
  const CASES = {
- 'shanmu-tea': {
- get module(){ return typeof window!=='undefined'? window.__case_shanmu_tea: null; }
- },
  'douya-mama': {
  get module(){ return typeof window!=='undefined'? window.__case_douya_mama: null; }
  },
