@@ -1646,34 +1646,63 @@ Work1.personaDraft.mountPreview = function(){
     el('span',{class:'pd-title'},'生成结果预览 · v', String(Work1.personaDraft.version + 1), '/', String(Work1.personaDraft.versions.length || 1)),
     el('button',{class:'pd-close', onclick:()=>Work1.personaDraft.close(true), title:'关闭'},'×')
   ));
-  // 三个区块
+  // 三个区块 —— 可编辑（直接改当前版本数据）
   dlg.appendChild(Work1.personaDraft.previewBlock('personas', '客户画像', v.personas, (item, idx) => {
-    return el('div',{class:'pd-card'},
-      el('div',{class:'pd-card-title'}, item.name || `P${idx+1}`, ' · ', item.gender || '—', ' · ', item.age || '—'),
-      el('div',{class:'pd-card-sub'}, item.occupation || '—'),
-      el('div',{style:'margin-top:6px'}, el('strong',{},'痛点：'), item.painPoints || '—'),
-      el('div',{}, el('strong',{},'价值观：'), (item.values||[]).join(' / ') || '—'),
-      el('div',{}, el('strong',{},'渠道：'), (item.channels||[]).join(' / ') || '—'),
-      item.quote ? el('div',{class:'pd-quote'}, '「', item.quote, '」') : null
-    );
+    const ed=(val, cb)=>el('textarea',{rows:1,class:'pd-edit',placeholder:'—',
+      oninput:e=>cb(e.target.value)}, val||'');
+    const card=el('div',{class:'pd-card'});
+    card.appendChild(el('div',{class:'pd-card-title'},
+      el('input',{class:'pd-edit-inline', value:item.name||'', style:{width:'60px'},
+        oninput:e=>{item.name=e.target.value;}}, ''),
+      el('span',{style:'font-size:12px;color:var(--color-ink-2)'}, ' · '),
+      el('input',{class:'pd-edit-inline', value:item.gender||'', style:{width:'44px'},
+        oninput:e=>{item.gender=e.target.value;}}, ''),
+      el('span',{style:'font-size:12px;color:var(--color-ink-2)'}, ' · '),
+      el('input',{class:'pd-edit-inline', value:item.age||'', style:{width:'60px'},
+        oninput:e=>{item.age=e.target.value;}}, '')
+    ));
+    card.appendChild(el('div',{class:'pd-card-sub'},
+      '职业：', ed(item.occupation||'', v=>item.occupation=v)
+    ));
+    card.appendChild(el('div',{style:'margin-top:6px'}, el('strong',{},'痛点'),
+      ed(item.painPoints||'', v=>item.painPoints=v)));
+    card.appendChild(el('div',{}, el('strong',{},'价值观'),
+      ed((item.values||[]).join(' / '), v=>item.values=v.split(' / ').map(s=>s.trim()).filter(Boolean))));
+    card.appendChild(el('div',{}, el('strong',{},'渠道'),
+      ed((item.channels||[]).join(' / '), v=>item.channels=v.split(' / ').map(s=>s.trim()).filter(Boolean))));
+    card.appendChild(el('div',{style:'margin-top:6px'}, el('strong',{},'引言'),
+      ed(item.quote||'', v=>item.quote=v)));
+    return card;
   }));
   dlg.appendChild(Work1.personaDraft.previewBlock('scenarios', '使用场景与价值矩阵', v.scenarios, (s, idx) => {
-    return el('div',{class:'pd-card'},
-      el('div',{class:'pd-card-title'}, s.name || `场景 ${idx+1}`),
-      el('div',{class:'pd-card-sub'}, '关联画像：', (s.personaNames||[]).join(' / ') || '—'),
-      el('div',{class:'pd-grid'},
-        el('div',{}, el('strong',{},'使用价值：'), s.benefits?.usage || '—'),
-        el('div',{}, el('strong',{},'服务价值：'), s.benefits?.service || '—'),
-        el('div',{}, el('strong',{},'人员价值：'), s.benefits?.staff || '—'),
-        el('div',{}, el('strong',{},'形象价值：'), s.benefits?.image || '—'),
-        el('div',{}, el('strong',{},'货币成本：'), s.costs?.monetary || '—'),
-        el('div',{}, el('strong',{},'时间成本：'), s.costs?.time || '—'),
-        el('div',{}, el('strong',{},'精力成本：'), s.costs?.energy || '—'),
-        el('div',{}, el('strong',{},'心理成本：'), s.costs?.psychic || '—')
-      ),
-      el('div',{style:'margin-top:6px'}, el('strong',{},'价值锚点：'), s.anchor || '—'),
-      el('div',{}, el('strong',{},'决定性短板：'), s.decisiveGap || '—')
-    );
+    const ed=(val, cb)=>el('textarea',{rows:1,class:'pd-edit',placeholder:'—',
+      oninput:e=>cb(e.target.value)}, val||'');
+    if(!s.benefits) s.benefits={usage:'',service:'',staff:'',image:''};
+    if(!s.costs) s.costs={monetary:'',time:'',energy:'',psychic:''};
+    const card=el('div',{class:'pd-card'});
+    card.appendChild(el('div',{class:'pd-card-title'},
+      el('input',{class:'pd-edit-inline', value:s.name||'', style:{width:'70%'},
+        oninput:e=>{s.name=e.target.value;}}, '')
+    ));
+    card.appendChild(el('div',{class:'pd-card-sub'}, '关联画像（P1/P2 用 / 分隔）',
+      el('input',{class:'pd-edit-inline', value:(s.personaNames||[]).join(' / '), style:{width:'60%'},
+        oninput:e=>{s.personaNames=e.target.value.split(' / ').map(x=>x.trim()).filter(Boolean);}}, '')
+    ));
+    card.appendChild(el('div',{class:'pd-grid'},
+      el('div',{}, el('strong',{},'使用价值'), ed(s.benefits.usage, v=>s.benefits.usage=v)),
+      el('div',{}, el('strong',{},'服务价值'), ed(s.benefits.service, v=>s.benefits.service=v)),
+      el('div',{}, el('strong',{},'人员价值'), ed(s.benefits.staff, v=>s.benefits.staff=v)),
+      el('div',{}, el('strong',{},'形象价值'), ed(s.benefits.image, v=>s.benefits.image=v)),
+      el('div',{}, el('strong',{},'货币成本'), ed(s.costs.monetary, v=>s.costs.monetary=v)),
+      el('div',{}, el('strong',{},'时间成本'), ed(s.costs.time, v=>s.costs.time=v)),
+      el('div',{}, el('strong',{},'精力成本'), ed(s.costs.energy, v=>s.costs.energy=v)),
+      el('div',{}, el('strong',{},'心理成本'), ed(s.costs.psychic, v=>s.costs.psychic=v))
+    ));
+    card.appendChild(el('div',{style:'margin-top:6px'}, el('strong',{},'价值锚点'),
+      ed(s.anchor||'', v=>s.anchor=v)));
+    card.appendChild(el('div',{}, el('strong',{},'决定性短板'),
+      ed(s.decisiveGap||'', v=>s.decisiveGap=v)));
+    return card;
   }));
   // 按钮组
   const adoptBtn = el('button',{class:'primary', onclick:()=>{
@@ -1706,7 +1735,7 @@ Work1.personaDraft.previewBlock = function(key, title, items, renderItem){
   return block;
 };
 
-// 采纳后侧边抽屉
+// 采纳后侧边抽屉（箭头拉出/回收）
 Work1.personaDraft.mountDrawer = function(){
   const mount = Work1.personaDraft.ensureMount();
   mount.innerHTML = '';
@@ -1714,9 +1743,16 @@ Work1.personaDraft.mountDrawer = function(){
   const v = Work1.personaDraft.versions[Work1.personaDraft.version];
   if(!v) return;
   const drawer = el('div',{class:'pd-drawer', role:'complementary'});
+  // 箭头 tab：展开时 ◀（收回），折叠时 ▶（拉出）
+  const tab = el('button',{class:'pd-drawer-tab', title: drawer.classList.contains('collapsed') ? '展开' : '收回',
+    onclick:()=>{
+      const collapsed = drawer.classList.toggle('collapsed');
+      tab.innerHTML = collapsed ? '▶' : '◀';
+      tab.title = collapsed ? '展开' : '收回';
+    }},'◀');
+  drawer.appendChild(tab);
   drawer.appendChild(el('div',{class:'pd-drawer-head'},
-    el('span',{},'已采纳 · v', String(Work1.personaDraft.version + 1)),
-    el('button',{class:'pd-drawer-toggle', onclick:()=>drawer.classList.toggle('collapsed')},'⇔')
+    el('span',{},'已采纳 · v', String(Work1.personaDraft.version + 1))
   ));
   drawer.appendChild(el('div',{class:'pd-drawer-body'},
     el('div',{class:'pd-block-title'},'画像 · ', String((v.personas||[]).length)),

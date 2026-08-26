@@ -2249,6 +2249,24 @@ body[data-w4-entry="greenfield"] .x-entry-heavy { display:block; }
   display:grid;grid-template-columns:1fr 1fr;gap:6px 14px;margin-top:8px;
   font-size:13px;
 }
+/* 预览浮层编辑框 */
+.persona-draft-overlay .pd-edit{
+  width:100%;padding:4px 6px;background:transparent;border:none;
+  border-bottom:1px solid var(--color-rule);color:var(--color-ink);
+  font-family:var(--font-body);font-size:13px;line-height:1.5;resize:vertical;
+  min-height:22px;
+}
+.persona-draft-overlay .pd-edit:focus{
+  outline:none;border-bottom-color:var(--color-accent);
+}
+.persona-draft-overlay .pd-edit-inline{
+  padding:2px 4px;background:transparent;border:none;
+  border-bottom:1px solid var(--color-rule);color:var(--color-ink);
+  font-family:var(--font-body);font-size:13px;
+}
+.persona-draft-overlay .pd-edit-inline:focus{
+  outline:none;border-bottom-color:var(--color-accent);
+}
 .persona-draft-overlay .pd-quote{
   margin-top:6px;font-style:italic;color:var(--color-ink-2);
 }
@@ -2267,17 +2285,20 @@ body[data-w4-entry="greenfield"] .x-entry-heavy { display:block; }
 .persona-draft-overlay .pd-drawer.collapsed .pd-drawer-body,
 .persona-draft-overlay .pd-drawer.collapsed .pd-drawer-foot{display:none}
 .persona-draft-overlay .pd-drawer-head{
-  display:flex;align-items:center;justify-content:space-between;
   padding:14px 16px;border-bottom:1px solid var(--color-rule);
   font-family:var(--font-mono);font-size:11px;letter-spacing:.18em;
   text-transform:uppercase;color:var(--color-ink-2);
 }
-.persona-draft-overlay .pd-drawer-toggle{
-  background:transparent;border:1px solid var(--color-rule);
-  color:var(--color-ink);width:28px;height:28px;cursor:pointer;
+/* 箭头 tab：抽屉右缘竖条，点击拉出/回收 */
+.persona-draft-overlay .pd-drawer-tab{
+  position:absolute;left:-18px;top:50%;transform:translateY(-50%);
+  width:18px;height:56px;border:none;
+  background:var(--color-ink);color:var(--color-paper);
+  font-size:10px;cursor:pointer;border-radius:4px 0 0 4px;
   display:inline-flex;align-items:center;justify-content:center;
+  box-shadow:-2px 0 6px rgba(0,0,0,0.15);
 }
-.persona-draft-overlay .pd-drawer-toggle:hover{background:var(--color-ink);color:var(--color-paper)}
+.persona-draft-overlay .pd-drawer-tab:hover{background:var(--color-accent)}
 .persona-draft-overlay .pd-drawer-body{
   flex:1;overflow:auto;padding:14px 16px;font-size:13px;line-height:1.6;
 }
@@ -2291,7 +2312,7 @@ body[data-w4-entry="greenfield"] .x-entry-heavy { display:block; }
 </head>
 <body>
 
-<div class="demo-banner" id="demoBanner">— DEMO 演示数据 · 只读预览，不可修改 · 再次点击「演示案例 ▼」切换/退出 —</div>
+<div class="demo-banner" id="demoBanner"><span id="demoBannerText">— 已载入案例 · 可编辑可保存 · 再次点击「载入案例 ▼」切换案例 —</span></div>
 
 <header class="masthead no-print">
   <div class="masthead-top">
@@ -2529,10 +2550,11 @@ const Store = {
 
   save(stateObj){
     if(!stateObj) return Promise.resolve();
-    if(stateObj.meta.isDemo){
-      const ss=$('#saveStatus'); if(ss) ss.textContent='演示模式 · 不会保存';
-      return Promise.resolve();
-    }
+    // 2026-08-26: 载入案例后可编辑可保存。isDemo 不再用于保存闸门。
+    // if(stateObj.meta.isDemo){
+    //   const ss=$('#saveStatus'); if(ss) ss.textContent='演示模式 · 不会保存';
+    //   return Promise.resolve();
+    // }
     // Serialize saves — rapid edits must not race the server.
     this._chain = this._chain.then(()=>this._doSave(stateObj)).catch(()=>{});
     return this._chain;
@@ -3213,15 +3235,16 @@ const App = {
     window.scrollTo({top, behavior:'smooth'});
   },
   renderAll(){
-    // Demo mode is read-only: lock the step content panels (inputs/buttons)
-    // while the masthead and the workshop/step navigation stay browsable.
-    const locked=!!state.meta.isDemo;
-    [1,2,3,4,5].forEach(n=>{ const el=$('#steps'+n); if(el) el.inert=locked; });
+    // 2026-08-26: 载入案例 = 可编辑可保存（去掉只读锁）。
+    // 用户导入案例后要基于案例编辑自己的策划，不再锁死 step 面板。
+    // 保留 isDemo 用于横幅显示"当前案例"，但不设 inert。
+    // const locked=!!state.meta.isDemo;
+    // [1,2,3,4,5].forEach(n=>{ const el=$('#steps'+n); if(el) el.inert=locked; });
     // lock top-bar mode switch in demo read-only mode
-    const sw=document.getElementById('modeSwitch');
-    if(sw) sw.querySelectorAll('button').forEach(b=>b.disabled=locked);
-    const gear=document.getElementById('settingsGear');
-    if(gear) gear.disabled=locked;
+    // const sw=document.getElementById('modeSwitch');
+    // if(sw) sw.querySelectorAll('button').forEach(b=>b.disabled=locked);
+    // const gear=document.getElementById('settingsGear');
+    // if(gear) gear.disabled=locked;
     if(typeof Settings!=='undefined') Settings.renderModeSwitch();
     [1,2,3,4,5].forEach(n=>{
       const mod={1:Work1,2:Work2,3:Work3,4:Work4,5:Work5}[n];
@@ -3282,26 +3305,14 @@ const App = {
     // 1) 先记当前 tab（renderAll 末尾会强制 goWork(1)，需要自己跳回原 tab）
     const keepWork = this.currentWork;
     const keepScroll = window.scrollY;
-    if(state.meta.isDemo){
-      // Exit demo: 优先用进入演示前的内存快照恢复真实 state（用户在演示期间
-      // 可能改了真实 state 但没保存到服务器 —— 此时 Store.load() 拿不到最新内容，
-      // 必须用快照）。快照保存于 demoSnapshot（结构：deep-clone 当前 work1-5 + meta）。
-      if(state.meta.demoSnapshot){
-        Object.assign(state, JSON.parse(JSON.stringify(state.meta.demoSnapshot)));
-        state.meta.isDemo=false;
-        state.meta.demoCase=null;
-        state.meta.demoSnapshot=null;
-      } else {
-        // 没有快照（极旧的会话）：回退到服务端 + 默认值
-        const keepApi=state.settings.api;
-        const real=await Store.load();
-        state = real ? mergeWithDefaults(real) : defaultState();
-        state.settings.api=keepApi;
-        state.meta.isDemo=false;
-        state.meta.demoCase=null;
-      }
+    if(state.meta.demoCase){
+      // 2026-08-26: "退出演示"语义改为"清除当前案例标记"。
+      // 载入案例=加载数据到工作区，可编辑可保存，不恢复快照（无只读快照）。
+      // 用户切换案例时直接再载入即可。
+      state.meta.demoCase=null;
+      state.meta.demoSnapshot=null;
       $('#demoBanner').classList.remove('show');
-      $('#demoBtn').textContent='演示案例 ▼';
+      $('#demoBtn').textContent='载入案例 ▼';
       document.body.classList.remove('is-demo');
     }else{
       // Enter demo: caseKey is required. If not provided, open the menu
@@ -3310,18 +3321,10 @@ const App = {
         if(typeof DemoMenu!=='undefined') DemoMenu.open();
         return;
       }
-      // 进入演示前先保存真实 state 到服务器（此时 isDemo=false，保存允许）。
-      // 顺序不能反：若先 inject 演示数据再保存，演示数据会被当成真实数据持久化，
-      // 且 isDemo 还来不及置 true —— 刷新后页面显示演示内容却没有「退出演示」
-      // 按钮，用户会被卡死在演示案例里。
+      // 2026-08-26: 载入案例 = 加载数据到工作区，可编辑可保存。
+      // 先保存当前工作区（案例载入后用户可随时保存，不被覆盖）。
       await saveNow();
-      // 再快照真实 state（演示数据是覆盖整个 work1-5，演示退出时必须用这个快照恢复）。
-      // 必须在 DemoData.inject 之前快照，否则会被演示数据污染。快照只存在内存，
-      // 不会持久化到服务器。
-      state.meta.demoSnapshot = JSON.parse(JSON.stringify({
-        work1: state.work1, work2: state.work2, work3: state.work3,
-        work4: state.work4, work5: state.work5, meta: state.meta,
-      }));
+      // 不再创建只读快照 demoSnapshot（无只读演示概念，刷新后不会被误判为污染数据）。
       if(typeof Cases==='undefined' || !Cases.has(caseKey)){
         // Fallback to legacy DemoData.inject if the brand isn't in the new cases/ registry
         if(typeof DemoData!=='undefined' && DemoData.inject(caseKey, state)){
@@ -3341,11 +3344,14 @@ const App = {
         if(loaded.work3) Object.assign(state.work3, loaded.work3);
         // work4/5 are not part of the migrated case data — leave them as default.
       }
-      state.meta.isDemo=true;
+      // 2026-08-26: 载入案例 = 加载数据到工作区，可编辑可保存。
+      // 不再设 isDemo=true（避免只读锁和保存闸门），仅记录 demoCase 供横幅/菜单高亮。
+      state.meta.isDemo=false;
       state.meta.demoCase=caseKey;
       $('#demoBanner').classList.add('show');
-      $('#demoBtn').textContent='退出演示';
-      document.body.classList.add('is-demo');
+      $('#demoBannerText').textContent = '当前案例：' + (caseKey || '');
+      $('#demoBtn').textContent='载入案例 ▼';
+      document.body.classList.remove('is-demo');
     }
     this.renderAll();
     this.updateSummary();
@@ -3396,8 +3402,9 @@ const App = {
         state=mergeWithDefaults(parsed);
         state.settings.api=keepApi;  // never import API config from a file
         state.meta.isDemo=false;
+        state.meta.demoCase=null;
         $('#demoBanner').classList.remove('show');
-        $('#demoBtn').textContent='演示案例 ▼';
+        $('#demoBtn').textContent='载入案例 ▼';
         document.body.classList.remove('is-demo');
         await saveNow();
         this.renderAll();
@@ -3430,10 +3437,10 @@ var DemoMenu = {
       btn._demoBound = true;
       btn.addEventListener('click', (e)=>{
         e.stopPropagation();
-        // 演示模式：按钮文案是"退出演示"，直接退出回到原 workshop
-        // 未演示：按钮文案是"演示案例 ▼"，打开选单让用户挑
-        if(state.meta.isDemo){
-          if(typeof App!=='undefined') App.toggleDemo();
+        // 已载入案例：按钮文案"载入案例 ▼"，点击再打开选单切换案例
+        // 未载入：同上，打开选单让用户挑
+        if(state.meta.demoCase && typeof App!=='undefined'){
+          App.toggleDemo();
         }else{
           this.toggle();
         }
@@ -3461,8 +3468,27 @@ var DemoMenu = {
     this.popup.classList.remove('open');
   },
   render(){
-    if(!this.listEl || typeof DemoData==='undefined') return;
-    const cases = DemoData.list();
+    if(!this.listEl) return;
+    // 优先新 cases 注册表（docs/cases/），fallback 到旧 demo-data.js
+    let cases = [];
+    if(typeof Cases!=='undefined' && Cases.list){
+      cases = Cases.list().map(c => ({
+        key: c.brand,
+        name: c.label,
+        ready: true,
+        industry: '',
+        description: c.summary || ''
+      }));
+    }
+    if(!cases.length && typeof DemoData!=='undefined' && DemoData.list){
+      cases = DemoData.list().map(c => ({
+        key: c.key,
+        name: c.name,
+        ready: !!c.ready,
+        industry: c.industry || '',
+        description: c.description || ''
+      }));
+    }
     const current = (state && state.meta && state.meta.demoCase) || null;
     this.listEl.innerHTML = '';
     cases.forEach(c => {
@@ -3474,7 +3500,7 @@ var DemoMenu = {
         el('div', {class: 'demo-menu-item-meta'}, c.industry),
         el('div', {class: 'demo-menu-item-desc'}, c.description),
         el('div', {class: 'demo-menu-item-status'},
-          c.ready ? (isActive ? '当前演示' : '点击进入') : '待补全')
+          c.ready ? (isActive ? '当前案例' : '点击载入') : '待补全')
       );
       if(c.ready){
         item.addEventListener('click', () => {
@@ -3493,7 +3519,8 @@ var DemoMenu = {
    ============================================================ */
 const SavePanel = {
   open(){
-    if(state?.meta?.isDemo){ showToast('演示模式不保存到服务器'); return; }
+    // 2026-08-26: 载入案例后可编辑可保存。案例数据作为当前工作区持久化。
+    // if(state?.meta?.isDemo){ showToast('演示模式不保存到服务器'); return; }
     $('#savePopup').classList.add('open');
     const inp=$('#saveName');
     inp.value='';
@@ -3646,7 +3673,7 @@ const History = {
       state.meta.demoCase=null;
       state.meta.demoSnapshot=null;
       $('#demoBanner').classList.remove('show');
-      $('#demoBtn').textContent='演示案例 ▼';
+      $('#demoBtn').textContent='载入案例 ▼';
       document.body.classList.remove('is-demo');
       this.close();
       App.renderAll();
@@ -3950,12 +3977,6 @@ var Work5={steps:[],defaultData:()=>({})};
 <script src="workshop4.js?v=50011"></script>
 <script src="workshop5.js?v=50008"></script>
 <script src="demo-data.js?v=50037"></script>
-<script src="cases/shanmu-tea/work1.js?v=50037"></script>
-<script src="cases/shanmu-tea/work2.js?v=50037"></script>
-<script src="cases/shanmu-tea/work3.js?v=50037"></script>
-<script src="cases/shanmu-tea/work4.js?v=50037"></script>
-<script src="cases/shanmu-tea/work5.js?v=50037"></script>
-<script src="cases/shanmu-tea/index.js?v=50037"></script>
 <script src="cases/douya-mama/work1.js?v=50037"></script>
 <script src="cases/douya-mama/work2.js?v=50037"></script>
 <script src="cases/douya-mama/work3.js?v=50037"></script>
