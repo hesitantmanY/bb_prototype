@@ -44,131 +44,250 @@ Work5.renderStep = function(id){
   const dn5=UI.demoNote(5,'plan'); if(dn5) sec.appendChild(dn5);
   if(Work5.mvo) sec.appendChild(UI.mvoCard(Work5.mvo(), sec));
 
-  // Cover
+  // ---------- Cover (editorial centered) ----------
   sec.appendChild(Work5.section('cover','封面', function(body){
     const c=state.work5.cover;
-    body.appendChild(UI.field('标题', el('input',{value:c.title,oninput:e=>{c.title=e.target.value;autosave();Work5.refreshCover()}})));
-    body.appendChild(UI.field('副标题', el('input',{value:c.subtitle,oninput:e=>{c.subtitle=e.target.value;autosave();Work5.refreshCover()}})));
-    body.appendChild(el('div',{class:'grid2'},
-      UI.field('团队 / 小组', el('input',{value:c.team,oninput:e=>{c.team=e.target.value;autosave();Work5.refreshCover()}})),
-      UI.field('日期', el('input',{type:'date',value:c.date,oninput:e=>{c.date=e.target.value;autosave();Work5.refreshCover()}}))
+    // 编辑态：字段列在，下方是排版态预览
+    body.appendChild(el('div',{class:'edit-grid'},
+      el('label',{},'标题'),el('input',{value:c.title||'',oninput:e=>{c.title=e.target.value;autosave();Work5.rerender('cover')}}),
+      el('label',{},'副标题'),el('input',{value:c.subtitle||'',oninput:e=>{c.subtitle=e.target.value;autosave();Work5.rerender('cover')}}),
+      el('label',{},'团队 / 小组'),el('input',{value:c.team||'',oninput:e=>{c.team=e.target.value;autosave();Work5.rerender('cover')}}),
+      el('label',{},'日期'),el('input',{type:'date',value:c.date||'',oninput:e=>{c.date=e.target.value;autosave();Work5.rerender('cover')}}),
     ));
     body.appendChild(el('div',{class:'ai-actions'},
       el('button',{class:'btn btn--ghost btn--small',onclick:e=>Work5.aiTitle(e.currentTarget,body)},'用 AI 起名')
     ));
-    body.appendChild(el('div',{id:'coverPreview',class:'plate',style:{marginTop:'14px',padding:'28px',background:'var(--color-paper)'}}));
-    Work5.refreshCover();
+    // 排版态预览
+    const prev=el('div',{class:'cover-preview'},
+      el('div',{class:'cover-title',contenteditable:'true',oninput:e=>{c.title=e.target.textContent;autosave();}},
+        c.title||'〔点击此处输入策划书标题〕'),
+      el('div',{class:'cover-subtitle',contenteditable:'true',oninput:e=>{c.subtitle=e.target.textContent;autosave();}},
+        c.subtitle||'〔点击此处输入副标题——一句话讲清这份策划要解决什么问题〕'),
+      el('div',{class:'cover-meta'},
+        el('div',{},el('strong',{},c.team||'〔团队〕'),el('div',{},'TEAM')),
+        el('div',{},el('strong',{},c.date||'〔日期〕'),el('div',{},'DATE')),
+        el('div',{},el('strong',{},'策划书'),el('div',{},'DOCUMENT'))
+      )
+    );
+    body.appendChild(prev);
   }));
 
-  // Abstract
+  // ---------- Abstract (italic editorial) ----------
   sec.appendChild(Work5.section('abstract','摘要', function(body){
     body.appendChild(el('div',{class:'ai-actions'},
-      el('button',{class:'btn btn--ghost btn--small',onclick:()=>Work5.aggregateAbstract(body)},'从章节自动汇总'),
+      el('button',{class:'btn btn--ghost btn--small',onclick:()=>Work5.aggregateAbstract()},'从章节自动汇总'),
       el('button',{class:'btn btn--ghost btn--small',onclick:e=>Work5.aiPolish('abstract','摘要',e.currentTarget)},'AI 润色')
     ));
-    body.appendChild(el('textarea',{rows:5,maxlength:600,oninput:e=>{state.work5.abstract=e.target.value;autosave()}},state.work5.abstract));
+    const ab=el('div',{class:'abstract',contenteditable:'true',
+      oninput:e=>{state.work5.abstract=e.target.textContent;autosave();}},
+      state.work5.abstract||'〔点击此处输入摘要——本策划书围绕……展开，目标解决……问题。〕');
+    body.appendChild(ab);
   }));
 
-  // Chapter 1
+  // ---------- Chapter 1 ----------
   sec.appendChild(Work5.section('ch1','1. 企业及业务概况', function(body){
     body.appendChild(el('div',{class:'ai-actions'},
-      el('button',{class:'btn btn--ghost btn--small',onclick:()=>Work5.aggregateCh1(body)},'从 Work 1 汇总'),
+      el('button',{class:'btn btn--ghost btn--small',onclick:()=>Work5.aggregateCh1()},'从 Work 1 汇总'),
       el('button',{class:'btn btn--ghost btn--small',onclick:e=>Work5.aiPolish('ch1_business','业务概况',e.currentTarget)},'AI 改写为章节语言')
     ));
-    body.appendChild(el('textarea',{rows:8,oninput:e=>{state.work5.ch1_business=e.target.value;autosave()}},state.work5.ch1_business));
+    const t=el('div',{class:'chapter-text',contenteditable:'true',
+      oninput:e=>{state.work5.ch1_business=e.target.textContent;autosave();}},
+      state.work5.ch1_business||'〔点击此处输入企业及业务概况——业务基本面、为什么要做、我们是谁/不是谁。〕');
+    body.appendChild(t);
+    // 价值链定位：来自 Work1 微笑曲线收口（只读引用，自动带出）
+    const vcLine = Work5.valueChainLine();
+    if(vcLine){
+      body.appendChild(el('p',{style:'font-size:12px;color:var(--color-ink-2);margin-top:10px;letter-spacing:.02em;line-height:1.7'},
+        '价值链定位：'+vcLine));
+    }
   }));
 
-  // Chapter 2: PEST + SWOT
+  // ---------- Chapter 2: PEST 2x2 + SWOT 2x2 ----------
   sec.appendChild(Work5.section('ch2','2. 营销环境分析（PEST + SWOT）', function(body){
     const e=state.work5.ch2_environment;
-    body.appendChild(el('h4',{},'2.1 PEST'));
-    [['political','P · 政治/政策/法规'],['economic','E · 经济/汇率/购买力'],
-     ['social','S · 社会/文化/人口'],['technological','T · 技术/基础设施/渠道']].forEach(([k,label])=>{
-      body.appendChild(UI.field(label, el('textarea',{rows:3,oninput:ev=>{e[k]=ev.target.value;autosave()}},e[k])));
-    });
     body.appendChild(el('div',{class:'ai-actions'},
       el('button',{class:'btn btn--ghost btn--small',onclick:()=>Work5.importPestFromWork1()},'从 Work 1 导入 PEST'),
       el('button',{class:'btn btn--ghost btn--small',onclick:e=>Work5.aiSwot(e.currentTarget)},'AI 提取 SWOT')
     ));
 
-    body.appendChild(el('h4',{style:{'margin-top':'20px'}},'2.2 SWOT'));
-    const swotGrid=el('div',{class:'grid2'});
-    [['strengths','优势 S'],['weaknesses','劣势 W'],['opportunities','机会 O'],['threats','威胁 T']].forEach(([k,label])=>{
-      const card=el('div',{class:'card'});
-      card.appendChild(el('label',{},label));
-      const ti=UI.tagsInput(e[k]||[]);
-      ti.el.querySelector('input').addEventListener('blur',()=>{e[k]=ti.get();autosave();Work5.refreshSwotMatrix()});
-      card.appendChild(ti.el);
-      swotGrid.appendChild(card);
+    // 2.1 PEST 2×2 大字版
+    body.appendChild(el('div',{class:'sub-head'},
+      el('span',{class:'num'},'2.1'),
+      el('h3',{},'PEST · 政治 / 经济 / 社会 / 技术')
+    ));
+    const pestGrid=el('div',{class:'pest-2x2'});
+    [['political','P','POLITICAL'],
+     ['economic','E','ECONOMIC'],
+     ['social','S','SOCIAL'],
+     ['technological','T','TECHNOLOGICAL']].forEach(([k,letter,label])=>{
+      const cell=el('div',{class:'pest-cell'},
+        el('div',{class:'pest-letter'},letter),
+        el('div',{class:'pest-label'},label),
+        el('div',{class:'pest-text',contenteditable:'true',
+          oninput:ev=>{e[k]=ev.target.textContent;autosave();}},
+          e[k]||'〔点击此处输入……〕')
+      );
+      pestGrid.appendChild(cell);
+    });
+    body.appendChild(pestGrid);
+
+    // 2.2 SWOT 2×2 大字版（项目列表）
+    body.appendChild(el('div',{class:'sub-head'},
+      el('span',{class:'num'},'2.2'),
+      el('h3',{},'SWOT · 优势 / 劣势 / 机会 / 威胁')
+    ));
+    const swotGrid=el('div',{class:'swot-2x2'});
+    [['strengths','S','优势'],['weaknesses','W','劣势'],
+     ['opportunities','O','机会'],['threats','T','威胁']].forEach(([k,letter,label])=>{
+      const itemsWrap=el('div',{class:'items'});
+      const renderItems=()=>{
+        itemsWrap.innerHTML='';
+        (e[k]||[]).forEach((it,i)=>{
+          const row=el('div',{class:'item',contenteditable:'true',
+            oninput:ev=>{ e[k][i]=ev.target.textContent; autosave(); }},
+            it);
+          itemsWrap.appendChild(row);
+        });
+        // 新增一行（占位）
+        const addRow=el('div',{class:'item item-add',contenteditable:'true',
+          oninput:ev=>{
+            const v=ev.target.textContent.trim();
+            if(v){
+              if(!e[k]) e[k]=[];
+              e[k].push(v);
+              autosave(); Work5.rerender('ch2');
+            }
+          }},
+          '＋ 添加');
+        itemsWrap.appendChild(addRow);
+      };
+      renderItems();
+      const cell=el('div',{class:'swot-cell '+k[0]},
+        el('div',{class:'label'},
+          el('span',{class:'letter'},letter),
+          el('span',{},label)
+        ),
+        itemsWrap
+      );
+      swotGrid.appendChild(cell);
     });
     body.appendChild(swotGrid);
-
-    body.appendChild(el('h4',{style:{'margin-top':'20px'}},'SWOT 矩阵'));
-    const swotVis=el('div',{id:'swotVis',style:{display:'grid','grid-template-columns':'1fr 1fr','gap':'0',border:'1px solid var(--color-rule)'}});
-    body.appendChild(swotVis);
-    Work5.refreshSwotMatrix();
   }));
 
-  // Chapter 3 STP
+  // ---------- Chapter 3: STP ----------
   sec.appendChild(Work5.section('ch3','3. 营销战略（STP）', function(body){
     const s=state.work5.ch3_strategy;
-    body.appendChild(el('h4',{},'3.1 细分 (Segmentation)'));
-    body.appendChild(el('textarea',{rows:3,oninput:e=>{s.segmentation=e.target.value;autosave()}},s.segmentation));
-    body.appendChild(el('h4',{},'3.2 目标市场 (Targeting)'));
     body.appendChild(el('div',{class:'ai-actions'},
       el('button',{class:'btn btn--ghost btn--small',onclick:()=>Work5.importTargeting()},'从 Work 2 导入'),
+      el('button',{class:'btn btn--ghost btn--small',onclick:()=>Work5.importPositioning()},'从 Work 3 导入')
     ));
-    body.appendChild(el('textarea',{rows:4,oninput:e=>{s.targeting=e.target.value;autosave()}},s.targeting));
-    body.appendChild(el('h4',{},'3.3 定位 (Positioning)'));
-    body.appendChild(el('div',{class:'ai-actions'},
-      el('button',{class:'btn btn--ghost btn--small',onclick:()=>Work5.importPositioning()},'从 Work 3 导入'),
-    ));
-    body.appendChild(el('textarea',{rows:4,oninput:e=>{s.positioning=e.target.value;autosave()}},s.positioning));
+    const stp=el('div',{class:'stp'},
+      ...['segmentation','targeting','positioning'].map(k=>{
+        const map={segmentation:{letter:'S',name:'细分',en:'Segmentation'},
+                   targeting:{letter:'T',name:'目标',en:'Targeting'},
+                   positioning:{letter:'P',name:'定位',en:'Positioning'}}[k];
+        return el('div',{class:'stp-row'},
+          el('div',{class:'stp-label'},
+            el('span',{class:'name'},map.letter+' — '+map.name),
+            map.en
+          ),
+          el('div',{class:'stp-text',contenteditable:'true',
+            oninput:e=>{s[k]=e.target.textContent;autosave();}},
+            s[k]||'〔点击此处输入……〕')
+        );
+      })
+    );
+    body.appendChild(stp);
   }));
 
-  // Chapter 4 route + 4P / 4C
+  // ---------- Chapter 4: 4P / 4C ----------
   sec.appendChild(Work5.section('ch4','4. 营销组合（路径 + 4P / 4C）', function(body){
     const m=state.work5.ch4_mix;
-    body.appendChild(UI.field('出海路径', el('textarea',{rows:3,oninput:e=>{m.route=e.target.value;autosave()}},m.route)));
-    [['product','产品 (Product)'],['price','价格 (Price)'],['place','渠道 (Place)'],['promotion','促销 (Promotion)']].forEach(([k,label])=>{
-      body.appendChild(UI.field(label, el('textarea',{rows:4,oninput:e=>{m[k]=e.target.value;autosave()}},m[k])));
-    });
     body.appendChild(el('div',{class:'ai-actions'},
       el('button',{class:'btn btn--ghost btn--small',onclick:()=>Work5.import4P()},'从 Work 4 导入'),
       el('button',{class:'btn btn--ghost btn--small',onclick:e=>Work5.convert4C(e.currentTarget)},'AI 转换为 4C')
     ));
-    body.appendChild(el('h4',{style:{'margin-top':'16px'}},'4C 视角'));
-    [['customerValue','客户价值 (Customer Value)'],['customerCost','客户成本 (Customer Cost)'],
-     ['convenience','客户便利 (Convenience)'],['communication','客户沟通 (Communication)']].forEach(([k,label])=>{
-      body.appendChild(UI.field(label, el('textarea',{rows:3,oninput:e=>{m[k]=e.target.value;autosave()}},m[k])));
+
+    // 增长路径（独立段落）
+    body.appendChild(el('div',{class:'sub-head'},
+      el('span',{class:'num'},'4.0'),
+      el('h3',{},'增长路径')
+    ));
+    body.appendChild(el('div',{class:'chapter-text',contenteditable:'true',
+      oninput:e=>{m.route=e.target.textContent;autosave();}},
+      m.route||'〔点击此处输入——模式/路径/节奏……〕'));
+
+    // 4.1 4P
+    body.appendChild(el('div',{class:'sub-head'},
+      el('span',{class:'num'},'4.1'),
+      el('h3',{},'4P · Product / Price / Place / Promotion')
+    ));
+    const pGrid=el('div',{class:'four-grid'});
+    [['product','P','Product','产品'],['price','P','Price','价格'],
+     ['place','P','Place','渠道'],['promotion','P','Promotion','促销']].forEach(([k,l,n,zh])=>{
+      pGrid.appendChild(el('div',{class:'four-cell'},
+        el('div',{class:'four-label'},l+' · '+n),
+        el('div',{class:'four-name'},zh),
+        el('div',{class:'four-text',contenteditable:'true',
+          oninput:e=>{m[k]=e.target.textContent;autosave();}},
+          m[k]||'〔点击此处输入……〕')
+      ));
     });
+    body.appendChild(pGrid);
+
+    // 4.2 4C
+    body.appendChild(el('div',{class:'sub-head'},
+      el('span',{class:'num'},'4.2'),
+      el('h3',{},'4C · Customer Value / Cost / Convenience / Communication')
+    ));
+    const cGrid=el('div',{class:'four-grid'});
+    [['customerValue','C','Customer Value','客户价值'],
+     ['customerCost','C','Customer Cost','客户成本'],
+     ['convenience','C','Convenience','客户便利'],
+     ['communication','C','Communication','客户沟通']].forEach(([k,l,n,zh])=>{
+      cGrid.appendChild(el('div',{class:'four-cell'},
+        el('div',{class:'four-label'},l+' · '+n),
+        el('div',{class:'four-name'},zh),
+        el('div',{class:'four-text',contenteditable:'true',
+          oninput:e=>{m[k]=e.target.textContent;autosave();}},
+          m[k]||'〔点击此处输入……〕')
+      ));
+    });
+    body.appendChild(cGrid);
   }));
 
-  // Chapter 5
+  // ---------- Chapter 5 ----------
   sec.appendChild(Work5.section('ch5','5. 总结与展望', function(body){
     body.appendChild(el('div',{class:'ai-actions'},
       el('button',{class:'btn btn--ghost btn--small',onclick:e=>Work5.aiOutlook(e.currentTarget)},'AI 生成总结展望')
     ));
-    body.appendChild(el('textarea',{rows:6,oninput:e=>{state.work5.ch5_outlook=e.target.value;autosave()}},state.work5.ch5_outlook));
+    const t=el('div',{class:'chapter-text',contenteditable:'true',
+      oninput:e=>{state.work5.ch5_outlook=e.target.textContent;autosave();}},
+      state.work5.ch5_outlook||'〔点击此处输入总结与展望——里程碑、关键风险、长期愿景。〕');
+    body.appendChild(t);
   }));
 
-  // References
+  // ---------- References (editorial table) ----------
   sec.appendChild(Work5.section('refs','参考文献', function(body){
     const refs=state.work5.references;
-    const table=el('div',{class:'table-wrap'});
-    const t=el('table',{class:'data'});
-    t.innerHTML='<thead><tr><th>作者</th><th>标题</th><th style="width:80px">年份</th><th>URL</th><th style="width:50px"></th></tr></thead>';
+    const tableWrap=el('div',{class:'refs'});
+    const t=el('table',{class:'refs-tbl'});
+    const thead=el('thead',{},el('tr',{},...['#','作者','标题','年份','URL',''].map(h=>el('th',{},h))));
     const tb=el('tbody');
     refs.forEach((r,i)=>{
-      const tr=el('tr');
-      ['authors','title','year','url'].forEach(k=>{
-        tr.appendChild(el('td',{},el('input',{value:r[k]||'',oninput:e=>{r[k]=e.target.value;autosave()}})));
-      });
-      tr.appendChild(el('td',{},el('button',{class:'btn btn--ghost btn--small',onclick:()=>{refs.splice(i,1);autosave();Work5.rerender('plan')}},'删除')));
+      const tr=el('tr',{'data-i':String(i)},
+        el('td',{class:'num'},String(i+1)),
+        ...['authors','title','year','url'].map(k=>el('td',{contenteditable:'true',
+          oninput:e=>{r[k]=e.target.textContent;autosave();}},r[k]||'')),
+        el('td',{},el('button',{class:'btn btn--ghost btn--small',onclick:()=>{refs.splice(i,1);autosave();Work5.rerender('refs')}},'×'))
+      );
       tb.appendChild(tr);
     });
-    t.appendChild(tb);table.appendChild(t);body.appendChild(table);
-    body.appendChild(el('button',{class:'btn btn--ghost btn--small',onclick:()=>{refs.push({authors:'',title:'',year:'',url:''});autosave();Work5.rerender('plan')}},'+ 添加文献'));
+    t.appendChild(thead);t.appendChild(tb);tableWrap.appendChild(t);
+    body.appendChild(tableWrap);
+    body.appendChild(el('button',{class:'btn btn--ghost btn--small',onclick:()=>{
+      refs.push({authors:'',title:'',year:'',url:''}); autosave(); Work5.rerender('refs');
+    }},'＋ 添加文献'));
   }));
 
   sec.dataset.rendered='1';
@@ -210,6 +329,15 @@ Work5.toolbar=function(){
 // 无 → 用各 work 内置的样本数据快速填一份, 再汇总
 // Work5.randomExampleAll 已删除：演示数据入口统一走顶栏"演示案例"菜单（DemoMenu），
 // 不再在 Work 5 toolbar 重复一个"随机生成示例"按钮。
+
+// 价值链定位：来自 Work1 微笑曲线收口（只读引用，供策划书自动带出 / 导出）
+Work5.valueChainLine=function(){
+  try{
+    const env = state.work1.environment;
+    const t = (env && env.ourCapabilities && env.ourCapabilities.smileCurve) || (typeof Work1!=='undefined' && Work1.smileConclusion ? Work1.smileConclusion() : '');
+    return String(t||'').trim();
+  }catch(e){ return ''; }
+};
 
 Work5.section=function(id,title,bodyFn){
   // 形态：id ∈ {cover, abstract, ch1..ch5, refs} ; title 形如 "1. 企业及业务概况"
@@ -480,5 +608,6 @@ Work5.refreshDynamic=function(){};
 Work5.exportMd = function(){
   const w=state.work5;
   const refs = w.references.length ? '\n## 参考文献\n'+w.references.map((r,i)=>`${i+1}. ${r.authors} (${r.year}). ${r.title}. ${r.url}`).join('\n') : '';
-  return `\n## V. 策划书正文\n\n# ${w.cover.title}\n## ${w.cover.subtitle}\n${w.cover.team} · ${w.cover.date}\n\n## 摘要\n${w.abstract}\n\n## 1. 企业及业务概况\n${w.ch1_business}\n\n## 2. 营销环境分析\n### 2.1 PEST\n- 政治：${w.ch2_environment.political}\n- 经济：${w.ch2_environment.economic}\n- 社会：${w.ch2_environment.social}\n- 技术：${w.ch2_environment.technological}\n\n### 2.2 SWOT\n| 优势 S | 劣势 W |\n|---|---|\n| ${(w.ch2_environment.strengths||[]).join('；')} | ${(w.ch2_environment.weaknesses||[]).join('；')} |\n| **机会 O** | **威胁 T** |\n| ${(w.ch2_environment.opportunities||[]).join('；')} | ${(w.ch2_environment.threats||[]).join('；')} |\n\n## 3. 营销战略（STP）\n### 3.1 细分\n${w.ch3_strategy.segmentation}\n\n### 3.2 目标市场\n${w.ch3_strategy.targeting}\n\n### 3.3 定位\n${w.ch3_strategy.positioning}\n\n## 4. 营销组合（4P / 4C）\n### 产品\n${w.ch4_mix.product}\n\n### 价格\n${w.ch4_mix.price}\n\n### 渠道\n${w.ch4_mix.place}\n\n### 促销\n${w.ch4_mix.promotion}\n\n### 4C\n- **客户价值**：${w.ch4_mix.customerValue}\n- **客户成本**：${w.ch4_mix.customerCost}\n- **客户便利**：${w.ch4_mix.convenience}\n- **客户沟通**：${w.ch4_mix.communication}\n\n## 5. 总结与展望\n${w.ch5_outlook}\n${refs}`;
+  const vcLine = Work5.valueChainLine();
+  return `\n## V. 策划书正文\n\n# ${w.cover.title}\n## ${w.cover.subtitle}\n${w.cover.team} · ${w.cover.date}\n\n## 摘要\n${w.abstract}\n\n## 1. 企业及业务概况\n${w.ch1_business}${vcLine ? '\n\n价值链定位：'+vcLine : ''}\n\n## 2. 营销环境分析\n### 2.1 PEST\n- 政治：${w.ch2_environment.political}\n- 经济：${w.ch2_environment.economic}\n- 社会：${w.ch2_environment.social}\n- 技术：${w.ch2_environment.technological}\n\n### 2.2 SWOT\n| 优势 S | 劣势 W |\n|---|---|\n| ${(w.ch2_environment.strengths||[]).join('；')} | ${(w.ch2_environment.weaknesses||[]).join('；')} |\n| **机会 O** | **威胁 T** |\n| ${(w.ch2_environment.opportunities||[]).join('；')} | ${(w.ch2_environment.threats||[]).join('；')} |\n\n## 3. 营销战略（STP）\n### 3.1 细分\n${w.ch3_strategy.segmentation}\n\n### 3.2 目标市场\n${w.ch3_strategy.targeting}\n\n### 3.3 定位\n${w.ch3_strategy.positioning}\n\n## 4. 营销组合（4P / 4C）\n### 产品\n${w.ch4_mix.product}\n\n### 价格\n${w.ch4_mix.price}\n\n### 渠道\n${w.ch4_mix.place}\n\n### 促销\n${w.ch4_mix.promotion}\n\n### 4C\n- **客户价值**：${w.ch4_mix.customerValue}\n- **客户成本**：${w.ch4_mix.customerCost}\n- **客户便利**：${w.ch4_mix.convenience}\n- **客户沟通**：${w.ch4_mix.communication}\n\n## 5. 总结与展望\n${w.ch5_outlook}\n${refs}`;
 };
