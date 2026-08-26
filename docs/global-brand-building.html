@@ -6,8 +6,9 @@
 <title>中小企业市场分析与品牌布局</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;0,900;1,700;1,900&family=Lora:ital,wght@0,400;0,500;0,700;1,400;1,700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=Lora:wght@400;500;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="tokens.css?v=6">
+<link rel="stylesheet" href="workshop5-editorial.css?v=1">
 <style>
 /* ============================================================
    HALLMARK · GRID 01 — design.md is the source of truth
@@ -101,6 +102,8 @@ button.ghost{
 button.ghost::after{height:1px;background:var(--color-ink);bottom:-1px}
 button.ghost:hover{color:var(--color-ink);border-bottom-color:transparent;background:transparent}
 button.small{padding:9px 14px;font-size:11px;letter-spacing:.16em}
+/* 历史记录「加载」两步行内确认的武装态 */
+button.small[data-armed="1"]{background:var(--color-ink);color:var(--color-paper)}
 button.icon-btn{padding:0;width:36px;height:36px;display:inline-flex;align-items:center;justify-content:center;line-height:0;background:transparent;color:var(--color-ink);border:1px solid var(--color-rule)}
 button.icon-btn:hover{background:var(--color-ink);color:var(--color-paper);border-color:var(--color-ink)}
 button.icon-btn::after{display:none}
@@ -129,6 +132,37 @@ button.abort-btn{
 }
 button.abort-btn::after{height:1px;background:var(--color-warn);bottom:-1px}
 button.abort-btn:hover{color:var(--color-warn);border-bottom-color:transparent;background:transparent}
+
+/* ============================================================
+   RUNNER BAR — 生成状态条（就地显示，任务结束后自动消失）
+   track = 2px hairline; fill = ink, scaleX 进度。
+   indeterminate = 单次请求（无 total）时的滑动动画。
+   ============================================================ */
+.runner-bar{
+  display:flex;flex-direction:column;gap:7px;
+  margin-top:12px;max-width:420px;
+}
+.runner-bar-track{
+  height:2px;background:var(--color-rule);overflow:hidden;
+}
+.runner-bar-fill{
+  height:100%;width:100%;
+  background:var(--color-ink);
+  transform:scaleX(0);transform-origin:left;
+  transition:transform 200ms var(--ease-out);
+}
+.runner-bar-fill.indeterminate{
+  width:40%;transform:none;
+  animation:runner-slide 1.1s linear infinite;
+}
+@keyframes runner-slide{
+  from{transform:translateX(-100%)}
+  to{transform:translateX(350%)}
+}
+.runner-bar-text{
+  font-family:var(--font-mono);font-size:11px;letter-spacing:.12em;
+  text-transform:uppercase;color:var(--color-ink-2);line-height:1.4;
+}
 
 /* ============================================================
    TAGS · BADGES · RULES
@@ -794,9 +828,21 @@ footer.doc-foot .doc{display:flex;justify-content:space-between;flex-wrap:wrap;g
   display:none;position:absolute;top:100%;left:0;margin-top:6px;
   background:var(--color-paper);border:1px solid var(--color-ink);
   padding:18px;min-width:380px;max-width:560px;
+  max-height:calc(100vh - 120px);overflow-y:auto;
   z-index:200;
 }
 .demo-menu-popup.open{display:block}
+/* 保存 = 持久化 + 手动创建版本。名字留空 = 服务端时间命名。 */
+.save-wrap{position:relative}
+.save-popup{
+  display:none;position:absolute;top:100%;right:0;margin-top:6px;
+  background:var(--color-paper);border:1px solid var(--color-ink);
+  padding:18px;min-width:300px;z-index:200;
+}
+.save-popup.open{display:block}
+.save-popup-actions{display:flex;justify-content:flex-end;gap:10px;margin-top:16px}
+.snap-search{display:block;margin:14px 0 4px}
+.snap-rename{font-size:13px;padding:4px 0;width:100%}
 .demo-menu-title{
   font-family:var(--font-mono);font-size:11px;letter-spacing:.18em;
   text-transform:uppercase;color:var(--color-ink-2);margin-bottom:12px;
@@ -1001,6 +1047,20 @@ table.data textarea{font-family:var(--font-body);font-style:normal;font-size:14p
 .notice{border:1px solid var(--color-rule);border-left:3px solid var(--color-ink);background:var(--color-paper-2);padding:14px 18px;margin:14px 0;font-size:14px;line-height:1.6}
 .notice.disclaimer{font-style:normal;color:var(--color-ink)}
 .basics-row{display:grid;grid-template-columns:280px 1fr;gap:16px;align-items:center;margin:10px 0}
+.basics-head{
+  display:grid;grid-template-columns:280px 1fr 1fr;gap:16px;
+  margin:14px 0 2px;
+}
+.basics-head-label{
+  font-family:var(--font-mono);font-size:10px;letter-spacing:.18em;
+  text-transform:uppercase;color:var(--color-ink-2);
+}
+.basics-head-col{
+  font-family:var(--font-mono);font-size:10px;letter-spacing:.16em;
+  text-transform:uppercase;color:var(--color-ink-2);
+  border-bottom:2px solid var(--color-ink);
+  padding-bottom:6px;
+}
 .basics-label{font-family:var(--font-body);font-size:15px;letter-spacing:0;color:var(--color-ink);font-weight:500}
 .basics-trio{display:grid;grid-template-columns:1fr 1fr;gap:10px}
 .basics-trio input{border:1px solid var(--color-rule);background:var(--color-paper);padding:9px 11px;font-family:var(--font-mono);font-size:13px}
@@ -1015,8 +1075,32 @@ table.data textarea{font-family:var(--font-body);font-style:normal;font-size:14p
   background-color:var(--color-paper);
   color:var(--color-ink-2);
 }
-@media(max-width:760px){.basics-row{grid-template-columns:1fr}.basics-trio{grid-template-columns:1fr}}
-.competitor-table td:first-child input{font-family:var(--font-body);font-style:normal;font-size:15px}
+@media(max-width:760px){
+  .basics-row{grid-template-columns:1fr}
+  .basics-trio{grid-template-columns:1fr}
+  .basics-head{grid-template-columns:1fr 1fr}
+  .basics-head-label{display:none}
+}
+.competitor-table td:first-child input,
+.competitor-table td:first-child textarea{font-family:var(--font-body);font-style:normal;font-size:15px}
+/* 语义定宽：窄列/宽列固定，输入时列宽稳定；文本在格内换行增高（Excel 式） */
+.competitor-table{table-layout:fixed;width:100%}
+.competitor-table th,.competitor-table td{overflow-wrap:break-word}
+.competitor-table .c-name{width:13%}
+.competitor-table .c-price{width:10%}
+.competitor-table .c-str,.competitor-table .c-weak{width:24%}
+.competitor-table .c-pos{width:21%}
+.competitor-table .c-del{width:8%}
+.competitor-table input,
+.competitor-table textarea{width:100%;min-width:0}
+.competitor-table textarea{
+  resize:none;overflow:hidden;
+  min-height:36px;
+  font-family:var(--font-body);font-style:normal;font-size:14px;line-height:1.5;
+  white-space:pre-wrap;
+}
+.competitor-table td:last-child{text-align:center}
+.competitor-table td:last-child button{padding:6px 10px}
 
 /* ============================================================
    TIER GRID — survey effort selector (work1 step5 调研密度)
@@ -1046,7 +1130,7 @@ table.data textarea{font-family:var(--font-body);font-style:normal;font-size:14p
   margin-bottom:10px;
 }
 .tier-card-name{
-  font-family:var(--font-display);font-style:italic;font-weight:700;
+  font-family:var(--font-display);font-style:normal;font-weight:700;
   font-size:1.5rem;line-height:1.1;color:var(--color-ink);
   letter-spacing:-.01em;
 }
@@ -1164,6 +1248,75 @@ table.data textarea{font-family:var(--font-body);font-style:normal;font-size:14p
   margin:0;letter-spacing:-.01em;
 }
 .ai-box.ai-box-step1 .ai-box-headline{font-size:1.75rem;font-weight:600;font-style:normal}
+
+/* ============================================================
+   AI DRAFT — step-level 一键起草入口（置于 step 内容开头）
+   Full-width hairline button; hover inverts to ink fill.
+   ============================================================ */
+.ai-draft{margin:0 0 32px}
+.ai-draft-btn{
+  display:flex;align-items:center;justify-content:space-between;gap:20px;
+  width:100%;
+  padding:20px 26px;
+  border:1px solid var(--color-ink);
+  background:var(--color-paper);
+  cursor:pointer;user-select:none;
+  text-align:left;
+  transition:background 140ms var(--ease-out),color 140ms var(--ease-out);
+}
+.ai-draft-btn:hover{background:var(--color-ink)}
+.ai-draft-title{
+  font-family:var(--font-display);font-style:italic;font-weight:700;
+  font-size:1.375rem;line-height:1.2;color:var(--color-ink);
+  letter-spacing:-.01em;
+  transition:color 140ms var(--ease-out);
+}
+.ai-draft-btn:hover .ai-draft-title{color:var(--color-paper)}
+.ai-draft-arrow{
+  flex-shrink:0;
+  font-family:var(--font-display);font-style:italic;font-weight:700;
+  font-size:1.5rem;color:var(--color-ink-2);
+  transition:color 140ms var(--ease-out),transform 140ms var(--ease-out);
+}
+.ai-draft-btn:hover .ai-draft-arrow{
+  color:var(--color-paper);transform:translateX(4px);
+}
+/* 运行态：进度直接做进大按钮内部（标题 + 秒数 + 中止 + 滑动进度条），
+   任务结束后 Runner.finish() 用 innerHTML 原样还原子节点。 */
+.ai-draft-btn.running{
+  flex-direction:column;align-items:stretch;gap:14px;
+  cursor:wait;
+}
+.ai-draft-btn.running:hover{background:var(--color-paper)}
+.ai-draft-btn.running:hover .ai-draft-title{color:var(--color-ink)}
+.ai-draft-row{display:flex;align-items:center;justify-content:space-between;gap:16px}
+.ai-draft-right{display:flex;align-items:center;gap:14px}
+.ai-draft-state-time{
+  font-family:var(--font-mono);font-size:11px;letter-spacing:.12em;
+  text-transform:uppercase;color:var(--color-ink-2);
+  font-variant-numeric:tabular-nums;
+}
+.ai-draft-btn .abort-inline{
+  background:transparent;color:var(--color-ink);border:1px solid var(--color-ink);
+  padding:7px 16px;font-size:12px;letter-spacing:.16em;line-height:1;
+  cursor:pointer;user-select:none;font-family:var(--font-mono);
+}
+.ai-draft-btn .abort-inline:hover{color:var(--color-warn);border-color:var(--color-warn)}
+.ai-draft-progress{display:block;height:2px;background:var(--color-rule);overflow:hidden}
+.ai-draft-progress-fill{
+  display:block;height:100%;width:40%;
+  background:var(--color-ink);
+  animation:runner-slide 1.1s linear infinite;
+}
+.ai-draft-hint{
+  font-family:var(--font-mono);font-size:11px;letter-spacing:.14em;
+  text-transform:uppercase;color:var(--color-ink-2);
+  margin:12px 2px 0;line-height:1.6;
+}
+@media(max-width:760px){
+  .ai-draft-btn{padding:16px 18px}
+  .ai-draft-title{font-size:1.125rem}
+}
 .ai-box-hint{
   font-size:14px;line-height:1.6;color:var(--color-ink-2);font-style:normal;
   max-width:60ch;
@@ -1634,7 +1787,14 @@ body[data-w4-entry="greenfield"] .x-entry-heavy { display:block; }
   }
   .progress-bar>div{transition:none}
   .expert-avatar.thinking{animation:none;opacity:.75}
+  /* 生成进度条：滑动动画被压缩后是死条，改用透明度脉冲（同属允许的交叉淡化）。 */
+  .ai-draft-progress-fill.indeterminate,
+  .runner-bar-fill.indeterminate{
+    animation:runner-pulse 1.4s ease-in-out infinite !important;
+    transform:none;
+  }
 }
+@keyframes runner-pulse{0%,100%{opacity:1}50%{opacity:.3}}
 /* Gate hover-driven visual changes behind a real pointer — touch fires false hovers.
    (Press feedback on :active still applies on touch.) */
 @media (hover: none){
@@ -2007,7 +2167,18 @@ body[data-w4-entry="greenfield"] .x-entry-heavy { display:block; }
       <button class="ghost" onclick="App.exportMd()">导出 MD</button>
       <button class="ghost" onclick="History.open()">历史记录</button>
       <button class="ghost" onclick="window.print()">打印 / PDF</button>
-      <button class="ghost" onclick="App.save(true)">保存</button>
+      <div class="save-wrap">
+        <button class="ghost" id="saveBtn" type="button" onclick="SavePanel.open()">保存</button>
+        <div class="save-popup" id="savePopup">
+          <label for="saveName">版本名（留空 = 时间命名）</label>
+          <input type="text" id="saveName" placeholder="如：初稿、给老板看的版本" autocomplete="off"
+                 onkeydown="if(event.key==='Enter'){event.preventDefault();SavePanel.commit()}">
+          <div class="save-popup-actions">
+            <button class="small" type="button" onclick="SavePanel.cancel()">取消</button>
+            <button class="small primary" type="button" onclick="SavePanel.commit()">保存</button>
+          </div>
+        </div>
+      </div>
       <button class="ghost" onclick="App.reset()">重置</button>
       <div class="mode-switch" id="modeSwitch" title="切换 AI 调用模式">
         <button type="button" data-mode="api" onclick="Settings.setMode('api')">API 自动</button>
@@ -2112,14 +2283,9 @@ body[data-w4-entry="greenfield"] .x-entry-heavy { display:block; }
   <div class="modal">
     <button class="modal-close" onclick="History.close()">×</button>
     <h2>历史记录.</h2>
-    <p class="muted">自动版本保留最近 30 个；手动存档的版本永久保留。恢复前会自动备份当前内容。</p>
-    <div class="row" style="align-items:flex-end">
-      <div class="field" style="margin-bottom:0">
-        <label>存档当前版本</label>
-        <input type="text" id="snapName" placeholder="版本名称，如：初稿、给老板看的版本">
-      </div>
-      <button class="primary" onclick="History.create()" style="flex:0 0 auto">存档</button>
-    </div>
+    <p class="muted">自定义名版本永久保留；时间名版本保留最近 10 个。加载前会把当前内容自动备份为「恢复前备份 …」。</p>
+    <input type="text" id="snapSearch" class="snap-search" placeholder="检索版本名…" autocomplete="off"
+           oninput="History.render()">
     <hr class="rule">
     <div id="snapList"></div>
   </div>
@@ -2236,10 +2402,11 @@ const Store = {
       });
       if(res.ok){
         const ss=$('#saveStatus'); if(ss) ss.textContent='已保存 · '+new Date().toLocaleTimeString();
-      }else{
-        showToast('保存失败: HTTP '+res.status);
+        return true;
       }
-    }catch(e){ showToast('保存失败: '+e.message); }
+      showToast('保存失败: HTTP '+res.status);
+      return false;
+    }catch(e){ showToast('保存失败: '+e.message); return false; }
   },
 
   async load(){
@@ -2248,16 +2415,6 @@ const Store = {
       if(!res.ok) return null;  // 404 = no saved state yet
       return await res.json();
     }catch{ return null; }
-  },
-
-  // Synchronous-ish save for page unload — sendBeacon survives tab close.
-  saveSync(){
-    if(!state || state.meta.isDemo) return;
-    try{
-      state.meta.savedAt = new Date().toISOString();
-      const blob = new Blob([JSON.stringify({project_id:this.projectId, state})], {type:'application/json'});
-      navigator.sendBeacon(apiUrl('/api/state'), blob);
-    }catch{}
   },
 
   // One-time migration: legacy localStorage data (and its plaintext key) → server.
@@ -2308,15 +2465,27 @@ function mergeWithDefaults(parsed){
   };
 }
 
-async function saveNow(){ await Store.save(state); }
-function save(manual){
-  saveNow().then(()=>{ if(manual && !state.meta.isDemo) showToast('已保存'); });
+// 手动保存 + 未保存追踪。autosave 不再自动写入服务器，
+// 只标记 dirty 让状态栏显示「未保存」；刷新/关闭时由 beforeunload 弹原生确认窗。
+let dirty = false;
+function markDirty(){
+  if(!state || state.meta?.isDemo) return;
+  dirty = true;
+  const ss=$('#saveStatus');
+  if(ss) ss.textContent='未保存 · 有更改';
 }
-let saveTimer=null;
+async function saveNow(){
+  try{
+    const ok = await Store.save(state);
+    if(ok) dirty=false;
+    return ok;
+  }catch(e){
+    /* 保存失败时保持 dirty，状态栏仍显示未保存 */
+    return false;
+  }
+}
 function autosave(){
-  if(!state?.settings?.autoSave) return;
-  clearTimeout(saveTimer);
-  saveTimer=setTimeout(()=>saveNow(), 1000);
+  markDirty();
 }
 
 /* ============================================================
@@ -2471,17 +2640,50 @@ const Runner = {
       id, label, button, total, pausable, onPause, onResume,
       controller: new AbortController(),
       status:'running', paused:false, aborted:false, done:0,
-      _resume:null, _origOnclick:null, _origText:'', _abortBtn:null, _finished:false
+      _resume:null, _origOnclick:null, _origText:'', _origHTML:null,
+      _abortBtn:null, _bar:null, _tick:null, _timeEl:null, _finished:false
     };
     if(button){
       task._origText=button.textContent;
       task._origOnclick=button.onclick;
+      task._origHTML=button.innerHTML;
       if(pausable) button.onclick=()=>this.togglePause();
       const ab=el('button',{class:'abort-btn',type:'button',title:'中止',
         onclick:()=>this.abort()},'×');
-      button.insertAdjacentElement('afterend', ab);
-      task._abortBtn=ab;
-      if(!pausable) button.disabled=true;
+      if(button.classList.contains('ai-draft-btn')){
+        // 大按钮：进度做进按钮内部（生成中 + 秒数 + 中止 + 滑动进度条）。
+        // 按钮保持可用（中止 × 在内部，用 span 实现避免 button 非法嵌套），
+        // 重复点击由上方任务锁拦截；完成后 finish() 用 _origHTML 原样还原。
+        button.classList.add('running');
+        button.innerHTML='';
+        const time=el('span',{class:'ai-draft-state-time'},'已用 0s');
+        task._timeEl=time;
+        button.appendChild(el('span',{class:'ai-draft-row'},
+          el('span',{class:'ai-draft-title'},'生成中 · '+label+'…'),
+          el('span',{class:'ai-draft-right'}, time,
+            el('span',{class:'abort-inline',role:'button',tabindex:0,title:'中止',
+              onclick:e=>{ e.stopPropagation(); this.abort(); },
+              onkeydown:e=>{ if(e.key==='Enter'||e.key===' '){ e.preventDefault(); e.stopPropagation(); this.abort(); } }},'中止'))
+        ));
+        button.appendChild(el('span',{class:'ai-draft-progress'},
+          el('span',{class:'ai-draft-progress-fill indeterminate'})));
+        task._elapsed=0;
+        task._tick=setInterval(()=>{
+          task._elapsed++;
+          if(task._timeEl) task._timeEl.textContent='已用 '+task._elapsed+'s';
+        },1000);
+      }else{
+        button.insertAdjacentElement('afterend', ab);
+        task._abortBtn=ab;
+        // 生成状态条（就地、运行时才出现）：任务名 · 百分比 · 计数
+        const bar=el('div',{class:'runner-bar'},
+          el('div',{class:'runner-bar-track'}, el('div',{class:'runner-bar-fill'})),
+          el('span',{class:'runner-bar-text'}, label)
+        );
+        ab.insertAdjacentElement('afterend', bar);
+        task._bar=bar;
+        if(!pausable) button.disabled=true;
+      }
     }
     this.current=task;
     this.renderUI();
@@ -2521,11 +2723,15 @@ const Runner = {
   finish(){
     const t=this.current; if(!t) return;
     t._finished=true;
+    if(t._tick){ clearInterval(t._tick); t._tick=null; }
     if(t.button){
       if(t._origOnclick!==null) t.button.onclick=t._origOnclick;
       buttonRestore(t.button, t._origText);
+      // ai-draft 大按钮：完整还原原有子节点（标题 + 箭头），而非压成纯文本。
+      if(t._origHTML!=null){ t.button.innerHTML=t._origHTML; t.button.classList.remove('running'); }
     }
     if(t._abortBtn){ t._abortBtn.remove(); t._abortBtn=null; }
+    if(t._bar){ t._bar.remove(); t._bar=null; }
     this.current=null;
     this.renderUI();
   },
@@ -2541,8 +2747,27 @@ const Runner = {
     if(t.pausable){
       if(t.paused) t.button.textContent = t.total?`继续 · ${t.done}/${t.total}`:'继续';
       else t.button.textContent = t.total?`暂停 · ${Math.round(100*t.done/t.total)}%`:'暂停';
-    }else{
+    }else if(!t.button.classList.contains('ai-draft-btn')){
+      // ai-draft 大按钮的运行态结构（生成中/秒数/进度条）在 start() 里已就位，
+      // 这里不能覆盖其子节点。
       t.button.textContent='生成中…';
+    }
+    // 就地状态条：任务名 · 百分比 · 计数
+    const bar=t._bar;
+    if(bar){
+      const fill=bar.querySelector('.runner-bar-fill');
+      const text=bar.querySelector('.runner-bar-text');
+      if(fill && text){
+        if(t.total>0){
+          const pct=Math.round(100*t.done/t.total);
+          fill.style.transform=`scaleX(${t.done/t.total})`;
+          fill.classList.remove('indeterminate');
+          text.textContent=`${t.label} · ${pct}% · ${t.done}/${t.total}${t.paused?' · 已暂停':''}`;
+        }else{
+          fill.classList.add('indeterminate');
+          text.textContent=`${t.label} · 生成中…`;
+        }
+      }
     }
   }
 };
@@ -2720,13 +2945,36 @@ const App = {
       const keepApi = state.settings.api;
       state = mergeWithDefaults(data);
       state.settings.api = keepApi;  // server config wins over saved copy
+      // 旧版 bug 自动恢复：演示数据曾被意外持久化（历史 bug：先注入演示数据
+      // 再保存，导致 current.json = 演示内容 + isDemo:false，刷新后没有「退出
+      // 演示」按钮，用户被卡死在案例里）。判别标志：meta.demoSnapshot 非空且
+      // isDemo 为 false —— 正常流程永远不会持久化 demoSnapshot，所以存在即污染。
+      if(state.meta && state.meta.demoSnapshot && !state.meta.isDemo){
+        try{
+          const snap = JSON.parse(JSON.stringify(state.meta.demoSnapshot));
+          const keepApi2 = state.settings.api;
+          state = mergeWithDefaults(snap);
+          state.settings.api = keepApi2;
+          state.meta.isDemo = false;
+          state.meta.demoCase = null;
+          state.meta.demoSnapshot = null;
+          showToast('已自动还原演示前的内容');
+          await saveNow();  // 立即用真实内容覆盖服务器上的污染数据
+        }catch(e){ console.error('演示数据自动还原失败:', e); }
+      }
     }
-    // 4. Flush on navigation & page hide — covers "填到一半关页面".
-    window.addEventListener('beforeunload', ()=>Store.saveSync());
-    document.addEventListener('visibilitychange', ()=>{
-      if(document.visibilityState==='hidden') Store.saveSync();
+    // 4. 未保存时关闭/刷新 → 浏览器原生确认弹窗（不再自动兜底保存）。
+    window.addEventListener('beforeunload', e=>{
+      if(dirty){
+        e.preventDefault();
+        e.returnValue='';
+      }
     });
-    // 5. Render.
+    // 5. 初始保存状态（与服务器数据一致 = 已保存）
+    dirty = false;
+    const ss0=$('#saveStatus');
+    if(ss0 && !state.meta.isDemo) ss0.textContent='已保存';
+    // 6. Render.
     this.renderAll();
     this.bindKeys();
     this.updateSummary();
@@ -2744,10 +2992,13 @@ const App = {
       if((e.ctrlKey||e.metaKey) && e.key>='1' && e.key<='5'){
         e.preventDefault(); this.goWork(parseInt(e.key));
       }
+      if((e.ctrlKey||e.metaKey) && e.key.toLowerCase()==='s'){
+        e.preventDefault(); SavePanel.open();
+      }
     });
   },
   goWork(n){
-    saveNow();  // flush pending edits before leaving the workshop
+    // 取消自动保存：切 tab 不写服务器（数据在内存，切换不丢）
     this.currentWork=n;
     state.meta.currentWork = n;
     $$('.workshop').forEach(s=>s.classList.toggle('active', +s.dataset.workshop===n));
@@ -2804,10 +3055,8 @@ const App = {
     if(!wMod) return;
     const validIds = wMod.steps.map(s=>s.id);
     if(!validIds.includes(id)) return;
-    saveNow();
     this.currentStep=id;
     state.meta.currentStep = id;
-    autosave();
     const wEl = document.querySelector(`.workshop[data-workshop="${this.currentWork}"]`);
     if(!wEl) return;
     $$('.step', wEl).forEach(s=>s.classList.toggle('active', s.dataset.step===id));
@@ -2849,8 +3098,11 @@ const App = {
     // Restore the user's last position (persisted in meta), defaulting to
     // workshop 1 / its first step when no position was saved yet.
     const w = [1,2,3,4,5].includes(state.meta.currentWork) ? state.meta.currentWork : 1;
-    this.goWork(w);
+    // Read the persisted step BEFORE goWork(): goWork() internally calls
+    // goStep(first) which overwrites state.meta.currentStep with the first
+    // step's id — reading after it would always restore the first step.
     const st = state.meta.currentStep;
+    this.goWork(w);
     if(st && this.workshopSteps(w).some(s=>s.id===st)) this.goStep(st);
   },
   updateSummary(){
@@ -2886,14 +3138,23 @@ const App = {
     const keepWork = this.currentWork;
     const keepScroll = window.scrollY;
     if(state.meta.isDemo){
-      // Exit demo: reload real state from the server — nothing demo-related
-      // was ever persisted, so the real data is exactly where we left it.
-      const keepApi=state.settings.api;
-      const real=await Store.load();
-      state = real ? mergeWithDefaults(real) : defaultState();
-      state.settings.api=keepApi;
-      state.meta.isDemo=false;
-      state.meta.demoCase=null;
+      // Exit demo: 优先用进入演示前的内存快照恢复真实 state（用户在演示期间
+      // 可能改了真实 state 但没保存到服务器 —— 此时 Store.load() 拿不到最新内容，
+      // 必须用快照）。快照保存于 demoSnapshot（结构：deep-clone 当前 work1-5 + meta）。
+      if(state.meta.demoSnapshot){
+        Object.assign(state, JSON.parse(JSON.stringify(state.meta.demoSnapshot)));
+        state.meta.isDemo=false;
+        state.meta.demoCase=null;
+        state.meta.demoSnapshot=null;
+      } else {
+        // 没有快照（极旧的会话）：回退到服务端 + 默认值
+        const keepApi=state.settings.api;
+        const real=await Store.load();
+        state = real ? mergeWithDefaults(real) : defaultState();
+        state.settings.api=keepApi;
+        state.meta.isDemo=false;
+        state.meta.demoCase=null;
+      }
       $('#demoBanner').classList.remove('show');
       $('#demoBtn').textContent='演示案例 ▼';
       document.body.classList.remove('is-demo');
@@ -2904,13 +3165,22 @@ const App = {
         if(typeof DemoMenu!=='undefined') DemoMenu.open();
         return;
       }
+      // 进入演示前先保存真实 state 到服务器（此时 isDemo=false，保存允许）。
+      // 顺序不能反：若先 inject 演示数据再保存，演示数据会被当成真实数据持久化，
+      // 且 isDemo 还来不及置 true —— 刷新后页面显示演示内容却没有「退出演示」
+      // 按钮，用户会被卡死在演示案例里。
+      await saveNow();
+      // 再快照真实 state（演示数据是覆盖整个 work1-5，演示退出时必须用这个快照恢复）。
+      // 必须在 DemoData.inject 之前快照，否则会被演示数据污染。快照只存在内存，
+      // 不会持久化到服务器。
+      state.meta.demoSnapshot = JSON.parse(JSON.stringify({
+        work1: state.work1, work2: state.work2, work3: state.work3,
+        work4: state.work4, work5: state.work5, meta: state.meta,
+      }));
       if(typeof DemoData==='undefined' || !DemoData.inject(caseKey, state)){
         showToast('演示案例加载失败：'+caseKey);
         return;
       }
-      // Enter demo: make sure real work is persisted first, then swap in
-      // demo data in-memory only. Store.save() refuses while isDemo=true.
-      await saveNow();
       state.meta.isDemo=true;
       state.meta.demoCase=caseKey;
       $('#demoBanner').classList.add('show');
@@ -3058,7 +3328,59 @@ var DemoMenu = {
 };
 
 /* ============================================================
-   HISTORY — snapshot list / named archive / restore
+   SAVE PANEL — 保存 = 持久化 + 手动创建版本（命名优先）。
+   留空 = 服务端时间命名；重名自动加后缀；内容无变化不新建版本。
+   ============================================================ */
+const SavePanel = {
+  open(){
+    if(state?.meta?.isDemo){ showToast('演示模式不保存到服务器'); return; }
+    $('#savePopup').classList.add('open');
+    const inp=$('#saveName');
+    inp.value='';
+    setTimeout(()=>inp.focus(), 0);
+    document.addEventListener('keydown', this._key);
+    document.addEventListener('click', this._outside);
+  },
+  cancel(){
+    $('#savePopup').classList.remove('open');
+    document.removeEventListener('keydown', this._key);
+    document.removeEventListener('click', this._outside);
+  },
+  _key(e){
+    if(e.key==='Escape') SavePanel.cancel();
+  },
+  _outside(e){
+    const pop=$('#savePopup');
+    if(pop.contains(e.target) || (e.target.id==='saveBtn')) return;
+    SavePanel.cancel();
+  },
+  async commit(){
+    if(!$('#savePopup').classList.contains('open')) return;
+    const name=$('#saveName').value.trim();
+    this.cancel();
+    try{
+      const persisted=await saveNow();
+      if(!persisted) return;  // Store.save 已弹出失败提示
+      // 同名版本：先问用户覆盖还是另存（覆盖会替换旧内容，需明确同意）
+      let overwrite=false;
+      if(name){
+        const snaps=await (await fetch(apiUrl('/api/snapshots')+'?project_id=default')).json().catch(()=>[]);
+        if(snaps.some(s=>s.type==='named' && s.name===name)){
+          overwrite=confirm('已存在同名版本「'+name+'」。\n确定 → 覆盖该版本（旧内容将被替换）\n取消 → 另存为新版本（自动加后缀）');
+        }
+      }
+      const res=await fetch(apiUrl('/api/snapshots'),{method:'POST',headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({project_id:'default', name, overwrite})});
+      if(!res.ok){ const t=await res.json().catch(()=>null); throw new Error(t?.detail||('HTTP '+res.status)); }
+      const snap=await res.json();
+      if(snap.skipped==='duplicate'){ showToast('内容无变化 · 未新建版本'); return; }
+      showToast(name? '已存档 · '+snap.name : '已保存 · '+snap.name);
+    }catch(e){ showToast('存档失败: '+e.message); }
+  }
+};
+
+/* ============================================================
+   HISTORY — snapshot list / search / restore / rename / delete
    ============================================================ */
 const History = {
   async open(){
@@ -3067,57 +3389,110 @@ const History = {
   },
   close(){ $('#historyModal').classList.remove('open'); },
   async render(){
+    const seq=(this._seq||0)+1; this._seq=seq;  // 快速输入/连续操作时丢弃过期请求，避免行重复
     const list=$('#snapList'); list.innerHTML='';
     let snaps=[];
     try{ snaps=await (await fetch(apiUrl('/api/snapshots')+'?project_id=default')).json(); }catch{}
+    if(seq!==this._seq) return;
+    const q=($('#snapSearch').value||'').trim().toLowerCase();
+    if(q) snaps=snaps.filter(s=>(s.name||'').toLowerCase().includes(q));
     if(!snaps.length){
-      list.appendChild(el('p',{class:'muted'},'还没有历史版本。'));
+      list.appendChild(el('p',{class:'muted'}, q? '没有匹配的版本。' : '还没有历史版本。'));
       return;
     }
     snaps.forEach(s=>{
       const time=new Date(s.created_at*1000).toLocaleString();
-      const isNamed=s.type==='named';
-      list.appendChild(el('div',{class:'expert-row'},
+      const isTime=s.type==='time';
+      list.appendChild(el('div',{class:'expert-row','data-id':s.id},
         el('div',{style:'flex:1;min-width:0'},
-          el('div',{style:'font-family:var(--font-mono);font-size:13px'},
-            isNamed? s.name : time,
-            isNamed? '' : ' '),
-          el('div',{class:'hint'}, isNamed? time+' · 存档' : '自动保存')
+          el('div',{class:'snap-name',style:'font-family:var(--font-mono);font-size:13px'}, s.name),
+          el('div',{class:'hint'}, isTime? '时间名版本 · 保留最近 10 个' : time+' · 永久保留')
         ),
-        el('button',{class:'small',onclick:()=>History.restore(s.id)},'恢复')
+        el('button',{class:'small','data-act':'load','data-name':s.name,onclick:()=>History.load(s.id)},'加载'),
+        el('button',{class:'small',onclick:()=>History.rename(s.id)},'重命名'),
+        el('button',{class:'small',onclick:()=>History.del(s.id)},'删除')
       ));
     });
   },
-  async create(){
-    const name=$('#snapName').value.trim();
-    if(!name){ showToast('请输入版本名称'); return; }
-    try{
-      await saveNow();  // persist latest edits before archiving
-      await fetch(apiUrl('/api/snapshots'),{method:'POST',headers:{'Content-Type':'application/json'},
-        body:JSON.stringify({project_id:'default', name})});
-      $('#snapName').value='';
-      showToast('已存档');
-      await this.render();
-    }catch(e){ showToast('存档失败: '+e.message); }
+  async rename(id){
+    const row=Array.from(document.querySelectorAll('#snapList .expert-row')).find(r=>r.dataset.id===id);
+    if(!row) return;
+    const nameEl=row.querySelector('.snap-name');
+    const inp=el('input',{type:'text',class:'snap-rename',value:nameEl.textContent});
+    nameEl.replaceWith(inp);
+    inp.focus(); inp.select();
+    let finished=false;
+    const finish=async saveIt=>{
+      if(finished) return; finished=true;
+      const v=inp.value.trim();
+      if(saveIt && v){
+        try{
+          // 同名版本：与保存流程一致，先问覆盖还是另存
+          let overwrite=false;
+          const snaps=await (await fetch(apiUrl('/api/snapshots')+'?project_id=default')).json().catch(()=>[]);
+          if(snaps.some(s=>s.type==='named' && s.id!==id && s.name===v)){
+            overwrite=confirm('已存在同名版本「'+v+'」。\n确定 → 覆盖该版本（旧内容将被替换）\n取消 → 另存为新版本（自动加后缀）');
+          }
+          const res=await fetch(apiUrl('/api/snapshots/'+encodeURIComponent(id)+'/rename')+'?project_id=default',
+            {method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({name:v, overwrite})});
+          if(!res.ok){ const t=await res.json().catch(()=>null); throw new Error(t?.detail||('HTTP '+res.status)); }
+          showToast('已重命名');
+        }catch(e){ showToast('重命名失败: '+e.message); }
+      }
+      this.render();
+    };
+    const onBlur=()=>finish(false);
+    inp.addEventListener('blur', onBlur);
+    inp.addEventListener('keydown', e=>{
+      if(e.key==='Enter'){ e.preventDefault(); inp.removeEventListener('blur', onBlur); finish(true); }
+      else if(e.key==='Escape'){ e.preventDefault(); inp.removeEventListener('blur', onBlur); finish(false); }
+    });
   },
-  async restore(id){
-    if(!confirm('恢复此版本？当前内容会先自动备份。')) return;
+  async del(id){
+    if(!confirm('删除此版本？此操作不可恢复。')) return;
+    try{
+      const res=await fetch(apiUrl('/api/snapshots/'+encodeURIComponent(id))+'?project_id=default',{method:'DELETE'});
+      if(!res.ok) throw new Error('HTTP '+res.status);
+      showToast('已删除');
+      await this.render();
+    }catch(e){ showToast('删除失败: '+e.message); }
+  },
+  async load(id){
+    // 两步行内确认（不用系统 confirm —— 系统对话框在某些环境会被拦截，点了没反应）。
+    // 第一击：武装按钮并说明行为；6 秒内第二击才真正执行。
+    const row=Array.from(document.querySelectorAll('#snapList .expert-row')).find(r=>r.dataset.id===id);
+    if(!row) return;
+    const btn=row.querySelector('button[data-act="load"]');
+    if(!btn || btn.dataset.armed!=='1'){
+      if(btn){ btn.dataset.armed='1'; btn.textContent='确认加载'; }
+      const hint=row.querySelector('.hint');
+      if(hint) hint.textContent='再次点击「确认加载」→ 当前内容先自动备份为「恢复前备份 …」，再替换为此版本内容。';
+      clearTimeout(History._disarm);
+      History._disarm=setTimeout(()=>{
+        const b=row.querySelector('button[data-act="load"]');
+        if(b && b.dataset.armed==='1'){ b.dataset.armed='0'; b.textContent='加载'; }
+      },6000);
+      return;
+    }
+    if(btn){ btn.dataset.armed='0'; btn.textContent='加载…'; }
     try{
       const res=await fetch(apiUrl('/api/snapshots/'+encodeURIComponent(id)+'/restore')+'?project_id=default',{method:'POST'});
-      if(!res.ok) throw new Error('HTTP '+res.status);
+      if(!res.ok){ const t=await res.json().catch(()=>null); throw new Error(t?.detail||('HTTP '+res.status)); }
       const data=await res.json();
       const keepApi=state.settings.api;
       state=mergeWithDefaults(data.state);
       state.settings.api=keepApi;
       state.meta.isDemo=false;
+      state.meta.demoCase=null;
+      state.meta.demoSnapshot=null;
       $('#demoBanner').classList.remove('show');
       $('#demoBtn').textContent='演示案例 ▼';
       document.body.classList.remove('is-demo');
       this.close();
       App.renderAll();
       App.updateSummary();
-      showToast('已恢复');
-    }catch(e){ showToast('恢复失败: '+e.message); }
+      showToast('已加载版本：'+(btn?.dataset.name||id));
+    }catch(e){ showToast('加载失败: '+e.message); }
   }
 };
 
@@ -3409,12 +3784,12 @@ var Work5={steps:[],defaultData:()=>({})};
      WORKSHOP MODULES (injected below)
      ============================================================ -->
 <script src="lib/demo_notes.js?v=50007"></script>
-<script src="workshop1.js?v=50034"></script>
+<script src="workshop1.js?v=50036"></script>
 <script src="workshop2.js?v=50009"></script>
-<script src="workshop3.js?v=50013"></script>
+<script src="workshop3.js?v=50014"></script>
 <script src="workshop4.js?v=50011"></script>
-<script src="workshop5.js?v=50005"></script>
-<script src="demo-data.js?v=50035"></script>
+<script src="workshop5.js?v=50008"></script>
+<script src="demo-data.js?v=50037"></script>
 <script>
 document.addEventListener('DOMContentLoaded', ()=>{
   // 演示菜单独立于 App.init 绑定：后端未连接时 init 会提前 return，菜单也必须可用
