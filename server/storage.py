@@ -1,4 +1,12 @@
-"""File-based state persistence with snapshot versioning."""
+"""File-based state persistence with manual version snapshots.
+
+Model (single save concept):
+- 保存 = persist current.json + explicitly create ONE version.
+- Versions are manual. Empty name → time-named (type "time"), pruned to the
+  newest MAX_TIME_SNAPSHOTS. Custom name → type "named", kept forever.
+- No auto snapshots: the legacy auto_* files are removed by
+  remove_legacy_auto_snapshots() at server startup.
+"""
 from __future__ import annotations
 
 import json
@@ -9,10 +17,11 @@ from pathlib import Path
 from typing import Any
 
 DATA_DIR = Path(__file__).resolve().parent / "data"
-MAX_AUTO_SNAPSHOTS = 30
-# Auto snapshots are throttled: at most one per interval, so the retained 30
-# span a meaningful stretch of editing time instead of 30 seconds of typing.
-AUTO_SNAPSHOT_MIN_INTERVAL = 120  # seconds
+# Time-named versions (quick saves with no custom name) are pruned to the
+# newest MAX_TIME_SNAPSHOTS; custom-named versions are permanent.
+MAX_TIME_SNAPSHOTS = 10
+# Backup created before a destructive restore — always custom-named (permanent).
+BACKUP_PREFIX = "恢复前备份 "
 
 
 def _project_dir(project_id: str) -> Path:
@@ -62,28 +71,24 @@ def _canonical(state: Any) -> str:
 
 
 def save_state(project_id: str, state: dict[str, Any]) -> dict[str, Any]:
-    """Save state and create an auto snapshot. Returns snapshot metadata.
-
-    Snapshots are skipped when (a) content is identical to the newest snapshot
-    (ignoring meta.savedAt), or (b) the newest auto snapshot is fresher than
-    AUTO_SNAPSHOT_MIN_INTERVAL. current.json is always written.
-    """
+    """Persist current state. No snapshot is created here — versions are
+    created explicitly via POST /api/snapshots (create_snapshot)."""
     _atomic_write(_current_file(project_id), json.dumps(state, ensure_ascii=False, indent=2))
-    snaps = list_snapshots(project_id)
-    if snaps:
-        newest = snaps[0]
-        latest_data = load_snapshot(project_id, newest["id"])
-        if latest_data is not None and _canonical(latest_data) == _canonical(state):
-            return {**newest, "skipped": "duplicate"}
-        if newest["type"] == "auto" and (time.time() - newest["created_at"]) < AUTO_SNAPSHOT_MIN_INTERVAL:
-            return {**newest, "skipped": "throttled"}
-    snap = create_snapshot(project_id, state=state)
-    _cleanup_auto_snapshots(project_id)
-    return snap
+    return {"ok": True}
+
+
+def _time_display(ts_str: str) -> str | None:
+    """Convert a 15-char %Y%m%d_%H%M%S timestamp to 'YYYY-MM-DD HH:MM:SS'."""
+    try:
+        t = time.mktime(time.strptime(ts_str, "%Y%m%d_%H%M%S"))
+        return time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(t))
+    except (ValueError, OSError):
+        return None
 
 
 def list_snapshots(project_id: str = "default") -> list[dict[str, Any]]:
-    """List snapshots, newest first."""
+    """List snapshots, newest first. Types: 'time' (time-named, prunable),
+    'named' (custom name, permanent)."""
     snap_dir = _snapshots_dir(project_id)
     if not snap_dir.exists():
         return []
@@ -92,32 +97,24 @@ def list_snapshots(project_id: str = "default") -> list[dict[str, Any]]:
     for f in snap_dir.glob("*.json"):
         try:
             stat = f.stat()
-            name = f.stem
-            is_auto = name.startswith("auto_")
-            # Extract timestamp from auto_YYYYMMDD_HHMMSS
+            stem = f.stem
+            is_time = stem.startswith("time_")
+            is_named = stem.startswith("named_")
             created_at = stat.st_mtime
-            if is_auto:
-                ts_str = name[5:]  # remove "auto_"
-                try:
-                    created_at = time.mktime(time.strptime(ts_str, "%Y%m%d_%H%M%S"))
-                except ValueError:
-                    pass
-
-            # Read minimal metadata without loading full state
-            display_name = name
-            if is_auto:
-                try:
-                    t = time.localtime(created_at)
-                    display_name = time.strftime("%Y-%m-%d %H:%M:%S", t)
-                except Exception:
-                    display_name = name
-            elif name.startswith("named_"):
-                display_name = name[6:]  # remove "named_"
+            display_name = stem
+            if is_time or stem.startswith("auto_"):  # auto_ tolerated until migration
+                ts_display = _time_display(stem[5:20])
+                if ts_display is not None:
+                    display_name = ts_display
+                    t = time.mktime(time.strptime(stem[5:20], "%Y%m%d_%H%M%S"))
+                    created_at = t
+            elif is_named:
+                display_name = stem[6:]  # remove "named_"
 
             snapshots.append({
-                "id": name,
+                "id": stem,
                 "name": display_name,
-                "type": "auto" if is_auto else "named",
+                "type": "time" if is_time else ("auto" if stem.startswith("auto_") else "named"),
                 "created_at": created_at,
             })
         except OSError:
@@ -131,35 +128,63 @@ def create_snapshot(
     project_id: str,
     name: str | None = None,
     state: dict[str, Any] | None = None,
+    overwrite: bool = False,
 ) -> dict[str, Any]:
-    """Create a snapshot. If name is provided, it's a named (permanent) snapshot.
-    If state is None, reads from current.json."""
+    """Create a version snapshot.
+
+    - name empty/None → time-named (type 'time'); pruned to newest
+      MAX_TIME_SNAPSHOTS after creation.
+    - name given → custom-named (type 'named'); permanent.
+    - Content identical to the newest snapshot → skipped (duplicate).
+    - Name collisions: overwrite=True replaces the same-named version in place
+      (old content gone — caller has already asked the user); otherwise the
+      collision gets a (1), (2), … suffix.
+    """
     if state is None:
         state = load_state(project_id)
         if state is None:
             raise ValueError("No state to snapshot")
 
+    # Skip when content is identical to the newest snapshot (ignoring meta.savedAt).
+    snaps = list_snapshots(project_id)
+    if snaps:
+        newest = snaps[0]
+        newest_data = load_snapshot(project_id, newest["id"])
+        if newest_data is not None and _canonical(newest_data) == _canonical(state):
+            return {**newest, "skipped": "duplicate"}
+
     snap_dir = _snapshots_dir(project_id)
     snap_dir.mkdir(parents=True, exist_ok=True)
 
+    name = (name or "").strip()
     if name:
-        # Sanitize name for filename
         safe_name = re.sub(r'[<>:"/\\|?*]', "_", name).strip()
-        snap_id = f"named_{safe_name}"
+        snap_id = "named_" + safe_name
+        if not overwrite:
+            counter = 1
+            while (snap_dir / f"{snap_id}.json").exists():
+                snap_id = f"named_{safe_name}({counter})"
+                counter += 1
+        display_name = snap_id[6:]  # include the (n) suffix when renamed-on-collision
     else:
-        snap_id = "auto_" + time.strftime("%Y%m%d_%H%M%S")
-        # Avoid collisions if multiple saves within the same second
+        base = time.strftime("%Y%m%d_%H%M%S")
+        ts_display = time.strftime("%Y-%m-%d %H:%M:%S")
+        snap_id = "time_" + base
         counter = 1
         while (snap_dir / f"{snap_id}.json").exists():
-            snap_id = f"auto_{time.strftime('%Y%m%d_%H%M%S')}_{counter}"
             counter += 1
+            snap_id = f"time_{base}_{counter}"
+        if counter > 1:
+            ts_display = f"{ts_display} ({counter})"
+        display_name = ts_display
 
     _atomic_write(snap_dir / f"{snap_id}.json", json.dumps(state, ensure_ascii=False, indent=2))
+    _cleanup_time_snapshots(project_id)
 
     return {
         "id": snap_id,
-        "name": name if name else snap_id[5:],
-        "type": "named" if name else "auto",
+        "name": display_name,
+        "type": "time" if not name else "named",
         "created_at": time.time(),
     }
 
@@ -179,17 +204,21 @@ def load_snapshot(project_id: str, snapshot_id: str) -> dict[str, Any] | None:
 
 
 def restore_snapshot(project_id: str, snapshot_id: str) -> dict[str, Any] | None:
-    """Restore a snapshot. Creates an auto-snapshot of current state first.
-    Returns the restored state, or None on failure."""
+    """Restore a snapshot. Current content is first backed up as a custom-named
+    version (「恢复前备份 …」, permanent). Returns the restored state, or None."""
     snapshot_state = load_snapshot(project_id, snapshot_id)
     if snapshot_state is None:
         return None
 
-    # Auto-snapshot current state before restoring (so user can undo)
     current = load_state(project_id)
-    if current is not None:
-        create_snapshot(project_id, state=current)
-        _cleanup_auto_snapshots(project_id)
+    # Backup only when the restore would actually change content — restoring
+    # the same version twice shouldn't produce backup noise.
+    if current is not None and _canonical(current) != _canonical(snapshot_state):
+        create_snapshot(
+            project_id,
+            name=BACKUP_PREFIX + time.strftime("%Y-%m-%d %H-%M"),  # 冒号会被文件名清洗，用连字符
+            state=current,
+        )
 
     _atomic_write(
         _current_file(project_id),
@@ -198,19 +227,89 @@ def restore_snapshot(project_id: str, snapshot_id: str) -> dict[str, Any] | None
     return snapshot_state
 
 
-def _cleanup_auto_snapshots(project_id: str, keep: int = MAX_AUTO_SNAPSHOTS) -> None:
-    """Keep only the N most recent auto snapshots. Named snapshots are untouched."""
+def delete_snapshot(project_id: str, snapshot_id: str) -> bool:
+    """Delete a snapshot. Returns True if it existed and was removed."""
+    safe_id = Path(snapshot_id).name
+    f = _snapshots_dir(project_id) / f"{safe_id}.json"
+    try:
+        f.unlink()
+        return True
+    except OSError:
+        return False
+
+
+def rename_snapshot(
+    project_id: str,
+    snapshot_id: str,
+    new_name: str,
+    overwrite: bool = False,
+) -> dict[str, Any] | None:
+    """Rename a snapshot (any type becomes custom-named / permanent).
+    On name collision: overwrite=True removes the target version first (caller
+    has already asked the user); otherwise the target gets a (1), (2), … suffix.
+    Returns new metadata; None if the snapshot doesn't exist.
+    Raises ValueError when the new name is empty after sanitizing."""
+    new_name = (new_name or "").strip()
+    if not new_name:
+        raise ValueError("Name is empty")
+    safe_name = re.sub(r'[<>:"/\\|?*]', "_", new_name).strip()
+    if not safe_name:
+        raise ValueError("Name is empty")
+
+    safe_id = Path(snapshot_id).name
+    snap_dir = _snapshots_dir(project_id)
+    src = snap_dir / f"{safe_id}.json"
+    if not src.exists():
+        return None
+
+    target = "named_" + safe_name
+    if overwrite:
+        existing = snap_dir / f"{target}.json"
+        if existing.exists() and existing != src:
+            try:
+                existing.unlink()  # 覆盖：先移除被顶掉的版本
+            except OSError:
+                raise ValueError("Cannot overwrite target snapshot")
+    else:
+        counter = 1
+        while (snap_dir / f"{target}.json").exists() and (snap_dir / f"{target}.json") != src:
+            target = f"named_{safe_name}({counter})"
+            counter += 1
+    dst = snap_dir / f"{target}.json"
+    if dst == src:
+        return {"id": target, "name": target[6:], "type": "named", "created_at": dst.stat().st_mtime}
+    os.replace(src, dst)
+
+    return {"id": target, "name": target[6:], "type": "named", "created_at": dst.stat().st_mtime}
+
+
+def _cleanup_time_snapshots(project_id: str, keep: int = MAX_TIME_SNAPSHOTS) -> None:
+    """Keep only the N most recent time-named versions. Named ones are untouched."""
     snap_dir = _snapshots_dir(project_id)
     if not snap_dir.exists():
         return
 
-    auto_files = sorted(
-        snap_dir.glob("auto_*.json"),
+    time_files = sorted(
+        snap_dir.glob("time_*.json"),
         key=lambda f: f.stat().st_mtime,
         reverse=True,
     )
-    for old in auto_files[keep:]:
+    for old in time_files[keep:]:
         try:
             old.unlink()
         except OSError:
             pass
+
+
+def remove_legacy_auto_snapshots() -> None:
+    """One-time migration: delete legacy auto_*.json snapshots (the auto-snapshot
+    feature was removed). Idempotent — safe to call on every startup."""
+    for proj in DATA_DIR.iterdir():
+        snap_dir = proj / "snapshots"
+        if not snap_dir.is_dir():
+            continue
+        for f in snap_dir.glob("auto_*.json"):
+            try:
+                f.unlink()
+            except OSError:
+                pass
