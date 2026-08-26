@@ -19,6 +19,21 @@
  const CASES = {
  'shanmu-tea': {
  get module(){ return typeof window!=='undefined'? window.__case_shanmu_tea: null; }
+ },
+ 'douya-mama': {
+ get module(){ return typeof window!=='undefined'? window.__case_douya_mama: null; }
+ },
+ 'xiaohuo-ji': {
+ get module(){ return typeof window!=='undefined'? window.__case_xiaohuo_ji: null; }
+ },
+ 'wenqu-shuyuan': {
+ get module(){ return typeof window!=='undefined'? window.__case_wenqu_shuyuan: null; }
+ },
+ 'hengrui-zao': {
+ get module(){ return typeof window!=='undefined'? window.__case_hengrui_zao: null; }
+ },
+ 'maohaizi-house': {
+ get module(){ return typeof window!=='undefined'? window.__case_maohaizi_house: null; }
  }
  };
 

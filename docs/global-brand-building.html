@@ -3322,9 +3322,24 @@ const App = {
         work1: state.work1, work2: state.work2, work3: state.work3,
         work4: state.work4, work5: state.work5, meta: state.meta,
       }));
-      if(typeof DemoData==='undefined' || !DemoData.inject(caseKey, state)){
-        showToast('演示案例加载失败：'+caseKey);
-        return;
+      if(typeof Cases==='undefined' || !Cases.has(caseKey)){
+        // Fallback to legacy DemoData.inject if the brand isn't in the new cases/ registry
+        if(typeof DemoData!=='undefined' && DemoData.inject(caseKey, state)){
+          // injected
+        } else {
+          showToast('演示案例加载失败：'+caseKey);
+          return;
+        }
+      } else {
+        const loaded = Cases.load(caseKey, {works:['work1','work2','work3']});
+        if(!loaded){
+          showToast('演示案例加载失败：'+caseKey);
+          return;
+        }
+        if(loaded.work1) Object.assign(state.work1, loaded.work1);
+        if(loaded.work2) Object.assign(state.work2, loaded.work2);
+        if(loaded.work3) Object.assign(state.work3, loaded.work3);
+        // work4/5 are not part of the migrated case data — leave them as default.
       }
       state.meta.isDemo=true;
       state.meta.demoCase=caseKey;
@@ -3935,6 +3950,33 @@ var Work5={steps:[],defaultData:()=>({})};
 <script src="workshop4.js?v=50011"></script>
 <script src="workshop5.js?v=50008"></script>
 <script src="demo-data.js?v=50037"></script>
+<script src="cases/shanmu-tea/work1.js?v=50037"></script>
+<script src="cases/shanmu-tea/work2.js?v=50037"></script>
+<script src="cases/shanmu-tea/work3.js?v=50037"></script>
+<script src="cases/shanmu-tea/work4.js?v=50037"></script>
+<script src="cases/shanmu-tea/work5.js?v=50037"></script>
+<script src="cases/shanmu-tea/index.js?v=50037"></script>
+<script src="cases/douya-mama/work1.js?v=50037"></script>
+<script src="cases/douya-mama/work2.js?v=50037"></script>
+<script src="cases/douya-mama/work3.js?v=50037"></script>
+<script src="cases/douya-mama/index.js?v=50037"></script>
+<script src="cases/xiaohuo-ji/work1.js?v=50037"></script>
+<script src="cases/xiaohuo-ji/work2.js?v=50037"></script>
+<script src="cases/xiaohuo-ji/work3.js?v=50037"></script>
+<script src="cases/xiaohuo-ji/index.js?v=50037"></script>
+<script src="cases/wenqu-shuyuan/work1.js?v=50037"></script>
+<script src="cases/wenqu-shuyuan/work2.js?v=50037"></script>
+<script src="cases/wenqu-shuyuan/work3.js?v=50037"></script>
+<script src="cases/wenqu-shuyuan/index.js?v=50037"></script>
+<script src="cases/hengrui-zao/work1.js?v=50037"></script>
+<script src="cases/hengrui-zao/work2.js?v=50037"></script>
+<script src="cases/hengrui-zao/work3.js?v=50037"></script>
+<script src="cases/hengrui-zao/index.js?v=50037"></script>
+<script src="cases/maohaizi-house/work1.js?v=50037"></script>
+<script src="cases/maohaizi-house/work2.js?v=50037"></script>
+<script src="cases/maohaizi-house/work3.js?v=50037"></script>
+<script src="cases/maohaizi-house/index.js?v=50037"></script>
+<script src="cases/loader.js?v=50037"></script>
 <script>
 document.addEventListener('DOMContentLoaded', ()=>{
   // 演示菜单独立于 App.init 绑定：后端未连接时 init 会提前 return，菜单也必须可用
