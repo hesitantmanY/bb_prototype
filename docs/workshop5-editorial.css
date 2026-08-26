@@ -452,3 +452,104 @@
 #steps5 table.refs-tbl td:last-child,
 #steps5 table.refs-tbl th:last-child { border-right: none; }
 #steps5 table.refs-tbl td.num { width: 48px; color: var(--color-ink-2); font-weight: 500; }
+/* ----- EDIT GRID (Cover fields above the live preview) ----- */
+#steps5 .edit-grid{
+  display: grid; grid-template-columns: 140px 1fr; gap: 10px 18px;
+  align-items: center;
+  margin-bottom: 14px; padding: 18px 22px;
+  border: 1px solid var(--color-rule); background: var(--color-paper-2);
+}
+#steps5 .edit-grid label{
+  font-family: var(--font-mono); font-size: 11px; letter-spacing: .18em;
+  text-transform: uppercase; color: var(--color-ink-2);
+}
+#steps5 .edit-grid input{
+  width: 100%; padding: 8px 10px;
+  background: var(--color-paper); border: 1px solid var(--color-rule);
+  font-family: var(--font-body); font-size: 16px; color: var(--color-ink);
+}
+
+/* ----- LIVE COVER PREVIEW ----- */
+#steps5 .cover-preview{
+  margin-top: 28px;
+  padding: var(--space-2xl) 0 var(--space-xl);
+  border-top: 1px solid var(--color-rule);
+  border-bottom: 1px solid var(--color-rule);
+  text-align: center;
+}
+#steps5 .cover-preview .cover-title{
+  font-style: normal;
+  margin: 18px auto 14px; max-width: 14ch;
+}
+#steps5 .cover-preview .cover-subtitle{
+  font-size: 1.5rem; margin: 0 auto 28px; max-width: 24ch;
+}
+#steps5 .cover-preview .cover-meta{
+  margin-top: 28px; padding-top: 24px;
+}
+
+/* ----- CHAPTER TEXT (ch1, ch5, route — long-form editable paragraphs) ----- */
+#steps5 .chapter-text{
+  font-size: 17px; line-height: 1.7; color: var(--color-ink);
+  max-width: 62ch;
+  padding: 14px 18px;
+  border-left: 2px solid var(--color-accent);
+  background: var(--color-paper);
+}
+#steps5 .chapter-text:empty::before,
+#steps5 [contenteditable].empty::before{
+  content: attr(data-placeholder);
+  color: var(--color-ink-2);
+}
+
+/* ----- CONTENTEDITABLE affordances ----- */
+#steps5 [contenteditable="true"]{
+  outline: none;
+  transition: background 120ms ease-out;
+}
+#steps5 [contenteditable="true"]:hover{
+  background: rgba(58, 25, 15, .03);
+}
+#steps5 [contenteditable="true"]:focus{
+  background: rgba(58, 25, 15, .06);
+  box-shadow: inset 0 0 0 1px var(--color-accent);
+}
+
+/* ----- SWOT add-row hint ----- */
+#steps5 .swot-cell .item-add{
+  color: var(--color-ink-2);
+  font-style: italic;
+  cursor: text;
+}
+#steps5 .swot-cell .item-add::before{
+  content: "＋";
+  color: var(--color-ink-2);
+}
+#steps5 .swot-cell .item-add:hover::before{
+  color: var(--color-accent);
+}
+
+/* ----- Remove default plate chrome that fights editorial layout ----- */
+#steps5 .plate{ background: transparent; padding: 0; border: none; }
+#steps5 .plate.no-print{ background: var(--color-paper-2); padding: 18px 22px; border: 1px solid var(--color-rule); }
+
+/* AI action buttons row (居中、行内) */
+#steps5 .ai-actions{
+  display: flex; gap: 10px; flex-wrap: wrap;
+  margin: 0 0 18px;
+}
+
+/* sub-head inside chapter (2.1, 2.2, 4.1 etc.) */
+#steps5 .sub-head{
+  margin: var(--space-lg) 0 14px;
+}
+#steps5 .sub-head h3{
+  font-size: 1.75rem; font-family: var(--font-display);
+  font-weight: 700; color: var(--color-ink);
+  letter-spacing: -.01em; margin: 0;
+}
+#steps5 .sub-head .num{
+  font-family: var(--font-mono); font-size: 13px;
+  letter-spacing: .2em; color: var(--color-accent);
+  text-transform: uppercase; display: block; margin-bottom: 6px;
+}
