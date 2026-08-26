@@ -22,9 +22,12 @@ from lda import run_lda
 from llm_proxy import proxy_llm
 from storage import (
     create_snapshot,
+    delete_snapshot,
     list_snapshots,
     load_snapshot,
     load_state,
+    remove_legacy_auto_snapshots,
+    rename_snapshot,
     restore_snapshot,
     save_state,
 )
@@ -41,6 +44,10 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+# One-time migration: the auto-snapshot feature was removed; delete legacy
+# auto_*.json files (idempotent, runs once per process start).
+remove_legacy_auto_snapshots()
 
 
 # ---------------------------------------------------------------------------
@@ -75,6 +82,12 @@ class LlmRequest(BaseModel):
 class SnapshotCreate(BaseModel):
     project_id: str = "default"
     name: str | None = None
+    overwrite: bool = False  # True = replace same-named version (user confirmed)
+
+
+class SnapshotRename(BaseModel):
+    name: str
+    overwrite: bool = False
 
 
 class StateSave(BaseModel):
@@ -139,8 +152,8 @@ def get_state(project_id: str = Query("default")) -> dict | None:
 @app.put("/api/state")
 @app.post("/api/state")  # POST alias for navigator.sendBeacon on page unload
 def put_state(body: StateSave) -> dict:
-    snap = save_state(body.project_id, body.state)
-    return {"ok": True, "snapshot": snap}
+    save_state(body.project_id, body.state)
+    return {"ok": True}
 
 
 # ---------------------------------------------------------------------------
@@ -155,7 +168,7 @@ def get_snapshots(project_id: str = Query("default")) -> list[dict]:
 @app.post("/api/snapshots")
 def post_snapshot(body: SnapshotCreate) -> dict:
     try:
-        snap = create_snapshot(body.project_id, name=body.name)
+        snap = create_snapshot(body.project_id, name=body.name, overwrite=body.overwrite)
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))
     return snap
@@ -175,6 +188,24 @@ def restore_snapshot_endpoint(snapshot_id: str, project_id: str = Query("default
     if data is None:
         raise HTTPException(status_code=404, detail="Snapshot not found")
     return {"ok": True, "state": data}
+
+
+@app.delete("/api/snapshots/{snapshot_id}")
+def delete_snapshot_endpoint(snapshot_id: str, project_id: str = Query("default")) -> dict:
+    if not delete_snapshot(project_id, snapshot_id):
+        raise HTTPException(status_code=404, detail="Snapshot not found")
+    return {"ok": True}
+
+
+@app.post("/api/snapshots/{snapshot_id}/rename")
+def rename_snapshot_endpoint(snapshot_id: str, body: SnapshotRename, project_id: str = Query("default")) -> dict:
+    try:
+        snap = rename_snapshot(project_id, snapshot_id, body.name, overwrite=body.overwrite)
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+    if snap is None:
+        raise HTTPException(status_code=404, detail="Snapshot not found")
+    return snap
 
 
 # ---------------------------------------------------------------------------
@@ -253,6 +284,17 @@ if DOCS_DIR.exists():
     def docs_file(filename: str) -> FileResponse:
         candidate = DOCS_DIR / filename
         if candidate.is_file() and filename.endswith((".js", ".css", ".png", ".jpg", ".svg", ".ico", ".json", ".html")):
+            media = "text/javascript" if filename.endswith(".js") else None
+            return FileResponse(str(candidate), media_type=media,
+                                headers={"Cache-Control": "no-cache, no-store, must-revalidate"})
+        raise HTTPException(status_code=404, detail="not found")
+
+    # Nested lib/ scripts (e.g. lib/demo_notes.js) — the single-segment route
+    # above cannot match a slash, so serve them explicitly.
+    @app.get("/lib/{filename}")
+    def lib_file(filename: str) -> FileResponse:
+        candidate = DOCS_DIR / "lib" / filename
+        if candidate.is_file() and filename.endswith((".js", ".css")):
             media = "text/javascript" if filename.endswith(".js") else None
             return FileResponse(str(candidate), media_type=media,
                                 headers={"Cache-Control": "no-cache, no-store, must-revalidate"})
