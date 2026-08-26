@@ -2279,6 +2279,8 @@ body[data-w4-entry="greenfield"] .x-entry-heavy { display:block; }
   box-shadow:-4px 0 16px rgba(0,0,0,0.10);
   display:flex;flex-direction:column;
   font-family:var(--font-body);
+  /* overlay 为 pointer-events:none，抽屉需显式恢复可点 */
+  pointer-events:auto;
   transition:width 160ms var(--ease-out, ease-out);
 }
 .persona-draft-overlay .pd-drawer.collapsed{width:32px}

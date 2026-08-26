@@ -1739,7 +1739,10 @@ Work1.personaDraft.previewBlock = function(key, title, items, renderItem){
 Work1.personaDraft.mountDrawer = function(){
   const mount = Work1.personaDraft.ensureMount();
   mount.innerHTML = '';
-  mount.classList.add('show');
+  // 关键：移除 show —— overlay 保持 pointer-events:none，抽屉不拦截页面点击。
+  // 若残留 show（从预览模态切换而来），overlay (fixed inset:0 z-index:10000)
+  // 会全屏挡住所有按键，表现为"采纳后锁死"。
+  mount.classList.remove('show');
   const v = Work1.personaDraft.versions[Work1.personaDraft.version];
   if(!v) return;
   const drawer = el('div',{class:'pd-drawer', role:'complementary'});
