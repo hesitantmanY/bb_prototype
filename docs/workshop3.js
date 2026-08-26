@@ -782,6 +782,20 @@ Work3.render.proposition = function(sec){
   plate.appendChild(posGrid);
   plate.appendChild(UI.field('目标客群', el('input',{value:p.positioning.audience,oninput:e=>{p.positioning.audience=e.target.value;autosave();Work3.updatePositioning()}})));
   plate.appendChild(UI.field('核心价值', el('textarea',{rows:2,oninput:e=>{p.positioning.coreValue=e.target.value;autosave();Work3.updatePositioning()}},p.positioning.coreValue)));
+  // 价值链重心（来自 Work1 微笑曲线收口）—— 定位的既定前提，只读引用
+  const vcRef = (()=>{
+    try{
+      const env = state.work1.environment;
+      const t = (env && env.ourCapabilities && env.ourCapabilities.smileCurve) || (typeof Work1!=='undefined' && Work1.smileConclusion ? Work1.smileConclusion() : '');
+      return String(t||'').trim();
+    }catch(e){ return ''; }
+  })();
+  if(vcRef){
+    plate.appendChild(el('div',{class:'callout',style:'margin-top:10px'},
+      el('span',{class:'callout-title'},'价值链重心 · 来自 Work1 微笑曲线'),
+      el('p',{style:'margin:6px 0 0;line-height:1.7'}, vcRef)
+    ));
+  }
   plate.appendChild(el('div',{class:'callout'},
     el('span',{class:'callout-title'},'定位句预览'),
     el('p',{id:'posPreview',style:{'font-family':'var(--font-display)','font-style':'normal','font-size':'20px'}}, '')
