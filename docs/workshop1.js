@@ -1194,7 +1194,11 @@ Work1.render.personas = function(sec){
   // —— Step 4：场景级感知价值矩阵（4×4）——
   if(!Array.isArray(state.work1.scenarios)) state.work1.scenarios=[];
   const sc=state.work1.scenarios;
-  plate.appendChild(el('h3',{},'场景级客户感知价值矩阵'));
+  // 标题行：左侧标题 + 右侧"一键生成"按钮（同行右对齐区）
+  const headRow = el('div',{class:'scenario-head-row', style:'display:flex;align-items:baseline;justify-content:space-between;gap:24px;margin-bottom:6px'});
+  headRow.appendChild(el('h3',{style:'margin:0'},'场景级客户感知价值矩阵'));
+  headRow.appendChild(el('button',{class:'primary', onclick:()=>Work1.openPersonaGenerator()},'一键生成使用场景和用户画像'));
+  plate.appendChild(headRow);
   plate.appendChild(el('p',{class:'muted',style:'font-size:13px'},
     '客户感知价值 = 总利益（使用/服务/人员/形象）− 总成本（货币/时间/精力/心理）。按场景拆分（建议 2-4 个），每张矩阵勾选关联画像，并定位决定性短板（信任 / 易用 / 规模化成本）。'));
 
@@ -1246,23 +1250,6 @@ Work1.render.personas = function(sec){
   plate.appendChild(scList);
   const scActions=el('div',{class:'ai-actions'},
     el('button',{class:'ghost',onclick:()=>{sc.push({id:uid('sc'),name:'',personaIds:[],benefits:{},costs:{},anchor:'',decisiveGap:''});autosave();Work1.rerender('personas')}},'+ 添加场景'));
-  if(state.work1.personas.length){
-    const ai=el('div',{class:'ai-box'});
-    const aiBtn=el('button',{class:'primary',onclick:()=>{
-      API.aiButton({button:aiBtn,container:ai,aiScope:'work1.scenarios',
-        buildPrompt:()=>[{role:'system',content:'你是用户研究专家。基于 SBU 与画像，输出 2-4 个客户场景的感知价值矩阵。JSON: {"scenarios":[{"name":"场景名","personaNames":["画像编号如P1"],"benefits":{"usage":"使用价值","service":"服务价值","staff":"人员价值","image":"形象价值"},"costs":{"monetary":"货币成本","time":"时间成本","energy":"精力成本","psychic":"心理成本"},"anchor":"顾客价值锚点","decisiveGap":"决定性短板：信任/易用/规模化成本中哪个 + 一句说明"}]}'},
-          {role:'user',content:`SBU:${state.work1.sbu.name}\n品类:${state.work1.sbu.category}\n概述:${state.work1.sbu.summary}\n画像:\n${state.work1.personas.map(p=>`${p.name}: 痛点=${p.painPoints}; 价值观=${(p.values||[]).join('/')}; 渠道=${(p.channels||[]).join('/')}`).join('\n')}`}],
-        onResult:r=>{
-          if(!r||!Array.isArray(r.scenarios)){showToast('生成失败');return;}
-          state.work1.scenarios=r.scenarios.map(x=>{
-            const ids=state.work1.personas.filter(p=>(x.personaNames||[]).includes(p.name)).map(p=>p.id);
-            return {id:uid('sc'),name:x.name||'',personaIds:ids,benefits:x.benefits||{},costs:x.costs||{},anchor:x.anchor||'',decisiveGap:x.decisiveGap||''};
-          });
-          autosave(); Work1.rerender('personas');
-        }});
-    }},'用 AI 预填场景矩阵');
-    ai.appendChild(aiBtn); scActions.appendChild(ai);
-  }
   plate.appendChild(scActions);
   plate.appendChild(el('hr',{class:'rule'}));
 
@@ -1276,8 +1263,7 @@ Work1.render.personas = function(sec){
     el('button',{onclick:()=>{
       d.push({id:uid('p'),name:'',gender:'',age:'',occupation:'',income:'',region:'',values:[],painPoints:'',channels:[],quote:'',traits:''});
       autosave(); Work1.renderStep('personas');
-    }},'+ 添加画像'),
-    el('button',{class:'primary',onclick:()=>Work1.generatePersonas(sec)},'用 AI 生成画像')
+    }},'+ 添加画像')
   ));
 };
 Work1.personaCard = function(p, i){
@@ -1368,30 +1354,391 @@ Work1.personaCard = function(p, i){
   block.appendChild(bodyItem);
   return block;
 };
-Work1.generatePersonas = function(container){
-  if(state.work1.personas.length && !confirm('这会替换当前画像，继续？')) return;
-  const ai=el('div',{class:'ai-box'});
-  container.appendChild(ai);
-  const btn=el('button',{class:'primary'},'生成中…');
-  btn.disabled=true; ai.appendChild(btn);
-  API.aiButton({
-    button:btn, container:ai, aiScope:'work1.personas',
-    buildPrompt:()=>[{role:'system',content:'你是消费者研究专家。基于 SBU 与目标市场，生成 4 个差异化的典型客户画像，男女比例均衡。gender 取值：女 / 男 / 其他 / 不透露。请使用编号 P1/P2/P3/P4 替代真实姓名（不要生成真实姓名）。输出 JSON: {"personas":[{"name":"","gender":"","age":"","occupation":"","income":"","region":"","values":[""],"painPoints":"","channels":[""],"quote":""}]}'},
-      {role:'user',content:`SBU: ${state.work1.sbu.name}\n品类: ${state.work1.sbu.category}\n范围: ${state.work1.sbu.scope}\n概述: ${state.work1.sbu.summary}\n环境: ${state.work1.environment.industry||''}`}],
-    onResult:r=>{
-      if(!r || !Array.isArray(r.personas)){ showToast('生成失败'); return; }
-      state.work1.personas = r.personas.map((p,i)=>({id:uid('p'),...p, gender: p.gender||'', name: `P${i+1}`}));
-      autosave(); Work1.renderStep('personas');
-    }
-  });
+
+/* ============================================================
+   Step 3 客户画像与价值诉求 — 一键生成使用场景和用户画像
+   决策依据: memory/project-step-13-ai-redesign-2026-08-26
+   状态机:
+     idle          → 点主按钮
+     input-modal   → 输入产品/客群 + 确认 / 取消
+     preview-modal → 预览生成的 personas + scenarios + 矩阵
+     drawer        → 采纳后浮层转侧边抽屉
+   草稿:
+     sessionStorage[w1.personaDraft]  ← 1 份，关闭系统清空，刷新不清空
+   ============================================================ */
+Work1.personaDraft = {
+  // 输入浮层当前输入
+  product: '',
+  audience: '',
+  // 生成结果（最新一次）
+  version: 0,        // 当前展示版本号
+  versions: [],      // [{personas, scenarios, generatedAt}]
+  // 哪些区块已被采纳
+  adopted: { personas: false, scenarios: false },
+  // 浮层形态
+  mode: 'idle',      // 'idle' | 'input' | 'preview' | 'drawer'
+  // 最近草稿（用于关闭/取消时存）
+  lastInput: null,
+  lastResult: null
 };
 
-/* ---------- STEP 4: METRICS (品牌资产指标体系) ---------- */
+Work1.personaDraft.save = function(){
+  try{
+    const payload = {
+      product: Work1.personaDraft.product,
+      audience: Work1.personaDraft.audience,
+      lastResult: Work1.personaDraft.lastResult,
+      savedAt: Date.now()
+    };
+    sessionStorage.setItem('w1.personaDraft', JSON.stringify(payload));
+  }catch(e){}
+};
 
-// Suggested first-level dimensions for an empty metrics set. Covers both
-// brand performance (功效) and brand image (形象) so the CBBE structure is
-// represented. Each comes with 3 starter secondary points to reduce the
-// blank-page problem.
+Work1.personaDraft.load = function(){
+  try{
+    const raw = sessionStorage.getItem('w1.personaDraft');
+    if(!raw) return null;
+    return JSON.parse(raw);
+  }catch(e){ return null; }
+};
+
+Work1.personaDraft.clear = function(){
+  try{ sessionStorage.removeItem('w1.personaDraft'); }catch(e){}
+};
+
+// 收集上游数据（work1.sbu + 已有 personas），作为 prompt 参考信息
+Work1.personaDraft.collectUpstream = function(){
+  const s = state.work1 || {};
+  const sbu = s.sbu || {};
+  const existing = s.personas || [];
+  return {
+    sbuName: sbu.name || '',
+    sbuCategory: sbu.category || '',
+    sbuSummary: sbu.summary || '',
+    sbuScope: sbu.scope || '',
+    industry: (s.environment && s.environment.industry) || '',
+    existingPersonas: existing.map(p => ({
+      name: p.name || '',
+      gender: p.gender || '',
+      age: p.age || '',
+      occupation: p.occupation || '',
+      painPoints: p.painPoints || '',
+      values: p.values || []
+    }))
+  };
+};
+
+// 构建发给 LLM 的 messages（system + user）
+Work1.personaDraft.buildMessages = function(product, audience){
+  const up = Work1.personaDraft.collectUpstream();
+  const systemContent =
+    '你是用户研究专家。基于 SBU 信息、目标客群描述与已有画像，' +
+    '输出 2-4 个使用场景、每场景 2-3 个客户画像，以及每个场景的 4×4 感知价值矩阵。\n' +
+    '约束：\n' +
+    '- 画像用编号 P1/P2/...P{n} 命名（不要生成真实姓名）\n' +
+    '- gender 取值：女 / 男 / 其他 / 不透露\n' +
+    '- 场景名为常见使用场景（自用/送礼/复购 等），不要超过 12 字\n' +
+    '- 4×4 矩阵 = 总利益 4 类（使用/服务/人员/形象）− 总成本 4 项（货币/时间/精力/心理），每格一句话\n' +
+    '- 决定性短板：信任 / 易用 / 规模化成本 中选一个 + 一句说明\n' +
+    '- 输出 JSON: ' +
+    '{"personas":[{"name":"P1","gender":"","age":"","occupation":"","income":"","region":"","values":[""],"painPoints":"","channels":[""],"quote":""}],' +
+    '"scenarios":[{"name":"场景名","personaNames":["P1","P2"],"benefits":{"usage":"...","service":"...","staff":"...","image":"..."},' +
+    '"costs":{"monetary":"...","time":"...","energy":"...","psychic":"..."},"anchor":"...","decisiveGap":"..."}]}';
+  const userContent =
+    `SBU: ${up.sbuName}\n品类: ${up.sbuCategory}\n范围: ${up.sbuScope}\n概述: ${up.sbuSummary}\n行业: ${up.industry}\n` +
+    `用户补充：\n  产品/服务: ${product || '(未填)'}\n  目标客群: ${audience || '(未填)'}\n` +
+    (up.existingPersonas.length
+      ? `\n已有画像（可参考/可替换）:\n${up.existingPersonas.map(p => `  ${p.name}: ${p.gender} ${p.age} ${p.occupation}; 痛点=${p.painPoints}; 价值观=${(p.values||[]).join('/')}`).join('\n')}\n`
+      : '\n（无已有画像）\n');
+  return [
+    {role:'system', content: systemContent},
+    {role:'user', content: userContent}
+  ];
+};
+
+// 把 LLM 返回的 persona/scenario 归一化并写入 state.work1
+Work1.personaDraft.applyVersion = function(version){
+  if(!version) return;
+  // 写 personas
+  if(Array.isArray(version.personas) && version.personas.length){
+    const existing = state.work1.personas || [];
+    const offset = existing.length; // 保持 ID 不冲突
+    state.work1.personas = version.personas.map((p, i) => ({
+      id: uid('p'),
+      name: p.name || `P${offset + i + 1}`,
+      gender: p.gender || '',
+      age: p.age || '',
+      occupation: p.occupation || '',
+      income: p.income || '',
+      region: p.region || '',
+      values: Array.isArray(p.values) ? p.values : [],
+      painPoints: p.painPoints || '',
+      channels: Array.isArray(p.channels) ? p.channels : [],
+      quote: p.quote || '',
+      traits: p.traits || ''
+    }));
+  }
+  // 写 scenarios
+  if(Array.isArray(version.scenarios) && version.scenarios.length){
+    state.work1.scenarios = version.scenarios.map(s => {
+      // personaNames 是 P1/P2/...，映射到已写入的 state.work1.personas 的 id
+      const ids = (state.work1.personas || [])
+        .filter(p => (s.personaNames || []).includes(p.name))
+        .map(p => p.id);
+      return {
+        id: uid('sc'),
+        name: s.name || '',
+        personaIds: ids,
+        benefits: s.benefits || {usage:'',service:'',staff:'',image:''},
+        costs: s.costs || {monetary:'',time:'',energy:'',psychic:''},
+        anchor: s.anchor || '',
+        decisiveGap: s.decisiveGap || ''
+      };
+    });
+  }
+  autosave();
+};
+
+// 生成按钮触发器：先弹输入浮层
+Work1.openPersonaGenerator = function(){
+  if(!state.work1.sbu || !state.work1.sbu.name){
+    showToast('请先填写 SBU 信息');
+    return;
+  }
+  // 恢复草稿
+  const draft = Work1.personaDraft.load();
+  if(draft){
+    Work1.personaDraft.product = draft.product || '';
+    Work1.personaDraft.audience = draft.audience || '';
+    if(draft.lastResult){
+      Work1.personaDraft.lastResult = draft.lastResult;
+      // 直接进入 preview 模式（用户上次没采纳就关了）
+      Work1.personaDraft.mode = 'preview';
+      Work1.personaDraft.mountPreview();
+      return;
+    }
+  }
+  Work1.personaDraft.mode = 'input';
+  Work1.personaDraft.mountInput();
+};
+
+// 浮层挂载点（与 page 平行）
+Work1.personaDraft.mountPoint = null;
+Work1.personaDraft.ensureMount = function(){
+  if(Work1.personaDraft.mountPoint && document.body.contains(Work1.personaDraft.mountPoint)){
+    return Work1.personaDraft.mountPoint;
+  }
+  const m = el('div',{id:'persona-draft-overlay', class:'persona-draft-overlay'});
+  document.body.appendChild(m);
+  Work1.personaDraft.mountPoint = m;
+  return m;
+};
+
+Work1.personaDraft.close = function(saveDraft){
+  if(saveDraft) Work1.personaDraft.save();
+  else Work1.personaDraft.clear();
+  if(Work1.personaDraft.mountPoint){
+    Work1.personaDraft.mountPoint.innerHTML = '';
+    Work1.personaDraft.mountPoint.classList.remove('show');
+  }
+  Work1.personaDraft.mode = 'idle';
+};
+
+// 输入浮层
+Work1.personaDraft.mountInput = function(){
+  const mount = Work1.personaDraft.ensureMount();
+  mount.innerHTML = '';
+  mount.classList.add('show');
+  // 蒙层
+  const veil = el('div',{class:'pd-veil', onclick:()=>Work1.personaDraft.close(true)});
+  mount.appendChild(veil);
+  // 浮层本体
+  const dlg = el('div',{class:'pd-modal', role:'dialog', 'aria-label':'一键生成使用场景和用户画像'});
+  // 标题栏
+  dlg.appendChild(el('div',{class:'pd-head'},
+    el('span',{class:'pd-title'},'一键生成使用场景和用户画像'),
+    el('button',{class:'pd-close', onclick:()=>Work1.personaDraft.close(true), title:'关闭'},'×')
+  ));
+  // 上游摘要（只读）
+  const up = Work1.personaDraft.collectUpstream();
+  const summary = el('details',{class:'pd-summary'},
+    el('summary',{},'上游数据 (', up.sbuName || 'SBU 未填', ' / 已有 ', (up.existingPersonas||[]).length, ' 个画像)'),
+    el('div',{class:'pd-summary-body'},
+      el('div',{}, el('strong',{},'SBU：'), ' ', up.sbuName || '—', ' · ', up.sbuCategory || '—'),
+      el('div',{}, el('strong',{},'概述：'), ' ', up.sbuSummary || '—'),
+      el('div',{}, el('strong',{},'行业：'), ' ', up.industry || '—'),
+      (up.existingPersonas.length
+        ? el('div',{style:'margin-top:8px'},
+            el('strong',{},'已有画像：'),
+            el('ul',{style:'margin:4px 0 0 18px;padding:0'},
+              ...up.existingPersonas.map(p => el('li',{}, `${p.name} · ${p.gender} ${p.age} · 痛点：${p.painPoints || '—'}`))
+            )
+          )
+        : el('div',{style:'margin-top:8px;color:var(--color-ink-2)'},'（无已有画像）'))
+    )
+  );
+  dlg.appendChild(summary);
+  // 输入字段
+  const productInput = el('input',{type:'text', class:'pd-input', value: Work1.personaDraft.product, placeholder:'产品/服务一句话', oninput:e=>{ Work1.personaDraft.product = e.target.value; }});
+  const audienceInput = el('input',{type:'text', class:'pd-input', value: Work1.personaDraft.audience, placeholder:'目标客群关键词', oninput:e=>{ Work1.personaDraft.audience = e.target.value; }});
+  dlg.appendChild(el('div',{class:'pd-field'}, el('label',{},'产品 / 服务'), productInput));
+  dlg.appendChild(el('div',{class:'pd-field'}, el('label',{},'目标客群'), audienceInput));
+  // 按钮组
+  const submitBtn = el('button',{class:'primary', onclick:()=>{
+    // 拦截：上游数据为空时强制手输
+    if(!up.sbuName && !Work1.personaDraft.product.trim()){
+      showToast('请填写产品/服务描述');
+      return;
+    }
+    submitBtn.disabled = true;
+    submitBtn.textContent = '生成中…';
+    const messages = Work1.personaDraft.buildMessages(Work1.personaDraft.product, Work1.personaDraft.audience);
+    const aiContainer = el('div'); // 不用显示 manual 模式 UI
+    API.aiButton({
+      button: submitBtn,
+      container: aiContainer,
+      aiScope: 'work1.personaDraft',
+      buildPrompt: () => messages,
+      label: '生成使用场景和用户画像',
+      onResult: (r, raw, source) => {
+        submitBtn.disabled = false;
+        submitBtn.textContent = '生成';
+        if(!r){ showToast('生成失败'); return; }
+        // 接受 personas + scenarios
+        const version = {
+          personas: Array.isArray(r.personas) ? r.personas : [],
+          scenarios: Array.isArray(r.scenarios) ? r.scenarios : [],
+          generatedAt: Date.now(),
+          source
+        };
+        Work1.personaDraft.versions.push(version);
+        Work1.personaDraft.version = Work1.personaDraft.versions.length - 1;
+        Work1.personaDraft.lastResult = version;
+        Work1.personaDraft.lastInput = { product: Work1.personaDraft.product, audience: Work1.personaDraft.audience };
+        Work1.personaDraft.save();
+        Work1.personaDraft.mode = 'preview';
+        Work1.personaDraft.mountPreview();
+      }
+    });
+  }}, '生成');
+  dlg.appendChild(el('div',{class:'pd-actions'},
+    el('button',{class:'ghost', onclick:()=>Work1.personaDraft.close(true)},'取消'),
+    submitBtn
+  ));
+  mount.appendChild(dlg);
+  // Esc 关闭
+  setTimeout(()=>{
+    const handler = (e)=>{ if(e.key==='Escape'){ Work1.personaDraft.close(true); document.removeEventListener('keydown', handler); } };
+    document.addEventListener('keydown', handler);
+  }, 0);
+};
+
+// 预览浮层（最小骨架：列出 personas + scenarios，采纳按钮 + 重生成按钮；版本切换下一轮再加）
+Work1.personaDraft.mountPreview = function(){
+  const mount = Work1.personaDraft.ensureMount();
+  mount.innerHTML = '';
+  mount.classList.add('show');
+  mount.appendChild(el('div',{class:'pd-veil', onclick:()=>Work1.personaDraft.close(true)}));
+  const v = Work1.personaDraft.versions[Work1.personaDraft.version];
+  if(!v){ Work1.personaDraft.mountInput(); return; }
+  const dlg = el('div',{class:'pd-modal pd-modal--wide', role:'dialog'});
+  dlg.appendChild(el('div',{class:'pd-head'},
+    el('span',{class:'pd-title'},'生成结果预览 · v', String(Work1.personaDraft.version + 1), '/', String(Work1.personaDraft.versions.length || 1)),
+    el('button',{class:'pd-close', onclick:()=>Work1.personaDraft.close(true), title:'关闭'},'×')
+  ));
+  // 三个区块
+  dlg.appendChild(Work1.personaDraft.previewBlock('personas', '客户画像', v.personas, (item, idx) => {
+    return el('div',{class:'pd-card'},
+      el('div',{class:'pd-card-title'}, item.name || `P${idx+1}`, ' · ', item.gender || '—', ' · ', item.age || '—'),
+      el('div',{class:'pd-card-sub'}, item.occupation || '—'),
+      el('div',{style:'margin-top:6px'}, el('strong',{},'痛点：'), item.painPoints || '—'),
+      el('div',{}, el('strong',{},'价值观：'), (item.values||[]).join(' / ') || '—'),
+      el('div',{}, el('strong',{},'渠道：'), (item.channels||[]).join(' / ') || '—'),
+      item.quote ? el('div',{class:'pd-quote'}, '「', item.quote, '」') : null
+    );
+  }));
+  dlg.appendChild(Work1.personaDraft.previewBlock('scenarios', '使用场景与价值矩阵', v.scenarios, (s, idx) => {
+    return el('div',{class:'pd-card'},
+      el('div',{class:'pd-card-title'}, s.name || `场景 ${idx+1}`),
+      el('div',{class:'pd-card-sub'}, '关联画像：', (s.personaNames||[]).join(' / ') || '—'),
+      el('div',{class:'pd-grid'},
+        el('div',{}, el('strong',{},'使用价值：'), s.benefits?.usage || '—'),
+        el('div',{}, el('strong',{},'服务价值：'), s.benefits?.service || '—'),
+        el('div',{}, el('strong',{},'人员价值：'), s.benefits?.staff || '—'),
+        el('div',{}, el('strong',{},'形象价值：'), s.benefits?.image || '—'),
+        el('div',{}, el('strong',{},'货币成本：'), s.costs?.monetary || '—'),
+        el('div',{}, el('strong',{},'时间成本：'), s.costs?.time || '—'),
+        el('div',{}, el('strong',{},'精力成本：'), s.costs?.energy || '—'),
+        el('div',{}, el('strong',{},'心理成本：'), s.costs?.psychic || '—')
+      ),
+      el('div',{style:'margin-top:6px'}, el('strong',{},'价值锚点：'), s.anchor || '—'),
+      el('div',{}, el('strong',{},'决定性短板：'), s.decisiveGap || '—')
+    );
+  }));
+  // 按钮组
+  const adoptBtn = el('button',{class:'primary', onclick:()=>{
+    Work1.personaDraft.applyVersion(v);
+    Work1.personaDraft.adopted.personas = true;
+    Work1.personaDraft.adopted.scenarios = true;
+    Work1.personaDraft.clear();
+    Work1.personaDraft.mode = 'drawer';
+    Work1.personaDraft.mountDrawer();
+    // 重渲染 personas 步骤
+    Work1.rerender('personas');
+  }}, '采纳到页面');
+  dlg.appendChild(el('div',{class:'pd-actions'},
+    el('button',{class:'ghost', onclick:()=>Work1.personaDraft.close(true)},'关闭（保存草稿）'),
+    adoptBtn
+  ));
+  mount.appendChild(dlg);
+};
+
+Work1.personaDraft.previewBlock = function(key, title, items, renderItem){
+  const adopted = Work1.personaDraft.adopted[key];
+  const block = el('div',{class:'pd-block' + (adopted ? ' pd-block--adopted' : '')});
+  block.appendChild(el('div',{class:'pd-block-head'},
+    el('span',{class:'pd-block-title'}, title, adopted ? ' ✓' : ''),
+    el('span',{class:'pd-block-meta'}, (items||[]).length, ' 项')
+  ));
+  const list = el('div',{class:'pd-list'});
+  (items||[]).forEach((item, i) => list.appendChild(renderItem(item, i)));
+  block.appendChild(list);
+  return block;
+};
+
+// 采纳后侧边抽屉
+Work1.personaDraft.mountDrawer = function(){
+  const mount = Work1.personaDraft.ensureMount();
+  mount.innerHTML = '';
+  mount.classList.add('show');
+  const v = Work1.personaDraft.versions[Work1.personaDraft.version];
+  if(!v) return;
+  const drawer = el('div',{class:'pd-drawer', role:'complementary'});
+  drawer.appendChild(el('div',{class:'pd-drawer-head'},
+    el('span',{},'已采纳 · v', String(Work1.personaDraft.version + 1)),
+    el('button',{class:'pd-drawer-toggle', onclick:()=>drawer.classList.toggle('collapsed')},'⇔')
+  ));
+  drawer.appendChild(el('div',{class:'pd-drawer-body'},
+    el('div',{class:'pd-block-title'},'画像 · ', String((v.personas||[]).length)),
+    ...(v.personas||[]).map(p => el('div',{class:'pd-drawer-row'}, p.name, ' · ', p.gender, ' · ', p.age)),
+    el('div',{class:'pd-block-title', style:'margin-top:12px'},'场景 · ', String((v.scenarios||[]).length)),
+    ...(v.scenarios||[]).map(s => el('div',{class:'pd-drawer-row'}, s.name, ' · 短板：', s.decisiveGap || '—'))
+  ));
+  drawer.appendChild(el('div',{class:'pd-drawer-foot'},
+    el('button',{class:'ghost small', onclick:()=>{
+      if(!confirm('清空已采纳的画像和场景？')) return;
+      state.work1.personas = [];
+      state.work1.scenarios = [];
+      autosave();
+      Work1.personaDraft.clear();
+      Work1.personaDraft.close(false);
+      Work1.rerender('personas');
+    }},'清空采纳')
+  ));
+  mount.appendChild(drawer);
+};
+
+
 Work1.METRIC_TEMPLATES = [
   {name:'品牌功效·产品', secondaries:[
     {name:'外观与质感', measure:'5分制外观评分 / 退货率'},
