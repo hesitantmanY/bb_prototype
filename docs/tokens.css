@@ -20,9 +20,11 @@
   --color-focus:        #2c5fb3;
 
   /* Fonts */
-  --font-display: 'Playfair Display', 'ChillDuanCN', Georgia, "Songti SC", serif;
-  --font-body:    'Lora', 'ChillDuanCN', Georgia, "Songti SC", serif;
-  --font-mono:    'JetBrains Mono', 'ChillDuanCN', ui-monospace, "Microsoft YaHei", monospace;
+  /* ChillDigits：unicode-range 只劫持阿拉伯数字 0-9 → 中文字体（2026-09-01 决策：
+     全站数字与正文/标题同字体；英文字母不受影响，仍走 Playfair/Lora/JetBrains）。 */
+  --font-display: 'ChillDigits', 'Playfair Display', 'ChillDuanCN', Georgia, "Songti SC", serif;
+  --font-body:    'ChillDigits', 'Lora', 'ChillDuanCN', Georgia, "Songti SC", serif;
+  --font-mono:    'ChillDigits', 'JetBrains Mono', 'ChillDuanCN', ui-monospace, "Microsoft YaHei", monospace;
 
   /* Spacing — 4pt named scale */
   --space-3xs: 0.25rem; --space-2xs: 0.5rem; --space-xs: 0.75rem;
@@ -49,6 +51,21 @@
   --dur-short:    120ms;
   --dur-base:     220ms;
   --dur-reveal:   320ms;
+}
+
+/* Digits-only faces（0-9 → ChillDuanSong）：前置进三栈后，任何上下文里
+   的阿拉伯数字都与所属文本的中文字体一致（2026-09-01 决策 5）。 */
+@font-face{
+  font-family:'ChillDigits';
+  src:url('fonts/web/ChillDuanSong-Regular.woff2') format('woff2');
+  font-weight:400; font-style:normal; font-display:swap;
+  unicode-range:U+0030-0039;
+}
+@font-face{
+  font-family:'ChillDigits';
+  src:url('fonts/web/ChillDuanSong-Bold.woff2') format('woff2');
+  font-weight:700; font-style:normal; font-display:swap;
+  unicode-range:U+0030-0039;
 }
 
 /* Backwards-compat alias map so any hard-coded references in workshop JS / inline

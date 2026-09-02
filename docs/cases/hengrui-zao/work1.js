@@ -21,6 +21,14 @@
       social: '工业 4.0 推动柔性制造；B 端采购线上化（1688/京东工业）；客户对交期/资质/小批量柔性要求提升。',
       technological: 'CNC 五轴加工+3D 打印+激光检测成熟；MES/ERP 数字化；SPC 体系+ISO 9001/IATF 16949 认证；AI 视觉检测。',
       industry: '精密件 OEM 头部：科达制造/巨轮智能/拓斯达；专精特新标杆：苏州春兴/宁波震裕/东莞长盈精密；自营品牌新锐：长盈精密自有品牌、绿的谐波。',
+      valueChain: [
+        {label:'研发/工程设计', v:8.5, reason:'公差/材料/工艺 — IP/图纸'},
+        {label:'关键零部件外购', v:5.5, reason:'刀具/夹具/标准件'},
+        {label:'制造/装配', v:2.5, reason:'CNC/后处理 — 微笑曲线谷底'},
+        {label:'物流/分销', v:4.0, reason:'仓配/客户交付'},
+        {label:'品牌/营销', v:9.0, reason:'展会+自有品牌 — 最高附加值'},
+        {label:'售后/技术服务', v:5.0, reason:'客户走访/质量追溯/补件'},
+      ],
       basics: {
         scale: { actual: '8000 万营收，80 人，30+ 台 CNC', target: '1.5 亿营收，自有品牌占 30%', source: '内部台账' },
         scope: { actual: '汽车变速箱+医疗+消费电子三领域', target: '汽车+医疗+3C+机器人四领域', source: '战略规划' },
@@ -85,29 +93,29 @@
     metrics: {
       dimensions: [
         { id:'m1', name:'产品·制造', secondaries:[
-          { id:'s1', name:'精度水平', measure:'加工精度 0.005mm / SPC 检测', forecast: 9, target: 9, actual: null },
-          { id:'s2', name:'打样交期', measure:'24h 打样达成率', forecast: 8, target: 9, actual: null },
-          { id:'s3', name:'小批量柔性', measure:'50 件起订达成率', forecast: 8, target: 9, actual: null }
+          { id:'s1', name:'精度水平', measure:'加工精度 0.005mm / SPC 检测', selfScore: 9, actual: null },
+          { id:'s2', name:'打样交期', measure:'24h 打样达成率', selfScore: 8, actual: null },
+          { id:'s3', name:'小批量柔性', measure:'50 件起订达成率', selfScore: 8, actual: null }
         ]},
         { id:'m2', name:'品牌·认知', secondaries:[
-          { id:'s4', name:'行业知名度', measure:'行业展会提及率', forecast: 5, target: 7, actual: null },
-          { id:'s5', name:'自有品牌认知', measure:'能说出"恒锐造"的客户%', forecast: 1, target: 6, actual: null },
-          { id:'s6', name:'口碑传播', measure:'老客户推荐率', forecast: 7, target: 8, actual: null }
+          { id:'s4', name:'行业知名度', measure:'行业展会提及率', selfScore: 5, actual: null },
+          { id:'s5', name:'自有品牌认知', measure:'能说出"恒锐造"的客户%', selfScore: 1, actual: null },
+          { id:'s6', name:'口碑传播', measure:'老客户推荐率', selfScore: 7, actual: null }
         ]},
         { id:'m3', name:'品牌·判断', secondaries:[
-          { id:'s7', name:'专业可信', measure:'专业度评分', forecast: 8, target: 9, actual: null },
-          { id:'s8', name:'医疗资质', measure:'ISO 13485 认证展示', forecast: 7, target: 9, actual: null },
-          { id:'s9', name:'性价比', measure:'加工费性价比评分', forecast: 7, target: 8, actual: null }
+          { id:'s7', name:'专业可信', measure:'专业度评分', selfScore: 8, actual: null },
+          { id:'s8', name:'医疗资质', measure:'ISO 13485 认证展示', selfScore: 7, actual: null },
+          { id:'s9', name:'性价比', measure:'加工费性价比评分', selfScore: 7, actual: null }
         ]},
         { id:'m4', name:'品牌·感受', secondaries:[
-          { id:'s10', name:'响应速度', measure:'图纸回复时间', forecast: 8, target: 9, actual: null },
-          { id:'s11', name:'品牌温度', measure:'品牌情感题均分', forecast: 5, target: 7, actual: null },
-          { id:'s12', name:'信任感', measure:'信任题均分', forecast: 7, target: 8, actual: null }
+          { id:'s10', name:'响应速度', measure:'图纸回复时间', selfScore: 8, actual: null },
+          { id:'s11', name:'品牌温度', measure:'品牌情感题均分', selfScore: 5, actual: null },
+          { id:'s12', name:'信任感', measure:'信任题均分', selfScore: 7, actual: null }
         ]},
         { id:'m5', name:'复购·推荐', secondaries:[
-          { id:'s13', name:'客户粘性', measure:'年合作客户数', forecast: 8, target: 9, actual: null },
-          { id:'s14', name:'续约率', measure:'年续约率', forecast: 8, target: 8, actual: null },
-          { id:'s15', name:'推荐意愿', measure:'NPS', forecast: 7, target: 8, actual: null }
+          { id:'s13', name:'客户粘性', measure:'年合作客户数', selfScore: 8, actual: null },
+          { id:'s14', name:'续约率', measure:'年续约率', selfScore: 8, actual: null },
+          { id:'s15', name:'推荐意愿', measure:'NPS', selfScore: 7, actual: null }
         ]}
       ],
       disclaimerAcknowledged: true

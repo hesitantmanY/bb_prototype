@@ -21,6 +21,14 @@
       social: 'Z 世代追求"出片+体验"；家庭客回归堂食重视"真材实料"；探店博主驱动新店流量；老字号国潮复兴。',
       technological: '抖音同城号/小红书探店种草成熟；小程序点餐+会员系统普及；明厨亮灶直播/中央厨房可视化。',
       industry: '粤菜头部：广州酒家（150 元，宴席/老字号）、点都德（80 元，早茶/茶楼）、炳胜（200 元，精品粤菜）、顺德食通天、太兴餐厅；融合菜新锐：gaga、渔宴、新长福。',
+      valueChain: [
+        {label:'食材溯源/采购', v:7.0, reason:'清远鸡/顺德鱼生 — 食材故事化'},
+        {label:'中央厨房/标准化', v:5.0, reason:'酱料/预制半成品/出品稳定'},
+        {label:'现场烹饪/服务', v:8.5, reason:'厨师+服务员 — 核心体验'},
+        {label:'渠道/抖音同城', v:4.5, reason:'美团/大众点评/抖音同城号'},
+        {label:'品牌/口碑/出片', v:9.0, reason:'老字号信任+出片 — 最高附加值'},
+        {label:'会员/复购/CRM', v:6.0, reason:'私域社群/会员次卡/老带新'},
+      ],
       basics: {
         scale: { actual: '2 家直营，5 位粤菜师傅，年营收 600 万', target: '5 家直营 + 2 家加盟，年营收 2500 万', source: '内部台账 + 战略规划' },
         scope: { actual: '堂食为主，2 家直营（荔湾/珠江新城）', target: '深圳/上海各 1 家直营 + 加盟', source: '战略规划' },
@@ -85,29 +93,29 @@
     metrics: {
       dimensions: [
         { id:'m1', name:'产品·菜品', secondaries:[
-          { id:'s1', name:'菜品口味稳定性', measure:'老客复购率/差评比', forecast: 8, target: 9, actual: null },
-          { id:'s2', name:'融合菜创新度', measure:'季度上新数/博主探店提及', forecast: 5, target: 8, actual: null },
-          { id:'s3', name:'食材新鲜度', measure:'食材报废率/客户感知', forecast: 8, target: 9, actual: null }
+          { id:'s1', name:'菜品口味稳定性', measure:'老客复购率/差评比', selfScore: 8, actual: null },
+          { id:'s2', name:'融合菜创新度', measure:'季度上新数/博主探店提及', selfScore: 5, actual: null },
+          { id:'s3', name:'食材新鲜度', measure:'食材报废率/客户感知', selfScore: 8, actual: null }
         ]},
         { id:'m2', name:'品牌·认知', secondaries:[
-          { id:'s4', name:'本地知名度', measure:'无提示提及率（广州%）', forecast: 7, target: 8, actual: null },
-          { id:'s5', name:'差异化定位', measure:'能说出"30 年老店"的客户%', forecast: 8, target: 9, actual: null },
-          { id:'s6', name:'出片传播力', measure:'小红书/抖音 UGC 篇数/月', forecast: 4, target: 8, actual: null }
+          { id:'s4', name:'本地知名度', measure:'无提示提及率（广州%）', selfScore: 7, actual: null },
+          { id:'s5', name:'差异化定位', measure:'能说出"30 年老店"的客户%', selfScore: 8, actual: null },
+          { id:'s6', name:'出片传播力', measure:'小红书/抖音 UGC 篇数/月', selfScore: 4, actual: null }
         ]},
         { id:'m3', name:'品牌·判断', secondaries:[
-          { id:'s7', name:'专业可信', measure:'粤菜专业度评分', forecast: 9, target: 9, actual: null },
-          { id:'s8', name:'食材安心', measure:'食材溯源感知', forecast: 8, target: 9, actual: null },
-          { id:'s9', name:'性价比', measure:'性价比评分', forecast: 7, target: 8, actual: null }
+          { id:'s7', name:'专业可信', measure:'粤菜专业度评分', selfScore: 9, actual: null },
+          { id:'s8', name:'食材安心', measure:'食材溯源感知', selfScore: 8, actual: null },
+          { id:'s9', name:'性价比', measure:'性价比评分', selfScore: 7, actual: null }
         ]},
         { id:'m4', name:'品牌·感受', secondaries:[
-          { id:'s10', name:'环境颜值', measure:'环境设计评分', forecast: 6, target: 8, actual: null },
-          { id:'s11', name:'品牌温度', measure:'品牌情感题均分', forecast: 7, target: 8, actual: null },
-          { id:'s12', name:'信任感', measure:'信任题均分', forecast: 8, target: 9, actual: null }
+          { id:'s10', name:'环境颜值', measure:'环境设计评分', selfScore: 6, actual: null },
+          { id:'s11', name:'品牌温度', measure:'品牌情感题均分', selfScore: 7, actual: null },
+          { id:'s12', name:'信任感', measure:'信任题均分', selfScore: 8, actual: null }
         ]},
         { id:'m5', name:'复购·推荐', secondaries:[
-          { id:'s13', name:'会员归属', measure:'小程序会员数', forecast: 5, target: 8, actual: null },
-          { id:'s14', name:'复购意愿', measure:'年复购率', forecast: 7, target: 8, actual: null },
-          { id:'s15', name:'推荐意愿', measure:'NPS', forecast: 7, target: 9, actual: null }
+          { id:'s13', name:'会员归属', measure:'小程序会员数', selfScore: 5, actual: null },
+          { id:'s14', name:'复购意愿', measure:'年复购率', selfScore: 7, actual: null },
+          { id:'s15', name:'推荐意愿', measure:'NPS', selfScore: 7, actual: null }
         ]}
       ],
       disclaimerAcknowledged: true

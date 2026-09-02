@@ -116,9 +116,22 @@
    {id:'w3-cand', work:3, step:'candidates', level:'warn',
     msg:'备选卖点少于 6 个，优选空间不足',
     test:()=>state.work3.candidates.length>=6},
+   {id:'w3-cand-pain', work:3, step:'candidates', level:'warn',
+    msg:'有卖点未关联痛点——卖点应回答"解决哪个痛点"',
+    test:()=>{const cs=state.work3.candidates.filter(c=>(c.name||'').trim()); return cs.length===0 || cs.every(c=>(c.pain||'').trim()); }},
+   {id:'w3-cand-ev', work:3, step:'candidates', level:'warn',
+    msg:'有卖点缺支撑证据——填语料摘录（[真实]/[模拟]）/ 量化统计 / 可验证依据',
+    test:()=>{const cs=state.work3.candidates.filter(c=>(c.name||'').trim()); return cs.length===0 || cs.every(c=>(c.evidence||'').trim()); }},
    {id:'w3-mat', work:3, step:'matrix', level:'warn',
     msg:'卖点还未全部完成合意性×可实施性打分',
-    test:()=>state.work3.candidates.length>0&&state.work3.candidates.every(c=>c.desirability!=null&&c.implementability!=null)},
+    test:()=>{
+      const named=state.work3.candidates.filter(c=>(c.name||'').trim());
+      if(!named.length) return true;
+      const ddims=state.work3.dimensions.desirability, idims=state.work3.dimensions.implementability;
+      const hasD = c => ddims.every(d=>c[d.key]!=null) || Object.keys(c.desirabilityScores||{}).length>0;
+      const hasI = c => idims.every(d=>c[d.key]!=null);
+      return named.every(c=>hasD(c) && hasI(c));
+    }},
    {id:'w3-prop', work:3, step:'proposition', level:'warn',
     msg:'价值主张或定位句未完成',
     test:()=>!!(state.work3.proposition.chosenValueText||'').trim()&&!!(state.work3.proposition.positioning&&state.work3.proposition.positioning.differentiator)},
@@ -140,16 +153,19 @@
     msg:'传播主题未确定，或传播手段少于 2 类',
     test:()=>!!(state.work4.promotion.theme||'').trim()&&['advertising','pr','salesPromotion'].filter(k=>(state.work4.promotion[k]||[]).length>0).length>=2},
 
-   // ---- Work 5 ----
-   {id:'w5-cover', work:5, step:'plan', level:'warn',
-    msg:'封面信息（标题/团队/日期）未填全',
-    test:()=>!!(state.work5.cover.title&&state.work5.cover.team&&state.work5.cover.date)},
-   {id:'w5-abs', work:5, step:'plan', level:'warn',
-    msg:'摘要缺失或过短',
-    test:()=>(state.work5.abstract||'').trim().length>30},
+   // ---- Work 5（2026-09-01：封面/摘要/参考文献删除，封面/摘要规则一并移除） ----
    {id:'w5-upstream', work:5, step:'plan', level:'info',
     msg:'部分 Work 1–4 章节尚未汇总，策划书可能不完整',
-    test:()=>!!(state.work5.ch1_business||'').trim()&&!!(state.work5.ch3_market||'').trim()&&!!(state.work5.ch4_mix||'').trim()},
+    test:()=>{
+      const w=state.work5;
+      const env=w.ch2_environment||{};
+      const s3=w.ch3_strategy||{};
+      const ch2=['political','economic','social','technological'].some(k=>(env[k]||'').trim())
+        || (env.strengths||[]).some(x=>(x||'').trim()) || (env.weaknesses||[]).some(x=>(x||'').trim());
+      const ch5=!!w.ch4_mix && ['product','price','place','promotion'].some(k=>(w.ch4_mix[k]||'').trim());
+      return !!(w.ch1_business||'').trim() && ch2
+        && !!((s3.segmentation||s3.targeting||'')).trim() && !!(s3.positioning||'').trim() && ch5;
+    }},
  ];
 
  function rulesFor(work, step){

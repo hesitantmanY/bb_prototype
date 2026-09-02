@@ -21,6 +21,14 @@
       social: '90/95 后成为养宠主力（占比 60%+），"科学养宠"理念普及；宠物拟人化（家人化）趋势；出差/旅行寄养刚需增长。',
       technological: '美团/大众点评宠物服务频道成熟；小红书/抖音同城种草高效；宠物洗护师认证体系（CKU/NGKC）普及；门店 SaaS 普及。',
       industry: '头部：新瑞鹏宠物医院（医疗为主）、萌爪医生（线上医疗）、小佩宠物（智能用品）、宠物家 PetsHome（连锁洗护）；区域品牌：圣宠、宠宠熊、爱诺宠物。',
+      valueChain: [
+        {label:'服务标准/培训', v:8.0, reason:'洗护师CKU认证+无应激标准'},
+        {label:'耗材/选品采购', v:5.0, reason:'洗护用品/食品/玩具选品'},
+        {label:'门店服务/洗护', v:8.5, reason:'现场洗护+寄养 — 核心体验'},
+        {label:'渠道/美团抖音', v:5.0, reason:'美团/大众点评/抖音同城'},
+        {label:'品牌/口碑/会员', v:9.0, reason:'出片+联名 — 最高附加值'},
+        {label:'客户回访/复购', v:5.5, reason:'CRM/会员次卡/异业联盟'},
+      ],
       basics: {
         scale: { actual: '2 家直营，年营收约 240 万', target: '5 家直营+1 加盟，年营收 800 万', source: '内部台账' },
         scope: { actual: '洗护+寄养 2 个 SKU', target: '+ 宠物摄影+会员次卡+宠物用品零售', source: '战略规划' },
@@ -85,29 +93,29 @@
     metrics: {
       dimensions: [
         { id:'m1', name:'服务·专业', secondaries:[
-          { id:'s1', name:'洗护师专业度', measure:'CKU/NGKC 认证占比', forecast: 8, target: 9, actual: null },
-          { id:'s2', name:'无应激环境', measure:'客户感知评分', forecast: 7, target: 9, actual: null },
-          { id:'s3', name:'卫生安全', measure:'店内卫生评分/防疫合规', forecast: 8, target: 9, actual: null }
+          { id:'s1', name:'洗护师专业度', measure:'CKU/NGKC 认证占比', selfScore: 8, actual: null },
+          { id:'s2', name:'无应激环境', measure:'客户感知评分', selfScore: 7, actual: null },
+          { id:'s3', name:'卫生安全', measure:'店内卫生评分/防疫合规', selfScore: 8, actual: null }
         ]},
         { id:'m2', name:'品牌·认知', secondaries:[
-          { id:'s4', name:'本地知名度', measure:'无提示提及率（成都%）', forecast: 6, target: 8, actual: null },
-          { id:'s5', name:'差异化定位', measure:'能说出"实时直播"的客户%', forecast: 7, target: 9, actual: null },
-          { id:'s6', name:'口碑传播', measure:'小红书/抖音 UGC 篇数/月', forecast: 5, target: 8, actual: null }
+          { id:'s4', name:'本地知名度', measure:'无提示提及率（成都%）', selfScore: 6, actual: null },
+          { id:'s5', name:'差异化定位', measure:'能说出"实时直播"的客户%', selfScore: 7, actual: null },
+          { id:'s6', name:'口碑传播', measure:'小红书/抖音 UGC 篇数/月', selfScore: 5, actual: null }
         ]},
         { id:'m3', name:'品牌·判断', secondaries:[
-          { id:'s7', name:'专业可信', measure:'专业度评分', forecast: 7, target: 9, actual: null },
-          { id:'s8', name:'寄养安心', measure:'实时直播感知', forecast: 8, target: 9, actual: null },
-          { id:'s9', name:'性价比', measure:'性价比评分', forecast: 6, target: 8, actual: null }
+          { id:'s7', name:'专业可信', measure:'专业度评分', selfScore: 7, actual: null },
+          { id:'s8', name:'寄养安心', measure:'实时直播感知', selfScore: 8, actual: null },
+          { id:'s9', name:'性价比', measure:'性价比评分', selfScore: 6, actual: null }
         ]},
         { id:'m4', name:'品牌·感受', secondaries:[
-          { id:'s10', name:'环境颜值', measure:'门店设计评分', forecast: 7, target: 8, actual: null },
-          { id:'s11', name:'品牌温度', measure:'品牌情感题均分', forecast: 8, target: 9, actual: null },
-          { id:'s12', name:'信任感', measure:'信任题均分', forecast: 8, target: 9, actual: null }
+          { id:'s10', name:'环境颜值', measure:'门店设计评分', selfScore: 7, actual: null },
+          { id:'s11', name:'品牌温度', measure:'品牌情感题均分', selfScore: 8, actual: null },
+          { id:'s12', name:'信任感', measure:'信任题均分', selfScore: 8, actual: null }
         ]},
         { id:'m5', name:'复购·推荐', secondaries:[
-          { id:'s13', name:'会员归属', measure:'月卡会员数', forecast: 4, target: 8, actual: null },
-          { id:'s14', name:'复购意愿', measure:'年复购率', forecast: 7, target: 8, actual: null },
-          { id:'s15', name:'推荐意愿', measure:'NPS', forecast: 7, target: 9, actual: null }
+          { id:'s13', name:'会员归属', measure:'月卡会员数', selfScore: 4, actual: null },
+          { id:'s14', name:'复购意愿', measure:'年复购率', selfScore: 7, actual: null },
+          { id:'s15', name:'推荐意愿', measure:'NPS', selfScore: 7, actual: null }
         ]}
       ],
       disclaimerAcknowledged: true

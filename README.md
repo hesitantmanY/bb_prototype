@@ -1,6 +1,18 @@
-# 中小企业市场分析与品牌布局
+# AI 驱动的品牌建设工作流
 
-一个面向"中小企业老板"的市场分析与品牌布局工具：5 个工作坊串联 SBU → 目标市场 → 价值主张 → 营销组合 → 策划书，含 LLM 合成调研、Delphi 专家权重、LDA 主题建模、最优决策扇面等方法。
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](./LICENSE)
+
+一个 AI 驱动的品牌建设平台：五个工作坊从界定 SBU 出发，依次完成目标市场选择、品牌价值主张提炼与营销组合规划，最终汇成一份完整的品牌策划书；方法上融合 LLM 合成调研、Delphi 专家权重、LDA 主题建模与最优决策扇面。
+
+## 方法依据
+
+用 LLM 做营销研究不是赶时髦，有一篇实证论文背书：Arora、Chakraborty 与 Nishimura 发表于 Journal of Marketing 2025 年第 89 卷第 2 期的《AI-Human Hybrids for Marketing Research: Leveraging Large Language Models (LLMs) as Collaborators》。该文与一家财富 500 强食品企业合作，用 GPT-4 复现了该公司 2019 年的定性深访与定量概念测试（n=605，以原始人类研究为基准），得到三个与本平台直接相关的结论。
+
+其一，人机混合优于任何单边。定性侧，人类评估者认为 LLM 生成的回答在深度与洞察性两个维度分别高出约 0.68 与 0.50 分（五点量表）；LLM 担任分析师时主题召回率达 77% 至 96%，还能发现人类遗漏的新主题；专家评委评选最佳摘要时，没有任何一位选择纯人类或纯 LLM 的版本。其二，LLM 可以低成本扮演合成受访者、访谈主持与分析师：设定样本特征、生成 persona、按提纲追问（回答质量低于阈值自动追问）、把长文本提炼为主题与摘要。本平台的合成调研与 Delphi 专家面板正是这一用法。其三，定量侧零样本 LLM 能抓住答案方向与效价，但异质性与内部一致性不足，需要用 few-shot 与 RAG 注入上下文改善。
+
+论文同样划清了边界：LLM 会出错、带偏见、会幻觉；问题定义与研究设计必须由人主导，最终洞察由人负责。因此本平台全程采用 AI 起草、人工复核采纳的模式，未配置 API Key 时所有 AI 步骤自动降级为复制提示词手动模式，流程不依赖 AI 也能完整走通。
+
+论文全文在线地址：https://studylib.net/doc/27782157/10.1177-00222429241276529（DOI: 10.1177/00222429241276529）
 
 ## 架构
 
@@ -48,7 +60,7 @@ python app.py
 |---|---|---|
 | I | 业务价值体系 | PEST、客户画像、合成调研（AI-Human Hybrids, JM 2025）、Likert/开放题分析、Sheth 价值框架 |
 | II | 目标市场选择 | 指标体系、5 位合成专家两轮 Delphi、加权评分、吸引力 × 竞争力矩阵 |
-| III | 价值主张与定位 | LDA 主题建模（本地 Python）、痛点地图、备选卖点、合意性 × 可实施性矩阵、最优决策扇面、迁移路径、定位句、MBTI 人格、slogan |
+| III | 价值主张与定位 | LDA 主题建模（本地 Python；语料 = 真实 + 画像生成模拟混合，依据 JM 2025）、痛点地图、备选卖点、合意性 × 可实施性矩阵、最优决策扇面、迁移路径、定位句、MBTI 人格、slogan |
 | IV | 营销组合 | 4P 表单与 AI 起草、渠道结构树、媒介预算百点图 |
 | V | 策划书 | 从 Work 1–4 一键汇总、PEST/SWOT/STP/4P/4C 章节、打印 PDF、导出 Markdown |
 
@@ -64,7 +76,7 @@ python app.py
 
 - **AI 标记**：AI 自动生成的区块会显示一个小的 "AI" 标签，用户编辑任一字段后自动转为"已确认"样式（描边），提醒哪些内容仍需人工核对。
 - **本步最小可交付**：每步顶部一张可勾选清单，告诉你这步至少要交什么。
-- **健康检查（右侧拉出）**：从右边缘拉出，列出当前步骤的具体待补 / 提醒项（如 PEST 缺维度、测评点缺量化口径、卖点没绑痛点等）。规则在 `docs/lib/quality_rules.js` 增删，可读说明在 `docs/teacher/quality-rules.md`。
+- **健康检查（右侧拉出）**：从右边缘拉出，列出当前步骤的具体待补 / 提醒项（如 PEST 缺维度、测评点缺量化口径、卖点没绑痛点等）。规则在 `docs/lib/quality_rules.js` 增删，可读说明在 `docs/quality-rules.md`。
 
 配置文件 `config.yaml`、`.env` 与数据目录 `data/` 均已在 `.gitignore` 中，不会被提交。
 
@@ -74,14 +86,29 @@ python app.py
 docs/
   global-brand-building.html           # 主页面
   workshop1.js ... workshop5.js        # 各工作坊模块
-  demo-data.js                         # 演示样例
+  cases/                               # 案例数据（bundle.js 由脚本生成）
   lib/
     ai_provenance.js                   # AI 来源标记 + "AI" 徽章
-    file_context.js                    # 上传文件池，注入 LLM 上下文
+    json_extract.js                    # LLM JSON 容错解析
+    schema_check.js                    # AI 输出结构校验
+    call_json_strict.js                # 带重试的 JSON 调用
+    likert_parse.js                    # 李克特 1-5 容错解析
+    providers.js                       # 提供商 JSON 模式白名单
+    archive.js                         # 档案（快照）存取
+    runner.js                          # AI 任务全局锁（暂停/中止/进度）
+    backend.js                         # 本地服务 HTTP 适配器
+    store.js                           # 状态持久化（保存/加载/旧数据迁移）
+    schema_migrate.js                  # 迁移注册表驱动
+    markdown_exchange.js               # 导出/导入 .md 纯逻辑
+    ui.js                              # 步骤挂载契约 + 共享 UI 组件
+    settings.js                        # API 设定弹层
+    savepanel.js                       # 保存弹层
+    history.js                         # 历史版本弹层
+    demomenu.js                        # 案例选择菜单
+    app.js                             # 应用编排（init/导航/导出/案例切换）
     quality_rules.js                   # 右侧健康检查规则
     demo_notes.js                      # 演示模式下的三行批注
-  teacher/
-    quality-rules.md                   # 健康检查规则的可读说明
+  quality-rules.md                     # 健康检查规则的可读说明
   specs/                               # 设计规格
 server/
   app.py                               # FastAPI 入口（配置/数据/快照/LLM 代理/LDA/Excel/文档解析）

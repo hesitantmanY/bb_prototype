@@ -13,8 +13,6 @@
 | `docs/workshop1.js` ~ `workshop5.js` | 内嵌在工作坊 UI 里的**交互式组件**（与表单/状态机联动） | 微笑曲线诊断 SVG、感知价值矩阵、媒介预算百点图 |
 | `docs/cases/<case>/*.js` | 具体案例（山木茶事等）的工作坊实例化 | 山木茶事的 work1.js |
 | **`docs/charts/*.html`** ← 你在这里 | **独立、可分享、双击可开的成片图**。可嵌入报告、PPT、外部分享 | 本目录所有 HTML |
-| `docs/teacher/` | 教学讲义（PDF / 长文），可能内嵌上面任一 | — |
-
 工作坊 UI 里的图保持原生 SVG / ECharts 写法以保证交互联动；成片输出的图走 lieflat-charts。
 
 ## 当前文件

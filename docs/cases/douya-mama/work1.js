@@ -21,6 +21,14 @@
       social: '90/95 后妈妈成为主力（占比 60%+），成分党、敏感肌关注度提升；小红书/抖音种草驱动决策；男性参与育儿比例上升。',
       technological: 'AI 客服、私域 SCRM、内容种草工具成熟；抖音电商 GMV 持续增长（2023 年母婴品类增长 35%+）；直播带货成为新流量入口。',
       industry: '头部品牌贝亲（外资）、红色小象（上美）、松达、戴可思；国货新锐崛起；价格带分高端（贝亲 100+）、中端（红色小象 80-150）、性价比（袋鼠妈妈 50-100）。',
+      valueChain: [
+        {label:'配方研发', v:8.5, reason:'成分/功效/感官定义 — 最高附加值'},
+        {label:'原料采购', v:5.0, reason:'原料溯源/包材/稳定供应链'},
+        {label:'OEM代工', v:3.0, reason:'代工厂生产 — 微笑曲线谷底'},
+        {label:'电商履约', v:4.0, reason:'仓配/快递/退换货'},
+        {label:'品牌/营销', v:9.0, reason:'种草/直播/复购 — 最高附加值'},
+        {label:'客服/会员', v:5.5, reason:'私域CRM/复购激励/口碑'},
+      ],
       basics: {
         scale: { actual: '8 人团队（运营 3/设计 1/客服 2/仓储 1/老板 1），年营收 1200 万', target: '15 人团队，年营收 2500 万', source: '内部台账' },
         scope: { actual: '婴幼儿洗浴+护肤+护臀，不做玩具/辅食/孕妇', target: '增加婴幼儿防晒、亲子共护线', source: '战略规划' },
@@ -85,29 +93,29 @@
     metrics: {
       dimensions: [
         { id:'m1', name:'产品功效·安全', secondaries:[
-          { id:'s1', name:'成分安全与配方透明', measure:'检测报告展示完整度 / 配方白名单', forecast: 7, target: 9, actual: null },
-          { id:'s2', name:'宝宝使用效果', measure:'红 PP 缓解率 / 客户复购', forecast: 7, target: 9, actual: null },
-          { id:'s3', name:'配送与售后服务', measure:'次日达率 / 客服响应时间', forecast: 6, target: 8, actual: null }
+          { id:'s1', name:'成分安全与配方透明', measure:'检测报告展示完整度 / 配方白名单', selfScore: 7, actual: null },
+          { id:'s2', name:'宝宝使用效果', measure:'红 PP 缓解率 / 客户复购', selfScore: 7, actual: null },
+          { id:'s3', name:'配送与售后服务', measure:'次日达率 / 客服响应时间', selfScore: 6, actual: null }
         ]},
         { id:'m2', name:'品牌形象·认知', secondaries:[
-          { id:'s4', name:'品牌知名度', measure:'无提示提及率（妈妈群体%）', forecast: 4, target: 7, actual: null },
-          { id:'s5', name:'差异化定位', measure:'能说出差异化的妈妈%', forecast: 5, target: 8, actual: null },
-          { id:'s6', name:'口碑传播', measure:'正面 UGC 篇数/月', forecast: 6, target: 8, actual: null }
+          { id:'s4', name:'品牌知名度', measure:'无提示提及率（妈妈群体%）', selfScore: 4, actual: null },
+          { id:'s5', name:'差异化定位', measure:'能说出差异化的妈妈%', selfScore: 5, actual: null },
+          { id:'s6', name:'口碑传播', measure:'正面 UGC 篇数/月', selfScore: 6, actual: null }
         ]},
         { id:'m3', name:'品牌形象·判断', secondaries:[
-          { id:'s7', name:'专业可信', measure:'专业度评分', forecast: 7, target: 9, actual: null },
-          { id:'s8', name:'配方安心', measure:'成分安心题均分', forecast: 8, target: 9, actual: null },
-          { id:'s9', name:'性价比', measure:'性价比评分', forecast: 6, target: 8, actual: null }
+          { id:'s7', name:'专业可信', measure:'专业度评分', selfScore: 7, actual: null },
+          { id:'s8', name:'配方安心', measure:'成分安心题均分', selfScore: 8, actual: null },
+          { id:'s9', name:'性价比', measure:'性价比评分', selfScore: 6, actual: null }
         ]},
         { id:'m4', name:'品牌形象·感受', secondaries:[
-          { id:'s10', name:'设计颜值', measure:'包装设计评分', forecast: 7, target: 8, actual: null },
-          { id:'s11', name:'品牌温度', measure:'品牌情感题均分', forecast: 7, target: 8, actual: null },
-          { id:'s12', name:'信任感', measure:'信任题均分', forecast: 8, target: 9, actual: null }
+          { id:'s10', name:'设计颜值', measure:'包装设计评分', selfScore: 7, actual: null },
+          { id:'s11', name:'品牌温度', measure:'品牌情感题均分', selfScore: 7, actual: null },
+          { id:'s12', name:'信任感', measure:'信任题均分', selfScore: 8, actual: null }
         ]},
         { id:'m5', name:'品牌共鸣·复购', secondaries:[
-          { id:'s13', name:'社群归属', measure:'私域社群活跃度', forecast: 7, target: 8, actual: null },
-          { id:'s14', name:'复购意愿', measure:'年复购率', forecast: 7, target: 8, actual: null },
-          { id:'s15', name:'推荐意愿', measure:'NPS', forecast: 6, target: 8, actual: null }
+          { id:'s13', name:'社群归属', measure:'私域社群活跃度', selfScore: 7, actual: null },
+          { id:'s14', name:'复购意愿', measure:'年复购率', selfScore: 7, actual: null },
+          { id:'s15', name:'推荐意愿', measure:'NPS', selfScore: 6, actual: null }
         ]}
       ],
       disclaimerAcknowledged: true

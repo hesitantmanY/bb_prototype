@@ -25,6 +25,7 @@
 docs/cases/
  SCHEMA.md — this file
  loader.js — Cases object: list/load/load(brand,{works})
+ bundle.js — GENERATED: 全部案例数据单文件（浏览器只挂这一个 script 标签）
  shanmu-tea/
  index.js — { brand, label, summary, defaultWorks, getState() }
  work1.js — exports Work1.defaultData() shape, fully filled
@@ -32,7 +33,18 @@ docs/cases/
  work3.js — exports Work3.defaultData() shape, fully filled
  work4.js — exports Work4.defaultData() shape, fully filled
  work5.js — exports Work5.defaultData() shape, fully filled
+
+scripts/
+ build-cases-bundle.js — 从 loader.js CASES 注册表读取品牌清单，
+ 拼接各品牌 work1..5 + index 生成 docs/cases/bundle.js
 ```
+
+**Bundle 规则（2026-09-01 架构评审候选 3）**：应用同时支持 file:// 与服务器，
+案例不能 fetch JSON，因此每个案例仍是 JS 数据文件（纯数据，无逻辑）；
+`global-brand-building.html` 只挂载 `<script src="cases/bundle.js">` +
+`cases/loader.js` 两个标签。**编辑任何案例源文件后必须重新生成 bundle**：
+`node scripts/build-cases-bundle.js`（构建脚本自动从 loader.js 取品牌清单，
+无第二份注册表）。
 
 ## Per-work field reference (drawn from `WorkN.defaultData()`)
 
@@ -44,6 +56,8 @@ one sub-field filled). The exact list per work:
 ### work1 (业务价值体系)
 - `sbu`: `{name, category, stage, scope, countries[], summary, threeQuestions:{customer,channel,brand}, boundary}`
 - `environment`: `{political, economic, social, technological, industry, basics:{scale,scope,products,customers,supply,performance{share,roi,growth} each {actual,target,source}}, competitors[5+ items with {id,name,price,strengths,weaknesses,position}], ourCapabilities:{delivery,core,brand,customer,compliance,defensive,critical,structural,smileCurve,trends}}`
+- `environment.valueChain`: 6 节点 `{label, v(0-10), reason}` —— 微笑曲线案例预设
+ （2026-09-01 从 demo-data.js meta.valueChain 迁入，案例自包含，不再依赖旧文件）
 - `personas[]`: 3–5 items with `{id,name,gender,age,occupation,income,region,values[],painPoints,channels[],quote,traits}`
 - `scenarios[]`: 2+ items with `{id,name,personaIds[], benefits{usage,service,staff,image}, costs{monetary,time,energy,psychic}, anchor, decisiveGap}`
 - `metrics.dimensions[]`: 5 CBBE 维度 × 3 二级指标 each `{id,name,forecast,target,actual,measure}` (forecast/target/actual 必填 number)
@@ -83,16 +97,17 @@ one sub-field filled). The exact list per work:
 - `place`: `{onlineSelf[], onlineThird[], onlineNotes, offlineDirect[], offlineDistrib[], offlineRetail[], offlineNotes, keyPartners[], channelIncentives, structure[], localChannelRelations}`
 - `promotion`: `{advertising[], pr[], salesPromotion[], crm{tool,membership,repurchase,notes}, contentStrategy, theme, context, taboos, kolTiers, language}`
 
-### work5 (策划书)
-- `cover`: `{title, subtitle, team, date}`
-- `abstract` (filled prose)
+### work5 (策划书) — 2026-09-01 契约（封面/摘要/参考文献已删除）
 - `ch1_business` (filled prose)
 - `ch2_environment`: `{political, economic, social, technological, strengths[], weaknesses[], opportunities[], threats[]}`
-- `ch3_strategy`: `{segmentation, targeting, positioning}`
-- `ch4_mix`: `{route, product, price, place, promotion, customerValue, customerCost, convenience, communication}`
-- `ch5_outlook` (filled prose)
-- `references[]`
+  （SWOT 四组必填——应用侧为「重新生成 SWOT」按键语义，案例自带教学样张）
+- `ch3_strategy`: `{segmentation, targeting, positioning}`（字段间单换行，禁止空行）
+- `ch4_mix`: `{route, product, price, place, promotion, customerValue, customerCost, convenience, communication,
+  pTable}`，其中 `pTable` 为表 4-1 教学样张：`{product,price,place,promotion}` 各 `{core(一句话), actions(· 要点，\n 分行), nums(关键数字或 —)}`
+- `ch5_outlook` (filled prose，禁 markdown 符号与空行分隔)
 - `lastAggregated` (timestamp)
+
+全文字段禁止 `\n\n` 空行与 `**`/`#` 等 markdown 符号（编辑框为纯文本）。
 
 ## How to add a new case (T09+)
 
@@ -116,7 +131,8 @@ one sub-field filled). The exact list per work:
  })();
  ```
 4. Register the case in `loader.js` (`CASES` constant).
-5. (Optional) Add to `docs/cases/README.md` index.
+5. `node scripts/build-cases-bundle.js` 重新生成 bundle（HTML 只加载 bundle + loader）。
+6. (Optional) Add to `docs/cases/README.md` index.
 
 ## What `loader.js` exposes
 

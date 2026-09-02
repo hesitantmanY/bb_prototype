@@ -3,9 +3,10 @@
  exercise the loader without a browser. Also verifies that:
  - list() returns the registered case
  - has() / load() reject unknown brands
- - load('shanmu-tea') returns a 5-work state
- - load('shanmu-tea', {works:['work1']}) only fills work1; rest = defaults
+ - load('douya-mama') returns a 5-work state
+ - load('douya-mama', {works:['work1']}) only fills work1; rest = defaults
  - deep-merge: case missing fields fall back to default
+ (2026-08-27: shanmu-tea case removed from registry — now uses douya-mama.)
 */
 'use strict';
 const path = require('path');
@@ -27,18 +28,18 @@ fakeWindow.Work3 = { defaultData: () => makeDefaultData('work3') };
 fakeWindow.Work4 = { defaultData: () => makeDefaultData('work4') };
 fakeWindow.Work5 = { defaultData: () => makeDefaultData('work5') };
 // Minimal case module — partial (missing `items` and `nested`) to test merge
-fakeWindow.__case_shanmu_tea = {
- brand: 'shanmu-tea',
- label: '山木茶事 Shanmu Tea',
+fakeWindow.__case_douya_mama = {
+ brand: 'douya-mama',
+ label: '豆芽妈妈 Douya Mama',
  summary: 'test',
  defaultWorks: ['work1','work2','work3','work4','work5'],
  getState(){
  return {
- work1: { name: 'shanmu', items: ['shanmu-leaf'], /* nested omitted */ },
- work2: { name: 'shanmu-w2' },
+ work1: { name: 'douya', items: ['douya-leaf'], /* nested omitted */ },
+ work2: { name: 'douya-w2' },
  work3: null, // explicit null — should fall back to default
  work4: { /* empty */ },
- work5: { name: 'shanmu-w5' }
+ work5: { name: 'douya-w5' }
  };
  }
 };
@@ -46,7 +47,7 @@ fakeWindow.__case_shanmu_tea = {
 global.window = fakeWindow;
 global.document = { addEventListener:()=>{} };
 
-// Load loader.js — it will read window.__case_shanmu_tea and attach window.Cases
+// Load loader.js — it will read window.__case_douya_mama and attach window.Cases
 require(path.join(__dirname, '..', 'docs', 'cases', 'loader.js'));
 const Cases = fakeWindow.Cases;
 
@@ -56,29 +57,28 @@ function assert(name, cond, detail){
  else { fail++; console.log('FAIL ' + name + (detail? ' — ' + detail: '')); }
 }
 
-assert('list() returns 1 case',
- Cases.list().length === 1,
- JSON.stringify(Cases.list()));
+const list = Cases.list();
+assert('list() returns >=1 case', list.length >= 1, JSON.stringify(list));
 
-assert('list() entry has brand/label/summary',
- Cases.list()[0].brand === 'shanmu-tea' &&
- /山木茶事/.test(Cases.list()[0].label) &&
- typeof Cases.list()[0].summary === 'string');
+const entry = list.find(c => c.brand === 'douya-mama');
+assert('list() has douya-mama with brand/label/summary',
+ !!entry && /豆芽妈妈/.test(entry.label) && typeof entry.summary === 'string',
+ JSON.stringify(entry));
 
-assert('has("shanmu-tea") is true', Cases.has('shanmu-tea') === true);
+assert('has("douya-mama") is true', Cases.has('douya-mama') === true);
 assert('has("nope") is false', Cases.has('nope') === false);
 
 let threw = false;
 try { Cases.load('nope'); } catch(e){ threw = true; }
 assert('load("nope") throws', threw);
 
-const full = Cases.load('shanmu-tea');
+const full = Cases.load('douya-mama');
 assert('full has work1..work5',
  ['work1','work2','work3','work4','work5'].every(k => k in full));
 
-assert('work1.name is case value', full.work1.name === 'shanmu');
+assert('work1.name is case value', full.work1.name === 'douya');
 assert('work1.items replaced (not concat)',
- Array.isArray(full.work1.items) && full.work1.items.length === 1 && full.work1.items[0] === 'shanmu-leaf',
+ Array.isArray(full.work1.items) && full.work1.items.length === 1 && full.work1.items[0] === 'douya-leaf',
  JSON.stringify(full.work1.items));
 assert('work1.nested falls back to default (case omitted it)',
  full.work1.nested && full.work1.nested.a === 1 && full.work1.nested.b === 2,
@@ -92,9 +92,9 @@ assert('work4 (case empty object) is replaced with full defaultData shape',
  full.work4 && full.work4._tag === 'work4' && full.work4.name === 'default-work4',
  JSON.stringify(full.work4));
 
-const partial = Cases.load('shanmu-tea', {works:['work2']});
+const partial = Cases.load('douya-mama', {works:['work2']});
 assert('partial: only work2 has case value',
- partial.work2.name === 'shanmu-w2' &&
+ partial.work2.name === 'douya-w2' &&
  partial.work1.name === 'default-work1' &&
  partial.work3.name === 'default-work3' &&
  partial.work4.name === 'default-work4' &&

@@ -21,6 +21,14 @@
       social: '家长鸡娃焦虑+预算紧；大学生就业难（2024 毕业生 1179 万），学一门实用技能意愿强；30+ 转行者看重"学完能找到工作"。',
       technological: 'AI/大模型工具降低数字媒体门槛；线上录播+线下小班混合模式成熟；抖音/小红书职业教育内容获客高效。',
       industry: 'K12 素质：编程猫/核桃编程/美术宝/小码王；职业培训：开课吧/三节课/腾讯课堂/得到高研院/黑马程序员。',
+      valueChain: [
+        {label:'教研/课程设计', v:8.5, reason:'教学体系/课纲/方法论'},
+        {label:'师资/招聘培训', v:6.0, reason:'教师稳定+司龄+培训体系'},
+        {label:'教材/教具/平台', v:4.0, reason:'教辅/平台/设备'},
+        {label:'招生/渠道', v:5.0, reason:'地推/美团/抖音/B站'},
+        {label:'品牌/口碑/案例', v:9.0, reason:'家长口碑+学员作品 — 最高附加值'},
+        {label:'学员服务/就业', v:5.5, reason:'课后辅导/职业推荐/复购续费'},
+      ],
       basics: {
         scale: { actual: '3 校区，员工 25 人，年营收 1500 万', target: '5 校区+1 职业培训线，年营收 3000 万', source: '内部台账' },
         scope: { actual: 'K12 编程+美术+口才 3 科', target: '+ 数字媒体/电商运营/AI 应用 3 科', source: '战略规划' },
@@ -85,29 +93,29 @@
     metrics: {
       dimensions: [
         { id:'m1', name:'教学·质量', secondaries:[
-          { id:'s1', name:'老师稳定性', measure:'老师流失率/年', forecast: 8, target: 9, actual: null },
-          { id:'s2', name:'教学效果', measure:'学员作品/成绩提升', forecast: 7, target: 8, actual: null },
-          { id:'s3', name:'课程体系完整', measure:'课程大纲完善度', forecast: 7, target: 8, actual: null }
+          { id:'s1', name:'老师稳定性', measure:'老师流失率/年', selfScore: 8, actual: null },
+          { id:'s2', name:'教学效果', measure:'学员作品/成绩提升', selfScore: 7, actual: null },
+          { id:'s3', name:'课程体系完整', measure:'课程大纲完善度', selfScore: 7, actual: null }
         ]},
         { id:'m2', name:'品牌·认知', secondaries:[
-          { id:'s4', name:'本地知名度', measure:'无提示提及率（杭州/宁波%）', forecast: 7, target: 8, actual: null },
-          { id:'s5', name:'差异化定位', measure:'能说出"老师稳定"的家长%', forecast: 6, target: 8, actual: null },
-          { id:'s6', name:'口碑传播', measure:'老带新转化率', forecast: 7, target: 8, actual: null }
+          { id:'s4', name:'本地知名度', measure:'无提示提及率（杭州/宁波%）', selfScore: 7, actual: null },
+          { id:'s5', name:'差异化定位', measure:'能说出"老师稳定"的家长%', selfScore: 6, actual: null },
+          { id:'s6', name:'口碑传播', measure:'老带新转化率', selfScore: 7, actual: null }
         ]},
         { id:'m3', name:'品牌·判断', secondaries:[
-          { id:'s7', name:'专业可信', measure:'专业度评分', forecast: 7, target: 8, actual: null },
-          { id:'s8', name:'就业保障', measure:'就业案例数/可信度', forecast: 4, target: 8, actual: null },
-          { id:'s9', name:'性价比', measure:'性价比评分', forecast: 6, target: 8, actual: null }
+          { id:'s7', name:'专业可信', measure:'专业度评分', selfScore: 7, actual: null },
+          { id:'s8', name:'就业保障', measure:'就业案例数/可信度', selfScore: 4, actual: null },
+          { id:'s9', name:'性价比', measure:'性价比评分', selfScore: 6, actual: null }
         ]},
         { id:'m4', name:'品牌·感受', secondaries:[
-          { id:'s10', name:'校区环境', measure:'校区环境评分', forecast: 7, target: 8, actual: null },
-          { id:'s11', name:'品牌温度', measure:'品牌情感题均分', forecast: 7, target: 8, actual: null },
-          { id:'s12', name:'信任感', measure:'信任题均分', forecast: 7, target: 9, actual: null }
+          { id:'s10', name:'校区环境', measure:'校区环境评分', selfScore: 7, actual: null },
+          { id:'s11', name:'品牌温度', measure:'品牌情感题均分', selfScore: 7, actual: null },
+          { id:'s12', name:'信任感', measure:'信任题均分', selfScore: 7, actual: null }
         ]},
         { id:'m5', name:'复购·推荐', secondaries:[
-          { id:'s13', name:'社群归属', measure:'家长社群活跃度', forecast: 7, target: 8, actual: null },
-          { id:'s14', name:'续费意愿', measure:'年续费率', forecast: 7, target: 8, actual: null },
-          { id:'s15', name:'推荐意愿', measure:'NPS', forecast: 7, target: 9, actual: null }
+          { id:'s13', name:'社群归属', measure:'家长社群活跃度', selfScore: 7, actual: null },
+          { id:'s14', name:'续费意愿', measure:'年续费率', selfScore: 7, actual: null },
+          { id:'s15', name:'推荐意愿', measure:'NPS', selfScore: 7, actual: null }
         ]}
       ],
       disclaimerAcknowledged: true

@@ -94,6 +94,14 @@
  models: {
  '*': { jsonMode: 'none' }
  }
+ },
+ custom: {
+ label: '其他 (OpenAI 兼容)',
+ jsonMode: 'openai_response_format',
+ baseUrlHint: '',
+ models: {
+ '*': { jsonMode: 'openai_response_format' }
+ }
  }
  };
 

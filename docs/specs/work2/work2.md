@@ -1,610 +1,483 @@
 # Work 2 — 目标市场选择
 
-> 5 步，每步一个子 tab。涉及 AI 的步骤统一支持双模式（API 调用 / 手动粘贴）。
-> 流程： SBU 接入与备选市场 →  指标体系与权重 →  评分测算 →  吸引力×竞争力矩阵 →  汇报
-> 设计系统、API 引擎、数据模型见 [README.md](README.md)。
-> 上游：Work 1 的 SBU 信息。下游：Work 3 选定的目标市场。
+> **3 步对齐课程 2.3 节的 3 个活动**(构建评估体系 / 评估候选市场 / 矩阵选市场)。
+> **3 个 sub-tab**，每个 1 个 AI 按键；**构建评估体系内部分 6 阶段**。
+> 所有 AI 深度消费 work1 产物(`sbu / environment / ourCapabilities / personas / competitors / metrics / recommendations`)。
+> **Delphi 升级为 Hybrid 2 风格**(论文 *"AI-Human Hybrids for Marketing Research"* JM 2025):1 call 招聘 + 5 call 深 persona(RAG + few-shot)+ user 主持 + 可选 1 call 收敛。
+> **AI 提问流程全局优化**(2026-08-27 决策):所有工作坊的 AI 按钮统一走 `docs/lib/ai_context.js` 的最小上下文包 + 「消息设置」折叠区,详见文末「AI 生成提问流程优化(全局机制)」。
+> 设计系统、API 引擎见 [README.md](README.md)。上游:Work 1。下游:Work 3(读 `decision.tier1.marketId`)。
 
 ---
 
-## 数据结构
+## 总览：3 步流程
 
-`state.work2` 完整 schema：
+| Sub-tab | 课程活动 | 内部段落 | AI 按键 | 成本 |
+|---|---|---|---|---|
+| **1. 构建评估体系** | 1. 构建评估体系 | 候选清单 / 筛选标准 / 应用筛选 / 指标体系 / 权重(Hybrid 2 Delphi) | 1 个「AI 从 work1 推导评估体系」 | 9-10 call |
+| **2. 评估候选市场** | 2. 评估各意向市场 | 3 保留市场 × 16 指标 = 48 评分格 | 1 个「AI 评分」+ 范围选抶 | 0-3 call |
+| **3. 矩阵 + 三档决策** | 3. 矩阵选目标市场 | 散点图 / 三档卡 / 触发再评估 | 1 个「AI 解释 + 起三档决策卡」 | 1 call |
+
+**全程 AI 总成本:10-14 call**(原 11 call Delphi 单项 + 评估/决策 ≈ 现在覆盖全流程)
+
+---
+
+## 数据结构(schemaVersion: 2)
 
 ```js
-{
-  //  SBU 接入与备选市场
-  sbu: {
-    name: "",           // 从 work1.sbu.name 自动带入，可覆盖
-    oneLine: ""
-  },
-  markets: [
-    {
-      id,
-      name: "",         // 市场名（国家/区域/细分市场）
-      reason: "",       // 列入备选的理由
-      scores: {},       // { indicatorId: 0-10 评分, "e_"+indicatorId: 评分依据, "src_"+indicatorId: "ai"|"user" }
-    }
+Work2.defaultData = () => ({
+  // ===== Tab 1: 构建评估体系 =====
+  candidates: [
+    // { id, name, reason, source: "user"|"ai" }
   ],
-
-  //  指标体系与权重（德尔菲法构建）
-  delphi: {
-    panel: [            // 5 位合成专家（固定阵容）
-      { id, role, affiliation, focus, avatar }
-    ],
-    round1: [           // 每位专家第一轮的原始回答
-      { expertId, attractiveness: [{name, definition, weight}], competitiveness: [...], rawText }
-    ],
-    synthesis: "",      // 主持人汇总（去重、频次、分歧点）
-    round2: [           // 每位专家第二轮修订
-      { expertId, attractiveness: [...], competitiveness: [...], adjustments: "调整说明" }
-    ],
-    finalSynthesis: "", // 最终聚合说明
-    status: "idle",     // idle | round1 | synthesizing | round2 | finalizing | done | error
-    startedAt: null,
-    finishedAt: null
+  screening: {
+    criteria: [
+      // { id, name, source: "user"|"ai" }
+    ]
   },
+  retained: [
+    // { id, name, region, population, gdpPerCapita, notes, source }
+  ],
   attractiveness: {
-    indicators: [
-      // 德尔菲结束后自动填入；用户可增删改
-      // { id, name, definition, rubric: {high, mid, low}, weight, support, source }
+    // 默认 4×2:经济/政治法律/社会文化/风险 × 二级指标
+    categories: [
+      // { id, name, indicators: [{ id, name, rubric:{high,mid,low}, weight, support, source }] }
     ]
   },
   competitiveness: {
-    indicators: []
+    // 默认 4×2:市场信息/营销渠道/认证合规/产品品牌 × 二级指标
+    categories: [ /* 同上 */ ]
   },
-
-  //  矩阵
-  matrix: {
-    xCut: null,         // 业务竞争力切分线；null = 按所有市场竞争力中位数自动切
-    yCut: null,         // 市场吸引力切分线；null = 按中位数自动切
-    selectedMarketId: null
+  delphi: {
+    // === Hybrid 2 升级版 ===
+    recruitment: { perspectives: [] },  // 招聘阶段输出
+    personas: [                        // persona 并行阶段输出（动态生成，不是固定 5）
+      // { id, perspectiveName, keySignals, ratings, reasoning, userOverride }
+    ],
+    userHosted: true,                  // User 主持阶段标志
+    finalWeights: null,                // 可选收敛（展示记录，回填后释放为 null）
+    status: "idle",                    // idle|recruiting|personas|hosted|converging|done
+    phase: null,                       // checkpoint
+    drifted: false,                    // 收敛后指标体系权重被手改 → 提示偏离收敛
+    // === 旧字段(保留兼容,不再使用) ===
+    panel: [], round1: null, round2: null, synthesis: null, finalSynthesis: null, weights: null
   },
-
-  //  AI 分析
-  analysis: {
-    prompt: "",
-    result: "",         // AI 对各市场的综合分析与建议
-    summaryText: ""     // 汇报文本
-  }
-}
+  // ===== Tab 2: 评估候选市场 =====
+  scoring: {
+    // marketId: { indicatorId: { score:0-10, evidence:str, url?:str, source:"user"|"ai" } }
+  },
+  // ===== Tab 3: 矩阵 + 三档决策 =====
+  matrix: { xCut: null, yCut: null, notes: "" },
+  decision: {
+    tier1: { marketId: null, rationale: "", resourcesPct: 80, milestones: [], reEvalTrigger: "" },
+    tier2: { marketIds: [], observationMetrics: [], reEvalTrigger: "" },
+    tier3: { marketIds: [], reEvalTrigger: "" }
+  },
+  // ===== 跨 tab 元信息 =====
+  meta: { schemaVersion: 2, work1Linked: false }
+});
 ```
 
-**默认值**（首次进入、重置后）：
-
-- 3 个备选市场：`市场 A` / `市场 B` / `市场 C`，`reason` 空。
-- 指标表初始为空，提示用户「启动德尔菲生成评估体系」或「＋ 手动添加指标」。
-  - 原型里的默认指标（需求 50 / 规模 30 / 趋势 20 等）作为"快速开始"按钮可一键填入，但默认不预填，保持空白。
-
 ---
 
-##  SBU 接入与备选市场
+## 构建评估体系
 
-### SBU 接入
-
-- 进入 Work 2 时自动从 `state.work1.sbu` 读取 `name` 和 `oneLine`，填入只读回显区。
-- 如果 Work 1 未填，显示提示"请先在 Work 1 填写 SBU"，并提供链接跳回。
-- 用户可点"覆盖"手动修改（仅影响 Work 2，不回写 Work 1）。
-
-### 备选市场列表
-
-- 卡片网格，每张卡片：市场名称、列入理由、删除按钮（至少保留 2 个）。
-- 「＋ 添加市场」按钮，最多 8 个。
-- 默认 3 个空卡片占位（市场 A/B/C），**不硬编码具体国家**。
-
-### AI 辅助（双模式）
-
-- 「让 AI 推荐备选市场」按钮：
-  - 输入：SBU 名称 + 一句话说明 + 行业。
-  - 输出：5 个候选市场，每个含名称 + 一句话理由（API 返回 JSON）。
-  - 用户从中勾选要加入的，追加到 `markets`（不覆盖已有）。
-  - 手动模式：显示提示词 + 粘贴区 + 解析按钮。
-
-**默认提示词**：
-> 你是一位全球市场进入策略顾问。我们的业务是"{SBU名称}"（{一句话说明}）。请推荐 5 个值得考虑进入的海外市场（可以是国家/区域/细分市场），每个给出：市场名称、列入理由（一句话，包含需求/规模/趋势中的一个角度）。用 JSON 数组返回，字段 name 和 reason。
-
----
-
-##  指标体系与权重（德尔菲法）
-
-### 方法
-
-用 5 个合成专家人格 + 两轮迭代构建指标体系和权重。这是 "AI-Human Hybrids" 论文中合成人格方法的直接应用：LLM 扮演不同视角的专家，匿名提交，看到汇总后修订，最终聚合。论文已实证这种合成数据具备异质性和内部一致性。
-
-**专家阵容**（固定，不允许改）：
-
-| 角色 | 机构设定 | 关注点 |
+| 标题 | 任务 | AI? |
 |---|---|---|
-| 市场研究分析师 | 全球市场调研公司 | 需求规模、增长率、用户行为 |
-| 行业/品类专家 | 该行业资深顾问 | 技术趋势、供应链、监管 |
-| 财务/投资分析师 | 跨境投行 | TAM、利润空间、汇率、进入成本 |
-| 跨文化/本地化专家 | 国际营销咨询 | 消费心理、文化壁垒、本地偏好 |
-| 渠道/分销专家 | 跨境零售运营 | 渠道结构、零售集中度、电商渗透率 |
+| 候选市场清单（5-10 个） | 5-10 个市场 + 入选理由 | AI 1 call |
+| 筛选标准（3-5 个可观测、可量化） | 3-5 个可观测标准 | AI 1 call |
+| 应用筛选 → 保留 3 个市场 | 输出 3 个保留市场 | AI 1 call |
+| 指标体系（4×2 模板，默认可覆写） | 4×2 模板(默认可覆写) | AI 1 call |
+| 招聘（Delphi） | LLM 建议"该听哪 5 个视角" | AI 1 call |
+| 5 persona 并行（Delphi） | 每个 persona 给权重 + 理由 | AI 5 call(并行) |
+| User 主持 | user 看 5 个输出,手改权重 | 0 call |
+| 收敛（可选） | AI 取均值归一化 | AI 0-1 call |
 
-### 运行流程
+**构建评估体系总成本：9-10 call**（与原 11 call 相当但覆盖更广）
 
-**第 0 步：启动面板**
-- 显示 5 位专家的卡片（首字母占位头像 + 角色 + 机构），全部灰色"待启动"。
-- 一个「启动德尔菲 · 两轮评估」主按钮。
-- SBU 信息缺失时按钮禁用，提示先完成 。
+### 候选市场清单（5-10 个）
 
-**第 1 轮（5 个并行调用）**
-- 对每位专家发一次 API 请求，system role 是其 persona，user role：
-  > 你是{role}（{affiliation}）。基于你的专业视角，为业务"{SBU名称}"（{一句话说明}，行业：{行业}）构建海外市场评估体系。
-  > 分别提出：
-  > 1. 市场吸引力指标 3–5 个：每个含 name（名称）、definition（一句话定义）、weight（权重 0–100，你提出的吸引力指标内部总和为 100）
-  > 2. 业务竞争力指标 3–5 个：同上，权重在竞争力指标内部总和为 100
-  > 只从你的专业视角出发，不要试图覆盖所有维度。用 JSON 返回，字段 attractiveness 和 competitiveness。
-- 每位专家返回后，头像从灰色变栗色"已提交"，可展开看回答。
-- 5 位并行，总墙钟约 5–10 秒。
-- **进度可视化**：头像状态（等待/思考中/已提交）+ "第 1 轮 · 3/5 位专家已提交"。
+**输入**(从 work1 读):
+- `state.work1.sbu.{name, category, scope, countries, summary}`
+- `state.work1.environment.industry`
+- `state.work1.personas[].region`
 
-**主持人汇总（1 次调用）**
-- 5 份回答全部到位后，自动触发主持人调用：
-  > 你是德尔菲法的主持人。以下是 5 位专家第一轮提交的指标方案（匿名）。请汇总：
-  > 1. 合并相似指标，列出每个指标被几位专家提到、权重的最小值/最大值/中位数
-  > 2. 标出分歧指标（权重跨度 > 30 或定义不一致）
-  > 3. 指出哪些重要维度可能被遗漏
-  > 用 Markdown 输出，结构清晰，不要给最终结论。
-- 汇总文本存入 `delphi.synthesis`，在过程面板中展示。
+**输出**:5-10 个候选市场,每个含 `{name, reason}`。
 
-**第 2 轮（5 个并行调用）**
-- 对每位专家发：
-  > 你是{role}。这是你第一轮的方案：{round1 回答}
-  > 这是所有专家第一轮的匿名汇总：{synthesis}
-  > 请给出修订后的最终方案。要求：
-  > - 可以坚持自己的观点，但如果汇总显示其他专家有不同意见，请在 adjustments 字段里说明你为什么坚持或如何调整
-  > - 仍然从你的角色视角出发
-  > - 权重在每类指标内部总和为 100
-  > 用 JSON 返回：attractiveness、competitiveness、adjustments（一段文字说明你的修改理由）
-- 进度可视化同第 1 轮。
+**AI prompt 模板**:
+```
+system: 你是国际市场进入策略顾问。基于 SBU 特征,列出 5-10 个值得评估的海外候选市场。
+user: SBU: ${work1.sbu.name} (${work1.sbu.category})
+范围: ${work1.sbu.scope}
+行业: ${work1.environment.industry}
+目标客群分布: ${work1.personas.map(p=>p.region).join(", ")}
+输出: {"candidates": [{"name": "", "reason": "1 句, 含 需求/规模/趋势 之一"}]}
+```
 
-**最终聚合（1 次调用）**
-- 5 份修订回答到位后，自动触发：
-  > 你是德尔菲法主持人。以下是 5 位专家第二轮修订后的最终方案。请聚合：
-  > 1. 合并相似指标（语义相同的合并）
-  > 2. 被 ≥2 位专家提到的指标保留为正式指标；只被 1 位提到的列为"补充候选"
-  > 3. 每个正式指标的权重 = 5 位专家权重的平均值，归一化到总和 100
-  > 4. 用 JSON 返回：{ attractiveness: [{name, definition, weight, support}], competitiveness: [...], supplementary: [...], notes: "聚合说明" }
-- 结果自动填入左右两栏的指标表。
-- `finalSynthesis` 存入过程面板。
+**UI**:表格行,name + reason 字段可编辑,可增删。
 
-### 进度可视化
+### 筛选标准（3-5 个可观测、可量化）
 
-- 顶部一条横向时间线：`第 1 轮 → 汇总 → 第 2 轮 → 最终聚合`，当前步骤高亮。
-- 5 个专家头像始终可见，状态随调用变化：灰色（等待）/ 栗色脉冲（思考中）/ 实心栗色（已提交）。
-- 每个专家头像可点击展开，看其两轮原始回答（只读）。
-- 走全局 Runner：四阶段（第一轮专家 / 主持人综合 / 第二轮专家 / 汇总）为暂停边界，可暂停-继续；× 中止保留已完成阶段（`delphi.phase` 记录进度），再次运行自动从断点阶段续跑。
+**输入**:从 work1 读 PEST + capabilities。
+**输出**:3-5 个可观测、可量化的筛选标准(如"Hofstede UAI > 80"、"市场规模 < $100M")。
 
-### 手动模式降级
+**AI prompt 模板**:
+```
+system: 你是市场进入策略顾问。基于以下业务特征,建议 3-5 个可观测、可量化的初筛淘汰标准。每条标准必须能从一个公开数据源查到。
+user: 政治环境: ${work1.environment.political}
+经济: ${work1.environment.economic}
+社会: ${work1.environment.social}
+技术: ${work1.environment.technological}
+能力: ${JSON.stringify(work1.environment.ourCapabilities)}
+输出: {"criteria": [{"name": "", "source": "数据源名称"}]}
+```
 
-未配置 API key 时，「启动德尔菲」按钮变成「复制德尔菲超级提示词」：
+### 应用筛选 → 保留 3 个市场
 
-- 生成一段提示词，要求外部 LLM **在一次回答中模拟整个过程**：扮演 5 位专家 → 自我汇总 → 第二轮修订 → 输出最终 JSON。
-- 用户粘贴回结果后，系统解析 JSON 填入指标表，并尝试解析过程文本展示。
-- 质量略低（同一上下文里的"多专家"独立性更弱），但可用。
+**输入**：候选市场清单 + 筛选标准的输出。
+**输出**:3 个保留市场,每个含 `{name, reason, region?, population?, gdpPerCapita?, notes?}`。
 
-### 指标表（运行后/手动编辑）
+**AI prompt 模板**:
+```
+system: 你是市场进入策略顾问。给定 5-10 个候选市场和 3-5 个筛选标准,应用标准淘汰到 3 个保留市场。
+user: 候选: ${JSON.stringify(candidates)}
+标准: ${JSON.stringify(criteria)}
+输出: {"retained": [{"name": "", "reason": "为什么留"}]}
+```
 
-左右两栏：
+**UI**:3 张详细字段卡(name / region / population / gdpPerCapita / notes),可编辑。
 
-- 左栏：**市场吸引力**（外部 — 这个市场值不值得进入）
-- 右栏：**业务竞争力**（内部 — 我们在这个市场能不能打）
+### 指标体系（4×2 模板，默认可覆写）
 
-每栏一个可增删的指标列表，每项：
-- 指标名称
-- 指标定义（一句话）
-- 权重（0–100，整数，可直接编辑）
-- 支持人数（`support`，德尔菲来源显示"N 位专家"，手动新增显示"手动"）
-- 权重条可视化（表单行内 UI，非独立图表：Atelier 直角条，背景 `#E8DFD8`，填充 `#3A190F`，高 4px）
-- 删除按钮（每栏至少保留 2 个指标）
+**默认模板**:
+- **市场吸引力(attractiveness)**:经济(市场规模/中高端容量 + 经济景气度/消费意愿)、政治法律(出海政策/贸易摩擦 + 认证要求/合规成本)、社会文化(目标客群需求强度 + Hofstede 文化维度匹配度)、风险(汇率/回款 + 物流时效/库存)
+- **业务竞争力(competitiveness)**:市场信息(需求数据可获取性 + 竞品数据可监测性)、营销渠道(电商平台成熟度 + KOL/合作渠道)、认证合规(既有认证可复用度 + 法律服务可获取性)、产品与品牌(客户基础可迁移性 + C 端品牌能力起点)
 
-工具栏：
-- 「重新运行德尔菲」：清空当前指标，重新跑两轮（confirm）。
-- 「＋ 手动添加指标」
-- 「权重归一化」：按比例缩放，差值补到第一个指标。
-- 「查看德尔菲过程」：折叠面板，展示两轮原始回答 + 主持人汇总 + 最终聚合说明。
+**每个一级默认权重 0.25,每个二级权重 = 0.5(一级内归一化)**。
 
-### 权重约束
+**AI prompt 模板**:
+```
+system: 你是营销研究方法专家。基于以下业务特征,建议 4 一级 × 2 二级 的市场吸引力指标 + 业务竞争力指标。每个指标给高中低评分锚点。
+user: PEST: ${work1.environment}
+能力: ${work1.environment.ourCapabilities}
+竞品: ${work1.environment.competitors}
+请按以下 4×2 模板输出(可微调一级名但不能删一级):
+  吸引力: 经济 / 政治法律 / 社会文化 / 风险
+  竞争力: 市场信息 / 营销渠道 / 认证合规 / 产品品牌
+输出: {"attractiveness": {"categories": [{"name": "", "indicators": [{"name": "", "rubric": {"high": "", "mid": "", "low": ""}}]}]}, "competitiveness": {...}}
+```
 
-- 每栏权重总和显示在栏顶（等宽字体）。
-- 不等于 100% 时用栗色标注。
-- 进入  评分时若权重未归一化，顶部显示提示（不阻塞，评分按未归一化权重也能算，但建议归一化）。
+**UI**:可折叠的 4 个一级 card,每 card 内 2 个二级指标行;user 可整 card 增删、二级增删改。
+
+### 权重：Hybrid 2 Delphi（先招聘后画像）
+
+**依据论文**:*AI-Human Hybrids for Marketing Research*(JM 2025)— 论文验证"先招聘后画像"模式产出异质性更高的合成数据。
+
+#### 招聘
+
+**AI prompt 模板**:
+```
+system: 你是营销研究方法专家。给定一个 SBU,建议做"海外市场选择"时应该重点听哪 5 个视角/利益方。
+user: SBU: ${work1.sbu}
+行业: ${work1.environment.industry}
+能力: ${work1.environment.ourCapabilities}
+输出: {"perspectives": [{"name": "视角名", "rationale": "为什么这个视角重要", "keySignals": ["3-5 个该视角最在意的信号"]}]}
+```
+
+#### 5 persona 并行
+
+**每个 persona 配**:
+- 深 system prompt(含 perspective.name + rationale + keySignals)
+- few-shot:1 个"好的权重推理示例"
+- RAG:塞入该 perspective.keySignals 相关的 work1 字段
+
+**AI prompt 模板**:
+```
+system: 你是 ${perspective.name} 专家。${perspective.rationale}
+你最在意的信号: ${perspective.keySignals.join("、")}。
+few-shot 示例: 财务紧张创业公司出海 → EBIT 0.5 / 增长 0.3 / 竞争 0.2,理由是短期要回本。
+请对下列指标赋权重(${axis} 维度内总和=1)。
+user: SBU: ${work1.sbu.name} (${work1.sbu.category})
+环境: ${work1.environment}
+能力: ${work1.environment.ourCapabilities}
+竞品: ${work1.environment.competitors}
+指标 (axis=${axis}):
+  - ${ind.name}: 高分锚点 ${ind.rubric.high} / 中分 ${ind.rubric.mid} / 低分 ${ind.rubric.low}
+输出: {"ratings": {"<id>": 0.0-1.0}, "reasoning": "<30字理由>"}
+```
+
+**运行**:5 个 parallel call。
+
+#### User 主持(no AI)
+
+**UI**:
+- 5 张 persona 卡片平铺
+- 每张显示:perspective 名 / 完整权重表 / 1 句理由
+- 顶部 banner:「这 5 位视角的权重有分歧。你可以:① 采纳 AI 收敛 ② 手动改 ③ 保留分歧给不同方案分别跑矩阵」
+- 每个权重行可编辑
+- 「AI 收敛」按钮（执行收敛）
+
+#### 收敛(可选)
+
+**AI prompt 模板**:
+```
+system: 你是研究方法主持人。5 位视角分别给出指标权重(已含用户手改)。请取均值(同轴内归一化),输出最终权重。
+user: 5 persona 权重: ${JSON.stringify(personas)}
+输出: {"weights": {"attractiveness": {"indId": w}, "competitiveness": {"indId": w}}, "summary": "1 段"}
+```
+
+**结果**:收敛权重（同轴内归一化）回填到存储的两级权重——一级权重 = 该一级下各二级收敛权重之和,二级权重 = 收敛权重 ÷ 一级权重,令 `一级 × 二级 == 收敛权重`;`delphi.status='done'`、`delphi.summary` 记录收敛。`finalWeights` 仅作展示/历史记录,不再作为计算权威;存量带 `finalWeights` 的档案在加载时一次性回填后置空（幂等,见 ADR-0002）。
 
 ---
 
-##  评分测算
+## 评估候选市场
 
-### 评分锚点（rubric）
+- 1 个表格:3 行(市场)× 16 列(指标)= 48 格
+- 每格:input number 0-10 + 必填 evidence (1 行)+ 可选 URL
+- 顶部 AI 按钮「AI 评分」+ 范围选抶(全部 / 市场 A / B / C)
 
-每个指标除了名称和定义，还有一个**评分锚点**字段，作为打分的共同尺度：
+### AI 评分
 
+**输入**(从 work1 读):
+- `work1.environment.competitors` (5-7 家):作为打分对照
+- `work1.personas`:客群需求强度打分依据
+- `work1.metrics.dimensions`:C 端品牌能力依据
+
+**AI prompt 模板**(每市场一次 call):
 ```
-指标：市场规模与成长
-锚点：
-  8–10：年销售额 > $10B 且 CAGR > 10%
-  4–7：  $1B–$10B，CAGR 3–10%
-  0–3：  < $1B 或负增长
-```
-
-- 德尔菲生成指标时，AI 一并生成每个指标的锚点。
-- 用户可在指标表里手动编辑锚点。
-- AI 评分时把锚点写入 prompt；人工打分时锚点以 tooltip / 展开行显示。
-- 没有锚点的指标仍可打分，但 AI 输出质量会下降（在 UI 上提示）。
-
-### 评分表
-
-- 每个市场一个折叠区块（默认展开第一个），内含：
-  - 市场名 + 理由（只读回显）。
-  - **市场吸引力**评分组：每个指标一行，列：
-    - 指标名 + 权重（小字）
-    - 评分输入（0–10，step 0.1，等宽字体）
-    - 评分依据（文本输入，可选）
-    - 来源标记：AI 填的分数带一个小 `AI` 角标；用户手动修改后角标消失
-    - 加权分（自动计算，只读）
-  - **业务竞争力**评分组：同上。
-- 鼠标悬停指标名时弹出锚点 tooltip。
-- 区块头部实时显示两个总分：`吸引力 X.XX · 竞争力 X.XX`（等宽字体 badge）。
-
-### 计算逻辑
-
-```
-吸引力总分 = Σ(指标评分 × 指标权重 / 100)
-竞争力总分 = Σ(指标评分 × 指标权重 / 100)
+system: 你是市场进入评分员。根据 SBU 与 rubric,对给定市场在每个指标上打 0-10 分。
+user: SBU: ${work1.sbu}
+竞品对照: ${work1.environment.competitors}
+客群需求: ${work1.personas}
+市场: ${market.name} (${market.region}, ${market.population}, ${market.gdpPerCapita})
+指标:
+${indBlock}
+输出: {"scores": {"<id>": 0-10}, "evidence": {"<id>": "10-30 字依据"}, "sources": {"<id>": "可选 URL"}}
 ```
 
-- 评分输入范围校验：0–10，超出自动钳制。
-- 未填评分视为缺失（不计入分母，权重重归一化到已填指标），并在该格标"未评"。避免未评分被误算为 0。
+**并行**:3 个市场用 `Promise.all` 并行。
 
-### 工具栏
+**UI 反馈**:每格显示 AI dot(标记 source="ai"),user 编辑后 dot 消失。
 
-- 「让 AI 为全部市场评分」：一键调 LLM 为所有市场所有指标打分。
-- 每个市场区块内也有一个「AI 评分本市场」按钮。
-- 「清空全部评分」：清空所有市场所有指标的评分、依据和来源标记（confirm 后执行）。
+### 数据源约束
 
-### AI 评分（双模式）
-
-- 一次调用为一个市场的全部指标评分，多个市场并行。
-- 输入：SBU 信息 + 市场名 + 指标列表（含定义和锚点）。
-- 输出：每个指标的 score（0–10）和 evidence（一句话依据），直接填入。
-- LLM 用参数化知识打分，不要求用户提供资料；依据里若引用了具体数字，用户可自行核实。
-- 已有分数时弹出选项：**覆盖已有分数 / 仅填空项 / 取消**。
-- 填入后用户可任意手动修改；手改后该格来源标记从 `AI` 变为 `用户`。
-- 手动模式：为每个市场生成提示词块（含全部指标 + 锚点 + 评分要求）+ 粘贴区 + 解析按钮。
-
-**默认提示词**：
-> 你是一位市场进入策略分析师。我们的业务是"{SBU名称}"（{一句话说明}）。请针对市场"{市场名}"，对以下指标分别给出 0–10 的评分和一句话依据。
->
-> 评分锚点（必须严格遵守）：
-> {每个指标：名称、定义、8–10 分锚点 / 4–7 分锚点 / 0–3 分锚点}
->
-> 依据要具体，引用你知道的数据或行业常识；不知道的不要编造，可写"需核实"。用 JSON 数组返回，字段 id（指标id）、score（0-10）、evidence。
+- 每格 `evidence` 必填(10-30 字)
+- 每格 `url` 可选(指向报告/新闻/公司公告)
+- 提交时校验:score 必须有,evidence 必须有,url 可缺
 
 ---
 
-##  吸引力 × 竞争力矩阵
+## 矩阵 + 三档决策
 
-### 布局
+### 散点图
 
-左右两栏：
+- 4 象限:明星 (高/高)/ 产能 (低/高)/ 双低 / 潜力 (高/低)
+- xCut/yCut 可手设或默认中位数
+- 排名表附在图下
 
-- **左栏**：控制点 + 象限说明 + 选定市场。
-- **右栏**：SVG 矩阵图 + 排名表。
+### 三档决策卡
 
-### 矩阵图（lieflat F8 + 库外翻译）
-
-骨架与色板见 [README.md](README.md)「图表实现（lieflat-charts × Atelier）」选型表与「库外图型规则」。这里只定义业务规则：
-
-- X 轴：业务竞争力（0–10），Y 轴：市场吸引力（0–10），均不断轴。
-- 1px hairline 网格（每 2 单位一条主线，每 1 单位一条次线），颜色 `ATELIER.GRID`。
-- 切分线 `xCut` / `yCut`：1px `ATELIER.MUT` 虚线（`stroke-dasharray:4 3`）。默认按当前所有市场该维度的**中位数**切分（避免固定 5.0 把所有市场塞进同一象限）；用户可通过左栏滑块改为固定值（0–10，step 0.1），也可点「恢复自动切分」回到中位数。
-- 四个象限用 `ATELIER.QUAD.*` 极淡底纹区分：右上=优质（栗色淡底）、左上=新兴（暖灰淡底）、右下=成熟（中性灰淡底）、左下=不良（警示淡底）。
-- 每个市场绘为圆点（r=7）：**未选中 = `ATELIER.DATA` 描边空心；选中市场 = `ATELIER.HERO` 实心**（栗色唯一主角，遵守 lieflat「强调色只给一个主角」硬规则）。象限归属靠位置 + 底色读出，不靠点的颜色。
-- 圆点旁标注市场名（超长截断 + tooltip 显示全名）。
-- hover 圆点显示 tooltip：市场名 + 吸引力分 + 竞争力分 + 象限分类。
-- 轴标签走 lieflat `MONO.FONT.axis`（Inter 600，9.5px），颜色 `ATELIER.MUT`（#6B6458，比 Atelier 批注色 #8A8275 深，保证图内小字号 4.5:1 对比度）。
-- 入场动画走 `MONO.obsReveal`，带 `prefers-reduced-motion` 降级。
-
-### 排名表
-
-矩阵下方：按"吸引力 + 竞争力"总和降序排列所有市场。
-
-列：排名、市场名、象限分类、吸引力分、竞争力分、操作（"选为目标市场"按钮）。
-
-### 选定目标市场
-
-- 默认自动选中综合分（吸引力 + 竞争力）最高的市场，`selectedMarketId` 自动写入。
-- 用户可在排名表中点"选为目标市场"切换；矩阵中当前选中的市场用栗色实心高亮，其余为空心。
-- 切分线、评分、权重变化导致排名变动时，选中项保持不变（不自动跳回最高），仅在从未选过时默认选最高。
-- 选定后：
-  - 写入全局摘要条："目标市场：xxx"。
-  - 该市场名 + 理由 + 两个总分传入 Work 3。
-
-### 四象限战略说明
-
-左栏固定显示四个象限的战略含义（等宽字体，hairline 左边框，按象限着色）。
-
----
-
-##  汇报
-
-### 自动汇报文本
-
-「刷新汇报」按钮根据当前数据生成结构化文本（Markdown，可编辑）：
-
-```markdown
-# {SBU名称} — 目标市场选择汇报
-
-## 一、备选市场
-{市场列表：名称 + 理由}
-
-## 二、评估体系
-### 市场吸引力（权重）
-- 指标A（X%）
-- 指标B（Y%）
-...
-
-### 业务竞争力（权重）
-- ...
-
-## 三、评分结果
-| 市场 | 吸引力 | 竞争力 | 象限 |
+**字段**:
+| 字段 | tier1 主战场 | tier2 观察期 | tier3 放弃/暂缓 |
 |---|---|---|---|
-| ... |
+| marketId(s) | 单个 | 列表 | 列表 |
+| rationale | 为什么 | 为什么观察 | 为什么暂缓 |
+| resourcesPct | 数字(如 80) | 数字(如 5) | 0 |
+| milestones | 6 个月里程碑 | — | — |
+| observationMetrics | — | 观察指标 | — |
+| reEvalTrigger | 触发再评估条件 | 触发再评估条件 | 触发再评估条件 |
 
-## 四、目标市场
-**{选定市场}** — {理由}
-{象限战略动作}
+**AI 按钮「AI 解释 + 起三档决策卡」**(单次输出全部):
+
+**输入**(从 work1 读):
+- `work1.recommendations.{short, mid, long}`:作为 milestones 引用
+- `work1.sbu.boundary`:作为"为什么主战场选这个"的战略契合依据
+
+**AI prompt 模板**:
+```
+system: 你是国际市场战略顾问。基于矩阵结果,给出三档决策 + 每档象限解释 + 触发再评估条件。
+user: SBU: ${work1.sbu}
+边界: ${work1.sbu.boundary}
+建议: 短期 ${work1.recommendations.short} / 中期 ${work1.recommendations.mid} / 长期 ${work1.recommendations.long}
+矩阵结果:
+${matrix.map(p => `- ${p.name}: 吸引力 ${p.y.toFixed(2)}, 竞争力 ${p.x.toFixed(2)}, 象限 ${p.quadrant}`).join("\n")}
+输出: {
+  "explanations": {"<marketName>": "为什么落在这个象限"},
+  "tier1": {"marketId": "<id>", "rationale": "", "resourcesPct": 80, "milestones": ["3-5 条"], "reEvalTrigger": ""},
+  "tier2": {"marketIds": ["<id1>", "<id2>"], "observationMetrics": ["2-3 条"], "reEvalTrigger": ""},
+  "tier3": {"marketIds": ["<id>"], "reEvalTrigger": ""}
+}
 ```
 
-- 「一键复制」按钮：`navigator.clipboard.writeText`。
-- 不直接生成 PPT（保持单文件边界），用户可粘到 KimiPPT/Gamma/WPS。
-
-### AI 综合分析（双模式）
-
-- 「让 AI 做综合分析」按钮：
-  - 输入：SBU + 全部市场 + 全部指标权重 + 全部评分。
-  - 输出：3–5 段分析（哪些市场值得进入、风险点、建议的进入顺序），追加到 `analysis.result`。
-  - 手动模式：提示词 + 粘贴区。
-
-**默认提示词**：
-> 你是一位全球市场进入策略顾问。基于以下"{SBU名称}"的目标市场评估数据，请给出综合分析：
-> 1. 哪些市场最值得进入，为什么？
-> 2. 哪些市场风险较高？
-> 3. 建议的进入顺序和资源分配。
-> 评估数据：
-> {所有市场的吸引力/竞争力总分及各指标评分}
-> 用 Markdown 输出，500 字以内。
+**UI**:3 张卡片平铺,user 可手改任何字段;改 tier1.marketId → tier2/tier3 自动调整。
 
 ---
 
-## 附录 A：与方法论规格的差距审计与修复方案（2026-08-20）
-
-> 本节对比 [《工作坊2：海外目标市场选择》](工作坊2：海外目标市场选择.md) 方法论规格（来自课程材料，本工具要落地的标准操作流程）与 `workshop2.js` 实现，列出 5 处关键差距、修复优先级与最小修复清单。本工具面向实际做品牌出海决策的用户，不是学生培训平台。
-
-### A.1 流程结构对比
-
-| 方法论 § | 方法论要求 | 实现 § | 实现内容 | 偏差 |
-| --- | --- | --- | --- | --- |
-| Step 1 | **初筛淘汰**：候选国 5–10 → 保留 3 个 | scope | 决策问题/时间窗口/约束/候选数量 |  **遗漏初筛淘汰环节** |
-| — | — | indicators | 4–6 个吸引力+竞争力指标 + rubric |  规格是 4×2=8 项固定结构；实现是 AI 生成变长 |
-| — | — | delphi | 5 位合成专家两轮打分 |  方法论是 3–5 位真人；实现是 AI 模拟（本工具的优势：让任何用户都能跑 Delphi） |
-| Step 1 | 候选国清单 | markets | 4–8 个候选市场 |  但顺序换了 |
-| Step 2 | 吸引力 4×2 + 权重 | indicators + delphi | 同上 |  拆成两步更细 |
-| Step 3 | 竞争力 4×2 + 权重 | indicators + delphi | 同上 |  拆成两步更细 |
-| Step 4 | 24 格评分 + **3 人独立打分** + 数据来源 | scoring | 单用户打分 / AI 一键评分 |  **缺 3 人交叉验证 + 强制数据来源** |
-| Step 5 | 矩阵 + **三档决策卡**（主战场 80% / 观察期 5% / 暂缓含触发条件） | matrix + decision | 单选 + 排名 |  **缺三档结构 + 触发再评估条件** |
-| Step 6 | 10 页 PPT + **敏感度分析** + 6 个月里程碑 + 模板归档 | （无，仅 exportMd） | 仅 markdown 导出 |  汇报/沉淀基本缺失 |
-
-**核心问题**：实现把规格的「流程说明书」拆得更细（7 步），但**关键决策结构（初筛、三档、3 人打分、数据来源、敏感度）反而没有落地**。流程更长，质量控制更松。
-
-### A.2 五处关键差距（按重要性排序）
-
-####  差距 1：决策结构只支持「单选」，丢了规格最核心的「三档决策卡」
-
-**方法论原文**（Step 5）：
-- 主战场（80% 资源、6 个月里程碑）
-- 观察期（5% 资源、观察指标、重新评估时点）
-- 暂缓/放弃（触发再评估条件）
-
-**当前实现**：
-- `state.work2.matrix.selectedMarketId` 只能选 1 个
-- `decision.rationale / sequence / risks / nextSteps` 四个字段，没有"观察期"、"资源占比"、"里程碑"、"触发再评估条件"
-
-**为什么这是最严重的差距**：方法论 5.2 节反复强调"必须有且仅有一个主战场"、"不能因为差不多就平均资源"——这恰恰是决策工具最该逼用户做的事。单选下，用户随便点一个就完事，三档结构才逼他们做"投入-观察-放弃"的资源分配决策。
-
-**修复方案（P0）**：改造 `decision` 步骤的数据结构与 UI
-
-数据 schema（追加到 `state.work2`）：
+## 数据迁移(schemaVersion: 1 → 2)
 
 ```js
-decision: {
-  primary: null,    // { marketId, resourcePct, actions:[], milestones:[] }
-  watch:   [],      // [{ marketId, resourcePct, indicators:[], reviewAt:'YYYY-MM' }]
-  defer:   [],      // [{ marketId, trigger:'再评估触发条件' }]
-  // 兼容老字段（v1 期间保留）
-  rationale:'', sequence:'', risks:[], nextSteps:''
-}
-```
-
-UI 改造（`Work2.render.decision`）：
-
-- 把 decision 步骤分 3 栏："主战场（必填 1 个）" / "观察期（最多 2 个）" / "暂缓（剩余）"
-- 每档可从矩阵图拖入市场，或在排名表里点"加入主战场/观察期/暂缓"
-- 资源占比输入框，三档相加=100% 才能进入下一步（不阻塞但红色提示）
-- 关键动作（3–5 条）、里程碑（量化）、触发条件各自必填
-
-```js
-// 伪代码：资源占比校验
-function validateDecision(decision) {
-  const sum = (decision.primary?.resourcePct || 0)
-    + decision.watch.reduce((a,b) => a + (b.resourcePct||0), 0)
-    + decision.defer.reduce((a,b) => a + (b.resourcePct||0), 0);
-  return Math.abs(sum - 100) < 0.5;
-}
-```
-
-####  差距 2：评分格不强制数据来源
-
-**方法论原文**（Step 4.1）：
-
-> 每个评分格必须包含 `[二级指标]：[分数]/10`，依据：[1-2 条具体数据来源 + 数字]
-
-**当前实现**：
-
-- AI 评分时 `mk['e_'+ind.id]` 存了 evidence，但**手动输入时只设 `src_=user`，没有任何证据字段**
-- UI 上 evidence 只有在 AI 生成时才显示
-
-**为什么严重**：规格第 4.2 节的易错点第一条就是"没有数据来源就是主观"。这一步是整个矩阵可信度的根基。
-
-**修复方案（P0）**：`scoring` 步骤加 evidence 字段
-
-UI 改造（每个评分格增加 evidence 文本输入）：
-
-- 评分 ≤3 或 ≥8 时，evidence 弹窗强制（不填不让保存）
-- 评分 4–7 时 evidence 可选（不阻塞）
-- exportMd 时 evidence 缺失的格标黄（不是阻止导出，但显眼提示）
-
-```js
-// 评分保存 oninput
-oninput = e => {
-  const score = parseFloat(e.target.value);
-  const evidence = evidenceInput.value;
-  mk.scores[ind.id] = score;
-  mk['e_'+ind.id] = evidence;
-  mk['src_'+ind.id] = evidence ? 'user' : 'unscored';
-  // 极值分数强制证据
-  if ((score <= 3 || score >= 8) && !evidence) {
-    showEvidenceModal(ind, score);
+function migrateWork2(old) {
+  if ((old.meta?.schemaVersion ?? 1) < 2) {
+    return {
+      ...old,
+      candidates: old.markets?.slice(3).map(m => ({ id: m.id, name: m.name, reason: m.notes || "", source: "user" })) || [],
+      retained: old.markets?.slice(0, 3) || [],
+      attractiveness: {
+        categories: bucketIndicatorsByCategory(old.attractiveness?.indicators || [], "attractiveness")
+      },
+      competitiveness: {
+        categories: bucketIndicatorsByCategory(old.competitiveness?.indicators || [], "competitiveness")
+      },
+      decision: {
+        tier1: {
+          marketId: old.matrix?.selectedMarketId || null,
+          rationale: old.decision?.rationale || "",
+          resourcesPct: 80,
+          milestones: old.decision?.nextSteps ? [old.decision.nextSteps] : [],
+          reEvalTrigger: ""
+        },
+        tier2: { marketIds: [], observationMetrics: [], reEvalTrigger: "" },
+        tier3: { marketIds: [], reEvalTrigger: "" }
+      },
+      meta: { schemaVersion: 2, work1Linked: false }
+    };
   }
+  return old;
+}
+function bucketIndicatorsByCategory(inds, axis) {
+  const defaultNames = axis === "attractiveness"
+    ? ["经济", "政治法律", "社会文化", "风险"]
+    : ["市场信息", "营销渠道", "认证合规", "产品品牌"];
+  // 按指标名模糊匹配归类;不匹配的归到第一个
+  // ...(见实现)
 }
 ```
 
-####  差距 3：缺少「初筛淘汰」环节
-
-**方法论 Step 1.2** 给出了可量化的淘汰标准（市场规模 < 1 亿美元且 CAGR < 5% / 认证成本 > 营收 20% / 文化极端距离 / 政治高风险）。
-
-**当前实现**：直接进 markets 步骤添加 4–8 个市场，没有"为什么保留这个、淘汰那个"的痕迹。
-
-**影响**：初筛淘汰是方法论强调"主观偏好会污染后续打分"的关键防污步骤。实际使用中，用户可能只列他熟悉的市场，跳过系统性扫描。
-
-**修复方案（P1）**：在 `scope` 步骤里加"淘汰市场清单"卡片（轻量级，不新增 step）：
-
-```js
-screened: {
-  rejected: [],  // [{name, criterion, dataSource}]  // 每个淘汰市场记 1 行
-  criteria: [
-    {name:'市场规模过小', rule:'年市场规模 < 1 亿美元 且 CAGR < 5%'},
-    {name:'认证成本极高', rule:'主要认证预算 > 单市场首年营收 20%'},
-    {name:'文化极端距离', rule:'Hofstede UAI > 80 且无本地合作方'},
-    {name:'政治高风险',   rule:'战争/制裁/重大贸易壁垒'}
-  ]
-}
-```
-
-UI：scope 步骤加折叠面板"淘汰清单（可选但推荐）"，4 条标准模板可勾选 + 自定义。
-
-####  差距 4：单人打分，无交叉验证
-
-**方法论**："3 人独立打分（业务负责人 + 产品经理 + 外部顾问），差异 >2 分必须开会讨论"。
-
-**当前实现**：单用户打分 / AI 一键评分，没有多评分人机制，也没有差异讨论。
-
-**修复方案（P2，降级版）**：AI 评分时同时出 3 个角色（业务/产品/顾问）的分数
-
-UI 改造（scoring 步骤加"3 角色打分"开关）：
-
-- 默认关闭（单用户模式，向后兼容）
-- 开启后，AI 一键评分时并行 3 次（业务/产品/顾问 persona），结果以"3 角色卡"展示
-- 差异 >2 分的指标显示  标记 + 讨论 prompt（"业务 7 分，产品 4 分，为什么差这么多？"）
-
-```js
-// 伪代码：3 角色并行打分
-async function aiScoreWithTriad(market, indicators) {
-  const roles = ['business','product','advisor'];
-  return await Promise.all(roles.map(role =>
-    callAi(buildPrompt(role, market, indicators))
-  ));
-}
-// 差异 >2 提示
-const max = Math.max(...scores), min = Math.min(...scores);
-if (max - min > 2) flagDisagreement(indicatorId, scores);
-```
-
-####  差距 5：缺敏感度分析、6 个月里程碑、模板归档
-
-**方法论 Step 6**：敏感度分析（"权重 +20% 会怎样"）、6 个月里程碑、模板归档至 wiki。
-
-**当前实现**：`exportMd` 只是把现有 state 拼成 markdown，缺：
-
-- 敏感度分析（"权重 ±20% 主战场是否变化"）
-- 6 个月里程碑字段
-- 模板独立导出
-
-**修复方案（P1）**：decision 步骤加「敏感度沙盒」子面板
-
-- 折叠面板，点开后是简易调节器（4–6 个指标权重 ±20% 滑块）
-- 实时显示主战场是否变化
-- 让"假设错了怎么办"从 PPT 概念变成可操作体验
-
-```js
-// 伪代码：敏感度沙盒
-function sensitivitySandbox(weights, markets) {
-  const perturbed = perturbWeights(weights, 0.2);
-  const newRanking = computeMatrix(markets, perturbed);
-  const newTop = newRanking[0].id;
-  const originalTop = computeMatrix(markets, weights)[0].id;
-  return {
-    stable: newTop === originalTop,
-    newLeader: newTop,
-    delta: newRanking[0].score - newRanking[1].score
-  };
-}
-```
-
-### A.3 修复优先级
-
-| 优先级 | 修复 | 工作量 | 价值 |
-| --- | --- | --- | --- |
-| **P0** | 决策步骤改三档结构 | 1 步 × 半天 | 直接把方法论最核心的"逼用户做资源分配决策"做出来 |
-| **P0** | scoring 步骤加 evidence 字段，用户手动评分也强制填依据 | 半天 | 整个矩阵可信度的根基 |
-| **P1** | 在 markets 前加"淘汰清单"卡片 | 半天 | 防主观偏好污染 |
-| **P1** | decision 加「敏感度分析」子步骤 | 1 天 | 实用价值高（用户立刻看到"假设错了会发生什么"） |
-| **P2** | AI 评分时同时出 3 个角色分数，差异 >2 分显示讨论 prompt | 1 天 | 模拟"3 人独立打分" |
-
-### A.4 最小修复清单（1 个工作日可完成）
-
-按 ROI 排序：
-
-1. **decision 步骤加三档结构**（主战场/观察期/放弃，每档 4 个字段，资源占比合计强制 100%） — 3 小时
-2. **scoring 步骤加 evidence 必填**（≤3 或 ≥8 强制弹窗） — 2 小时
-3. **scope 步骤加淘汰清单卡片**（每个淘汰市场记 1 行原因） — 1 小时
-4. **exportMd 改为 10 段输出**（按规格 Step 6 PPT 顺序：候选国/吸引力表/竞争力表/矩阵/决策/风险/敏感度/行动/里程碑/附录） — 2 小时
-
-合计 ~8 小时（1 个工作日），可达成规格 80% 的核心要求。
-
-### A.5 推荐取舍
-
-1. **三档结构 vs 单选：必须做三档，不要妥协**。三档是方法论反复强调的"主战场没有，资源必然稀释"这件事的**唯一抓手**。**关键：让 UI 强制资源占比相加=100%**——用户分配不到 100% 时不让下一步。
-2. **Delphi 5 位 AI 专家：保留，不要改成真人**。真人凑不齐（用户多是单个产品经理或创业者，没有"3-5 位高管"配置）；AI 模拟 Delphi 的价值在于： 让用户看到"5 个不同视角怎么拉权重"； 让用户看到"主持人综合"是干什么的； 比"老板拍脑袋给权重"强 10 倍。唯一要做的是：第二轮时**展示每位专家的修订幅度**，让用户看到"分歧收敛"的过程。
-3. **指标 4×2 固定 vs AI 生成变长：建议固定 4×2，但允许用户改**。规格的设计意图是"4 个一级 × 2 个二级 = 8 项 25%/12.5%"——这让跨 SBU 横向比较有基准。建议：AI 生成时默认给 4×2 结构；用户可以删/加，但**警告"偏离 4×2 后跨 SBU 对比失效"**。
-4. **评分证据：用户手动也要强制**。不要做成"AI 评分有 evidence / 用户没有"这种不对称。建议：任何评分格都有 evidence 字段；评完最低分（≤3）或最高分（≥8）时，UI 弹窗强制"请给 1 条数据来源"；exportMd 时缺 evidence 的格标黄。
-5. **敏感度分析：值得做，做成"沙盒"**。不要做成必做步骤（用户时间宝贵），做成 decision 步骤里的"敏感性沙盒"：默认折叠，点开是简易调节器（指标权重 ±20%），实时显示主战场是否变化。
-6. **模板归档：放到工具外动作**。模板归档是组织知识管理动作（wiki/Notion），不是单次决策时用户需要完成的事。工具层面只要 exportMd 能导出 4 个独立模板（候选国初筛清单 / 吸引力表 / 竞争力表 / 决策卡）就够。
-
-### A.6 关联 PR / 实现任务拆分
-
-如果按最小修复清单实施，建议拆 4 个独立 commit（每个 commit 自包含、可回滚）：
-
-| Commit | 范围 | 涉及文件 | 验收 |
-| --- | --- | --- | --- |
-| `w2-fix-decision-3tier` | A.2 差距 1：三档结构 | `workshop2.js`（decision render + data schema） | 资源占比合计 100% 校验；3 档字段齐备 |
-| `w2-fix-evidence-required` | A.2 差距 2：evidence 必填 | `workshop2.js`（scoring render） | ≤3/≥8 弹窗；exportMd 缺 evidence 标黄 |
-| `w2-fix-screened-list` | A.2 差距 3：淘汰清单 | `workshop2.js`（scope render） | 4 条标准模板；至少 1 条淘汰记录才能进 markets |
-| `w2-fix-export-10sections` | A.4 第 4 项：10 段 exportMd | `workshop2.js`（exportMd） | 输出包含敏感度、6 个月里程碑 |
-
-每个 commit 完成后对应 P0/P1 验收点。
+迁移时弹 toast:「Workshop 2 已重构,老数据已迁移,请复核。」
 
 ---
 
-**审计者备注**：本附录为 2026-08-20 实测审计结果。方法论 6 步的核心决策目标（量化打分 → 矩阵决策 → 资源分配 → 风险与触发条件 → 汇报沉淀）在当前实现中**约 50% 落地**。落地部分（Delphi、矩阵、评分表、AI 评分）质量较高；未落地部分（三档决策、初筛淘汰、强制证据、敏感度）正是方法论反复强调的"决策质量保障"环节。建议**优先 P0 修复**，再做 P1 增强。
+## AI 生成提问流程优化(全局机制 · 2026-08-27 决策)
+
+> 适用于全部 5 个工作坊的 AI 按钮。目标:**准确性优先**(相关上下文必给、无关上下文不给——无关信息是噪音,会稀释模型注意力)、**用户知情可控**(生成前可查看/调整将发送的消息)、**不 dump 整包 state**(字段级截断)。token 节约是副产品,不是目的。
+
+### 共享库 `docs/lib/ai_context.js`(新增)
+
+| API | 职责 |
+|---|---|
+| `AiContext.sections(workId)` | 每工作坊注册上下文节:节名 / 来源(state 路径) / 截断上限 |
+| `AiContext.digest(workId, cfg)` | 按「上游 state 指纹 + cfg(选中节 + fewShot 选择)」会话内缓存,返回稳定共享前缀 |
+| `AiContext.buildPrompt({workId, needs, system, instruction, fewShot})` | 拼 messages:`[system + 共享 digest] + 按钮指令`,稳定前缀在前 |
+| `AiContext.estimateTokens(text)` | 3 字符/token 估算(同 `file_context.js`) |
+| 护栏 | digest 上限 ≈1000 tokens;超限丢弃低优先级节并注明「已省略」 |
+
+### 上下文节注册表(节名 / 来源 / 截断上限)
+
+| work | 节 | 来源 | 上限 |
+|---|---|---|---|
+| work1 | `sbu` | `work1.sbu.{name,category,scope,summary,boundary}` | 全量(短字段) |
+| work1 | `environment` | `work1.environment.{political,economic,social,technological,industry,ourCapabilities,competitors}` | 每维 ≤200 字 |
+| work1 | `personas` | `work1.personas[]` | 痛点 ≤120 字/条,其余 ≤60 字 |
+| work1 | `insights` | `work1.analysis.insights` | ≤300 字 |
+| work1 | `valueFramework` | `work1.values.*` | ≤200 字 |
+| work1 | `metrics` | `work1.metrics.dimensions` | ≤300 字 |
+| work2 | `markets` | `work2.candidates / retained` | 全量(行少) |
+| work2 | `indicators` | `work2.attractiveness / competitiveness` | ≤400 字 |
+| work2 | `matrix` | `work2.matrix` + 各市场得分 | ≤200 字 |
+| work3 | `positioning` | `work3.proposition.{chosenValueText,positioningStatement,chosenSlogan,mbti}` | 全量 |
+| work3 | `differentiators` | `work3.candidates[]` 入选项 | ≤200 字合计 |
+| work3 | `painMap` | `work3.mining.painMap` top 5 | ≤200 字 |
+| work4 | 各 P | `work4.*`(含新增 certList / scenarios / risk 等) | 按交付物 ≤400 字 |
+| work5 | `ch4_mix` | `work5.ch4_mix` | ≤600 字 |
+
+### 按钮 `needs` 声明(开发侧,用户不可见)
+
+- 每个按钮声明需要的节;「消息设置」默认勾选 = `needs`。例:
+  - work2 候选市场:`needs:['sbu','environment','personas']`
+  - work2 persona 并行赋权:`needs:['sbu','environment','indicators'] + fewShot:'delphi.weights'`
+- 精度原则:**相关节全给、无关节不给**。`needs` 的首要作用是精度而非省钱——给错信息比给少信息更伤输出质量。
+
+### 「消息设置」折叠区(每个 ai-box,默认收起)
+
+| 控件 | 行为 |
+|---|---|
+| 上下文节勾选 | 列出该按钮可用节,默认 = `needs`;用户可加勾/去勾 |
+| 示例(few-shot) | `无示例` / `通用格式示例`;结构化按钮默认开,纯文本按钮默认无 |
+| 消息预览 | 显示将发送的 prompt + 估算 token 数 |
+| 重置为推荐 | 恢复 `needs` 默认 + 默认 fewShot |
+
+- 手动模式不变(复制提示词 + 粘贴结果);消息预览复用同一 digest 缓存,不重复构建。
+- **不用演示案例做 few-shot**(会把模型带偏到案例公司数据)。通用格式示例 = 每交付物一小段「输入片段 + 期望 JSON 形状」占位样例,指令注明「仅参考格式,勿照抄内容」。
+
+### 缓存与重试
+
+- digest 指纹 = 上游 state 版本 + 选中节 + fewShot 选择;同一配置重复点击 / SchemaCheck 重试命中缓存,messages 数组不重建。
+- prompt 结构稳定前缀在前 → 命中 DeepSeek/OpenAI 自动 prompt 缓存;work2 Delphi 的 5 路 persona 并行与多轮迭代共享同一 digest,收益最大。
+
+### 迁移批次
+
+1. 新建 `docs/lib/ai_context.js` + 本规格落地
+2. W4 全部按钮(18 个)先采用
+3. W3/W5 简单按钮(痛点地图 / 备选卖点 / slogan / 4C / SWOT / 起名等)
+4. W1/W2 循环流程(合成问卷、Delphi 招聘–收敛全流程、AI 评分)最后迁移——每轮迭代共享同一 digest
+
+### 本文件(work2.md)受影响点
+
+- 各节内联的「AI prompt 模板」保留为模板正本,实现时改写为 `needs` + `instruction` 声明,经 `AiContext.buildPrompt` 调用。
+- persona 并行阶段已内联的 few-shot 示例移入通用格式示例注册表(键 `delphi.weights`),UI 走「消息设置」的示例选择。
+
+---
+
+## 验收测试场景
+
+1. **冷启动**：清空 state → 构建评估体系 AI 弹"work1 未填，请先完成 work1"
+2. **正常路径**：work1 完整 → 构建评估体系 6 阶段全跑通 → 评估候选市场 48 格填满 → 矩阵 + 三档决策 3 档卡填满
+3. **Delphi Hybrid 2**:① 招聘 1 call 输出 5 perspectives ② 5 personas 并行带 RAG work1 ③ user 主持可改权重 ④ 收敛取均值
+4. **三档可改**：矩阵 + 三档决策改 tier1.marketId → tier2/tier3 自动调整
+5. **Manual mode**:所有 AI 按键在无 API key 时走"复制 + 粘贴"流程
+6. **数据迁移**:schemaVersion=1 → 2 字段映射正确
+7. **导出**:`Work2.exportMd()` 输出符合新 6 段结构,work3 能解析
+
+---
+
+## Assumptions
+
+1. **Delphi = Hybrid 2 升级版**(6-7 call + user 主持 + RAG/few-shot)
+2. **Work1 缺失时 Work2 不复制 work1 表单**,只降级 AI 输出
+3. **样本数据**:`docs/demo-data.js` 集中提供,不硬编码到 workshop2.js
+4. **`Runner.start({total: 6, pausable: true})` 可支撑构建评估体系的 6 阶段**
+5. **tier1 必须有市场**(强制非空),tier2/tier3 可空
+6. **Work3 改造**只改主市场读取 + 加 tier2 上下文,不动其他步骤
+7. **论文依据**:Arora, Chakraborty & Nishimura (2025), *AI-Human Hybrids for Marketing Research: Leveraging LLMs as Collaborators*, Journal of Marketing 89(2) 43-70（DOI 10.1177/00222429241276529）
+
+---
+
+## 实施顺序(Goal 模式时)
+
+1. 改 `state.work2` schema + 迁移逻辑
+2. 改 `Work2.steps` → 3 tab
+3. 构建评估体系基础阶段（候选 / 标准 / 筛选 / 指标）
+4. 构建评估体系 Delphi 阶段（Hybrid 2 Delphi）
+5. 评估候选市场（48 格 + 必填依据 + 1+选抶）
+6. 矩阵 + 三档决策（散点图 + 3 档卡 + 单 AI 输出）
+7. Work3 适配
+8. 5 个 sample case 迁 schema
+9. 写新测试 + 跑通 7 个验收场景
+10. 更新 `docs/specs/`
+
+---
+
+## 文件改动清单
+
+| 文件 | 改动 |
+|---|---|
+| `docs/lib/ai_context.js` | **新增**:全局 AI 上下文机制(sections 注册 / digest 缓存 / buildPrompt / token 护栏) |
+| `docs/workshop2.js` | 主改:3 tab、Hybrid 2 Delphi、6 阶段 Runners、3 档卡 UI、新 schema、迁移 hook |
+| `docs/global-brand-building.html` | 改 `Work2.steps`、迁移 hook、3 档 CTA、3 档总结 panel |
+| `docs/workshop3.js` | `selectedMarketId` → `tier1.marketId`、加 tier2 读取 |
+| `docs/demo-data.js` | 5 个 sample case 迁 schema |
+| `tests/random_example.test.js` | 改断言 |
+| `tests/cases.shanmu_tea.test.js` | 改断言 |
+| `tests/work2_migration.test.js` | **新增** |
+| `tests/work2_delphi_hybrid2.test.js` | **新增** |
+| `docs/specs/work2/工作坊2:海外目标市场选择.md` | 校对(应已对齐 3 活动) |
+| `docs/specs/README.md` | 同步 3 步法 |

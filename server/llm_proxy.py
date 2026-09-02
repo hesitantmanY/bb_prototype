@@ -6,6 +6,7 @@ from typing import Any
 import httpx
 
 from config import load_config
+from gemini_body import build_gemini_body
 
 TIMEOUT = 120.0
 
@@ -39,7 +40,9 @@ async def proxy_llm(
 
     try:
         if provider == "gemini":
-            return await _proxy_gemini(base_url, model, api_key, messages, temperature)
+            return await _proxy_gemini(
+                base_url, model, api_key, messages, temperature, opts
+            )
         else:
             return await _proxy_openai_compatible(
                 base_url, model, api_key, messages, temperature, opts
@@ -95,14 +98,10 @@ async def _proxy_gemini(
     api_key: str,
     messages: list[dict],
     temperature: float,
+    opts: dict[str, Any],
 ) -> tuple[int, dict]:
     url = f"{base_url}/models/{model}:generateContent"
-    # Match the original frontend behavior: join all messages into one part.
-    joined = "\n\n".join(m.get("content", "") for m in messages)
-    body = {
-        "contents": [{"parts": [{"text": joined}]}],
-        "generationConfig": {"temperature": temperature},
-    }
+    body = build_gemini_body(messages, temperature, opts)
 
     async with httpx.AsyncClient(timeout=TIMEOUT) as client:
         res = await client.post(

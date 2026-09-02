@@ -20,8 +20,6 @@ DATA_DIR = Path(__file__).resolve().parent / "data"
 # Time-named versions (quick saves with no custom name) are pruned to the
 # newest MAX_TIME_SNAPSHOTS; custom-named versions are permanent.
 MAX_TIME_SNAPSHOTS = 10
-# Backup created before a destructive restore — always custom-named (permanent).
-BACKUP_PREFIX = "恢复前备份 "
 
 
 def _project_dir(project_id: str) -> Path:
@@ -135,23 +133,17 @@ def create_snapshot(
     - name empty/None → time-named (type 'time'); pruned to newest
       MAX_TIME_SNAPSHOTS after creation.
     - name given → custom-named (type 'named'); permanent.
-    - Content identical to the newest snapshot → skipped (duplicate).
     - Name collisions: overwrite=True replaces the same-named version in place
       (old content gone — caller has already asked the user); otherwise the
       collision gets a (1), (2), … suffix.
+    - 2026-08-27：取消"内容相同则跳过"——以用户给出的语义名称为主，
+      同一内容也允许起多个名字存档（典型场景：用户为同一份策划起多个
+      里程碑名称如 step1_done / step2_done / 终版）。
     """
     if state is None:
         state = load_state(project_id)
         if state is None:
             raise ValueError("No state to snapshot")
-
-    # Skip when content is identical to the newest snapshot (ignoring meta.savedAt).
-    snaps = list_snapshots(project_id)
-    if snaps:
-        newest = snaps[0]
-        newest_data = load_snapshot(project_id, newest["id"])
-        if newest_data is not None and _canonical(newest_data) == _canonical(state):
-            return {**newest, "skipped": "duplicate"}
 
     snap_dir = _snapshots_dir(project_id)
     snap_dir.mkdir(parents=True, exist_ok=True)
@@ -204,21 +196,11 @@ def load_snapshot(project_id: str, snapshot_id: str) -> dict[str, Any] | None:
 
 
 def restore_snapshot(project_id: str, snapshot_id: str) -> dict[str, Any] | None:
-    """Restore a snapshot. Current content is first backed up as a custom-named
-    version (「恢复前备份 …」, permanent). Returns the restored state, or None."""
+    """Restore a snapshot, replacing the live state directly.
+    2026-08-26: 不再自动创建「恢复前备份」（用户决策：一键直载 + 不要备份）。"""
     snapshot_state = load_snapshot(project_id, snapshot_id)
     if snapshot_state is None:
         return None
-
-    current = load_state(project_id)
-    # Backup only when the restore would actually change content — restoring
-    # the same version twice shouldn't produce backup noise.
-    if current is not None and _canonical(current) != _canonical(snapshot_state):
-        create_snapshot(
-            project_id,
-            name=BACKUP_PREFIX + time.strftime("%Y-%m-%d %H-%M"),  # 冒号会被文件名清洗，用连字符
-            state=current,
-        )
 
     _atomic_write(
         _current_file(project_id),

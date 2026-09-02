@@ -66,6 +66,12 @@ ok('moonshot moonshot-v1-32k → none',
 ok('doubao doubao-pro-32k → none',
  P.getMode('doubao','doubao-pro-32k') === 'none');
 
+// Custom (OpenAI-compatible): any model → openai_response_format
+ok('custom gpt-4 → openai_response_format (OpenAI 兼容兜底)',
+ P.getMode('custom','gpt-4') === 'openai_response_format');
+ok('custom unknown model → openai_response_format (wildcard)',
+ P.getMode('custom','anything') === 'openai_response_format');
+
 // Unknown provider → none (safe default)
 ok('unknown provider → none', P.getMode('foo','bar') === 'none');
 ok('null provider → none', P.getMode(null,null) === 'none');

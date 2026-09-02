@@ -20,6 +20,7 @@ from doc_extract import extract_document
 from excel_parser import parse_spreadsheet
 from lda import run_lda
 from llm_proxy import proxy_llm
+from llm_validate import validate_llm_request
 from storage import (
     create_snapshot,
     delete_snapshot,
@@ -133,6 +134,9 @@ def update_config(cfg: ConfigUpdate) -> dict:
 
 @app.post("/api/llm")
 async def llm_endpoint(req: LlmRequest) -> JSONResponse:
+    ok, errors = validate_llm_request(req.model_dump())
+    if not ok:
+        raise HTTPException(status_code=400, detail="; ".join(errors))
     status, data = await proxy_llm(req.messages, req.opts, req.profile)
     return JSONResponse(status_code=status, content=data)
 
@@ -294,6 +298,31 @@ if DOCS_DIR.exists():
     @app.get("/lib/{filename}")
     def lib_file(filename: str) -> FileResponse:
         candidate = DOCS_DIR / "lib" / filename
+        if candidate.is_file() and filename.endswith((".js", ".css")):
+            media = "text/javascript" if filename.endswith(".js") else None
+            return FileResponse(str(candidate), media_type=media,
+                                headers={"Cache-Control": "no-cache, no-store, must-revalidate"})
+        raise HTTPException(status_code=404, detail="not found")
+
+    # Nested cases/ scripts (e.g. cases/douya-mama/work1.js) — demo case data.
+    @app.get("/cases/{filename}")
+    def cases_root_file(filename: str) -> FileResponse:
+        import re
+        if not re.fullmatch(r"[a-zA-Z0-9\-_]+\.\w+", filename):
+            raise HTTPException(status_code=404, detail="not found")
+        candidate = DOCS_DIR / "cases" / filename
+        if candidate.is_file() and filename.endswith((".js", ".css")):
+            media = "text/javascript" if filename.endswith(".js") else None
+            return FileResponse(str(candidate), media_type=media,
+                                headers={"Cache-Control": "no-cache, no-store, must-revalidate"})
+        raise HTTPException(status_code=404, detail="not found")
+
+    @app.get("/cases/{brand}/{filename}")
+    def case_file(brand: str, filename: str) -> FileResponse:
+        import re
+        if not re.fullmatch(r"[a-zA-Z0-9\-_]+", brand) or not re.fullmatch(r"[a-zA-Z0-9\-_]+\.\w+", filename):
+            raise HTTPException(status_code=404, detail="not found")
+        candidate = DOCS_DIR / "cases" / brand / filename
         if candidate.is_file() and filename.endswith((".js", ".css")):
             media = "text/javascript" if filename.endswith(".js") else None
             return FileResponse(str(candidate), media_type=media,

@@ -1,6 +1,5 @@
-/* Smoke test: load workshop 1-5 in a stub env, call each apply with sample[0],
-   verify state mutation + no exceptions.
-   Covers Work 1 (SBU), Work 2/3/4 (random example samples), Work 5 (chain trigger).
+/* Smoke test: load workshop 1-5 in a stub env, verify new schemas
+   (work2 v2 three-tab, work3 six-step) + pure helpers.
    Run: node tests/random_example.test.js
 */
 'use strict';
@@ -8,176 +7,251 @@ const fs = require('fs');
 const path = require('path');
 const vm = require('vm');
 
-const root = '/Users/hesitantmany/vs project/building brand/Brand-building/docs';
+const root = path.join(__dirname, '..', 'docs');
 const files = ['workshop1.js', 'workshop2.js', 'workshop3.js', 'workshop4.js', 'workshop5.js'];
+
+function makeNode(tag, attrs, ...children){
+  const node = {
+    tag, attrs: attrs || {}, children, _text: null,
+    style: (attrs && attrs.style) || {},
+    class: (attrs && attrs.class) || '',
+    appendChild(c){ this.children.push(c); return c; },
+    addEventListener(){ return this; },
+    querySelector(){ return null; },
+    set innerHTML(v){ this._innerHTML = v; this.children = []; },
+    get innerHTML(){ return this._innerHTML || ''; },
+    set textContent(v){ this._text = v; },
+    get textContent(){ return this._text; }
+  };
+  if(children.length === 1 && typeof children[0] === 'string') node._text = children[0];
+  return node;
+}
 
 // Minimal browser-like env
 const sandbox = {
   console,
-  window: {},
   setTimeout, clearTimeout, setInterval, clearInterval,
   Date, JSON, Math, Object, Array, String, Number, Boolean,
-  document: { body: { dataset: {} } },
-  // el helper used by workshops (just builds an object with .appendChild/.querySelector etc.)
-  el: function(tag, attrs, ...children){
-    const node = {
-      tag, attrs: attrs || {},
-      children,
-      _text: null,
-      style: (attrs && attrs.style) || {},
-      class: (attrs && attrs.class) || '',
-      appendChild(c){ this.children.push(c); return c; },
-      addEventListener(ev, fn){ this._events = this._events || {}; (this._events[ev] = this._events[ev] || []).push(fn); return this; },
-      querySelector(){ return null; },
-      set innerHTML(v){ this._innerHTML = v; this.children = []; },
-      get innerHTML(){ return this._innerHTML || ''; },
-      set textContent(v){ this._text = v; },
-      get textContent(){ return this._text; },
-    };
-    // Allow passing text as 3rd arg or nested
-    if(children.length === 1 && typeof children[0] === 'string') node._text = children[0];
-    return node;
-  },
-  // stubs for global functions referenced in workshops
+  document: { body: { dataset: {} }, querySelector: () => null, getElementById: () => null, createElement: t => makeNode(t), head: { appendChild(){} } },
+  el: makeNode,
   uid: (prefix='id') => prefix + '_' + Math.random().toString(36).slice(2, 9),
-  mean: (arr) => arr.reduce((a,b)=>a+b, 0) / arr.length,
+  mean: (arr) => arr.length ? arr.reduce((a,b)=>a+b, 0) / arr.length : 0,
   sd: (arr) => {
-    if(!arr.length) return 0;
+    if(arr.length < 2) return 0;
     const m = arr.reduce((a,b)=>a+b, 0) / arr.length;
     return Math.sqrt(arr.reduce((s,x)=>s + (x-m)*(x-m), 0) / arr.length);
   },
-  median: (arr) => { const s = arr.slice().sort((a,b)=>a-b); return s[Math.floor(s.length/2)]; },
+  median: (arr) => { if(!arr.length) return 0; const s = arr.slice().sort((a,b)=>a-b); const m=Math.floor(s.length/2); return s.length%2 ? s[m] : (s[m-1]+s[m])/2; },
   clamp: (v, lo, hi) => Math.max(lo, Math.min(hi, v)),
-  state: {
-    work1: { sbu: { name:'', threeQuestions: { customer:false, channel:false, brand:false } }, environment: { political:'' }, personas:[], values:{chosenFunctional:'',chosenEmotional:'',chosenSocial:'',rationale:''}, survey:{responses:[],n:0,questions:[]}, analysis:{insights:'',openThemes:{texts:[]}}, recommendations:{short:'',mid:'',long:'',risks:[]} },
-    work2: { scope:{question:'',timeframe:'',constraints:'',candidateCount:4}, attractiveness:{indicators:[]}, competitiveness:{indicators:[]}, delphi:{panel:[]}, markets:[], matrix:{selectedMarketId:null,xCut:null,yCut:null,notes:''}, decision:{rationale:'',sequence:'',risks:[],nextSteps:''} },
-    work3: { context:{sbuName:'',targetMarket:'',personas:[],hasSurvey:false}, mining:{documents:[],topics:[],wordFreqTop:[],stats:null,painMap:[]}, candidates:[], dimensions:{desirability:[],implementability:[]}, matrix:{showSector:true,sectorAngle:90,sectorRadius:12,xCut:null,yCut:null,manualSelected:[]}, migration:{analyses:[]}, proposition:{coreValueIds:[],alternatives:[],chosenValueText:'',positioning:{brand:'',audience:'',coreValue:'',category:''},positioningStatement:'',sloganOptions:[],chosenSlogan:'',mbti:'',personalityTraits:[]} },
-    work4: { route:{scope:'',oemType:'',entryMode:'',light:[],politicalPower:''}, product:{name:'',description:'',coreDifferentiators:[],skus:[],aiResult:'',businessType:'physical'}, price:{strategy:'',strategyNote:'',tiers:[],promotions:[],aiResult:''}, place:{onlineSelf:[],onlineThird:[],offlineDirect:[],offlineDistrib:[],offlineRetail:[],keyPartners:[],structure:[],aiResult:''}, promotion:{advertising:[],pr:[],salesPromotion:[],crm:{},kolTiers:[],aiResult:'',theme:'',context:'',taboos:'',language:'',contentStrategy:''} }
-  },
-  // workshop namespaces must already exist; inject them
+  esc: s => String(s==null?'':s),
+  backendOnline: false,
+  state: null
 };
-// Create Work1..4 namespaces
-['Work1','Work2','Work3','Work4','Work5','UI','API','App','Runner','showToast'].forEach(n => { sandbox[n] = {}; });
-sandbox.autosave = () => {};  // analyzeResponses / apply 路径会调用
-sandbox.window = sandbox;  // so window.RandomExample works
+['Work1','Work2','Work3','Work4','Work5','UI','App','Runner'].forEach(n => { sandbox[n] = {}; });
+sandbox.UI.demoNote = () => null;
+sandbox.API = { aiButton(){}, callJson(){}, call(){}, extractJson(){ return null; } };
+sandbox.autosave = () => {};
+sandbox.window = sandbox;
 vm.createContext(sandbox);
 
+// Default state built from the modules AFTER load (see below).
 let pass=0, fail=0;
 function ok(name, cond, detail){
   if(cond){ pass++; console.log('PASS ' + name); }
   else { fail++; console.log('FAIL ' + name + (detail? ' — ' + detail : '')); }
 }
 
-// Load each file
 for(const f of files){
   const code = fs.readFileSync(path.join(root, f), 'utf8');
   try{ vm.runInContext(code, sandbox, {filename: f}); }
   catch(e){ console.log('LOAD ERR ' + f + ': ' + e.message); fail++; }
 }
 
-// 1. window.RandomExample
-ok('window.RandomExample is defined', typeof sandbox.RandomExample === 'object' && typeof sandbox.RandomExample.mount === 'function');
+// Build a state object from the new defaultData() shapes.
+sandbox.state = {
+  work1: sandbox.Work1.defaultData(),
+  work2: sandbox.Work2.defaultData(),
+  work3: sandbox.Work3.defaultData(),
+  work4: sandbox.Work4.defaultData(),
+  work5: sandbox.Work5.defaultData()
+};
 
-// 2. Work1.SBU_SAMPLES exposed
-ok('Work1.SBU_SAMPLES exposed', Array.isArray(sandbox.Work1.SBU_SAMPLES) && sandbox.Work1.SBU_SAMPLES.length >= 6);
-ok('Work1.applySBU exposed', typeof sandbox.Work1.applySBU === 'function');
+/* ---------- Work 2 v2 ---------- */
+ok('Work2 has 3 tabs', sandbox.Work2.steps.length === 3 &&
+  sandbox.Work2.steps.map(s=>s.id).join(',') === 'framework,evaluate,decision');
 
-// 3. Apply Work 1 sample
-try{ sandbox.Work1.applySBU(sandbox.Work1.SBU_SAMPLES[0]); ok('Work1.applySBU ran', sandbox.state.work1.sbu.name && sandbox.state.work1.sbu.name.length > 0); }
-catch(e){ ok('Work1.applySBU ran', false, e.message); }
+const d2 = sandbox.state.work2;
+ok('Work2 default schemaVersion=2', d2.meta.schemaVersion === 2);
+ok('Work2 default template 4×2 attractiveness',
+  d2.attractiveness.categories.length === 4 &&
+  d2.attractiveness.categories.every(c => c.indicators.length === 2));
+ok('Work2 default template 4×2 competitiveness',
+  d2.competitiveness.categories.length === 4 &&
+  d2.competitiveness.categories.every(c => c.indicators.length === 2));
+ok('Work2 default weights 0.25 / 0.5',
+  d2.attractiveness.categories.every(c => c.weight === 0.25 && c.indicators.every(i => i.weight === 0.5)));
+ok('Work2 decision tier1/tier2/tier3 shape',
+  d2.decision.tier1.resourcesPct === 80 && Array.isArray(d2.decision.tier2.marketIds) && Array.isArray(d2.decision.tier3.marketIds));
+ok('Work2.allIndicators flattens 16', sandbox.Work2.allIndicators().length === 16);
 
-// 3b. Work 1 FULL sample (覆盖 8 个子 step)
-ok('Work1.WORK1_FULL_SAMPLES exposed', Array.isArray(sandbox.Work1.WORK1_FULL_SAMPLES) && sandbox.Work1.WORK1_FULL_SAMPLES.length >= 2);
-ok('Work1._applyWork1FullSample exposed', typeof sandbox.Work1._applyWork1FullSample === 'function');
-try{
-  sandbox.Work1._applyWork1FullSample(sandbox.Work1.WORK1_FULL_SAMPLES[0]);
-  const d = sandbox.state.work1;
-  ok('Work1 full: sbu.name filled', !!d.sbu.name);
-  ok('Work1 full: environment.political', d.environment.political && d.environment.political.length > 5);
-  ok('Work1 full: 5+ competitors', d.environment.competitors.length >= 5);
-  ok('Work1 full: ourCapabilities 5 dims', !!(d.environment.ourCapabilities.delivery && d.environment.ourCapabilities.core));
-  ok('Work1 full: 5 personas', d.personas.length === 5);
-  ok('Work1 full: 3 scenarios', d.scenarios.length === 3);
-  ok('Work1 full: 5 metrics dimensions', d.metrics.dimensions.length === 5);
-  ok('Work1 full: 3 secondaries per dim', d.metrics.dimensions.every(dim => dim.secondaries.length === 3));
-  ok('Work1 full: 10 likert questions', d.survey.questions.length === 10);
-  ok('Work1 full: 10 responses (5p × 2n)', d.survey.responses.length === 10);
-  ok('Work1 full: each response has 10 answers', d.survey.responses.every(r => r.answers.length === 10));
-  // analyzeResponses 会基于 10 个 likert 题生成 10 个 indicatorMeans (而非 metrics 的 15 个二级)
-  ok('Work1 full: 10 indicator means (from 10 likert)', d.analysis.indicatorMeans.length === 10);
-  ok('Work1 full: likertStats filled (10 questions)', Object.keys(d.analysis.likertStats).length === 10);
-  // backfillScores 会给 s1-s10 设 actual, s11-s15 仍是 null
-  const s2Actuals = d.metrics.dimensions.flatMap(dim => dim.secondaries.map(s2 => s2.actual));
-  ok('Work1 full: 10 s2.actual backfilled', s2Actuals.filter(v => v != null).length === 10);
-  ok('Work1 full: values chosen set', !!(d.values.chosenFunctional && d.values.chosenEmotional && d.values.chosenSocial));
-  ok('Work1 full: recommendations filled', !!(d.recommendations.short && d.recommendations.mid && d.recommendations.long));
-  ok('Work1 full: 3+ risks', d.recommendations.risks.length >= 3);
-  // 2nd sample (欧洲家居) sanity
-  sandbox.Work1._applyWork1FullSample(sandbox.Work1.WORK1_FULL_SAMPLES[1]);
-  const d2 = sandbox.state.work1;
-  ok('Work1 full[2]: CASA scope=欧洲', d2.sbu.scope === '欧洲');
-  ok('Work1 full[2]: 5 personas, names differ', d2.personas.length === 5 && d2.personas[0].id !== 'p1');
-  ok('Work1 full[2]: metrics still 5 dim × 3', d2.metrics.dimensions.length === 5 && d2.metrics.dimensions.every(dim => dim.secondaries.length === 3));
-}catch(e){ ok('Work1 full apply ran', false, e.message + '\n' + e.stack); }
+// Migration v1 → v2
+const oldWork2 = {
+  scope: { question:'q', timeframe:'t', constraints:'c', candidateCount:4 },
+  attractiveness: { indicators: [
+    {id:'i1', name:'经济市场规模', rubric:{high:'h',mid:'m',low:'l'}, weight:0.5, support:3, source:'delphi'},
+    {id:'i2', name:'渠道成熟度', rubric:{high:'h',mid:'m',low:'l'}, weight:0.5, support:3, source:'delphi'}
+  ]},
+  competitiveness: { indicators: [
+    {id:'j1', name:'认证可复用', rubric:{high:'h',mid:'m',low:'l'}, weight:1, support:3, source:'delphi'}
+  ]},
+  delphi: { panel: [], weights: {attractiveness:{i1:1}, competitiveness:{j1:1}}, finalSynthesis:'syn' },
+  markets: [
+    {id:'m1', name:'新加坡', region:'SEA', notes:'keep1', scores:{}},
+    {id:'m2', name:'吉隆坡', region:'SEA', notes:'keep2', scores:{}},
+    {id:'m3', name:'雅加达', region:'SEA', notes:'keep3', scores:{}},
+    {id:'m4', name:'曼谷', region:'SEA', notes:'dropped', scores:{}}
+  ],
+  matrix: { selectedMarketId:'m1', xCut:null, yCut:null, notes:'' },
+  decision: { rationale:'r', sequence:'s', risks:['x'], nextSteps:'n' }
+};
+const mig2 = sandbox.Work2.migrateWork2(oldWork2);
+ok('migrate: schemaVersion bumped', mig2.meta.schemaVersion === 2);
+ok('migrate: first 3 markets retained', mig2.retained.length === 3 && mig2.retained[0].name === '新加坡');
+ok('migrate: rest → candidates with reason', mig2.candidates.length === 1 && mig2.candidates[0].name === '曼谷' && mig2.candidates[0].reason === 'dropped');
+ok('migrate: indicators bucketed into categories',
+  mig2.attractiveness.categories.reduce((a,c)=>a+c.indicators.length,0) === 2 &&
+  mig2.competitiveness.categories.reduce((a,c)=>a+c.indicators.length,0) === 1);
+ok('migrate: tier1 from selectedMarketId', mig2.decision.tier1.marketId === 'm1' && mig2.decision.tier1.rationale === 'r');
+ok('migrate: nextSteps → milestones', mig2.decision.tier1.milestones[0] === 'n');
+ok('migrate: idempotent on v2', sandbox.Work2.migrateWork2(mig2) === mig2);
+ok('migrate: old keys removed', !('markets' in mig2) && !('scope' in mig2));
 
-// 4. Work 2 sample + apply
-ok('Work2.WORK2_SAMPLES exposed', Array.isArray(sandbox.Work2.WORK2_SAMPLES) && sandbox.Work2.WORK2_SAMPLES.length >= 2);
-ok('Work2._applyWork2Sample exposed', typeof sandbox.Work2._applyWork2Sample === 'function');
-try{
-  sandbox.Work2._applyWork2Sample(sandbox.Work2.WORK2_SAMPLES[0]);
-  const d = sandbox.state.work2;
-  ok('Work2 sample: scope filled', !!d.scope.question);
-  ok('Work2 sample: 3+ markets', d.markets.length >= 3);
-  ok('Work2 sample: a-indicators filled', d.attractiveness.indicators.length >= 3);
-  ok('Work2 sample: c-indicators filled', d.competitiveness.indicators.length >= 3);
-  ok('Work2 sample: matrix selectedMarketId set', !!d.matrix.selectedMarketId);
-  ok('Work2 sample: decision filled', !!d.decision.rationale);
-}catch(e){ ok('Work2 apply ran', false, e.message); }
+// bucketIndicatorsByCategory fuzzy match
+const buckets = sandbox.Work2.bucketIndicatorsByCategory(
+  [{id:'a', name:'经济规模'}, {id:'b', name:'完全无关指标'}, {id:'c', name:'政治稳定性'}], 'attractiveness');
+ok('bucket: 经济 → 经济类', buckets.find(c=>c.name==='经济').indicators.some(i=>i.id==='a'));
+ok('bucket: 政治 → 政治法律类', buckets.find(c=>c.name==='政治法律').indicators.some(i=>i.id==='c'));
+ok('bucket: unmatched → first category', buckets[0].indicators.some(i=>i.id==='b'));
+ok('bucket: weights normalized within category',
+  buckets.every(c => Math.abs(c.indicators.reduce((s,i)=>s+i.weight,0) - (c.indicators.length?1:0)) < 0.001));
 
-// 5. Work 3
-ok('Work3.WORK3_SAMPLES exposed', Array.isArray(sandbox.Work3.WORK3_SAMPLES) && sandbox.Work3.WORK3_SAMPLES.length >= 2);
-ok('Work3._applyWork3Sample exposed', typeof sandbox.Work3._applyWork3Sample === 'function');
-try{
-  sandbox.Work3._applyWork3Sample(sandbox.Work3.WORK3_SAMPLES[0]);
-  const d = sandbox.state.work3;
-  ok('Work3 sample: 15+ documents', d.mining.documents.length >= 15);
-  ok('Work3 sample: 3+ topics', d.mining.topics.length >= 3);
-  ok('Work3 sample: 3+ pain points', d.mining.painMap.length >= 3);
-  ok('Work3 sample: 3+ candidates', d.candidates.length >= 3);
-  ok('Work3 sample: proposition chosenValueText', !!d.proposition.chosenValueText);
-  ok('Work3 sample: positioning statement', !!d.proposition.positioningStatement);
-  ok('Work3 sample: chosenSlogan', !!d.proposition.chosenSlogan);
-}catch(e){ ok('Work3 apply ran', false, e.message); }
+// selectedTiers: new schema + legacy fallback
+d2.retained = [{id:'m1', name:'新加坡'}, {id:'m2', name:'吉隆坡'}, {id:'m3', name:'雅加达'}];
+d2.decision.tier1.marketId = 'm1';
+d2.decision.tier2.marketIds = ['m2'];
+let tiers = sandbox.Work2.selectedTiers();
+ok('selectedTiers v2: tier1 name', tiers.v === 2 && tiers.tier1.name === '新加坡');
+ok('selectedTiers v2: tier2 list', tiers.tier2.length === 1 && tiers.tier2[0].name === '吉隆坡');
+// legacy fallback
+d2.decision.tier1.marketId = null;
+d2.matrix = { selectedMarketId:'m3', xCut:null, yCut:null, notes:'' };
+tiers = sandbox.Work2.selectedTiers();
+ok('selectedTiers legacy fallback', tiers.v === 1 && tiers.tier1.name === '雅加达');
 
-// 6. Work 4
-ok('Work4.WORK4_SAMPLES exposed', Array.isArray(sandbox.Work4.WORK4_SAMPLES) && sandbox.Work4.WORK4_SAMPLES.length >= 2);
-ok('Work4._applyWork4Sample exposed', typeof sandbox.Work4._applyWork4Sample === 'function');
-try{
-  sandbox.Work4._applyWork4Sample(sandbox.Work4.WORK4_SAMPLES[0]);
-  const d = sandbox.state.work4;
-  ok('Work4 sample: route oemType', !!d.route.oemType);
-  ok('Work4 sample: product name', !!d.product.name);
-  ok('Work4 sample: 5 SKUs', d.product.skus.length === 5);
-  ok('Work4 sample: price strategy', !!d.price.strategy);
-  ok('Work4 sample: 3+ price tiers', d.price.tiers.length >= 3);
-  ok('Work4 sample: place structure tree', d.place.structure.length >= 1);
-  ok('Work4 sample: promotion theme', !!d.promotion.theme);
-  ok('Work4 sample: 3 KOL tiers', d.promotion.kolTiers.length >= 3);
-}catch(e){ ok('Work4 apply ran', false, e.message); }
+// computeMatrix weighted scoring
+d2.decision.tier1.marketId = null;
+d2.scoring = {};
+const inds2 = sandbox.Work2.allIndicators();
+d2.retained.forEach(m=>{
+  d2.scoring[m.id] = {};
+  inds2.forEach(i=>{ d2.scoring[m.id][i.id] = {score: m.id==='m1'?8:4, evidence:'e', url:'', source:'ai'}; });
+});
+const pts2 = sandbox.Work2.computeMatrix();
+ok('computeMatrix: uniform weights → mean score',
+  Math.abs(pts2.find(p=>p.id==='m1').y - 8) < 0.01 && Math.abs(pts2.find(p=>p.id==='m2').x - 4) < 0.01);
 
-// 7. Work 5 button hooks
-ok('Work5.randomExampleAll defined', typeof sandbox.Work5.randomExampleAll === 'function');
-ok('Work5.aggregateAll defined', typeof sandbox.Work5.aggregateAll === 'function');
+// convergeWeights pure function
+const personas = [
+  { ratings: { attractiveness: {a1:0.8, a2:0.2}, competitiveness: {c1:1} } },
+  { ratings: { attractiveness: {a1:0.4, a2:0.6}, competitiveness: {c1:1} } }
+];
+const fakeInds = [
+  {id:'a1', axis:'attractiveness'}, {id:'a2', axis:'attractiveness'},
+  {id:'c1', axis:'competitiveness'}
+];
+const conv = sandbox.Work2.convergeWeights(personas, fakeInds);
+ok('convergeWeights: mean + normalize',
+  Math.abs(conv.attractiveness.a1 - 0.6) < 0.001 && Math.abs(conv.attractiveness.a2 - 0.4) < 0.001);
+ok('convergeWeights: axis sums to 1',
+  Math.abs(Object.values(conv.attractiveness).reduce((a,b)=>a+b,0) - 1) < 0.001 &&
+  Math.abs(Object.values(conv.competitiveness).reduce((a,b)=>a+b,0) - 1) < 0.001);
 
-// 微笑曲线 SVG 渲染
-ok('Work1.renderSmileCurve defined', typeof sandbox.Work1.renderSmileCurve === 'function');
-try{
-  const node = sandbox.Work1.renderSmileCurve();
-  ok('Work1.renderSmileCurve returns element', !!node);
-  ok('Work1.renderSmileCurve wraps SVG', typeof node.innerHTML === 'string' && node.innerHTML.indexOf('<svg') !== -1);
-  ok('Work1.renderSmileCurve has 6 nodes', (node.innerHTML.match(/<circle/g) || []).length === 6);
-  ok('Work1.renderSmileCurve has axis label', node.innerHTML.indexOf('SMILE CURVE') !== -1);
-}catch(e){ ok('Work1.renderSmileCurve runs', false, e.message); }
+// syncTiers: changing tier1 moves old tier1 to tier2
+d2.decision.tier1.marketId = 'm1';
+d2.decision.tier2.marketIds = ['m2'];
+d2.decision.tier3.marketIds = [];
+sandbox.Work2.syncTiers('m3', 'm1');
+ok('syncTiers: new tier1 removed from tier2/3',
+  !d2.decision.tier2.marketIds.includes('m3') && !d2.decision.tier3.marketIds.includes('m3'));
+ok('syncTiers: old tier1 demoted to tier2', d2.decision.tier2.marketIds.includes('m1'));
+
+// exportMd 6-section structure
+d2.candidates = [{id:'c1', name:'候选A', reason:'r'}];
+d2.screening.criteria = [{id:'cr1', name:'标准A', source:'src'}];
+d2.decision.tier1 = { marketId:'m1', rationale:'why', resourcesPct:80, milestones:['ms1'], reEvalTrigger:'trig' };
+const md2 = sandbox.Work2.exportMd();
+ok('exportMd contains 6 sections',
+  ['### 1. 候选市场清单','### 2. 筛选标准','### 3. 保留市场','### 4. 指标体系与权重','### 5. 评分与矩阵','### 6. 三档决策'].every(h => md2.includes(h)));
+
+/* ---------- Work 3 six-step ---------- */
+ok('Work3 has 6 steps', sandbox.Work3.steps.length === 6 &&
+  sandbox.Work3.steps.map(s=>s.id).join(',') === 'scenarios,mining,candidates,matrix,proposition,identity');
+
+const d3 = sandbox.state.work3;
+ok('Work3 default: scenarios empty, candidates 5 blanks',
+  d3.scenarios.length === 0 && d3.candidates.length === 5);
+ok('Work3 default: identity object',
+  d3.identity && d3.identity.mbti === '' && Array.isArray(d3.identity.sloganOptions));
+ok('Work3 default: proposition has no slogan fields',
+  !('chosenSlogan' in d3.proposition) && !('mbti' in d3.proposition));
+
+// migrateWork3: old proposition (with slogan/mbti) → identity
+const oldWork3 = {
+  context: { sbuName:'x', targetMarket:'y', personas:[], hasSurvey:false },
+  mining: { documents:[], topics:[], painMap:[{id:'p1', pain:'痛', type:'痛点'}] },
+  candidates: [{id:'c1', name:'卖点', selected:true}],
+  proposition: {
+    coreValueIds:['c1'], alternatives:[], chosenValueText:'主张',
+    positioning:{brand:'b',audience:'a',coreValue:'c',category:'cat'},
+    positioningStatement:'sentence',
+    sloganOptions:['s1','s2'], chosenSlogan:'s1', mbti:'ENFP', personalityTraits:['t1']
+  }
+};
+const mig3 = sandbox.Work3.migrateWork3(oldWork3);
+ok('migrate3: identity ← proposition', mig3.identity.mbti === 'ENFP' && mig3.identity.chosenSlogan === 's1' && mig3.identity.personalityTraits[0] === 't1');
+ok('migrate3: proposition cleaned', !('mbti' in mig3.proposition) && !('chosenSlogan' in mig3.proposition));
+ok('migrate3: painMap/candidates get scenarioId', mig3.mining.painMap[0].scenarioId === '' && mig3.candidates[0].scenarioId === '');
+ok('migrate3: idempotent', (()=>{ const again = sandbox.Work3.migrateWork3(mig3); return again.identity.mbti === 'ENFP'; })());
+
+// syncContext reads work2 tier1/tier2 via selectedTiers
+sandbox.state.work1.sbu.name = '测试SBU';
+sandbox.state.work1.personas = [{id:'p1', name:'画像1', painPoints:'痛', values:[], quote:'', region:'R'}];
+d2.decision.tier1 = { marketId:'m1', rationale:'why', resourcesPct:80, milestones:[], reEvalTrigger:'' };
+d2.decision.tier2 = { marketIds:['m2'], observationMetrics:[], reEvalTrigger:'' };
+d2.decision.tier3 = { marketIds:[], reEvalTrigger:'' };
+sandbox.Work3.syncContext();
+ok('syncContext: tier1 name', d3.context.targetMarket === '新加坡');
+ok('syncContext: tier2 list', d3.context.tier2.length === 1 && d3.context.tier2[0].name === '吉隆坡');
+ok('syncContext: personas copied', d3.context.personas.length === 1);
+
+// scenarioSelect / scenarioName helpers
+d3.scenarios = [{id:'sc1', name:'母婴场景', selected:true}];
+ok('Work3.scenarioName resolves', sandbox.Work3.scenarioName('sc1') === '母婴场景');
+ok('Work3.scenarioName unknown → empty', sandbox.Work3.scenarioName('nope') === '');
+
+// exportMd includes new sections
+d3.proposition.chosenValueText = '价值主张X';
+d3.identity.chosenSlogan = '口号X';
+const md3 = sandbox.Work3.exportMd();
+ok('Work3.exportMd includes scenarios + identity',
+  md3.includes('### 2. 场景细分') && md3.includes('口号X') && md3.includes('### 7. 品牌人格与 Slogan'));
+
+/* ---------- Work 4 ---------- */
+ok('Work4 exposes renderTreemap', typeof sandbox.Work4.renderTreemap === 'function');
+ok('Work4 steps no longer include summary（ADR 0008：末步 promotion 直连 Work5）', !sandbox.Work4.steps.some(s=>s.id==='summary') && sandbox.Work4.steps.length === 5);
+
+/* ---------- Work 5 ---------- */
+ok('Work5._tier1Name via selectedTiers', sandbox.Work5._tier1Name() === '新加坡');
 
 console.log(`\nTotal: ${pass} pass / ${fail} fail`);
 process.exit(fail ? 1 : 0);

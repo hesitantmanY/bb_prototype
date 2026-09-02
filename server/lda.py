@@ -155,10 +155,12 @@ def run_lda(
     for bow in corpus:
         dist = dict(lda.get_document_topics(bow, minimum_probability=0.0))
         for tid in range(k):
-            topic_totals[tid] += dist.get(tid, 0.0)
+            # gensim 返回 numpy.float32，累加前必须转原生 float，
+            # 否则响应里会混入 float32 → FastAPI/Pydantic 序列化 500。
+            topic_totals[tid] += float(dist.get(tid, 0.0))
     n = max(1, len(corpus))
     for t in topics_out:
-        t["share"] = round(topic_totals[t["id"]] / n * 100, 1)
+        t["share"] = float(round(topic_totals[t["id"]] / n * 100, 1))
 
     # Representative docs per topic: pick docs with highest probability for that topic.
     doc_scores: dict[int, list[tuple[int, float]]] = {t["id"]: [] for t in topics_out}

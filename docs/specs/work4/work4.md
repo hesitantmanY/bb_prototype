@@ -1,7 +1,7 @@
 # Work 4 — 营销组合（4P）
 
-> 4 个子模块（4P），每个一个子 tab。涉及 AI 的步骤统一支持双模式（API 调用 / 手动粘贴）。
-> 流程： 产品/技术/服务 →  定价/价格体系 →  渠道治理 →  传播促销/客户关系
+> 5 个步骤（路径 + 4P），每个一个子 tab。涉及 AI 的步骤统一支持双模式（API 调用 / 手动粘贴）。
+> 流程：路径（出海路径与进入模式）→ 产品/技术/服务 → 定价/价格体系 → 渠道治理 → 传播促销/客户关系
 > 设计系统、API 引擎、数据模型见 [README.md](README.md)。
 > 上游：Work 1（SBU）、Work 2（目标市场）、Work 3（价值主张、定位、品牌个性）。
 > 下游：Work 5（策划书第 4 章营销组合）。
@@ -22,7 +22,16 @@
     slogan: ""             // 从 work3.identity.chosenSlogan 带入
   },
 
-  //  产品 / 技术 / 服务
+  // 路径（出海路径与进入模式）
+  route: {
+    scope: "",             // 出海 global / 本阶段聚焦国内 domestic
+    oemType: "",           // OEM | ODM | OBM | EMS
+    entryMode: "",         // export | licensing | franchise | contract-mfg | jv | acquisition | greenfield
+    light: [],             // 出海姿态：single-point | borrow-boat | philosophy
+    politicalPower: ""     // 政企关系 / 合规要点（仅 jv / acquisition / greenfield）
+  },
+
+  // 产品 / 技术 / 服务
   product: {
     name: "",              // 产品/产品线名称
     description: "",       // 产品概述
@@ -37,7 +46,7 @@
     aiResult: ""           // AI 提炼的产品卖点文案
   },
 
-  //  定价 / 价格体系
+  // 定价 / 价格体系
   price: {
     strategy: "",          // cost-plus | value | competitive | penetration | skimming
     strategyNote: "",      // 选择该策略的理由
@@ -58,7 +67,7 @@
     aiResult: ""
   },
 
-  //  销售渠道治理
+  // 销售渠道治理
   place: {
     online: {
       selfOperated: [],    // 自营渠道（官网、独立站、App）
@@ -81,7 +90,7 @@
     aiResult: ""
   },
 
-  //  传播促销 / 客户关系
+  // 传播促销 / 客户关系
   promotion: {
     advertising: [
       // 广告投放
@@ -137,7 +146,21 @@ SBU：xxx   目标市场：xxx   价值主张：xxx   定位：xxx   Slogan：xx
 
 ---
 
-##  产品 / 技术 / 服务
+## 路径（出海路径与进入模式）
+
+判断业务在微笑曲线上的位置、用什么模式进入市场、以什么姿态起步——路径决定控制权：OEM 几乎没有品牌和定价权，OBM 要自己承担渠道和传播。先想清楚再填 4P。
+
+### 字段
+
+- **市场范围**：出海 / 跨国经营，或本阶段聚焦国内市场。选国内时隐藏全部跨文化调适字段，4P 按常规营销组合填写。
+- **业务在微笑曲线上的位置**：OEM 代工生产 / ODM 设计+制造 / OBM 自有品牌 / EMS 代工服务。
+- **进入模式**：直接出口（最低控制）/ 授权许可 / 特许加盟 / 合同制造 / 合资 / 并购 / 绿地自建（最重但完全控制）。
+- **出海姿态（可多选）**：单点突破 / 借船出海 / 长期主义。
+- **政企关系**（仅合资 / 并购 / 绿地）：记录政府关系、准入许可、合规要点。
+
+---
+
+## 产品 / 技术 / 服务
 
 ### 字段
 
@@ -168,7 +191,7 @@ SBU：xxx   目标市场：xxx   价值主张：xxx   定位：xxx   Slogan：xx
 
 ---
 
-##  定价 / 价格体系
+## 定价 / 价格体系
 
 ### 字段
 
@@ -193,7 +216,7 @@ SBU：xxx   目标市场：xxx   价值主张：xxx   定位：xxx   Slogan：xx
 **促销期价格**（可增删）：
 - 场合、折扣力度、时间段
 
-**竞争对手价格**：文本区，学员粘贴竞品价格数据。
+**竞争对手价格**：文本区，使用者粘贴竞品价格数据。
 
 ### 可视化
 
@@ -217,7 +240,7 @@ SBU：xxx   目标市场：xxx   价值主张：xxx   定位：xxx   Slogan：xx
 
 ---
 
-##  销售渠道治理
+## 销售渠道治理
 
 ### 字段
 
@@ -261,7 +284,7 @@ SBU：xxx   目标市场：xxx   价值主张：xxx   定位：xxx   Slogan：xx
 
 ---
 
-##  传播促销 / 客户关系
+## 传播促销 / 客户关系
 
 ### 字段
 
@@ -306,15 +329,54 @@ SBU：xxx   目标市场：xxx   价值主张：xxx   定位：xxx   Slogan：xx
 
 ---
 
-## 4P 汇总视图
+## 跨工作坊闭环 CTA（2026-08-27 grilling 共识）
 
-4P 完成后，子 tab 栏右侧有一个「4P 汇总」按钮（或第 5 个 tab），展示：
+末步 `promotion`（2026-09-01：summary 步已删除，汇总由 Work5 承担）的 mvo
+全过后，step 末显示「V. 策划书 →」，点击进下一工作坊首步。统一实现 `UI.nextWorkCta`
+（global-brand-building.html）；规则同 work1 step8，work5 终点不加。
 
-- 四个 P 的核心结论卡片（从各 P 的 `aiResult` + 关键字段自动拼接）。
-- 检查清单：
-  - 产品卖点是否支撑价值主张？
-  - 定价是否匹配目标客群？
-  - 渠道是否覆盖目标客群聚集的地方？
-  - 传播信息是否一致？
-- 一键同步到 Work 5 策划书第 4 章。
-- 一键复制 4P 摘要文本（供 PPT/汇报使用）。
+---
+
+## 步级 AI 起草（2026-09-01，取代段落采纳流 / 一键 4P）
+
+### 每步一个按钮
+
+4P 每步顶部唯一一个「AI 起草{内容}」主按钮（head row 与上下文折叠保留）：
+
+- 该步无内容 → `AI 起草{产品卖点/定价建议/渠道策略/传播方案}`，直接生成
+- 该步已有内容 → `重新生成{内容}`，先弹「整体替换」确认（workshop123 式）
+
+### 一次调用双写
+
+单次 LLM 调用，prompt 由 `Work4.buildStepPrompt(pKey)` 统一构建（`STEP_FIELD_SPEC`
+一处维护字段清单 / guide / 条件裁剪——跨文化字段仅出海、7P 扩展仅服务/混合业务）：
+
+- **字段 JSON 对象**（末尾一个 ```json 块，键名 = 字段 key）→ `Work4.applyStepAll`
+  容错解析后**整组覆盖**该步表单字段（未含的 key 不动；tags/text/table/crm/enum/
+  structure 六类清洗，表格复用 `parseStructured` 容错链）
+- **叙事正文**（## 标题 + 散文/列表/Markdown 表格）→ 剥掉 JSON 块后存 `aiResult`，
+  自动全部采纳，段落区只读展示（JSON 永不外露；含 ```fence 的历史段落折叠为提示行）
+
+成功 toast「已生成并填入 N/M 个字段，请逐项审改」；解析失败不动字段 + 显式 toast reason，
+正文仍存入段落区。
+
+### 表单是唯一真相源
+
+`summaryText` 字段优先（已采纳段落拼接分支删除），price 摘要补跨文化 3 字段；
+用户改表单 → 导出 / Work5 直接反映。
+
+### mvo
+
+4 个 P 的「采纳了至少 1 个 AI 起草段落」检查删除（内容检查即闸门，不强制用 AI）；
+summary 步与其 mvo 一并删除，promotion 变末步。
+
+### 截断抢救
+
+fence 未闭合但对象完整（max_tokens 切掉结尾 ```）→ 括号平衡扫描救回；对象中途被截断
+（顶层缺 `}`）显式失败 + 保留原字段，交用户重新生成。
+
+### 图与表数据流通
+
+- `Work4.simpleTable` 的 oninput 触发对应 step 的 `Work4.refreshCharts(stepId)`，**只重画 SVG 不重渲染整步**（避免输入框失焦）。
+- channel tree / 嵌套 treemap / hundred field 渲染函数都从 `state.work4.{P}.{field}` 重读数据，refreshCharts 调用即可。
+- place 的 `structure` 默认种子保留（不破坏老用户），但首次进 place 步时显示一行「已为你填入示例渠道结构，请按实际修改或点上方 AI 起草重抽」；`structure` 也纳入步级生成。
