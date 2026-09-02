@@ -12,7 +12,7 @@
 
 论文同样划清了边界：LLM 会出错、带偏见、会幻觉；问题定义与研究设计必须由人主导，最终洞察由人负责。因此本平台全程采用 AI 起草、人工复核采纳的模式，未配置 API Key 时所有 AI 步骤自动降级为复制提示词手动模式，流程不依赖 AI 也能完整走通。
 
-论文全文：`docs/AI-Human Hybrids for Marketing Research Leveraging Large Language Models (LLMs) as Collaborators.pdf`（在线备份：https://studylib.net/doc/27782157/10.1177-00222429241276529；DOI: 10.1177/00222429241276529）
+论文全文：`docs/AI-Human Hybrids for Marketing Research Leveraging Large Language Models (LLMs) as Collaborators.pdf`
 
 ## 架构
 
