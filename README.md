@@ -6,7 +6,7 @@
 
 ## 方法依据
 
-用 LLM 做营销研究不是赶时髦，有一篇实证论文背书：Arora、Chakraborty 与 Nishimura 发表于 Journal of Marketing 2025 年第 89 卷第 2 期的《AI-Human Hybrids for Marketing Research: Leveraging Large Language Models (LLMs) as Collaborators》。该文与一家财富 500 强食品企业合作，用 GPT-4 复现了该公司 2019 年的定性深访与定量概念测试（n=605，以原始人类研究为基准），得到三个与本平台直接相关的结论。
+Arora、Chakraborty 与 Nishimura 于2025 年发表了《AI-Human Hybrids for Marketing Research: Leveraging Large Language Models (LLMs) as Collaborators》。该文与一家财富 500 强食品企业合作，用 GPT-4 复现了该公司 2019 年的定性深访与定量概念测试（n=605，以原始人类研究为基准），得到三个与本平台直接相关的结论。
 
 其一，人机混合优于任何单边。定性侧，人类评估者认为 LLM 生成的回答在深度与洞察性两个维度分别高出约 0.68 与 0.50 分（五点量表）；LLM 担任分析师时主题召回率达 77% 至 96%，还能发现人类遗漏的新主题；专家评委评选最佳摘要时，没有任何一位选择纯人类或纯 LLM 的版本。其二，LLM 可以低成本扮演合成受访者、访谈主持与分析师：设定样本特征、生成 persona、按提纲追问（回答质量低于阈值自动追问）、把长文本提炼为主题与摘要。本平台的合成调研与 Delphi 专家面板正是这一用法。其三，定量侧零样本 LLM 能抓住答案方向与效价，但异质性与内部一致性不足，需要用 few-shot 与 RAG 注入上下文改善。
 
