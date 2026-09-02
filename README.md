@@ -123,7 +123,6 @@ docs/
     demomenu.js                        # 案例选择菜单
     app.js                             # 应用编排（init / 导航 / 导出 / 案例切换）
     demo_notes.js                      # 演示模式下的三行批注
-  specs/                               # 各工作坊设计规格（work1-5）
   charts/ fonts/ pics/                 # 静态资源（图示 / 字体 / 截图）
 server/
   app.py                               # FastAPI 入口（全部 /api/* 端点 + 静态托管）

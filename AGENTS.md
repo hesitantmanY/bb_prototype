@@ -2,7 +2,7 @@
 
 ## Work3 卖点挖掘（语料双来源 + 混合建模）
 
-改动或评审 `docs/workshop3.js` 的语料/建模逻辑（`runLDA`、`collectDocs`、`painPrompt`、`simulatedDocuments`、「生成模拟语料」按钮、语料构成标注）或评分判分逻辑（MVO/`ensureDesirabilityAggregates`/`computeMatrix`）前，先读 [docs/specs/work3/work3.md](docs/specs/work3/work3.md) 的「语料来源」和 [CONTEXT.md](CONTEXT.md) 的 Work3 术语：真实 + 模拟混合建模、构成可见、样本补足、真实 ≥3 条可建模、模拟默认参与且可勾选退出、模拟语料默认包含负面反馈（`includeNegative`）；评分 MVO 判分基于维度分或 persona 子分，聚合值不回写。文献依据 JM 2025（Arora, Chakraborty & Nishimura）：人机混合优于纯人类/纯 LLM；全文见 `docs/AI-Human Hybrids for Marketing Research Leveraging Large Language Models (LLMs) as Collaborators.pdf`。
+改动或评审 `docs/workshop3.js` 的语料/建模逻辑（`runLDA`、`collectDocs`、`painPrompt`、`simulatedDocuments`、「生成模拟语料」按钮、语料构成标注）或评分判分逻辑（MVO/`ensureDesirabilityAggregates`/`computeMatrix`）前，先核对 [CONTEXT.md](CONTEXT.md) 的 Work3 术语：真实 + 模拟混合建模、构成可见、样本补足、真实 ≥3 条可建模、模拟默认参与且可勾选退出、模拟语料默认包含负面反馈（`includeNegative`）；评分 MVO 判分基于维度分或 persona 子分，聚合值不回写。文献依据 JM 2025（Arora, Chakraborty & Nishimura）：人机混合优于纯人类/纯 LLM；全文见 `docs/AI-Human Hybrids for Marketing Research Leveraging Large Language Models (LLMs) as Collaborators.pdf`。
 
 ## Schema 迁移 / mergeWithDefaults
 
