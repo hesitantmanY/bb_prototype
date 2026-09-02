@@ -21,7 +21,7 @@ Arora、Chakraborty 与 Nishimura 于 2025 年发表了《AI-Human Hybrids for M
 - **后端**（`server/`）：FastAPI，默认 `127.0.0.1:8765`。端点：健康检查 `/api/health`、配置读写 `/api/config`、状态 `/api/state`、版本快照 `/api/snapshots`（增删/改名/恢复）、LLM 代理 `/api/llm`、LDA `/api/lda`、表格解析 `/api/parse-excel`、文档提取 `/api/extract-doc`；同时托管前端静态文件。
 - **配置与数据**：API 配置存 `server/config.yaml`，API Key 存 `server/.env`（均已 git-ignore）；工作内容存 `server/data/<project>/current.json`，版本快照存同目录 `snapshots/`。
 - **LLM 请求代理**：所有 AI 调用经后端转发，API Key 不会到达浏览器；`providers.js` 维护各提供商 JSON 模式白名单，Gemini 的非 OpenAI 请求体由 `gemini_body.py` 转换。
-- **分析与解析**：LDA 主题建模（jieba + gensim，`lda.py`）、八爪鱼/问卷星表格解析（pandas + openpyxl，`excel_parser.py`）、文档文本提取（`doc_extract.py`：txt/md/csv 直接读、docx 用标准库解、pdf 用 pypdf）。
+- **分析与解析**：LDA 主题建模（jieba + gensim，`lda.py`）、八爪鱼/问卷星表格解析（pandas + openpyxl，`excel_parser.py`）（未测试）、文档文本提取（`doc_extract.py`：txt/md/csv 直接读、docx 用标准库解、pdf 用 pypdf）。
 - **测试**：`tests/` 下 50+ 个 Node 直跑测试（`node tests/<name>.test.js`），另含 `server/test_lda.py`。
 - 整体架构图见 `docs/architecture.html`（可交互）。
 
@@ -77,7 +77,6 @@ python app.py
 - **本步最小可交付（MVO）**：每步顶部一张可勾选清单，告诉你这步至少要交什么。全部通过后，步骤底部亮出「下一步 →」按钮（工作坊末步则是跳往下一工作坊的跨坊 CTA）；清单只控制按钮显隐，步骤导航始终可用。
 - **AI 任务锁**：全局同一时刻至多一个 AI 任务，进行中时其他 AI 按钮锁定。按钮三态：生成中 → 已暂停（再次点击主体 = 中止）→ 回到初始；生成中另有 × 直接中止，进度按 LLM 调用次数计。
 
-配置文件 `config.yaml`、`.env` 与数据目录 `data/` 均已在 `.gitignore` 中，不会被提交。
 
 ## 目录
 
