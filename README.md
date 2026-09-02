@@ -21,7 +21,7 @@ Arora、Chakraborty 与 Nishimura 于2025 年发表了《AI-Human Hybrids for Ma
   - **配置与数据持久化**：API 配置存 `server/config.yaml`，API Key 存 `server/.env`（均已 git-ignore）；工作内容存 `server/data/default/current.json`。
   - **LLM 请求代理**：所有 AI 调用经后端转发，API Key 不会到达浏览器。
   - **版本回溯**：每次保存自动建快照（保留最近 30 个），支持手动命名存档与一键恢复。
-  - LDA 主题建模（jieba + gensim）和 Excel/CSV 解析。
+  - LDA 主题建模（jieba + gensim）和 Excel/CSV 解析。（暂未测试）
   - 文档解析（`doc_extract.py`）：txt/md/csv 直接读、docx 用标准库解、pdf 用 pypdf。给"资料文件"抽屉用。
 - **AI**：后端代理到 LLM（DeepSeek / OpenAI / Gemini / 任何 OpenAI 兼容端点）。无 Key 时所有 AI 步骤自动降级为"复制提示词 → 粘贴结果"的手动模式。
 
