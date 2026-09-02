@@ -188,7 +188,7 @@ JSON 返回 {"scenarios":[{"name":"","description":"","personaIds":[],"needStren
 - **负面反馈默认开启**：`mining.includeNegative` 默认 true，勾选框「语料包含负面反馈/抱怨」。开启时至少一半模拟语料必须是负面/抱怨/吐槽（未满足需求、失败体验、犹豫、竞品对比失望、不推荐理由），禁止「以前痛、现在好了」的种草腔；画像原话（quote）只是期望，不代表真实好评。
 - **运行条件**：真实语料 ≥3 条即可建模；<3 条时经样本补足后也可建模——不再硬阻断。模拟语料在真实足量后**继续参与建模**（补充而非替代），默认勾选「建模时包含模拟语料」，可取消、可一键清除。
 - **标注护栏**：语料卡显示「真实 N + 模拟 M」；`painPrompt` 语料样例每条标 `[真实]/[模拟]`；导出含语料构成。
-- **文献依据**：Arora, Chakraborty & Nishimura (2025), *AI-Human Hybrids for Marketing Research: Leveraging LLMs as Collaborators*, Journal of Marketing 89(2) 43-70（DOI 10.1177/00222429241276529）——人机混合（真实 + 合成受访者组合）优于纯人类/纯 LLM，合成数据需 few-shot/RAG 校准，LLM 会错需人监督 + 标注。
+- **文献依据**：Arora, Chakraborty & Nishimura (2025), *AI-Human Hybrids for Marketing Research: Leveraging LLMs as Collaborators*, Journal of Marketing 89(2) 43-70（DOI 10.1177/00222429241276529）——人机混合（真实 + 合成受访者组合）优于纯人类/纯 LLM，合成数据需 few-shot/RAG 校准，LLM 会错需人监督 + 标注。全文见 `docs/AI-Human Hybrids for Marketing Research Leveraging Large Language Models (LLMs) as Collaborators.pdf`。
 
 **「AI 起草痛点地图」**（2 单元流水线）：
 

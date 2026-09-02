@@ -447,7 +447,7 @@ function bucketIndicatorsByCategory(inds, axis) {
 4. **`Runner.start({total: 6, pausable: true})` 可支撑构建评估体系的 6 阶段**
 5. **tier1 必须有市场**(强制非空),tier2/tier3 可空
 6. **Work3 改造**只改主市场读取 + 加 tier2 上下文,不动其他步骤
-7. **论文依据**:Arora, Chakraborty & Nishimura (2025), *AI-Human Hybrids for Marketing Research: Leveraging LLMs as Collaborators*, Journal of Marketing 89(2) 43-70（DOI 10.1177/00222429241276529）
+7. **论文依据**:Arora, Chakraborty & Nishimura (2025), *AI-Human Hybrids for Marketing Research: Leveraging LLMs as Collaborators*, Journal of Marketing 89(2) 43-70（DOI 10.1177/00222429241276529）；全文见 `docs/AI-Human Hybrids for Marketing Research Leveraging Large Language Models (LLMs) as Collaborators.pdf`
 
 ---
 
