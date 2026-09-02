@@ -22,7 +22,8 @@ Arora、Chakraborty 与 Nishimura 于 2025 年发表了《AI-Human Hybrids for M
 - **配置与数据**：API 配置存 `server/config.yaml`，API Key 存 `server/.env`（均已 git-ignore）；工作内容存 `server/data/<project>/current.json`，版本快照存同目录 `snapshots/`。
 - **LLM 请求代理**：所有 AI 调用经后端转发，API Key 不会到达浏览器；`providers.js` 维护各提供商 JSON 模式白名单，Gemini 的非 OpenAI 请求体由 `gemini_body.py` 转换。
 - **分析与解析**：LDA 主题建模（jieba + gensim，`lda.py`）、八爪鱼/问卷星表格解析（pandas + openpyxl，`excel_parser.py`）（未测试）、文档文本提取（`doc_extract.py`：txt/md/csv 直接读、docx 用标准库解、pdf 用 pypdf）。
-- **测试**：`tests/` 下 50+ 个 Node 直跑测试（`node tests/<name>.test.js`），另含 `server/test_lda.py`。
+- **测试**：`tests/` 下 50+ 个 Node 直跑测试（`node tests/<name>.test.js`），另含 `server/test_lda.py`；仓库根执行 `node scripts/run-tests.js` 可顺序跑全部测试并汇总退出码。
+- **安全回归**：`server/test_security.py` + `tests/security_frontend.test.js` 覆盖 API Key 不外泄、`project_id`/快照路径穿越、上传大小上限、Markdown/SVG 转义。
 - 整体架构图见 `docs/architecture.html`（可交互）。
 
 ## 运行
@@ -52,6 +53,14 @@ python app.py
 - Model：`deepseek-chat`
 
 配置保存到项目 `server/config.yaml` 与 `server/.env`。也可手动复制 `server/.env.example` 为 `.env` 后编辑。顶栏可随时在「API 自动 / 手动模式」间切换（独立于是否配 Key）。
+
+### 4. 一键跑测试
+
+```bash
+node scripts/run-tests.js
+```
+
+脚本会先按文件名顺序跑完 `tests/*.test.js`，再跑 `server/test_*.py`（使用 `server/.venv`）；任一失败都会继续跑完其余测试并在最后汇总，退出码非 0。后端依赖未安装时会明确提示而不是静默跳过。
 
 ## 工作坊
 
@@ -129,6 +138,7 @@ server/
   requirements.txt
 scripts/
   build-cases-bundle.js                # 重新生成 docs/cases/bundle.js
+  run-tests.js                         # 顺序跑全部 JS/Python 测试并汇总退出码
 tests/                                 # Node 直跑测试（node tests/<name>.test.js）
 ```
 

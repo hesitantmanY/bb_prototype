@@ -20,9 +20,14 @@ DATA_DIR = Path(__file__).resolve().parent / "data"
 # Time-named versions (quick saves with no custom name) are pruned to the
 # newest MAX_TIME_SNAPSHOTS; custom-named versions are permanent.
 MAX_TIME_SNAPSHOTS = 10
+# project_id is an API-facing filesystem directory name. Only accept safe
+# basenames: no path separators, no leading dot, no absolute paths.
+_PROJECT_ID_RE = re.compile(r"^[A-Za-z0-9][A-Za-z0-9._-]{0,63}$")
 
 
 def _project_dir(project_id: str) -> Path:
+    if not isinstance(project_id, str) or not _PROJECT_ID_RE.fullmatch(project_id):
+        raise ValueError("Invalid project_id")
     return DATA_DIR / project_id
 
 

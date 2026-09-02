@@ -13,7 +13,7 @@ from fastapi import FastAPI, File, HTTPException, Query, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 from config import load_config, public_config, save_config
 from doc_extract import extract_document
@@ -35,6 +35,9 @@ from storage import (
 
 ROOT = Path(__file__).resolve().parent.parent
 HTML_FILE = ROOT / "docs" / "global-brand-building.html"
+# project_id becomes a directory name under server/data; only safe basenames
+# are allowed (same contract as storage._PROJECT_ID_RE).
+PROJECT_ID_PATTERN = r"^[A-Za-z0-9][A-Za-z0-9._-]{0,63}$"
 
 app = FastAPI(title="Global Brand Building and Marketing Communication", version="0.2.0")
 
@@ -81,7 +84,7 @@ class LlmRequest(BaseModel):
 
 
 class SnapshotCreate(BaseModel):
-    project_id: str = "default"
+    project_id: str = Field(default="default", pattern=PROJECT_ID_PATTERN)
     name: str | None = None
     overwrite: bool = False  # True = replace same-named version (user confirmed)
 
@@ -92,7 +95,7 @@ class SnapshotRename(BaseModel):
 
 
 class StateSave(BaseModel):
-    project_id: str = "default"
+    project_id: str = Field(default="default", pattern=PROJECT_ID_PATTERN)
     state: dict[str, Any]
 
 
@@ -146,7 +149,7 @@ async def llm_endpoint(req: LlmRequest) -> JSONResponse:
 # ---------------------------------------------------------------------------
 
 @app.get("/api/state")
-def get_state(project_id: str = Query("default")) -> dict | None:
+def get_state(project_id: str = Query("default", pattern=PROJECT_ID_PATTERN)) -> dict | None:
     state = load_state(project_id)
     if state is None:
         raise HTTPException(status_code=404, detail="No saved state")
@@ -165,7 +168,7 @@ def put_state(body: StateSave) -> dict:
 # ---------------------------------------------------------------------------
 
 @app.get("/api/snapshots")
-def get_snapshots(project_id: str = Query("default")) -> list[dict]:
+def get_snapshots(project_id: str = Query("default", pattern=PROJECT_ID_PATTERN)) -> list[dict]:
     return list_snapshots(project_id)
 
 
@@ -179,7 +182,7 @@ def post_snapshot(body: SnapshotCreate) -> dict:
 
 
 @app.get("/api/snapshots/{snapshot_id}")
-def get_snapshot(snapshot_id: str, project_id: str = Query("default")) -> dict:
+def get_snapshot(snapshot_id: str, project_id: str = Query("default", pattern=PROJECT_ID_PATTERN)) -> dict:
     data = load_snapshot(project_id, snapshot_id)
     if data is None:
         raise HTTPException(status_code=404, detail="Snapshot not found")
@@ -187,7 +190,7 @@ def get_snapshot(snapshot_id: str, project_id: str = Query("default")) -> dict:
 
 
 @app.post("/api/snapshots/{snapshot_id}/restore")
-def restore_snapshot_endpoint(snapshot_id: str, project_id: str = Query("default")) -> dict:
+def restore_snapshot_endpoint(snapshot_id: str, project_id: str = Query("default", pattern=PROJECT_ID_PATTERN)) -> dict:
     data = restore_snapshot(project_id, snapshot_id)
     if data is None:
         raise HTTPException(status_code=404, detail="Snapshot not found")
@@ -195,14 +198,14 @@ def restore_snapshot_endpoint(snapshot_id: str, project_id: str = Query("default
 
 
 @app.delete("/api/snapshots/{snapshot_id}")
-def delete_snapshot_endpoint(snapshot_id: str, project_id: str = Query("default")) -> dict:
+def delete_snapshot_endpoint(snapshot_id: str, project_id: str = Query("default", pattern=PROJECT_ID_PATTERN)) -> dict:
     if not delete_snapshot(project_id, snapshot_id):
         raise HTTPException(status_code=404, detail="Snapshot not found")
     return {"ok": True}
 
 
 @app.post("/api/snapshots/{snapshot_id}/rename")
-def rename_snapshot_endpoint(snapshot_id: str, body: SnapshotRename, project_id: str = Query("default")) -> dict:
+def rename_snapshot_endpoint(snapshot_id: str, body: SnapshotRename, project_id: str = Query("default", pattern=PROJECT_ID_PATTERN)) -> dict:
     try:
         snap = rename_snapshot(project_id, snapshot_id, body.name, overwrite=body.overwrite)
     except ValueError as e:
