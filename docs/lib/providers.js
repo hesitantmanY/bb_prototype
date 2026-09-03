@@ -1,5 +1,5 @@
 /* ============================================================
- Providers — provider/model capability whitelist.
+ Providers — provider/model capability whitelist + 默认预填单一来源。
  Loaded as a plain <script>. Attaches to window.Providers.
 
  Why this exists: the original code did
@@ -11,7 +11,7 @@
 
  Public API:
  getMode(provider, model) → 'openai_response_format' | 'gemini_response_mime_type' | 'none'
- getProviderConfig(provider) → full record (label, baseUrl hint, models dict) or null
+ getProviderConfig(provider) → full record (label, baseUrlHint, defaultModel, models dict) or null
 
  Provider support levels (locked 2026-08-20):
  - openai: full JSON mode (response_format json_object)
@@ -24,6 +24,14 @@
  Other Zhipu models don't. Conservative default = "none".
  - moonshot: "none" — many older endpoints 400 on response_format.
  - doubao: "none" — Ark-style endpoints 400 on response_format.
+ - minimax: "none" — response_format 支持按模型而异，保守置 none。
+ - custom: full JSON mode (user-provided OpenAI-compatible endpoint).
+
+ baseUrlHint = 服务端拼出请求 URL 所需前缀（llm_proxy 在其后追加
+ /chat/completions 或 /models/{model}:generateContent），必须含 /v1 等段；
+ 设置弹层切换厂商时用它预填 Base URL（settings.js onProviderChange）。
+ defaultModel = 同弹层预填的 Model（可改；与 README「配置 LLM」同步维护）。
+ 模型 ID 会随厂商迭代，预填只保证"选中即可用"，别当长期清单。
 
  Add a new provider: append to PROVIDERS below, document the JSON
  mode behavior, and (if needed) extend llm_proxy.py.
@@ -35,7 +43,8 @@
  openai: {
  label: 'OpenAI',
  jsonMode: 'openai_response_format',
- baseUrlHint: 'https://api.openai.com',
+ baseUrlHint: 'https://api.openai.com/v1',
+ defaultModel: 'gpt-4o-mini',
  models: {
  '*': { jsonMode: 'openai_response_format' }
  }
@@ -44,14 +53,16 @@
  label: 'DeepSeek',
  jsonMode: 'openai_response_format',
  baseUrlHint: 'https://api.deepseek.com',
+ defaultModel: 'deepseek-v4-flash',
  models: {
  '*': { jsonMode: 'openai_response_format' }
  }
  },
  qwen: {
- label: '通义千问 (DashScope OpenAI-compat)',
+ label: '通义千问',
  jsonMode: 'openai_response_format',
  baseUrlHint: 'https://dashscope.aliyuncs.com/compatible-mode',
+ defaultModel: 'qwen3.6-flash',
  models: {
  '*': { jsonMode: 'openai_response_format' }
  }
@@ -59,7 +70,8 @@
  gemini: {
  label: 'Google Gemini',
  jsonMode: 'gemini_response_mime_type', // T03 will handle this in llm_proxy.py
- baseUrlHint: 'https://generativelanguage.googleapis.com',
+ baseUrlHint: 'https://generativelanguage.googleapis.com/v1beta',
+ defaultModel: 'gemini-2.0-flash',
  models: {
  '*': { jsonMode: 'gemini_response_mime_type' }
  }
@@ -67,7 +79,8 @@
  zhipu: {
  label: '智谱 GLM',
  jsonMode: 'none',
- baseUrlHint: 'https://open.bigmodel.cn/api/paas',
+ baseUrlHint: 'https://open.bigmodel.cn/api/paas/v4',
+ defaultModel: 'glm-5.3',
  models: {
  'glm-4-plus': { jsonMode: 'openai_response_format' },
  'glm-4-flash': { jsonMode: 'openai_response_format' },
@@ -77,9 +90,10 @@
  }
  },
  moonshot: {
- label: 'Moonshot (Kimi)',
+ label: 'Kimi（Moonshot）',
  jsonMode: 'none',
- baseUrlHint: 'https://api.moonshot.cn',
+ baseUrlHint: 'https://api.moonshot.cn/v1',
+ defaultModel: 'kimi-k2.6',
  models: {
  // Moonshot v1 supports a guided JSON mode via a different param
  // (response_format={"type":"json_object"}) but historically 400'd
@@ -88,17 +102,30 @@
  }
  },
  doubao: {
- label: '豆包 (火山方舟)',
+ label: '火山方舟（豆包）',
  jsonMode: 'none',
  baseUrlHint: 'https://ark.cn-beijing.volces.com/api/v3',
+ defaultModel: 'ark-code-latest',
  models: {
+ // Ark 风格端点对 response_format 400，保守置 "none"。
+ '*': { jsonMode: 'none' }
+ }
+ },
+ minimax: {
+ label: 'MiniMax',
+ jsonMode: 'none',
+ baseUrlHint: 'https://api.minimaxi.com/v1',
+ defaultModel: 'MiniMax-M3',
+ models: {
+ // OpenAI 兼容端点；response_format 支持按模型而异，保守置 "none"。
  '*': { jsonMode: 'none' }
  }
  },
  custom: {
- label: '其他 (OpenAI 兼容)',
+ label: '其他（OpenAI 兼容）',
  jsonMode: 'openai_response_format',
  baseUrlHint: '',
+ defaultModel: '',
  models: {
  '*': { jsonMode: 'openai_response_format' }
  }

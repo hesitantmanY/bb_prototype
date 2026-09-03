@@ -22,6 +22,9 @@ eq('numeric 5', L.parseValue(5), {ok:true, value:5});
 eq('string "3"', L.parseValue('3'), {ok:true, value:3});
 eq('string " 3 "', L.parseValue(' 3 '), {ok:true, value:3});
 eq('float 3.0 → 3', L.parseValue(3.0), {ok:true, value:3});
+eq('string "3.0" → 3 (AI07)', L.parseValue('3.0'), {ok:true, value:3});
+eq('string "3.00" → 3 (AI07)', L.parseValue('3.00'), {ok:true, value:3});
+eq('string "3.5" still rejected', L.parseValue('3.5'), {ok:false, reason:'notInteger'});
 eq('Chinese 三', L.parseValue('三'), {ok:true, value:3});
 eq('Chinese 五', L.parseValue('五'), {ok:true, value:5});
 

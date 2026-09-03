@@ -59,15 +59,20 @@ const Settings = {
     r.style.color='var(--color-accent)';
   },
   onProviderChange(){
+    // 2026-09-03：预填数据以 providers.js 注册表为单一来源（baseUrlHint +
+    // defaultModel）；旧的本地写死 presets 漏了 qwen/zhipu/moonshot/doubao，
+    // 选中即 TypeError。Providers 缺失时保留最小兜底。
     const p=$('#setProvider').value;
-    const presets={
-      deepseek:{baseUrl:'https://api.deepseek.com',model:'deepseek-v4-flash'},
-      openai:{baseUrl:'https://api.openai.com/v1',model:'gpt-4o-mini'},
-      gemini:{baseUrl:'https://generativelanguage.googleapis.com/v1beta',model:'gemini-2.0-flash'},
-      custom:{baseUrl:'',model:''}
-    };
-    const v=presets[p];
-    $('#setBaseUrl').value=v.baseUrl; $('#setModel').value=v.model;
+    let baseUrl='', model='';
+    if(typeof Providers!=='undefined'){
+      const rec=Providers.getProviderConfig(p);
+      if(rec){ baseUrl=rec.baseUrlHint||''; model=rec.defaultModel||''; }
+    }
+    if(!model && typeof Providers==='undefined'){
+      model={deepseek:'deepseek-v4-flash',openai:'gpt-4o-mini',gemini:'gemini-2.0-flash'}[p]||'';
+    }
+    $('#setBaseUrl').value=baseUrl;
+    $('#setModel').value=model;
   },
   async save(){
     const body={

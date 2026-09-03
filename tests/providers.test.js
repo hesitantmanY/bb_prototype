@@ -85,5 +85,29 @@ ok('getProviderConfig(unknown) returns null',
 ok('getProviderConfig has label + baseUrlHint',
  P.getProviderConfig('deepseek').label && P.getProviderConfig('deepseek').baseUrlHint);
 
+// 2026-09-03：下拉新增/修正的国内厂商预填（单一来源锁）
+ok('list() includes minimax',
+ P.list().includes('minimax'));
+ok('moonshot baseUrlHint ends /v1（否则拼 /chat/completions 404）',
+ P.getProviderConfig('moonshot').baseUrlHint.endsWith('/v1'),
+ P.getProviderConfig('moonshot').baseUrlHint);
+ok('zhipu baseUrlHint ends /v4（GLM 实际端点）',
+ P.getProviderConfig('zhipu').baseUrlHint.endsWith('/v4'),
+ P.getProviderConfig('zhipu').baseUrlHint);
+ok('openai baseUrlHint ends /v1',
+ P.getProviderConfig('openai').baseUrlHint.endsWith('/v1'));
+ok('gemini baseUrlHint ends /v1beta',
+ P.getProviderConfig('gemini').baseUrlHint.endsWith('/v1beta'));
+eq('doubao defaultModel 预填', P.getProviderConfig('doubao').defaultModel, 'ark-code-latest');
+eq('moonshot defaultModel 预填', P.getProviderConfig('moonshot').defaultModel, 'kimi-k2.6');
+eq('minimax defaultModel 预填', P.getProviderConfig('minimax').defaultModel, 'MiniMax-M3');
+ok('minimax any model → none (保守)',
+ P.getMode('minimax','MiniMax-M3') === 'none');
+ok('every listed provider has baseUrlHint + defaultModel fields',
+ P.list().every(k => {
+   const c = P.getProviderConfig(k);
+   return c && typeof c.baseUrlHint === 'string' && typeof c.defaultModel === 'string';
+ }));
+
 console.log(`\n${pass} pass / ${fail} fail`);
 process.exit(fail === 0? 0: 1);

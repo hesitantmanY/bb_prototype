@@ -59,5 +59,43 @@ const SMART_DELIM = `\`\`\`json\n[{\u201cname\u201d:\u201c基础版\u201d,\u201c
   ok('advertising share 归一到 100', r.ok && Math.abs(r.value.reduce((s,a)=>s+a.budgetShare,0) - 100) < 0.01, JSON.stringify(r.value));
 }
 
+// AI01:清洗后为空的表字段 = 解析失败(不许静默清空已有数据)
+{
+  const r = JsonExtract.structured('```json\n[{"channel":"某渠道","reach":4000}]\n```', 'advertising');
+  ok('advertising 旁路键(channel)清洗后为空 → ok:false',
+     r.ok === false && /empty after clean/.test(r.reason), JSON.stringify(r));
+}
+{
+  const r = JsonExtract.structured('```json\n[{"tactic":"","mechanic":""}]\n```', 'salesPromotion');
+  ok('salesPromotion 空壳行 → ok:false', r.ok === false && /empty after clean/.test(r.reason), JSON.stringify(r));
+}
+{
+  const r = JsonExtract.structured('```json\n[{"event":"","timing":""}]\n```', 'pr');
+  ok('pr 空壳行 → ok:false', r.ok === false, JSON.stringify(r));
+}
+// AI01:share 百分号形态容错,非法值落 0 不产生 NaN
+{
+  const r = JsonExtract.structured('```json\n[{"media":"电视","share":"30%"},{"media":"社媒","share":"70%"}]\n```', 'advertising');
+  ok('share "30%" 形态 → 30', r.ok && r.value[0].budgetShare === 30, JSON.stringify(r.value));
+  ok('share 解析后无 NaN 残留', r.ok && r.value.every(a => Number.isFinite(a.budgetShare)), JSON.stringify(r.value));
+}
+{
+  const r = JsonExtract.structured('```json\n[{"media":"电视","budgetShare":"abc"}]\n```', 'advertising');
+  ok('share 非法串 → 落 0 而非 NaN', r.ok && r.value[0].budgetShare === 0, JSON.stringify(r.value));
+}
+// AI06:hero 肯定形态白名单 —「否」「主推」不再误判 true
+{
+  const r = JsonExtract.structured('```json\n[{"name":"A","price":79,"hero":"否"},{"name":"B","price":139,"hero":true},{"name":"C","price":199,"hero":"主推"}]\n```', 'tiers');
+  ok('hero "否" → false', r.ok && !r.value.find(t=>t.name==='A').hero, JSON.stringify(r.value.map(t=>[t.name,t.hero])));
+  ok('hero true → true', r.ok && r.value.find(t=>t.name==='B').hero);
+  ok('hero "主推" 不误判', r.ok && !r.value.find(t=>t.name==='C').hero, JSON.stringify(r.value.map(t=>[t.name,t.hero])));
+}
+// AI06:Markdown 表路径先按 hero 列坐标判定(名称含"主力"不误伤)
+{
+  const r = JsonExtract.structured('| 档位 | 价格 | hero |\n| --- | --- | --- |\n| 主力机型A | 139 | 是 |\n| 经济款 | 79 | 否 |', 'tiers');
+  ok('表路径 hero 列 是→true/否→false', r.ok && r.value.find(t=>t.name==='主力机型A').hero === true && r.value.find(t=>t.name==='经济款').hero === false,
+     JSON.stringify(r.value.map(t=>[t.name,t.hero])));
+}
+
 console.log(`\n${pass} pass / ${fail} fail`);
 process.exit(fail === 0 ? 0 : 1);
