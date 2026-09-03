@@ -38,6 +38,9 @@ const Settings = {
   async open(){
     let cfg={...DEFAULT_SETTINGS, apiKeyExists: !!state?.settings?.api?.apiKey};
     try{ cfg = await (await fetch(apiUrl('/api/config'))).json(); }catch{}
+    // 2026-09-03：保存快照用于「测试连接」前的一致性检查（防"以为在测新厂商
+    // 实际在测旧配置"）；保存成功后同步刷新。
+    this._saved = {provider:cfg.provider, baseUrl:cfg.baseUrl, model:cfg.model};
     $('#setProvider').value=cfg.provider;
     $('#setBaseUrl').value=cfg.baseUrl;
     $('#setModel').value=cfg.model;
@@ -74,7 +77,9 @@ const Settings = {
     $('#setBaseUrl').value=baseUrl;
     $('#setModel').value=model;
   },
-  async save(){
+  // 仅持久化（不关窗）：供 save() 与 test() 的「先保存再测」共用。
+  // 成功返回 merged 配置并刷新一致性快照；失败返回 null（toast 提示）。
+  async _persist(){
     const body={
       provider:$('#setProvider').value,
       baseUrl:$('#setBaseUrl').value.trim(),
@@ -91,14 +96,46 @@ const Settings = {
       if(!res.ok) throw new Error('HTTP '+res.status);
       const merged = await res.json();
       state.settings.api = {...merged, apiKey: merged.apiKeyExists ? '********' : ''};
-      this.close();
-      showToast('设定已保存');
-      this.renderModeSwitch();
-      this.checkBackend();
-    }catch(e){ showToast('设定保存失败: '+e.message); }
+      this._saved = {provider:merged.provider, baseUrl:merged.baseUrl, model:merged.model};
+      return merged;
+    }catch(e){
+      showToast('设定保存失败: '+e.message);
+      return null;
+    }
+  },
+  async save(){
+    const merged = await this._persist();
+    if(!merged) return;
+    this.close();
+    showToast('设定已保存');
+    this.renderModeSwitch();
+    this.checkBackend();
   },
   async test(){
     const r=$('#setTestResult'); r.textContent='测试中…'; r.style.color='var(--color-ink-2)';
+    // 2026-09-03：防误配——表单与已保存配置不一致时先问。
+    // Key 输入框有内容 = 新 Key 未保存；provider/baseUrl/model 改了 = 未保存。
+    // 测试走的是服务器已保存的那套，不是弹窗里显示的这套。
+    const form={
+      provider:$('#setProvider').value,
+      baseUrl:$('#setBaseUrl').value.trim(),
+      model:$('#setModel').value.trim()
+    };
+    const saved=this._saved || form;   // open() 后必有快照；兜底当一致
+    const keyTyped=$('#setApiKey').value.trim();
+    const formChanged = form.provider!==saved.provider || form.baseUrl!==saved.baseUrl ||
+      form.model!==saved.model || !!keyTyped;
+    if(formChanged){
+      const goSave = confirm(
+        '改动尚未保存：「测试连接」打的是服务器已保存的配置（'+saved.provider+
+        ' / '+(saved.model||'?')+'），不是弹窗里显示的（'+form.provider+' / '+(form.model||'?')+'）。\n\n'+
+        (keyTyped?'注意：新粘贴的 API Key 也未保存。\n\n':'')+
+        '「确定」→ 先保存再测试\n「取消」→ 仍按已保存配置测试');
+      if(goSave){
+        const merged=await this._persist();
+        if(!merged){ r.textContent='保存失败，未测试'; r.style.color='var(--color-warn)'; return; }
+      }
+    }
     try{
       const text=await API.call([{role:'user',content:'回复"OK"两个字符'}]);
       if(text.trim().includes('OK')){ r.textContent='连接成功'; r.style.color='var(--color-accent)'; }
