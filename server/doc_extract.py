@@ -19,6 +19,12 @@ from xml.etree import ElementTree as ET
 
 MAX_TEXT_CHARS = 200_000  # hard cap per file (~50k tokens) to protect prompts
 
+# SEC03: uploads are capped by *input* bytes only, so a highly compressed
+# docx could expand into hundreds of MB before ET.parse builds a full DOM.
+# Cap expanded zip size and the main XML member to keep memory bounded.
+MAX_ZIP_EXPANDED = 64 * 1024 * 1024
+MAX_XML_MEMBER = 32 * 1024 * 1024
+
 
 def _decode(data: bytes) -> str:
     try:
@@ -32,8 +38,13 @@ def _extract_docx(data: bytes) -> str:
     ns = {"w": "http://schemas.openxmlformats.org/wordprocessingml/2006/main"}
     paragraphs: list[str] = []
     with zipfile.ZipFile(io.BytesIO(data)) as z:
+        if sum(i.file_size for i in z.infolist()) > MAX_ZIP_EXPANDED:
+            raise RuntimeError("docx 解压后体积超过上限，无法解析")
         # word/document.xml holds the main body
-        with z.open("word/document.xml") as f:
+        member = z.getinfo("word/document.xml")
+        if member.file_size > MAX_XML_MEMBER:
+            raise RuntimeError("docx 正文体积超过上限，无法解析")
+        with z.open(member) as f:
             tree = ET.parse(f)
     for p in tree.iter("{%s}p" % ns["w"]):
         texts = [t.text for t in p.iter("{%s}t" % ns["w"]) if t.text]

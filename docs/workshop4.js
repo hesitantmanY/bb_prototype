@@ -394,14 +394,18 @@ Work4.applyStepAll = function(pKey, text){
     } else if(s.kind === 'crm'){
       const c = (v && typeof v === 'object') ? v : {};
       p.crm = p.crm || {};
-      ['tool','membership','repurchase','notes'].forEach(k => { if(c[k] !== undefined) p.crm[k] = String(c[k]||'').trim(); });
-      n++;
+      let wrote=0;
+      ['tool','membership','repurchase','notes'].forEach(k => { if(c[k] !== undefined){ p.crm[k] = String(c[k]||'').trim(); wrote++; } });
+      // AI05：空 crm 对象不虚计"已填入"
+      if(wrote) n++;
+      else warnings.push((s.name || s.key) + ' 没有可用字段');
     } else if(s.kind === 'structure'){
       const parsed = Work4.parseStructured('```json\n' + JSON.stringify(v) + '\n```', 'structure');
       if(parsed && parsed.ok){ p.structure = parsed.value; n++; }
       else warnings.push('渠道结构解析失败' + (parsed && parsed.reason ? '：' + parsed.reason : ''));
     } else if(s.kind === 'enum'){
       if(s.values.includes(String(v))){ p[s.key] = String(v); n++; }
+      else warnings.push((s.name || s.key) + ' 值不在可选范围，已保留原值（' + String(v).slice(0,20) + '）'); // AI05
     } else {
       p[s.key] = String(v).trim();
       n++;
@@ -440,7 +444,6 @@ Work4.renderStep = function(id){
     sec.appendChild(el('p',{class:'lede', style:{fontFamily:'var(--font-display)', fontStyle:'normal', fontSize:'1.125rem', lineHeight:1.5, color:'var(--color-ink)', margin:'0 0 28px'}}, subEl4));
   }
   sec.appendChild(el('div',{class:'plate plate--empty'}));
-  const dn=UI.demoNote(4,id); if(dn) sec.appendChild(dn);
   // Context bar（上游只读）
   const tiers=(typeof Work2!=='undefined'&&Work2.selectedTiers)?Work2.selectedTiers():{tier1:null};
   const vp=state.work3.proposition;
@@ -621,7 +624,6 @@ Work4.runAiDraft = function(pKey, opts, btn){
     container,
     jsonMode: false,
     label: origLabel,
-    aiScope: 'work4.'+pKey,
     buildPrompt: () => [{role:'user', content: prompt}],
     onResult: (r, raw, source) => {
       const text = typeof r === 'string' ? r : (raw || (r && typeof r==='object' ? JSON.stringify(r,null,2) : ''));
@@ -640,7 +642,12 @@ Work4.runAiDraft = function(pKey, opts, btn){
       autosave();
       Work4.rerender(pKey);
       if(applied.ok){
-        showToast('已生成并填入 ' + applied.n + '/' + applied.total + ' 个字段，请逐项审改');
+        // AI05：字段级警告(归一化/部分失败)不再吞掉
+        let msg = '已生成并填入 ' + applied.n + '/' + applied.total + ' 个字段，请逐项审改';
+        if(applied.warnings && applied.warnings.length){
+          msg += ' ｜ ' + applied.warnings.slice(0,3).join('；') + (applied.warnings.length>3 ? '…' : '');
+        }
+        showToast(msg);
       } else {
         showToast('未能解析字段：' + applied.reason + '；正文已存入段落区');
       }

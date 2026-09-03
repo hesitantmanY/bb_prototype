@@ -2,8 +2,10 @@
 from __future__ import annotations
 
 import mimetypes
+import re
 from pathlib import Path
 from typing import Any
+from urllib.parse import urlparse
 
 # Some machines (notably Windows) don't register the woff2 MIME type; without
 # it StaticFiles serves the font as application/octet-stream and browsers refuse it.
@@ -13,7 +15,7 @@ from fastapi import FastAPI, File, HTTPException, Query, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, field_validator
 
 from config import load_config, public_config, save_config
 from doc_extract import extract_document
@@ -41,13 +43,51 @@ PROJECT_ID_PATTERN = r"^[A-Za-z0-9][A-Za-z0-9._-]{0,63}$"
 
 app = FastAPI(title="Global Brand Building and Marketing Communication", version="0.2.0")
 
-# The HTML is opened from disk or served at / — allow both via permissive CORS.
+# The HTML is opened from disk (file://, Origin "null") or served at / — the
+# trust gate below still lets both through while blocking remote websites.
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+# --- Trust gate (SEC01 / SEC05) -------------------------------------------
+# The service is unauthenticated and bound to localhost. Without this gate any
+# webpage the user visits could drive it cross-origin: rewrite the LLM config
+# (baseUrl → attacker), then POST /api/llm so the real API key is sent to the
+# attacker, read/rewrite the whole brand plan, and burn LLM quota.
+# Allow only loopback origins plus "null" (page opened from disk as file://).
+# Requests without an Origin header (curl, same-origin navigations) pass.
+# ponytail: file:// and any loopback-served page count as the operator; a
+# locally downloaded .html is the same trust level as running the tool.
+_LOOPBACK_HOSTS = {"127.0.0.1", "localhost", "::1"}
+_MAX_JSON_BODY = 32 * 1024 * 1024  # /api/state + /api/lda body cap
+
+
+def _origin_allowed(origin: str | None) -> bool:
+    if not origin or origin == "null":
+        return True
+    try:
+        return urlparse(origin).hostname in _LOOPBACK_HOSTS
+    except ValueError:
+        return False
+
+
+@app.middleware("http")
+async def _api_trust_gate(request, call_next):
+    path = request.url.path
+    if path.startswith("/api/"):
+        origin = request.headers.get("origin")
+        if not _origin_allowed(origin):
+            return JSONResponse(status_code=403,
+                                content={"error": "cross-origin request denied"})
+        if request.method in ("PUT", "POST") and path in ("/api/state", "/api/lda"):
+            cl = request.headers.get("content-length")
+            if cl and cl.isdigit() and int(cl) > _MAX_JSON_BODY:
+                return JSONResponse(status_code=413,
+                                    content={"error": "request body too large"})
+    return await call_next(request)
 
 # One-time migration: the auto-snapshot feature was removed; delete legacy
 # auto_*.json files (idempotent, runs once per process start).
@@ -60,11 +100,11 @@ remove_legacy_auto_snapshots()
 
 class LdaRequest(BaseModel):
     documents: list[str]
-    k: int = 5
-    passes: int = 15
-    iterations: int = 100
-    no_below: int = 2
-    no_above: float = 0.5
+    k: int = Field(default=5, ge=2, le=15)
+    passes: int = Field(default=15, ge=1, le=200)
+    iterations: int = Field(default=100, ge=1, le=1000)
+    no_below: int = Field(default=2, ge=0, le=50)
+    no_above: float = Field(default=0.5, gt=0, le=1.0)
     language: str = "zh"
 
 
@@ -80,7 +120,22 @@ class ConfigUpdate(BaseModel):
 class LlmRequest(BaseModel):
     messages: list[dict[str, Any]]
     opts: dict[str, Any] | None = None
-    profile: dict[str, Any] | None = None  # reserved for multi-model profiles
+    # Kept for API compatibility only; server ignores it (SEC02) — a
+    # client-supplied profile previously overrode baseUrl/model/apiKey and
+    # turned /api/llm into an open proxy (SSRF).
+    profile: dict[str, Any] | None = None
+
+
+def _clean_snapshot_name(name: str | None) -> str | None:
+    """Strip control characters/newlines and cap length (SEC07).
+
+    Empty-after-clean → None (auto time-based name) for create, error for
+    rename (storage requires a real name there).
+    """
+    if name is None:
+        return None
+    name = re.sub(r"[\x00-\x1f\x7f]", "", name).strip()
+    return name[:60] if name else None
 
 
 class SnapshotCreate(BaseModel):
@@ -88,10 +143,23 @@ class SnapshotCreate(BaseModel):
     name: str | None = None
     overwrite: bool = False  # True = replace same-named version (user confirmed)
 
+    @field_validator("name")
+    @classmethod
+    def _name_valid(cls, v: str | None) -> str | None:
+        return _clean_snapshot_name(v)
+
 
 class SnapshotRename(BaseModel):
     name: str
     overwrite: bool = False
+
+    @field_validator("name")
+    @classmethod
+    def _name_valid(cls, v: str) -> str:
+        cleaned = _clean_snapshot_name(v)
+        if cleaned is None:
+            raise ValueError("版本名不能为空")
+        return cleaned
 
 
 class StateSave(BaseModel):
@@ -122,6 +190,16 @@ def get_config() -> dict:
 def update_config(cfg: ConfigUpdate) -> dict:
     """Save config to config.yaml + .env."""
     data = cfg.model_dump()
+    # SEC06 修订（2026-09-03）：不枚举厂商名——前端 docs/lib/providers.js 才是
+    # 厂商清单；枚举会让 qwen/zhipu/moonshot/doubao 等合法厂商保存被 400 拒绝
+    # （回归教训）。这里只保形状：yaml 写入已走 safe_dump（注入面封死），
+    # provider 值仅用于 gemini 分流，非法形状直接拒。
+    provider = str(data.get("provider") or "")
+    if not re.match(r"^[A-Za-z][A-Za-z0-9_\-]{0,31}$", provider):
+        raise HTTPException(status_code=400, detail=f"provider 非法: {provider}")
+    base = data.get("baseUrl") or ""
+    if base and not re.match(r"^https?://", base):
+        raise HTTPException(status_code=400, detail="baseUrl 必须以 http(s):// 开头")
     # If apiKey is None or masked, don't update the key
     if data.get("apiKey") in (None, "", "********"):
         data.pop("apiKey", None)
@@ -223,10 +301,12 @@ def rename_snapshot_endpoint(snapshot_id: str, body: SnapshotRename, project_id:
 def lda_endpoint(req: LdaRequest) -> dict:
     if not req.documents:
         raise HTTPException(status_code=400, detail="documents is empty")
-    k = max(2, min(15, req.k))
+    if len(req.documents) > 500 or sum(len(d) for d in req.documents) > 5_000_000:
+        raise HTTPException(status_code=400,
+                            detail="documents 过大（上限 500 条 / 总计 5MB）")
     return run_lda(
         documents=req.documents,
-        k=k,
+        k=req.k,
         passes=req.passes,
         iterations=req.iterations,
         no_below=req.no_below,

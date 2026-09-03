@@ -195,7 +195,6 @@ Work2.renderStep = function(id){
     sec.appendChild(el('p',{class:'lede', style:{fontFamily:'var(--font-display)', fontStyle:'normal', fontSize:'1.125rem', lineHeight:1.5, color:'var(--color-ink)', margin:'0 0 28px'}}, subEl2));
   }
   sec.appendChild(el('div',{class:'plate plate--empty'}));
-  const dn=UI.demoNote(2,id); if(dn) sec.appendChild(dn);
   UI.mountMvo(sec, Work2, id);
   const fn=Work2.render[id]; if(fn) fn(sec);
   // 步间跳转 CTA：本步 mvo 全过后显示「下一步 →」（2026-08-28 统一步间 CTA）
@@ -451,13 +450,13 @@ Work2.runFrameworkPipeline = function(button, container, cfg){
       '你是国际市场进入策略顾问。基于 SBU 特征，列出 5-10 个值得评估的海外候选市场。',
       '目标客群分布：' + (w1.personas||[]).map(p=>p.region).filter(Boolean).join('、') +
       '\n输出: {"candidates": [{"name": "", "reason": "1 句, 含 需求/规模/趋势 之一"}]}',
-      r=>{ if(!r?.candidates) return;
+      r=>{ if(!r?.candidates){ showToast('AI 返回缺少候选市场，已保留原值'); return; }
         state.work2.candidates = r.candidates.map(c=>({id:uid('cand'),name:c.name||'',reason:c.reason||'',source:'ai'}));
         state.work2.meta.work1Linked = true; autosave(); }),
     mk('fw:criteria','筛选标准','work2.criteria',['sbu','environment'],
       '你是市场进入策略顾问。基于业务特征，建议 3-5 个可观测、可量化的初筛淘汰标准。每条标准必须能从一个公开数据源查到。',
       '输出: {"criteria": [{"name": "", "source": "数据源名称"}]}',
-      r=>{ if(!r?.criteria) return;
+      r=>{ if(!r?.criteria){ showToast('AI 返回缺少评估标准，已保留原值'); return; }
         state.work2.screening.criteria = r.criteria.map(c=>({id:uid('crit'),name:c.name||'',source:c.source||'',kind:'ai'}));
         autosave(); }),
     mk('fw:retained','应用筛选','work2.retained',['sbu'],
@@ -467,7 +466,7 @@ Work2.runFrameworkPipeline = function(button, container, cfg){
       '\n只能从上面的候选清单里选，不得引入清单外的市场。' +
       // 2026-09-01：三个事实字段必须填——空串占位示例会被模型照抄成空值（1.3 卡片全空的根因）
       '\n输出: {"retained": [{"name": "清单中的市场名", "reason": "为什么留", "region": "所属地区如 欧洲/东亚", "population": "人口或规模量级如 约 6700 万", "gdpPerCapita": "人均 GDP 量级如 约 4.9 万美元"}]}，region/population/gdpPerCapita 按真实近似值填写，不得留空。',
-      r=>{ if(!r?.retained) return;
+      r=>{ if(!r?.retained){ showToast('AI 返回缺少保留市场，已保留原值'); return; }
         state.work2.retained = r.retained.slice(0,3).map(m=>({id:uid('m'),name:m.name||'',region:m.region||'',population:m.population||'',gdpPerCapita:m.gdpPerCapita||'',notes:'',reason:m.reason||'',source:'ai'}));
         state.work2.scoring = {}; autosave(); }),
     mk('fw:indicators','指标体系','work2.indicators',['sbu','environment','competitors'],
@@ -508,9 +507,8 @@ Work2.renderDelphi = function(plate){
       system:'你是营销研究方法专家。给定一个 SBU，建议做“海外市场选择”时应该重点听哪 5 个视角/利益方。',
       instruction:()=>'行业: ' + (state.work1.environment?.industry||'') +
         '\n输出: {"perspectives": [{"name": "视角名", "rationale": "为什么这个视角重要", "keySignals": ["3-5 个该视角最在意的信号"]}]}',
-      aiScope:'work2.delphi.recruit',
       onResult:r=>{
-        if(!r?.perspectives?.length) return;
+        if(!r?.perspectives?.length){ showToast('AI 未招募到专家视角，已保留原值'); return; }
         d.recruitment.perspectives = r.perspectives.slice(0,7).map(p=>({name:p.name||'',rationale:p.rationale||'',keySignals:p.keySignals||[]}));
         d.status='recruiting'; d.personas=[]; d.finalWeights=null;
         autosave(); Work2.rerender('framework');
@@ -621,9 +619,23 @@ Work2.runPersonas = async function(button){
     ].filter(Boolean);
     return '你最在意的信号：' + sig + '\n相关资料：\n' + bits.join('\n');
   };
+  // BIZ04：persona 一完成即归一化+落盘——中止只丢未完成单元，
+  // 已完成单元不重跑（原实现等整批 resolve 后才写，中止即整批丢弃）。
+  const applyPersona = (p, r) => {
+    if(!r?.ratings){ showToast('该 persona 未返回评分，已跳过'); return; }
+    const ratings = {attractiveness:{}, competitiveness:{}};
+    inds.forEach(i=>{ ratings[i.axis][i.id] = clamp(Number(r.ratings[i.id])||0, 0, 1); });
+    ['attractiveness','competitiveness'].forEach(axis=>{
+      const sum = Object.values(ratings[axis]).reduce((a,b)=>a+b,0);
+      if(sum>0) Object.keys(ratings[axis]).forEach(k=>ratings[axis][k]=+(ratings[axis][k]/sum).toFixed(3));
+    });
+    d.personas.push({id:uid('persona'), perspectiveName:p.name, keySignals:p.keySignals||[],
+      ratings, reasoning:r.reasoning||'', userOverride:false});
+    autosave();
+  };
   try{
-    // 剩余 persona 并行 call
-    const results = await Promise.all(pending.map(async p=>{
+    // 剩余 persona 并行 call；每个完成即入库（不等待整批）
+    await Promise.all(pending.map(async p=>{
       const sys = '你是' + p.name + '专家。' + (p.rationale||'') +
         '\n few-shot 示例：财务紧张创业公司出海 → 短期要回本，权重偏向规模与增长。\n' +
         '请对下列指标赋权重（吸引力维度内总和=1，竞争力维度内总和=1，保留两位小数）。严格输出 JSON。';
@@ -636,20 +648,12 @@ Work2.runPersonas = async function(button){
       const messages = [{role:'system',content:sys}];
       if(fs) messages.push({role:'system',content:'格式示例（仅参考格式，勿照抄内容）：\n'+fs});
       messages.push({role:'user',content:user});
-      return API.callJson(messages, {signal:Runner.signal()}).then(r=>{ Runner.tick(1); return {p, r}; });
+      const r = await API.callJson(messages, {signal:Runner.signal()});
+      Runner.tick(1);
+      if(task.aborted) return;
+      applyPersona(p, r);
     }));
     if(task.aborted) return;
-    results.forEach(({p, r})=>{
-      if(!r?.ratings) return;
-      const ratings = {attractiveness:{}, competitiveness:{}};
-      inds.forEach(i=>{ ratings[i.axis][i.id] = clamp(Number(r.ratings[i.id])||0, 0, 1); });
-      ['attractiveness','competitiveness'].forEach(axis=>{
-        const sum = Object.values(ratings[axis]).reduce((a,b)=>a+b,0);
-        if(sum>0) Object.keys(ratings[axis]).forEach(k=>ratings[axis][k]=+(ratings[axis][k]/sum).toFixed(3));
-      });
-      d.personas.push({id:uid('persona'), perspectiveName:p.name, keySignals:p.keySignals||[],
-        ratings, reasoning:r.reasoning||'', userOverride:false});
-    });
     d.status='hosted'; d.phase=null;
     autosave();
   }catch(e){
@@ -902,7 +906,6 @@ Work2.render.decision = function(sec){
       '\n象限语义: 明星=双高·重点投入 / 潜力=吸引力高竞争力低·补能力 / 产能=竞争力高吸引力低·选择性收割 / 双低=放弃' +
       (hasStar ? '' : '\n当前无明星市场：tier1 选非明星市场时，rationale 必须写明取舍（选它要补什么能力、放弃什么）。') +
       '\n输出: explanations / tier1 / tier2 / tier3 四段 JSON（marketId 用上面给出的 id）。',
-    aiScope:'work2.decision',
     onResult:r=>{
       if(!r) return;
       if(r.explanations) d.explanations = r.explanations;

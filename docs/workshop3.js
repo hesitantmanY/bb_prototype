@@ -152,7 +152,6 @@ Work3.renderStep = function(id){
     sec.appendChild(el('p',{class:'lede', style:{fontFamily:'var(--font-display)', fontStyle:'normal', fontSize:'1.125rem', lineHeight:1.5, color:'var(--color-ink)', margin:'0 0 28px'}}, subEl3));
   }
   sec.appendChild(el('div',{class:'plate plate--empty'}));
-  const dn=UI.demoNote(3,id); if(dn) sec.appendChild(dn);
   UI.mountMvo(sec, Work3, id);
   const fn=Work3.render[id]; if(fn) fn(sec);
   // 步间跳转 CTA：本步 mvo 全过后显示「下一步 →」（2026-08-28 统一步间 CTA）
@@ -282,9 +281,8 @@ Work3.render.scenarios = function(sec){
         + '\n使用场景（Work 1 感知价值矩阵）：' + JSON.stringify((w1.scenarios||[]).map(s=>({id:s.id,name:s.name,personaIds:s.personaIds})))
         + '\nJSON 返回 {"scenarios":[{"name":"","description":"","personaIds":[],"needStrength":{"pain":0,"willingness":0,"frequency":0},"selected":true}]}';
     },
-    aiScope:'work3.scenarios',
     onResult:(r,raw,mode)=>{
-      if(!r?.scenarios?.length) return;
+      if(!r?.scenarios?.length){ showToast('AI 未返回场景，已保留原值'); return; }
       // 2026-08-29 重新生成语义：已生成 → 按钮变「重新生成」，点击直接整组替换（不确认）
       state.work3.scenarios = r.scenarios.map(s=>({
         id:uid('sc'), name:(s.name||'').slice(0,24), description:s.description||'',
@@ -857,9 +855,8 @@ Work3.render.candidates = function(sec){
     label: cs.some(c=>(c.name||'').trim()) ? '重新生成备选卖点' : 'AI 起草备选卖点',
     system:'你是产品策略专家。基于痛点地图生成 8-12 个备选卖点。每个卖点必须绑定一个痛点（painId 取自下方痛点地图列表，不得编造）；证据可沿用该痛点的 evidence，或给出语料摘录/量化统计。关联场景（可为空字符串）。',
     instruction:()=>`SBU:${state.work1.sbu.name}\n目标市场:${state.work3.context.targetMarket}\n价值框架:${state.work3.context.valueFramework.join('/')}\n场景:${JSON.stringify(state.work3.scenarios.map(s=>({id:s.id,name:s.name})))}\n痛点地图:\n${state.work3.mining.painMap.map(p=>'- ['+p.id+'] '+p.pain+' ('+p.type+'): '+p.evidence).join('\n')}\n输出: {"candidates":[{"name":"","painId":"<上方痛点地图的 id，无法对应时留空>","pain":"<逐字复制 painId 对应的痛点地图文本，不得改写、不得填 id>","description":"","evidence":"","scenarioId":""}]}`,
-    aiScope:'work3.candidates',
     onResult:(r,raw,mode)=>{
-      if(!r?.candidates?.length) return;
+      if(!r?.candidates?.length){ showToast('AI 未返回候选卖点，已保留原值'); return; }
       // 2026-08-29 重新生成语义：已生成 → 直接整组替换（不确认）
       // 2026-09-01：绑定归一走 resolvePainBinding（幻觉 id 清空、painId 命中以地图原文为准）
       state.work3.candidates = r.candidates.map(c=>{
@@ -1112,6 +1109,12 @@ Work3.render.matrix = function(sec){
     }
   });
   state.work3.proposition.coreValueIds = pts.filter(p=>p.selected).map(p=>p.id);
+  // BIZ01：自动派生结果写回真候选——mvo 闸门/主张步守卫/跨坊 CTA 读的是
+  // candidates[].selected；手动确认过的（manualSelected 内）保留原值不动。
+  const autoSel = new Set(state.work3.proposition.coreValueIds);
+  (state.work3.candidates||[]).forEach(c=>{
+    if(!manual.has(c.id)) c.selected = autoSel.has(c.id);
+  });
 
   const scatterPlate=el('section',{class:'plate'},
     el('span',{class:'plate-label'},'F8 · PLUMB SCATTER · 客户合意性 × 企业可实施性'));
@@ -1211,11 +1214,11 @@ Work3.runDoubleScoring = async function(button, container, cfg){
       {key:'ms:d',label:'合意性评分',jsonMode:true,
         buildPrompt:()=>[{role:'system',content:'你是目标客户。对每个卖点在 '+dimsD.map(d=>d.label+'('+d.key+')').join('、')+' 维度打 0-10 分。输出 JSON: {"scores":{"<candidateId>":{"'+dimsD.map(d=>d.key).join('":0,"')+'":0}}}'},
           {role:'user',content:'SBU:'+state.work1.sbu.name+'\n卖点:\n'+list}],
-        onResult:r=>{ if(!r?.scores) return; cs.forEach(c=>{ const sc=r.scores[c.id]; if(!sc) return; dimsD.forEach(d=>{c[d.key]=clamp(Number(sc[d.key])||0,0,10); c['src_'+d.key]='ai';}); c.desirabilitySource='ai'; }); autosave(); }},
+        onResult:r=>{ if(!r?.scores){ showToast('AI 未返回评分，已保留原值'); return; } cs.forEach(c=>{ const sc=r.scores[c.id]; if(!sc) return; dimsD.forEach(d=>{c[d.key]=clamp(Number(sc[d.key])||0,0,10); c['src_'+d.key]='ai';}); c.desirabilitySource='ai'; }); autosave(); }},
       {key:'ms:i',label:'可实施性评分',jsonMode:true,
         buildPrompt:()=>[{role:'system',content:'你是企业运营顾问。对每个卖点在 '+dimsI.map(d=>d.label+'('+d.key+')').join('、')+' 维度打 0-10 分。输出 JSON: {"scores":{"<candidateId>":{"'+dimsI.map(d=>d.key).join('":0,"')+'":0}}}'},
           {role:'user',content:'SBU:'+state.work1.sbu.name+'\n卖点:\n'+list}],
-        onResult:r=>{ if(!r?.scores) return; cs.forEach(c=>{ const sc=r.scores[c.id]; if(!sc) return; dimsI.forEach(d=>{c[d.key]=clamp(Number(sc[d.key])||0,0,10); c['src_'+d.key]='ai';}); }); autosave(); }}
+        onResult:r=>{ if(!r?.scores){ showToast('AI 未返回评分，已保留原值'); return; } cs.forEach(c=>{ const sc=r.scores[c.id]; if(!sc) return; dimsI.forEach(d=>{c[d.key]=clamp(Number(sc[d.key])||0,0,10); c['src_'+d.key]='ai';}); }); autosave(); }}
     ];
     const done=new Set();
     API._manualPipeline(container,'双维评分',units,done,(k)=>done.add(k));
@@ -1323,7 +1326,7 @@ Work3._scoreAxis = async function(axis, task){
 Work3.generateMigration = function(btn, container, outside){
   const m=state.work3.matrix;
   API.aiButton({
-    button:btn, container, aiScope:'work3.migration',
+    button:btn, container,
     buildPrompt:()=>{
       const sys='你是品牌战略顾问。为扇面外卖点生成迁移路径。输出 JSON: {"analyses":[{"candidateId":"","diagnosis":"","actions":[""],"targetScores":{"desirability":0,"implementability":0}}]}';
       const user=`SBU:${state.work1.sbu.name}\n目标市场:${state.work3.context.targetMarket}\n扇面标准: 最优 = 第一象限（切分线内）∩ 均衡带 |合意性−可实施性| ≤ ${m.sectorWidth}\n\n扇面外卖点:\n${outside.map(p=>`- [${p.id}] ${p.name}: 合意性 ${p.y.toFixed(2)}, 可实施性 ${p.x.toFixed(2)}, 方案:${p.description}`).join('\n')}`;
@@ -1332,7 +1335,7 @@ Work3.generateMigration = function(btn, container, outside){
         : [{role:'system',content:sys},{role:'user',content:user}];
     },
     onResult:r=>{
-      if(!r?.analyses)return;
+      if(!r?.analyses){ showToast('AI 未返回迁移分析，已保留原值'); return; }
       state.work3.migration.analyses=r.analyses;
       autosave(); Work3.rerender('matrix');
     }
@@ -1406,14 +1409,14 @@ Work3.render.proposition = function(sec){
             '\n输出: {"alternatives":[{"text":""}]}',
           fewShot:cfg.fewShot}),
         // 覆盖语义：整组替换（首次为空数组等同追加；重生成不叠加旧候选）
-        onResult:r=>{ if(!r?.alternatives)return; p.alternatives=r.alternatives.map(a=>({id:uid('alt'),text:a.text||''})); autosave(); }},
+        onResult:r=>{ if(!r?.alternatives){ showToast('AI 未返回备选方案，已保留原值'); return; } p.alternatives=r.alternatives.map(a=>({id:uid('alt'),text:a.text||''})); autosave(); }},
       {key:'prop:pos',label:'定位句建议',jsonMode:true,
         buildPrompt:()=>AiContext.buildPrompt({workId:'work3',sections:cfg.sections,
           system:'你是品牌定位顾问。按四要素（品类/目标客群/差异化卖点/可量化利益）给定位句填空建议。',
           instruction:'SBU:'+state.work1.sbu.name+'\n价值主张候选:'+(p.alternatives.map(a=>a.text).join('；')||selTxt())+
             '\n输出: {"positioning":{"brand":"","audience":"","coreValue":"","category":""}}',
           fewShot:'work3.positioning'}),
-        onResult:r=>{ if(!r?.positioning)return; ['brand','audience','coreValue','category'].forEach(k=>{ if(r.positioning[k]) p.positioning[k]=r.positioning[k]; }); autosave(); }}
+        onResult:r=>{ if(!r?.positioning){ showToast('AI 未返回定位句，已保留原值'); return; } ['brand','audience','coreValue','category'].forEach(k=>{ if(r.positioning[k]) p.positioning[k]=r.positioning[k]; }); autosave(); }}
     ];
     API.aiPipeline({button:propBtn, container:mid, label:'AI 起草主张与定位', units,
       store:{get(){return state.work3._pipeProp||[];}, set(v){state.work3._pipeProp=v;}},
@@ -1520,7 +1523,7 @@ Work3.render.identity = function(sec){
             '\n输出: {"slogans":[""]}',
           fewShot:'work3.slogans'}),
         // 2026-08-29 重新生成语义：整组替换（不追加叠加）；chosenSlogan 失效则清空
-        onResult:r=>{ if(!r?.slogans)return; id.sloganOptions=r.slogans.slice(); if(id.chosenSlogan && !id.sloganOptions.includes(id.chosenSlogan)) id.chosenSlogan=''; autosave(); }}
+        onResult:r=>{ if(!r?.slogans){ showToast('AI 未返回 Slogan 候选，已保留原值'); return; } id.sloganOptions=r.slogans.slice(); if(id.chosenSlogan && !id.sloganOptions.includes(id.chosenSlogan)) id.chosenSlogan=''; autosave(); }}
     ];
     API.aiPipeline({button:idBtn, container:mid, label:'AI 起草人格与 Slogan', units,
       store:{get(){return state.work3._pipeIdentity||[];}, set(v){state.work3._pipeIdentity=v;}},

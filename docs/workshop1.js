@@ -142,7 +142,6 @@ Work1._renderFull = function(sec, id){
     sec.appendChild(el('p',{class:'lede', style:{fontFamily:'var(--font-display)', fontStyle:'normal', fontSize:'1.125rem', lineHeight:1.5, color:'var(--color-ink)', margin:'0 0 28px'}}, subEl));
   }
   sec.appendChild(el('div',{class:'plate plate--empty'}));
-  const dn=UI.demoNote(1,id); if(dn) sec.appendChild(dn);
   UI.mountMvo(sec, Work1, id);
   const fn = Work1.render[id];
   if(fn) fn(sec);
@@ -753,12 +752,14 @@ Work1.renderSmileCurve = function(){
       const valueY = isHigh ? y - 4 : y + 36;
       const valueColor = n.v >= 7 ? 'var(--color-accent)' : (n.v <= 3 ? 'var(--color-ink-2)' : 'var(--color-ink)');
       const why = n.reason || n.tip || '';
+      // SEC04：节点文本（label/得分/理由）可来自导入档案与 AI 起草，必须先转义
+      const lab = esc(String(n.label ?? '')); const val = esc(String(n.v ?? '')); const whyS = esc(String(why));
       return `
         <g>
           <circle class="smile-node" data-idx="${i}" cx="${x}" cy="${y}" r="6" fill="var(--color-ink)"/>
-          <text data-label-idx="${i}" x="${x}" y="${labelY}" text-anchor="middle" font-family="var(--font-display)" font-style="normal" font-size="14" fill="var(--color-ink)">${n.label}</text>
-          <text data-value-idx="${i}" x="${x}" y="${valueY}" text-anchor="middle" font-family="var(--font-mono)" font-size="11" fill="${valueColor}">附加值 ${n.v}</text>
-          <title>${n.label} · ${n.v} 分\n${why}</title>
+          <text data-label-idx="${i}" x="${x}" y="${labelY}" text-anchor="middle" font-family="var(--font-display)" font-style="normal" font-size="14" fill="var(--color-ink)">${lab}</text>
+          <text data-value-idx="${i}" x="${x}" y="${valueY}" text-anchor="middle" font-family="var(--font-mono)" font-size="11" fill="${valueColor}">附加值 ${val}</text>
+          <title>${lab} · ${val} 分\n${whyS}</title>
         </g>`;
     }).join('');
     const axisY = yFor(0);
@@ -959,7 +960,7 @@ Work1.render.environment = function(sec){
   const aiBtn = el('button',{type:'button',class:'ai-draft-btn',
     onclick:()=>{
       API.aiButton({
-        button:aiBtn, container:aiWrap, aiScope:'work1.environment',
+        button:aiBtn, container:aiWrap,
         label:'起草环境与竞争分析',
         buildPrompt:Work1._ctx(aiWrap, ['sbu'], ()=>{
           // 实况（业务基本情况）作为 AI 起草的依据；目标可空不强制
@@ -1644,7 +1645,6 @@ Work1.personaDraft.mountInput = function(){
     API.aiButton({
       button: submitBtn,
       container: aiContainer,
-      aiScope: 'work1.personaDraft',
       buildPrompt: Work1._ctx(aiContainer, ['sbu'], () => messages),
       label: '生成使用场景和用户画像',
       onResult: (r, raw, source) => {
@@ -2033,7 +2033,7 @@ Work1.draftMetrics = function(btn, container){
   const m=state.work1.metrics;
   const filledCount=(m.dimensions||[]).filter(d=>(d.name||'').trim() || (d.secondaries||[]).some(s=>(s.name||'').trim()||s.selfScore!=null)).length;
   if(filledCount>0 && !confirm('用 AI 起草会整体替换当前指标体系（现有 '+filledCount+' 个一级指标），确定？')) return;
-  API.aiButton({button:btn, container, aiScope:'work1.metrics',
+  API.aiButton({button:btn, container,
     buildPrompt:Work1._ctx(container, ['sbu','personas'], ()=>[{role:'system',content:'你是品牌资产管理专家（CBBE，Keller 1998）。为给定 SBU 设计品牌资产指标体系：4 个一级指标按 CBBE 金字塔——品牌显著性 / 品牌功效 / 品牌形象 / 品牌共鸣，每层 2-4 个二级测评点。每个测评点给出：量化口径（用什么数据衡量、什么算高分）与自评分（1-10，基于前文资料对品牌现状的主观估计；1-3 行业中下游 / 4-6 行业平均 / 7-8 行业前列 / 9-10 品类标杆）。测评点要具体可感知，不用"品质好"这类空话。输出 JSON: {"dimensions":[{"name":"一级指标名","secondaries":[{"name":"测评点","measure":"量化口径","selfScore":6}]}]}'},
       {role:'user',content:`SBU:${state.work1.sbu.name}\n品类:${state.work1.sbu.category}\n概述:${state.work1.sbu.summary}\n场景短板:\n${(state.work1.scenarios||[]).map(s=>s.name+': '+(s.decisiveGap||'')).join('\n')}\n画像痛点:\n${state.work1.personas.map(p=>p.name+':'+p.painPoints).join('\n')}`}]),
     onResult:r=>{
@@ -2279,7 +2279,10 @@ Work1.render.survey = function(sec){
     (s.status==='paused'||s.status==='aborted')?'继续合成调研':'运行合成调研');
   const actions=el('div',{class:'ai-actions'}, runBtn,
     el('button',{class:'ghost',onclick:()=>Work1.analyzeResponses()},'重新分析'),
-    el('button',{class:'ghost',onclick:()=>{ if(confirm('清空已有回答？')){s.responses=[];s._doneKeys=[];s.status='idle';s.likertStats={};s.openThemes=[];autosave();Work1.rerender('survey');}}},'清空回答')
+    el('button',{class:'ghost',onclick:()=>{ if(confirm('清空已有回答？')){s.responses=[];s._doneKeys=[];s.status='idle';
+      // BIZ05：统计/主题/实测回填源在 analysis 侧，一并清空并重算（actual 归 null）
+      const a=state.work1.analysis||(state.work1.analysis={});a.likertStats={};a.openThemes=[];a.indicatorMeans=[];
+      Work1.backfillScores();autosave();Work1.rerender('survey');}}},'清空回答')
   );
   plate.appendChild(actions);
   if(s.error) plate.appendChild(el('div',{class:'warning'},s.error));
@@ -2352,7 +2355,6 @@ Work1.runSurvey = async function(button){
       s.status='done';
       delete s._doneKeys;
       Work1.analyzeResponses();
-      if(typeof AIProv!=='undefined') AIProv.mark('work1.survey');
     }
     autosave(); Work1.rerender('survey');
   }
@@ -2443,7 +2445,7 @@ Work1.render.analysis = function(sec){
   const insightAi=el('div',{class:'ai-box'});
   const insightBtn=el('button',{class:'primary',onclick:()=>{
     API.aiButton({
-      button:insightBtn, container:insightAi, aiScope:'work1.analysis',
+      button:insightBtn, container:insightAi,
       buildPrompt:Work1._ctx(insightAi, ['sbu','metrics'], ()=>[{role:'system',content:'你是市场研究总监。根据给定的描述性统计与开放题主题，撰写 5-8 条可执行洞察。输出 JSON: {"insights":"..."}'},
         {role:'user',content:Work1.surveyDigest()}]),
       onResult:r=>{ if(r?.insights){ a.insights=r.insights; autosave(); Work1.renderStep('analysis'); } }
@@ -2585,7 +2587,7 @@ Work1.surveyDigest = function(){
 };
 Work1.extractThemes = function(ot, btn, plate){
   API.aiButton({
-    button:btn, container:plate, aiScope:'work1.analysis',
+    button:btn, container:plate,
     buildPrompt:Work1._ctx(plate, ['sbu'], ()=>[{role:'system',content:'你是定性研究分析师。从开放题答案中归纳 4-6 个主题。输出 JSON: {"themes":[{"label":"","count":0}],"quotes":[""]}'},
       {role:'user',content:`题目：${ot.question}\n\n回答：\n${ot.texts.map((t,i)=>`${i+1}. ${t}`).join('\n')}`}]),
     onResult:r=>{
@@ -2621,7 +2623,7 @@ Work1.render.values = function(sec){
   const aiBox=el('div',{class:'ai-box'});
   const draftBtn=el('button',{class:'primary',onclick:()=>{
     API.aiButton({
-      button:draftBtn,container:aiBox,aiScope:'work1.values',
+      button:draftBtn,container:aiBox,
       buildPrompt:Work1._ctx(aiBox, ['sbu','personas','insights'], ()=>[{role:'system',content:'你是品牌价值框架专家。根据 SBU、客户画像、调研洞察，提出功能/情感/社会/认知/条件 5 类价值要素，并从中选出三条主轴。输出 JSON: {"functional":[],"emotional":[],"social":[],"epistemic":[],"conditional":[],"chosenFunctional":"","chosenEmotional":"","chosenSocial":"","rationale":""}'},
         {role:'user',content:`SBU:${state.work1.sbu.name}\n画像:${state.work1.personas.map(p=>p.name+':'+p.painPoints).join('\n')}\n洞察:\n${state.work1.analysis.insights}`}]),
       onResult:r=>{
@@ -2718,7 +2720,7 @@ Work1.render.recommendations = function(sec){
     const filled=['short','mid','long'].filter(k=>(r[k]||'').trim()).length+((r.risks||[]).some(x=>(x||'').trim())?1:0);
     if(filled>0 && !confirm('用 AI 起草会整体替换当前建议（短/中/长/风险 已有 '+filled+' 项内容），继续？')) return;
     API.aiButton({
-      button:btn,container:ai,aiScope:'work1.recommendations',
+      button:btn,container:ai,
       buildPrompt:Work1._ctx(ai, ['sbu','valueFramework','insights'], ()=>[{role:'system',content:'你是品牌战略顾问。根据价值框架与洞察，输出短中长期建议与关键风险。JSON: {"short":"","mid":"","long":"","risks":[""]}'},
         {role:'user',content:`SBU:${state.work1.sbu.name}\n价值: 功能=${state.work1.values.chosenFunctional} 情感=${state.work1.values.chosenEmotional} 社会=${state.work1.values.chosenSocial}\n洞察:\n${state.work1.analysis.insights}`}]),
       onResult:res=>{

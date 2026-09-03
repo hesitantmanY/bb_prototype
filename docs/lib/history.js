@@ -106,6 +106,9 @@ const History = {
       $('#demoBanner').classList.remove('show');
       $('#demoBtn').textContent='载入案例 ▼';
       document.body.classList.remove('is-demo');
+      // BIZ03：已换到服务器上的恢复版本——对账基准归零（下一保存直接记录，不误报）
+      if(typeof lastServerStamp!=='undefined') lastServerStamp=null;
+      dirty=false;
       this.close();
       App.renderAll();
       App.updateSummary();

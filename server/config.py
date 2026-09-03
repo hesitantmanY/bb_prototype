@@ -56,21 +56,27 @@ def save_config(config: dict[str, Any]) -> dict[str, Any]:
     backend_url = config.get("backendUrl", DEFAULTS["backendUrl"])
 
     # Hand-written (instead of yaml.dump) so the explanatory comments survive
-    # every save from the settings modal.
+    # every save from the settings modal. String fields go through safe_dump
+    # so values are quoted when needed (SEC06 — prevents YAML injection via
+    # provider/baseUrl/model/backendUrl).
+    def _quote(value: Any) -> str:
+        return yaml.safe_dump(value, allow_unicode=True).strip()
+
     yaml_text = f"""# Global Brand Building — LLM 配置
 # 也可在页面右上角「API 设定」里修改，保存时会覆写本文件。
 
-# 提供商: deepseek | openai | gemini | custom(任何 OpenAI 兼容端点)
-provider: {provider}
+# 提供商: 名称与前端 docs/lib/providers.js 保持一致（deepseek / doubao /
+# moonshot / minimax / qwen / zhipu / openai / gemini / custom 等）
+provider: {_quote(provider)}
 
 # API 基地址。提供商预设：
 #   deepseek -> https://api.deepseek.com
 #   openai   -> https://api.openai.com/v1
 #   gemini   -> https://generativelanguage.googleapis.com/v1beta
-baseUrl: {base_url}
+baseUrl: {_quote(base_url)}
 
 # 模型名称
-model: {model}
+model: {_quote(model)}
 
 # 采样温度，控制输出的随机性，取值 0.0–2.0：
 #   0.0–0.3  稳定、确定，适合结构化输出/评分/JSON（Delphi 权重、打分）
@@ -81,7 +87,7 @@ model: {model}
 temperature: {temperature}
 
 # 本地 Python 服务地址（LDA / Excel / 数据存储），一般不用改
-backendUrl: {backend_url}
+backendUrl: {_quote(backend_url)}
 """
     with open(CONFIG_FILE, "w", encoding="utf-8") as f:
         f.write(yaml_text)

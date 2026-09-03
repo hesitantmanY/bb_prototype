@@ -5,19 +5,26 @@ Covers the trust boundaries that matter for this local FastAPI service:
   2. the API key is stored in .env only, never returned by /api/config and
      never written into config.yaml;
   3. upload endpoints enforce their documented size limits;
-  4. /api/config exposes only apiKeyExists.
+  4. /api/config exposes only apiKeyExists;
+  5. cross-origin web pages are rejected (trust gate, SEC01);
+  6. client-supplied llm `profile` is ignored (SEC02 — no SSRF);
+  7. snapshot names are sanitized/capped (SEC07); lda params are clamped
+     (SEC05); decompression of docx/xlsx is bounded (SEC03).
 
 Run: server/.venv/bin/python server/test_security.py
 """
 from __future__ import annotations
 
+import io
+import zipfile
 from pathlib import Path
 from tempfile import TemporaryDirectory
 from unittest.mock import patch
 
 import config as config_module
 import storage
-from app import app
+from app import _clean_snapshot_name, app
+from doc_extract import extract_document
 from fastapi.testclient import TestClient
 
 
@@ -141,12 +148,118 @@ def test_upload_size_limits() -> None:
     ok("extract-doc over 5MB -> 413", r.status_code == 413, str(r.status_code))
 
 
+def test_cross_origin_requests_rejected() -> None:
+    evil = {"Origin": "https://evil.example.com"}
+    r = client.get("/api/config", headers=evil)
+    ok("GET /api/config from evil origin -> 403", r.status_code == 403, str(r.status_code))
+    r = client.put("/api/state", headers=evil,
+                   json={"project_id": "default", "state": {"x": 1}})
+    ok("PUT /api/state from evil origin -> 403", r.status_code == 403, str(r.status_code))
+
+    with TemporaryDirectory() as d:
+        base = Path(d) / "data"
+        with patch.object(storage, "DATA_DIR", base):
+            loop = {"Origin": "http://127.0.0.1:8765"}
+            r = client.put("/api/state", headers=loop,
+                           json={"project_id": "default", "state": {"ok": 1}})
+            ok("loopback origin can save state", r.status_code == 200, str(r.status_code))
+            r = client.put("/api/state", headers={"Origin": "null"},
+                           json={"project_id": "default", "state": {"ok": 1}})
+            ok("file:// (null origin) can save state", r.status_code == 200, str(r.status_code))
+
+
+def test_llm_profile_is_ignored() -> None:
+    # Even a profile that supplies its own key/baseUrl must NOT be honored —
+    # otherwise this would be an open proxy (SSRF). Stub the server config as
+    # key-less and expect the deterministic 503: any 2xx/other status would
+    # mean the request went somewhere (profile baseUrl 127.0.0.1:9).
+    import llm_proxy
+
+    with patch.object(llm_proxy, "load_config", return_value={
+        "provider": "deepseek", "baseUrl": "https://api.deepseek.com",
+        "model": "m", "temperature": 1.0,  # no apiKey on purpose
+    }):
+        r = client.post("/api/llm", json={
+            "messages": [{"role": "user", "content": "hi"}],
+            "profile": {
+                "provider": "custom",
+                "baseUrl": "http://127.0.0.1:9",
+                "model": "x",
+                "apiKey": "anything",
+            },
+        })
+    ok("profile apiKey/baseUrl ignored -> 503 not-configured",
+       r.status_code == 503 and "API Key" in r.json()["error"]["message"],
+       f"{r.status_code} {r.text[:120]}")
+
+
+def test_lda_params_clamped() -> None:
+    r = client.post("/api/lda", json={"documents": ["a", "b"], "passes": 9999999})
+    ok("lda passes out of range -> 422", r.status_code == 422, str(r.status_code))
+    r = client.post("/api/lda", json={"documents": ["x"] * 600})
+    ok("lda too many documents -> 400", r.status_code == 400, str(r.status_code))
+
+
+def test_snapshot_name_sanitized() -> None:
+    cleaned = _clean_snapshot_name("a\nb\r\tc" * 30)
+    ok("snapshot name: control chars stripped", "\n" not in cleaned and "\r" not in cleaned)
+    ok("snapshot name: capped at 60 chars", cleaned is not None and len(cleaned) <= 60)
+    ok("snapshot name: empty -> None (auto name)", _clean_snapshot_name("  \n ") is None)
+    r = client.post("/api/snapshots/default/rename", json={"name": "   "})
+    ok("rename with blank name -> 422", r.status_code == 422, str(r.status_code))
+
+
+def test_config_rejects_invalid_provider_and_scheme() -> None:
+    r = client.put("/api/config", json={"provider": "evil\nx: 1", "baseUrl": "https://a", "model": "m"})
+    ok("config provider not whitelisted -> 400", r.status_code == 400, str(r.status_code))
+    r = client.put("/api/config", json={"provider": "deepseek", "baseUrl": "ftp://x", "model": "m"})
+    ok("config baseUrl non-http(s) -> 400", r.status_code == 400, str(r.status_code))
+
+
+def test_config_accepts_all_ui_providers() -> None:
+    # 厂商清单归前端 providers.js（deepseek/doubao/moonshot/minimax/qwen/zhipu
+    # …），服务端只校验形状——防止枚举校验把合法厂商保存拒掉（2026-09-03 回归）。
+    with TemporaryDirectory() as d:
+        base = Path(d)
+        with (
+            patch.object(config_module, "SERVER_DIR", base),
+            patch.object(config_module, "CONFIG_FILE", base / "config.yaml"),
+            patch.object(config_module, "ENV_FILE", base / ".env"),
+        ):
+            for prov in ("deepseek", "qwen", "zhipu", "moonshot", "doubao", "minimax"):
+                r = client.put("/api/config", json={
+                    "provider": prov, "baseUrl": "https://x.example.com", "model": "m",
+                })
+                ok(f"config provider {prov} accepted -> 200", r.status_code == 200, str(r.status_code))
+            ok("config.yaml written without provider key injection",
+               (base / "config.yaml").exists())
+
+
+def test_docx_decompression_bomb_rejected() -> None:
+    # A zip whose word/document.xml claims >32MB uncompressed must be refused
+    # before ET.parse inflates it.
+    buf = io.BytesIO()
+    with zipfile.ZipFile(buf, "w", zipfile.ZIP_DEFLATED) as z:
+        z.writestr("word/document.xml", b"<w:document/>" + b"a" * (33 * 1024 * 1024))
+    result = extract_document("bomb.docx", buf.getvalue())
+    ok("oversized docx XML member rejected",
+       result.get("ok") is False and "上限" in result.get("error", ""),
+       str(result)[:120])
+
+
 test_project_id_cannot_escape_data_dir()
 test_state_api_rejects_traversal_project_id()
 test_snapshot_id_is_never_a_path()
 test_api_key_lives_in_env_not_config_or_api_response()
 test_config_endpoint_never_returns_key()
 test_upload_size_limits()
+test_cross_origin_requests_rejected()
+test_llm_profile_is_ignored()
+test_lda_params_clamped()
+test_snapshot_name_sanitized()
+test_config_rejects_invalid_provider_and_scheme()
+test_config_accepts_all_ui_providers()
+test_docx_decompression_bomb_rejected()
 
 print(f"\n{passed} pass / {failed} fail")
 raise SystemExit(1 if failed else 0)

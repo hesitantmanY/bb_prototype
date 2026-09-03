@@ -21,9 +21,13 @@ async def proxy_llm(
     Returns (status_code, response_dict). On success the dict includes '_text'
     with the extracted response content so the frontend doesn't need to know
     provider-specific shapes.
+
+    `profile` is ignored (SEC02): it previously let any caller override
+    baseUrl/model/apiKey, turning this endpoint into an open HTTP proxy
+    (SSRF). Server config is the single source of truth.
     """
     opts = opts or {}
-    cfg = profile or load_config()
+    cfg = load_config()
 
     provider = cfg.get("provider", "deepseek")
     api_key = cfg.get("apiKey", "")

@@ -58,8 +58,9 @@
  } else {
  // Reject "1-5的整数" / "评分" / "N/A" / "3.5" — not Number.parseInt-able
  // to a single bounded int without ambiguity. parseFloat would accept
- // "3.5" and we don't want that.
- if(!/^-?\d+$/.test(t)){
+ // "3.5" and we don't want that. Integer-shaped floats ("3.0"/"3.00")
+ // are tolerated (AI07 — header docs promise "3.0" → 3).
+ if(!/^-?\d+(\.0+)?$/.test(t)){
  return { ok:false, reason:'notInteger' };
  }
  n = parseInt(t, 10);

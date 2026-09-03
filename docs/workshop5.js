@@ -46,7 +46,6 @@ Work5.renderStep = function(id){
   sec.innerHTML='';
   sec.appendChild(Work5.toolbar());
   sec.appendChild(Work5.readinessPanel());
-  const dn5=UI.demoNote(5,'plan'); if(dn5) sec.appendChild(dn5);
   UI.mountMvo(sec, Work5, id);
 
   const w=state.work5;
@@ -547,11 +546,20 @@ Work5.sellingPointBlock = function(container){
     const row=el('tr',{},
       el('td',{},String(i+1)),
       el('td',{style:{'font-style':'normal'}},p.name),
-      el('td',{},el('input',{type:'number',min:0,max:10,step:0.1,value:(p.y??'').toFixed(1)||'',onchange:e=>{p.reviewDes=e.target.value===''?null:parseFloat(e.target.value);autosave();Work5.rerender('plan');}})),
-      el('td',{},el('input',{type:'number',min:0,max:10,step:0.1,value:(p.x??'').toFixed(1)||'',onchange:e=>{p.reviewImp=e.target.value===''?null:parseFloat(e.target.value);autosave();Work5.rerender('plan');}})),
+      el('td',{},el('input',{type:'number',min:0,max:10,step:0.1,value:(p.y??'').toFixed(1)||'',onchange:e=>{const c=(state.work3.candidates||[]).find(x=>x.id===p.id);if(!c)return;c.reviewDes=e.target.value===''?null:parseFloat(e.target.value);autosave();Work5.rerender('plan');}})),
+      el('td',{},el('input',{type:'number',min:0,max:10,step:0.1,value:(p.x??'').toFixed(1)||'',onchange:e=>{const c=(state.work3.candidates||[]).find(x=>x.id===p.id);if(!c)return;c.reviewImp=e.target.value===''?null:parseFloat(e.target.value);autosave();Work5.rerender('plan');}})),
       el('td',{},el('span',{class:'tag '+(q==='明星'?'maroon':'')},q)),
       el('td',{},w3.matrix.showSector ? (inside?el('span',{class:'tag soft'},'扇面内'):el('span',{class:'tag'},'外')) : el('span',{class:'muted'},'—')),
-      el('td',{},(()=>{const cb=el('input',{type:'checkbox',checked:!!p.selected});cb.style.width='auto';cb.addEventListener('change',()=>{p.selected=cb.checked;autosave();Work5.rerender('plan');});return cb;})()),
+      el('td',{},(()=>{const cb=el('input',{type:'checkbox',checked:!!p.selected});cb.style.width='auto';cb.addEventListener('change',()=>{
+        // BIZ01：写回真候选 + manualSelected 覆盖（防自动派生回写覆盖手选）
+        const c=(state.work3.candidates||[]).find(x=>x.id===p.id);if(!c)return;
+        c.selected=cb.checked;
+        const mm=state.work3.matrix;
+        const list=Array.isArray(mm.manualSelected)?mm.manualSelected.slice():[];
+        const i=list.indexOf(p.id);
+        if(cb.checked&&i<0)list.push(p.id);if(!cb.checked&&i>=0)list.splice(i,1);
+        mm.manualSelected=list;
+        autosave();Work5.rerender('plan');});return cb;})()),
       el('td',{class:'hint',style:{'text-transform':'none','letter-spacing':'0'}},sug.text)
     );
     tb.appendChild(row);
@@ -1237,18 +1245,30 @@ Work5.aiPolish=async function(field,label,button){
 };
 
 // Multi-chapter polish: pausable Runner, one unit per chapter.
+// BIZ06：此前只写死第 1 章——补全 1-5 章全部自由文本章节（嵌套字段走点路径）。
 Work5.aiPolishAll=async function(button){
-  const fields=[['ch1_business','业务概况']].filter(([f])=>state.work5[f]);
-  if(!fields.length){ showToast('没有可润色的章节'); return; }
-  const task=Runner.start({id:'work5-polish-all', label:'润色全文', button, total:fields.length, pausable:true,
+  const get=(p)=>p.split('.').reduce((a,k)=>a==null?null:a[k], state.work5);
+  const set=(p,v)=>{ const ks=p.split('.'); const o=ks.slice(0,-1).reduce((a,k)=>a&&a[k], state.work5); if(o) o[ks[ks.length-1]]=v; };
+  const units=[
+    ['ch1_business','业务概况'],
+    ['ch2_environment.political','环境·政治'],['ch2_environment.economic','环境·经济'],
+    ['ch2_environment.social','环境·社会'],['ch2_environment.technological','环境·技术'],
+    ['ch3_strategy.segmentation','STP·市场细分'],['ch3_strategy.targeting','STP·目标市场'],
+    ['ch3_strategy.positioning','STP·定位'],
+    ['ch4_mix.product','4P·产品'],['ch4_mix.price','4P·价格'],
+    ['ch4_mix.place','4P·渠道'],['ch4_mix.promotion','4P·推广'],
+    ['ch5_outlook','总结展望']
+  ].filter(([p])=>String(get(p)||'').trim());
+  if(!units.length){ showToast('没有可润色的章节'); return; }
+  const task=Runner.start({id:'work5-polish-all', label:'润色全文', button, total:units.length, pausable:true,
     onPause:()=>autosave(), onResume:()=>{}});
   if(!task) return;
-  for(const [f,l] of fields){
+  for(const [f,l] of units){
     if(task.aborted) break;
     try{
       const text=await API.call([{role:'system',content:`你是策划书编辑。润色给定的${l}章节，保持事实不变，仅让表达更通顺专业。直接输出润色后的文本。`+Work5._humanRule},
-        {role:'user',content:state.work5[f]}],{signal:task.controller.signal});
-      if(text){ state.work5[f]=text; autosave(); }
+        {role:'user',content:get(f)}],{signal:task.controller.signal});
+      if(text){ set(f,text); autosave(); }
     }catch(e){ if(task.aborted || (e&&e.name==='AbortError')) break; console.warn(e); }
     task.done++; Runner.renderUI();
     try{ await Runner.checkpoint(); }catch{ break; }
@@ -1275,7 +1295,8 @@ Work5.exportMd = function(){
   const part=(...xs)=>xs.filter(x=>x!=null&&String(x).trim()!=='').join('\n\n');
   return part(
     '## V. 策划书正文',
-    '# '+(sbuName?sbuName+' 品牌策划书':'品牌策划书'),
+    // BIZ07：正文不再输出一级标题——文件级 H1 由档案名驱动（markdown_exchange）
+    '**'+(sbuName?sbuName+' 品牌策划书':'品牌策划书')+'**',
     '> 上游成稿：'+Work5.upstreamLine(),
     part('## 1 业务与市场（来自 Work 1）',
       part('### 1.1 企业与业务概况', w.ch1_business||'（待完成）',

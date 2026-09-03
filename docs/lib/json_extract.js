@@ -445,7 +445,8 @@ function structured(rawText, schemaKey){
       targetSegment: String(t.targetSegment||t.segment||'').trim(),
       price: typeof t.price==='number' ? t.price : parseFloat(t.price)||0,
       unit: String(t.unit||t.currency||'').trim(),
-      hero: !!t.hero,
+      // AI06：肯定形态白名单，杜绝 !!'否'===true 把非主力款标成主力
+      hero: /^(是|yes|true|✓|✔|★|1|主力|主打)$/i.test(String(t.hero??'').trim()),
       notes: String(t.notes||'').trim()
     })).filter(t=>t.name);
     if(!cleaned.length) return {ok:false, raw, reason:'tiers array empty after clean'};
@@ -474,14 +475,17 @@ function structured(rawText, schemaKey){
   if(schemaKey === 'advertising'){
     if(!Array.isArray(parsed)) return {ok:false, raw, reason:'expected array of advertising'};
     const cleaned = parsed.map(a=>{
-      const share = Number(a.share ?? a.budgetShare ?? 0);
+      // 容忍 "30%" / "30％" / 数字形态（AI01），非法值落 0 不再产生 NaN
+      const share = parseFloat(String(a.share ?? a.budgetShare ?? '').replace(/[%％]/g,''));
       return {
         media: String(a.media||'').trim(),
-        budgetShare: share,
+        budgetShare: Number.isFinite(share)?share:0,
         message: String(a.message||'').trim(),
         kpi: String(a.kpi||'').trim()
       };
     }).filter(a=>a.media);
+    // AI01：空数组 = 解析失败（与 skus/promotions 一致），不许静默清空已有数据
+    if(!cleaned.length) return {ok:false, raw, reason:'advertising array empty after clean'};
     const total = cleaned.reduce((s,a)=>s+(a.budgetShare||0),0);
     if(total > 0 && Math.abs(total-100) > 0.5){
       const k = 100/total;
@@ -494,11 +498,16 @@ function structured(rawText, schemaKey){
     if(!Array.isArray(parsed)) return {ok:false, raw, reason:'expected array of channel groups'};
     const cleaned = parsed.map(g=>({
       name: String(g.name||'').trim(),
-      children: (Array.isArray(g.children)?g.children:[]).map(c=>({
-        name: String(c.name||'').trim(),
-        share: Number(c.share||0)
-      })).filter(c=>c.name)
+      children: (Array.isArray(g.children)?g.children:[]).map(c=>{
+        const share = parseFloat(String(c.share ?? c.budgetShare ?? '').replace(/[%％]/g,''));
+        return {
+          name: String(c.name||'').trim(),
+          share: Number.isFinite(share)?share:0
+        };
+      }).filter(c=>c.name)
     })).filter(g=>g.name);
+    // AI01：空数组 = 解析失败，不许静默清空已有渠道结构
+    if(!cleaned.length) return {ok:false, raw, reason:'structure array empty after clean'};
     cleaned.forEach(g=>{
       const total = g.children.reduce((s,c)=>s+(c.share||0),0);
       if(total > 0 && Math.abs(total-100) > 0.5){
@@ -516,6 +525,8 @@ function structured(rawText, schemaKey){
       timing: String(e.timing||e.time||'').trim(),
       expectedReach: String(e.expectedReach||e.reach||'').trim()
     })).filter(e=>e.event);
+    // AI01：空数组 = 解析失败，不许静默清空已有 PR 活动
+    if(!cleaned.length) return {ok:false, raw, reason:'pr array empty after clean'};
     return {ok:true, value:cleaned, raw, warnings};
   }
   if(schemaKey === 'salesPromotion'){
@@ -525,6 +536,8 @@ function structured(rawText, schemaKey){
       mechanic: String(s.mechanic||'').trim(),
       period: String(s.period||'').trim()
     })).filter(s=>s.tactic);
+    // AI01：空数组 = 解析失败，不许静默清空已有促销活动
+    if(!cleaned.length) return {ok:false, raw, reason:'salesPromotion array empty after clean'};
     return {ok:true, value:cleaned, raw, warnings};
   }
   if(schemaKey === 'differentiators'){
@@ -572,7 +585,9 @@ function structured(rawText, schemaKey){
         targetSegment: String(pickCell(r,['targetSegment'])).trim(),
         price: parseFloat(pickCell(r,['price'])) || 0,
         unit: String(pickCell(r,['unit'])).trim(),
-        hero: /主力|hero/i.test(Object.values(r).join('|')),
+        hero: (()=>{ const h=String(pickCell(r,['hero'])).trim(); // AI06：先按 hero 列坐标判定，避免整行误扫备注/名称
+          if(h) return /^(是|yes|true|✓|✔|★|1|主力|主打)$/i.test(h);
+          return /主力|hero/i.test(Object.values(r).join('|')); })(),
         notes: String(pickCell(r,['notes'])).trim()
       })).filter(t=>t.name);
       if(cleaned.length) return {ok:true, value:cleaned, raw, warnings:['从 Markdown 表格解析（LLM 未出 JSON 块）']};
