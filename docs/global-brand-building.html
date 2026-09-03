@@ -2486,9 +2486,10 @@ body[data-w4-entry="greenfield"] .x-entry-heavy { display:block; }
   <div class="modal">
     <button class="modal-close" onclick="Settings.close()">×</button>
     <h2>设置</h2>
-    <p class="muted">配置 LLM 提供商与本地服务。API Key 不会离开本机。</p>
+    <p class="muted">配置 LLM 提供商与本地服务。API Key 不会离开本机。每家厂商各有自己的 Key；「保存」会把当前厂商设为激活。</p>
+    <div class="warning" id="legacyKeyBanner" style="display:none;margin:0 0 12px">检测到旧 key，请到设置中重新配置 <button type="button" class="ghost small" onclick="Settings.discardLegacy()">丢弃旧 Key</button></div>
     <div class="field">
-      <label for="setProvider">提供商</label>
+      <label for="setProvider">厂商（✓=已配置 Key，保存后激活）</label>
       <select id="setProvider" onchange="Settings.onProviderChange()">
         <option value="deepseek">DeepSeek</option>
         <option value="doubao">火山方舟（豆包）</option>
@@ -2511,7 +2512,10 @@ body[data-w4-entry="greenfield"] .x-entry-heavy { display:block; }
     </div>
     <div class="field">
       <label for="setApiKey">API Key</label>
-      <input type="password" id="setApiKey" placeholder="sk-..." oninput="Settings.onApiKeyInput()">
+      <div class="row">
+        <input type="password" id="setApiKey" placeholder="sk-..." oninput="Settings.onApiKeyInput()" style="flex:1">
+        <button type="button" class="ghost" id="setClearKey" onclick="Settings.clearKey()" style="display:none">清除此厂商 Key</button>
+      </div>
     </div>
     <div class="field">
       <label for="setTemperature">Temperature: <span id="setTempVal">1.0</span>
@@ -3220,11 +3224,11 @@ var Work5={steps:[],defaultData:()=>({})};
 <script src="lib/schema_migrate.js?v=2"></script>
 <script src="lib/markdown_exchange.js?v=1"></script>
 <script src="lib/ui.js?v=2"></script>
-<script src="lib/settings.js?v=3"></script>
+<script src="lib/settings.js?v=4"></script>
 <script src="lib/savepanel.js?v=2"></script>
 <script src="lib/demomenu.js?v=1"></script>
 <script src="lib/history.js?v=2"></script>
-<script src="lib/app.js?v=4"></script>
+<script src="lib/app.js?v=5"></script>
 <script src="workshop1.js?v=50041"></script>
 <script src="workshop2.js?v=50021"></script>
 <script src="workshop3.js?v=50021"></script>

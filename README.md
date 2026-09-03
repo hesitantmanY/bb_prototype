@@ -47,9 +47,9 @@ python app.py
 
 ### 3. 配置 LLM
 
-打开页面右上角「API 设定」（齿轮）：选择提供商、Base URL、Model、API Key、温度（默认 `1.0`）。切换提供商时会自动预填该厂商的官方 Base URL 与一个可用 Model（都可改）。
+打开页面右上角「API 设定」（齿轮）：每家厂商一套独立配置（Base URL / Model / 自己的 API Key）。厂商下拉选中后自动预填该厂商官方 Base URL 与可用 Model（都可改），**「保存」= 写入该厂商并设为当前激活**——AI 调用走激活的那家，不存在"界面选 A、实际打 B"。
 
-国内厂商已内置在「提供商」下拉里（预填值会随厂商迭代，README 与 `lib/providers.js` 同步维护）：
+国内厂商已内置在「提供商」下拉里，已配 Key 的厂商带 ✓（预填值会随厂商迭代，README 与 `lib/providers.js` 同步维护）：
 
 | 厂商 | Base URL | 预填 Model 示例 |
 | --- | --- | --- |
@@ -62,7 +62,7 @@ python app.py
 
 下拉里另有 OpenAI / Google Gemini / 其他（任意 OpenAI 兼容端点，Base URL 留空手填）。结构化字段（Delphi 权重、JSON 回填等）对豆包/Kimi/MiniMax 走"提示词要求 JSON + 容错解析"路径（这些厂商对 `response_format` 参数历史上有 400，白名单保守置关）；若你的厂商支持 JSON 模式可自行在 `lib/providers.js` 调整。
 
-配置保存到项目 `server/config.yaml` 与 `server/.env`。也可手动复制 `server/.env.example` 为 `.env` 后编辑。顶栏可随时在「API 自动 / 手动模式」间切换（独立于是否配 Key）。
+非敏感配置（各家 Base URL / Model / 温度 / 当前激活家）存 `server/config.yaml`，各家 Key 分存 `server/.env` 的 `LLM_API_KEY_<厂商>` 行（均 git-ignore）。Key 输入框**留空 = 不动该家 Key**；已有 Key 时粘贴新 Key 保存会先确认覆盖；「清除此厂商 Key」按钮可单独删一家。某家未配 Key 时激活它 → AI 自动模式不可用（自动落手动），「测试连接」会如实失败，不会借别家 Key"假成功"。旧版单槽遗留的裸 `LLM_API_KEY` 不会被自动归属任何厂商（避免固化历史上 Key 与厂商错配），设置弹窗会提示你手动认领或丢弃。顶栏可随时在「API 自动 / 手动模式」间切换。
 
 ### 4. 一键跑测试
 

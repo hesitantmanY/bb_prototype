@@ -108,12 +108,20 @@ def test_api_key_lives_in_env_not_config_or_api_response() -> None:
             })
             public = config_module.public_config()
             ok("public_config has no apiKey key", "apiKey" not in public)
-            ok("public_config only reports apiKeyExists",
+            ok("public_config reports apiKeyExists for active provider",
                public.get("apiKeyExists") is True)
+            ok("public_config lists providers without keys",
+               public.get("providers") == [{
+                   "name": "deepseek", "baseUrl": "https://example.com", "model": "m",
+                   "temperature": 1.0, "apiKeyExists": True,
+               }], str(public.get("providers")))
             ok("secret not written to config.yaml",
                secret not in (base / "config.yaml").read_text(encoding="utf-8"))
-            ok("secret stored in .env",
-               secret in (base / ".env").read_text(encoding="utf-8"))
+            env_text = (base / ".env").read_text(encoding="utf-8")
+            ok("secret stored per-provider (LLM_API_KEY_DEEPSEEK)",
+               f"LLM_API_KEY_DEEPSEEK='{secret}'" in env_text, env_text)
+            ok("no bare legacy LLM_API_KEY line written",
+               "LLM_API_KEY=" not in env_text.replace("LLM_API_KEY_DEEPSEEK", ""))
 
             config_module.save_config({
                 "provider": "deepseek",
@@ -125,6 +133,69 @@ def test_api_key_lives_in_env_not_config_or_api_response() -> None:
             })
             ok("masked update keeps existing key",
                config_module.load_config().get("apiKey") == secret)
+
+
+def test_per_provider_keys_are_isolated() -> None:
+    with TemporaryDirectory() as d:
+        base = Path(d)
+        with (
+            patch.object(config_module, "SERVER_DIR", base),
+            patch.object(config_module, "CONFIG_FILE", base / "config.yaml"),
+            patch.object(config_module, "ENV_FILE", base / ".env"),
+        ):
+            config_module.save_config({"provider": "deepseek", "baseUrl": "https://a",
+                                       "model": "m", "temperature": 1.0, "apiKey": "sk-ds"})
+            config_module.save_config({"provider": "qwen", "baseUrl": "https://b",
+                                       "model": "m", "temperature": 1.0, "apiKey": "sk-qw"})
+            cfg = config_module.load_config()
+            ok("save activates the provider being saved (qwen)",
+               cfg["provider"] == "qwen" and cfg["apiKey"] == "sk-qw")
+            cfg = config_module.load_config()
+            config_module.save_config({"provider": "deepseek", "baseUrl": "https://a",
+                                       "model": "m", "temperature": 1.0})
+            ok("switching back keeps qwen key untouched",
+               config_module.load_config().get("apiKey") == "sk-ds")
+            pub = config_module.public_config()
+            by = {p["name"]: p["apiKeyExists"] for p in pub["providers"]}
+            ok("public_config shows both keys exist, keys absent",
+               by.get("deepseek") is True and by.get("qwen") is True and
+               "apiKey" not in str(pub["providers"]).lower().replace("apikeyexists", ""),
+               str(pub.get("providers")))
+            config_module.clear_provider_key("qwen")
+            pub2 = config_module.public_config()
+            by2 = {p["name"]: p["apiKeyExists"] for p in pub2["providers"]}
+            ok("clear_provider_key removes only qwen", by2.get("qwen") is False and
+               by2.get("deepseek") is True)
+
+
+def test_legacy_single_slot_key_pending_until_claimed() -> None:
+    with TemporaryDirectory() as d:
+        base = Path(d)
+        with (
+            patch.object(config_module, "SERVER_DIR", base),
+            patch.object(config_module, "CONFIG_FILE", base / "config.yaml"),
+            patch.object(config_module, "ENV_FILE", base / ".env"),
+        ):
+            # 旧单槽：yaml 顶层字段 + .env 裸 LLM_API_KEY
+            (base / "config.yaml").write_text(
+                "provider: deepseek\nbaseUrl: https://api.deepseek.com\n"
+                "model: m\ntemperature: 1.0\nbackendUrl: http://localhost:8765\n",
+                encoding="utf-8")
+            (base / ".env").write_text("LLM_API_KEY='sk-legacy'\n", encoding="utf-8")
+            pub = config_module.public_config()
+            ok("legacy bare key → legacyKeyPending=true", pub.get("legacyKeyPending") is True)
+            ok("legacy bare key not auto-attached to any provider",
+               pub.get("apiKeyExists") is False and
+               all(p["apiKeyExists"] is False for p in pub["providers"]),
+               str(pub.get("providers")))
+            # 认领：给 deepseek 存新 Key → 旧裸行删除、pending 消失
+            config_module.save_config({"provider": "deepseek", "baseUrl": "https://api.deepseek.com",
+                                       "model": "m", "temperature": 1.0, "apiKey": "sk-new"})
+            pub2 = config_module.public_config()
+            ok("claiming key clears legacy pending", pub2.get("legacyKeyPending") is False)
+            ok("new key attached to deepseek slot",
+               pub2["apiKeyExists"] is True and
+               "sk-legacy" not in (base / ".env").read_text(encoding="utf-8"))
 
 
 def test_config_endpoint_never_returns_key() -> None:
@@ -251,6 +322,8 @@ test_project_id_cannot_escape_data_dir()
 test_state_api_rejects_traversal_project_id()
 test_snapshot_id_is_never_a_path()
 test_api_key_lives_in_env_not_config_or_api_response()
+test_per_provider_keys_are_isolated()
+test_legacy_single_slot_key_pending_until_claimed()
 test_config_endpoint_never_returns_key()
 test_upload_size_limits()
 test_cross_origin_requests_rejected()

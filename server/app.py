@@ -17,7 +17,13 @@ from fastapi.responses import FileResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, Field, field_validator
 
-from config import load_config, public_config, save_config
+from config import (
+    clear_provider_key,
+    discard_legacy_key,
+    load_config,
+    public_config,
+    save_config,
+)
 from doc_extract import extract_document
 from excel_parser import parse_spreadsheet
 from lda import run_lda
@@ -167,6 +173,10 @@ class StateSave(BaseModel):
     state: dict[str, Any]
 
 
+class ProviderAction(BaseModel):
+    name: str = Field(pattern=PROJECT_ID_PATTERN)
+
+
 # ---------------------------------------------------------------------------
 # Health
 # ---------------------------------------------------------------------------
@@ -207,6 +217,23 @@ def update_config(cfg: ConfigUpdate) -> dict:
     merged.pop("apiKey", None)
     merged["apiKeyExists"] = bool(load_config().get("apiKey"))
     return merged
+
+
+@app.post("/api/config/clear-key")
+def clear_key_endpoint(a: ProviderAction) -> dict:
+    """清除指定厂商在 .env 里的 Key（多厂商配置，2026-09-03）。"""
+    try:
+        clear_provider_key(a.name)
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+    return public_config()
+
+
+@app.post("/api/config/discard-legacy")
+def discard_legacy_endpoint() -> dict:
+    """删除旧单槽遗留的裸 LLM_API_KEY 行（不自动归属任何厂商）。"""
+    discard_legacy_key()
+    return public_config()
 
 
 # ---------------------------------------------------------------------------
