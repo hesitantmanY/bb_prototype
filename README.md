@@ -54,7 +54,7 @@ python app.py
 | 厂商 | Base URL | 预填 Model 示例 |
 | --- | --- | --- |
 | DeepSeek | `https://api.deepseek.com` | `deepseek-v4-flash` |
-| 火山方舟 | `https://ark.cn-beijing.volces.com/api/v3` | `ark-code-latest` |
+| 火山方舟 Agent plan | `https://ark.cn-beijing.volces.com/api/plan/v3` | `ark-code-latest` |
 | Kimi（Moonshot） | `https://api.moonshot.cn/v1` | `kimi-k2.6` |
 | MiniMax | `https://api.minimaxi.com/v1` | `MiniMax-M3` |
 | 通义千问 | `https://dashscope.aliyuncs.com/compatible-mode` | `qwen3.6-flash` |
