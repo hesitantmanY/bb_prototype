@@ -104,7 +104,8 @@
  doubao: {
  label: '火山方舟（豆包）',
  jsonMode: 'none',
- baseUrlHint: 'https://ark.cn-beijing.volces.com/api/v3',
+ // 2026-09-03：按用户 Agent Plan 套餐端点（README 同源；/api/v3 是按量计费路径）
+ baseUrlHint: 'https://ark.cn-beijing.volces.com/api/plan/v3',
  defaultModel: 'ark-code-latest',
  models: {
  // Ark 风格端点对 response_format 400，保守置 "none"。
