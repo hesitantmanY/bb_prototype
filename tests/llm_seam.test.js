@@ -41,7 +41,7 @@ ok('proxy_llm passes opts to _proxy_gemini',
 
 // Frontend: providers.js is loaded and the JSON-mode negotiation uses it.
 ok('HTML loads lib/providers.js',
-  /<script src="lib\/providers\.js\?v=1"><\/script>/.test(htmlSrc));
+  /<script src="lib\/providers\.js\?v=\d+"><\/script>/.test(htmlSrc));
 ok('callJson negotiates mode via Providers.getMode',
   /Providers\.getMode\(provider, model\)/.test(htmlSrc));
 ok('callJson maps openai/gemini modes to response_format',
@@ -49,11 +49,11 @@ ok('callJson maps openai/gemini modes to response_format',
 
 // Frontend: AI JSON 调用与李克特解析走已加载的库（候选 1）。
 ok('HTML loads schema_check.js',
-  /<script src="lib\/schema_check\.js\?v=1"><\/script>/.test(htmlSrc));
+  /<script src="lib\/schema_check\.js\?v=\d+"><\/script>/.test(htmlSrc));
 ok('HTML loads call_json_strict.js',
-  /<script src="lib\/call_json_strict\.js\?v=1"><\/script>/.test(htmlSrc));
+  /<script src="lib\/call_json_strict\.js\?v=\d+"><\/script>/.test(htmlSrc));
 ok('HTML loads likert_parse.js',
-  /<script src="lib\/likert_parse\.js\?v=1"><\/script>/.test(htmlSrc));
+  /<script src="lib\/likert_parse\.js\?v=\d+"><\/script>/.test(htmlSrc));
 // 2026-09-03：AI 溯源徽章与山木茶事批注层随资产删除（决策：不要 AI 标记、
 // 案例只读）——反向断言锁死：被删的脚本不得重新出现在加载清单里。
 ok('HTML no longer loads deleted ai_provenance.js',

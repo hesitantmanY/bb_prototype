@@ -92,7 +92,7 @@ async function main(){
 
   // shell no longer has inline snapshot fetches
   const htmlSrc = fs.readFileSync(path.join(__dirname, '..', 'docs', 'global-brand-building.html'), 'utf8');
-  ok('HTML loads lib/archive.js', /<script src="lib\/archive\.js\?v=1"><\/script>/.test(htmlSrc));
+  ok('HTML loads lib/archive.js', /<script src="lib\/archive\.js\?v=\d+"><\/script>/.test(htmlSrc));
   ok('no inline /api/snapshots fetches remain', !/fetch\(apiUrl\('\/api\/snapshots/.test(htmlSrc));
 }
 
