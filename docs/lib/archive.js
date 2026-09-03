@@ -64,6 +64,18 @@
     }
   };
 
+  // BIZ02：案例浏览（只读）时禁止一切档案版本写操作——读列表仍可用。
+  function _locked(){
+    return !!(typeof window !== 'undefined' && window.state && window.state.meta && window.state.meta.isDemo);
+  }
+  ['create','rename','remove','restore'].forEach(k=>{
+    const fn=Archive[k];
+    Archive[k]=async function(...args){
+      if(_locked()) throw new Error('案例浏览中：不可修改档案版本');
+      return fn.apply(this, args);
+    };
+  });
+
   if(typeof window !== 'undefined') window.Archive = Archive;
   if(typeof module !== 'undefined' && module.exports) module.exports = Archive;
 })();

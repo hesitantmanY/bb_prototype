@@ -354,7 +354,7 @@ const App = {
       this.applyCaseWorks(state, loaded);
       state.meta.caseFp = this.caseFp(loaded);   // 刷新后用于检测案例数据是否更新
       state.meta.demoSnapshot=snap;
-      state.meta.isDemo=false;
+      state.meta.isDemo=true;      // BIZ02：案例=只读浏览——保存/AI/编辑控件统一闸门
       state.meta.demoCase=caseKey;
       // 2026-08-28：进入案例时清掉档案名（案例自己当档案名驱动导出）。
       state.meta.loadedFrom=null;
@@ -367,9 +367,9 @@ const App = {
         state.meta.currentStep = Work1.steps[0].id;
       }
       $('#demoBanner').classList.add('show');
-      $('#demoBannerText').textContent = '当前案例：'+(caseKey||'')+' · 可编辑可保存 · 点「退出案例」回到进入前内容';
+      $('#demoBannerText').textContent = '当前案例：'+(caseKey||'')+' · 只读浏览（可查看 / 复制文本 / 导出）· 点「退出案例」回到进入前内容';
       $('#demoBtn').textContent='退出案例';
-      document.body.classList.remove('is-demo');
+      document.body.classList.add('is-demo');   // BIZ02：steps 区全部编辑控件 inert
     }
     this.renderAll();
     this.updateSummary();

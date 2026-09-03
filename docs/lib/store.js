@@ -12,11 +12,8 @@ const Store = {
 
   save(stateObj){
     if(!stateObj) return Promise.resolve();
-    // 2026-08-26: 载入案例后可编辑可保存。isDemo 不再用于保存闸门。
-    // if(stateObj.meta.isDemo){
-    //   const ss=$('#saveStatus'); if(ss) ss.textContent='演示模式 · 不会保存';
-    //   return Promise.resolve();
-    // }
+    // 2026-09-03: 案例 = 只读浏览（决策翻转 2026-08-26 可编辑）。
+    // 保存闸门在 html saveNow 统一拦截（isDemo 时不写盘），此处不重复。
     // Serialize saves — rapid edits must not race the server.
     this._chain = this._chain.then(()=>this._doSave(stateObj)).catch(()=>{});
     return this._chain;

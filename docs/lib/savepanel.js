@@ -8,8 +8,9 @@
 
 const SavePanel = {
   open(){
-    // 2026-08-26: 载入案例后可编辑可保存。案例数据作为当前工作区持久化。
-    // if(state?.meta?.isDemo){ showToast('演示模式不保存到服务器'); return; }
+    // BIZ02：案例 = 只读浏览，版本面板一并锁住（旧注释时代用 isDemo 拦保存，
+    // 2026-08-26 移除后案例可编辑；现按决策恢复为只读）。
+    if(state?.meta?.isDemo){ showToast('案例浏览中：不可存档'); return; }
     $('#savePopup').classList.add('open');
     const inp=$('#saveName');
     inp.value='';

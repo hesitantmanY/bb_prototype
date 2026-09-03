@@ -6,7 +6,7 @@
 
 ## 方法依据
 
-Arora、Chakraborty 与 Nishimura 于 2025 年发表了《AI-Human Hybrids for Marketing Research: Leveraging Large Language Models (LLMs) as Collaborators》。该文与一家财富 500 强食品企业合作，用 GPT-4 复现了该公司 2019 年的定性深访与定量概念测试（n=605，以原始人类研究为基准），得到三个与本平台直接相关的结论。
+Arora、Chakraborty 与 Nishimura 于 2025 年发表了《AI-Human Hybrids for Marketing Research: Leveraging Large Language Models (LLMs) as Collaborators》。作者们与一家财富 500 强食品企业合作，用 GPT-4 复现了该公司 2019 年的定性深访与定量概念测试（n=605，以原始人类研究为基准），得到三个与本平台直接相关的结论。
 
 其一，人机混合优于任何单边。定性侧，人类评估者认为 LLM 生成的回答在深度与洞察性两个维度分别高出约 0.68 与 0.50 分（五点量表）；LLM 担任分析师时主题召回率达 77% 至 96%，还能发现人类遗漏的新主题；专家评委评选最佳摘要时，没有任何一位选择纯人类或纯 LLM 的版本。其二，LLM 可以低成本扮演合成受访者、访谈主持与分析师：设定样本特征、生成 persona、按提纲追问（回答质量低于阈值自动追问）、把长文本提炼为主题与摘要。本平台的合成调研与 Delphi 专家面板正是这一用法。其三，定量侧零样本 LLM 能抓住答案方向与效价，但异质性与内部一致性不足，需要用 few-shot 与 RAG 注入上下文改善。
 
@@ -16,7 +16,7 @@ Arora、Chakraborty 与 Nishimura 于 2025 年发表了《AI-Human Hybrids for M
 
 ## 架构
 
-- **前端**（`docs/`）：`global-brand-building.html` 单页 + 5 个 `workshopN.js` 工作坊模块 + `lib/` 下 21 个原生 JS 工具模块（AI 上下文、JSON 容错解析、状态持久化、版本快照、任务锁等）。无框架、无构建步骤，浏览器直接加载。
+- **前端**（`docs/`）：`global-brand-building.html` 单页 + 5 个 `workshopN.js` 工作坊模块 + `lib/` 下 20 个原生 JS 工具模块（AI 上下文、JSON 容错解析、状态持久化、版本快照、任务锁等）。无框架、无构建步骤，浏览器直接加载。
 - **案例库**（`docs/cases/`）：5 个演示案例，源数据按 `<brand>/work1-5.js + index.js` 组织，`bundle.js` 由 `scripts/build-cases-bundle.js` 生成，`loader.js` 是运行时注册表。
 - **后端**（`server/`）：FastAPI，默认 `127.0.0.1:8765`。端点：健康检查 `/api/health`、配置读写 `/api/config`、状态 `/api/state`、版本快照 `/api/snapshots`（增删/改名/恢复）、LLM 代理 `/api/llm`、LDA `/api/lda`、表格解析 `/api/parse-excel`、文档提取 `/api/extract-doc`；同时托管前端静态文件。
 - **配置与数据**：API 配置存 `server/config.yaml`，API Key 存 `server/.env`（均已 git-ignore）；工作内容存 `server/data/<project>/current.json`，版本快照存同目录 `snapshots/`。
@@ -47,10 +47,20 @@ python app.py
 
 ### 3. 配置 LLM
 
-打开页面右上角「API 设定」（齿轮）：选择提供商、Base URL、Model、API Key、温度（默认 `1.0`）。建议 DeepSeek：
+打开页面右上角「API 设定」（齿轮）：选择提供商、Base URL、Model、API Key、温度（默认 `1.0`）。切换提供商时会自动预填该厂商的官方 Base URL 与一个可用 Model（都可改）。
 
-- Base URL：`https://api.deepseek.com`
-- Model：`deepseek-chat`
+国内厂商已内置在「提供商」下拉里（预填值会随厂商迭代，README 与 `lib/providers.js` 同步维护）：
+
+| 厂商 | Base URL | 预填 Model 示例 |
+| --- | --- | --- |
+| DeepSeek | `https://api.deepseek.com` | `deepseek-v4-flash` |
+| 火山方舟 | `https://ark.cn-beijing.volces.com/api/v3` | `ark-code-latest` |
+| Kimi（Moonshot） | `https://api.moonshot.cn/v1` | `kimi-k2.6` |
+| MiniMax | `https://api.minimaxi.com/v1` | `MiniMax-M3` |
+| 通义千问 | `https://dashscope.aliyuncs.com/compatible-mode` | `qwen3.6-flash` |
+| 智谱 GLM | `https://open.bigmodel.cn/api/paas/v4` | `glm-5.3` |
+
+下拉里另有 OpenAI / Google Gemini / 其他（任意 OpenAI 兼容端点，Base URL 留空手填）。结构化字段（Delphi 权重、JSON 回填等）对豆包/Kimi/MiniMax 走"提示词要求 JSON + 容错解析"路径（这些厂商对 `response_format` 参数历史上有 400，白名单保守置关）；若你的厂商支持 JSON 模式可自行在 `lib/providers.js` 调整。
 
 配置保存到项目 `server/config.yaml` 与 `server/.env`。也可手动复制 `server/.env.example` 为 `.env` 后编辑。顶栏可随时在「API 自动 / 手动模式」间切换（独立于是否配 Key）。
 
@@ -79,7 +89,7 @@ node scripts/run-tests.js
 - **历史记录**：右上角「历史记录」列出全部版本，可一键恢复（直接载入，不做额外备份）、重命名、删除。重置、导入 .md 前会自动建「重置前 / 导入前存档」版本，都可在历史记录中回退。
 - **导入 / 导出**：「导出 MD」生成可阅读的 Markdown，文件末尾嵌入完整数据；文件名与首行标题由档案名决定（进入过某版本或案例时顶栏显示当前档案名，可用 ✎ 重命名；无档案名时回退 `brand-workshop.md`）。「导入 .md」解析该数据块并覆盖当前内容，API 配置不会被导入。
 - **语料导入（Work III）**：卖点挖掘步可上传 xlsx / xls / csv / txt，经后端解析（`/api/parse-excel`）后进入 LDA 语料列表。
-- **演示案例**：顶栏「演示案例」提供 5 个完整案例（豆芽妈妈、小镬记、问渠书院、恒锐造、毛孩子之家），覆盖母婴电商、餐饮、教培、B2B 制造、宠物服务等行业。进入即沙箱：进入前内容先存快照；看案例期间可编辑可保存（改动会存为版本），顶栏按钮变「退出案例」，点击丢弃案例数据、恢复进入前的工作区。演示模式下每个步骤顶部会显示三行批注：在分析什么 / 写时考虑 / 常见错误。
+- **演示案例**：顶栏「演示案例」提供 5 个完整案例（豆芽妈妈、小镬记、问渠书院、恒锐造、毛孩子之家），覆盖母婴电商、餐饮、教培、B2B 制造、宠物服务等行业。进入即只读沙箱：进入前内容先存快照；浏览期间编辑控件与 AI 全部禁用、不写盘（可查看 / 复制文本 / 导出 Markdown），顶栏按钮变「退出案例」，点击丢弃案例数据、恢复进入前的工作区。
 
 ## 写作辅助
 
@@ -103,7 +113,6 @@ docs/
     SCHEMA.md                          #   案例数据结构说明
   lib/
     ai_context.js                      # 全局 AI 上下文（分节 digest + 消息设置）
-    ai_provenance.js                   # AI 来源标记 + "AI" 徽章
     call_json_strict.js                # 带错误反馈重试的严格 JSON 调用
     json_extract.js                    # LLM JSON 多层容错解析
     schema_check.js                    # AI 输出结构校验
@@ -122,7 +131,6 @@ docs/
     history.js                         # 历史版本弹层
     demomenu.js                        # 案例选择菜单
     app.js                             # 应用编排（init / 导航 / 导出 / 案例切换）
-    demo_notes.js                      # 演示模式下的三行批注
   charts/ fonts/ pics/                 # 静态资源（图示 / 字体 / 截图）
 server/
   app.py                               # FastAPI 入口（全部 /api/* 端点 + 静态托管）

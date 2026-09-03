@@ -144,8 +144,9 @@ const UI = {
       });
       progress.textContent=n+'/'+checks.length;
       const allDone=n===checks.length;
-      // 演示模式下不自动折叠——让用户能看到完整的演示内容
-      const inDemo = typeof state!=='undefined' && state && state.meta && state.meta.isDemo;
+      // 案例（演示）模式下不自动折叠——让用户能看到完整的演示内容。
+      // BIZ02：isDemo 全库无 true 写入者，真实案例标记是 meta.demoCase。
+      const inDemo = typeof state!=='undefined' && state && state.meta && !!state.meta.demoCase;
       if(allDone && !card.dataset.wasDone && !inDemo){ card.classList.add('collapsed'); }
       card.dataset.wasDone=allDone?'1':'0';
       toggle.textContent=card.classList.contains('collapsed')?'展开':'收起';
@@ -160,22 +161,6 @@ const UI = {
     refresh();
     return card;
   },
-  // Demo-mode 3-line annotation (在分析什么 / 写时考虑 / 常见错误).
-  // Returns null when not in demo mode or no note exists for work+step.
-  demoNote(work, step){
-    if(typeof state==='undefined' || !state.meta || !state.meta.isDemo) return null;
-    if(typeof DemoNotes==='undefined') return null;
-    const note = DemoNotes.get(work, step);
-    if(!note) return null;
-    const row = (label, text) => el('div',{class:'demo-note-row'},
-      el('span',{class:'demo-note-label'}, label),
-      el('span',{class:'demo-note-text'}, text));
-    return el('div',{class:'demo-note'},
-      el('div',{class:'demo-note-head'}, '演示批注 · 学习这一步'),
-      row('在分析什么', note.what),
-      row('写时考虑', note.consider),
-      row('常见错误', note.mistake));
-  }
 };
 
  if(typeof window!=='undefined') window.UI = UI;

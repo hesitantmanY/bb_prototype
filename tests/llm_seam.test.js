@@ -54,8 +54,12 @@ ok('HTML loads call_json_strict.js',
   /<script src="lib\/call_json_strict\.js\?v=1"><\/script>/.test(htmlSrc));
 ok('HTML loads likert_parse.js',
   /<script src="lib\/likert_parse\.js\?v=1"><\/script>/.test(htmlSrc));
-ok('HTML loads ai_provenance.js',
-  /<script src="lib\/ai_provenance\.js\?v=1"><\/script>/.test(htmlSrc));
+// 2026-09-03：AI 溯源徽章与山木茶事批注层随资产删除（决策：不要 AI 标记、
+// 案例只读）——反向断言锁死：被删的脚本不得重新出现在加载清单里。
+ok('HTML no longer loads deleted ai_provenance.js',
+  !/<script src="lib\/ai_provenance\.js/.test(htmlSrc));
+ok('HTML no longer loads deleted demo_notes.js',
+  !/<script src="lib\/demo_notes\.js/.test(htmlSrc));
 ok('callJson delegates to CallJsonStrict.run',
   /CallJsonStrict\.run\(\{/.test(htmlSrc));
 ok('callJson keeps transport errors throwing (raw==null)',

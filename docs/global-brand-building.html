@@ -986,20 +986,44 @@ main{max-width:1320px;margin:0 auto;padding:0 40px 96px}
 .step-header{margin-bottom:32px}
 .step-header h2{font-size:2.5rem;font-weight:900;letter-spacing:-.01em}
 .step-header p{font-size:1.125rem;line-height:1.55;text-align:left;color:var(--color-ink-2)}
+/* BIZ02：案例 = 只读浏览。body.is-demo 由 App 在进入案例时挂上——
+   steps 区全部编辑控件与 AI 按钮 inert；顶栏（导出 / API 设定 / 退出案例）
+   不受影响。注意 contenteditable 禁 pointer-events 后不可选中文本，
+   复制走顶栏「导出 Markdown」。 */
 body.is-demo .chip-row input{display:none}
 body.is-demo .edit-hint{display:none}
 body.is-demo #steps1 button,
 body.is-demo #steps2 button,
 body.is-demo #steps3 button,
 body.is-demo #steps4 button,
-body.is-demo #steps5 button{
-  opacity:.4;cursor:not-allowed;pointer-events:none;transform:none;
+body.is-demo #steps5 button,
+body.is-demo #steps1 input,
+body.is-demo #steps2 input,
+body.is-demo #steps3 input,
+body.is-demo #steps4 input,
+body.is-demo #steps5 input,
+body.is-demo #steps1 textarea,
+body.is-demo #steps2 textarea,
+body.is-demo #steps3 textarea,
+body.is-demo #steps4 textarea,
+body.is-demo #steps5 textarea,
+body.is-demo #steps1 select,
+body.is-demo #steps2 select,
+body.is-demo #steps3 select,
+body.is-demo #steps4 select,
+body.is-demo #steps5 select,
+body.is-demo #steps1 [contenteditable],
+body.is-demo #steps2 [contenteditable],
+body.is-demo #steps3 [contenteditable],
+body.is-demo #steps4 [contenteditable],
+body.is-demo #steps5 [contenteditable],
+body.is-demo #steps1 svg,
+body.is-demo #steps2 svg,
+body.is-demo #steps3 svg,
+body.is-demo #steps4 svg,
+body.is-demo #steps5 svg{
+  opacity:.55;cursor:not-allowed;pointer-events:none;transform:none;
 }
-body.is-demo #steps1 button::after,
-body.is-demo #steps2 button::after,
-body.is-demo #steps3 button::after,
-body.is-demo #steps4 button::after,
-body.is-demo #steps5 button::after{display:none}
 .step-number{
   font-family:var(--font-mono);font-size:12px;letter-spacing:.22em;color:var(--color-ink-2);
   text-transform:uppercase;margin-bottom:10px;display:block;
@@ -2467,9 +2491,14 @@ body[data-w4-entry="greenfield"] .x-entry-heavy { display:block; }
       <label for="setProvider">提供商</label>
       <select id="setProvider" onchange="Settings.onProviderChange()">
         <option value="deepseek">DeepSeek</option>
-        <option value="openai">ChatGPT (OpenAI)</option>
-        <option value="gemini">Gemini</option>
-        <option value="custom">其他 (OpenAI 兼容)</option>
+        <option value="doubao">火山方舟（豆包）</option>
+        <option value="moonshot">Kimi（Moonshot）</option>
+        <option value="minimax">MiniMax</option>
+        <option value="qwen">通义千问</option>
+        <option value="zhipu">智谱 GLM</option>
+        <option value="openai">OpenAI</option>
+        <option value="gemini">Google Gemini</option>
+        <option value="custom">其他（OpenAI 兼容）</option>
       </select>
     </div>
     <div class="field">
@@ -2666,6 +2695,7 @@ function mergeWithDefaults(parsed){
 // 以及 init 里每 2 分钟的周期保存（有改动时覆盖原档案，不新建版本）。
 // 刷新/关闭时由 beforeunload 弹原生确认窗兜底。
 let dirty = false;
+let lastServerStamp = null;  // BIZ03：本页签上次写入后服务器上的 savedAt（对账基准）
 function markDirty(){
   if(!state || state.meta?.isDemo) return;
   dirty = true;
@@ -2673,9 +2703,30 @@ function markDirty(){
   if(ss) ss.textContent='未保存 · 有更改';
 }
 async function saveNow(){
+  // BIZ02：案例浏览（isDemo）为只读，任何路径都不写盘（退出案例会先清标志再保存）。
+  if(state && state.meta && state.meta.isDemo) return true;
+  // BIZ03：写前对账——另一页签/恢复操作已把服务器推到更新的版本时先问。
+  // 静默覆盖会让「恢复旧版本」几分钟后又被别页签的旧内存内容顶掉。
+  try{
+    const pid = (typeof Store!=='undefined' && Store.projectId) || 'default';
+    const cur = await (await fetch(apiUrl('/api/state')+'?project_id='+encodeURIComponent(pid))).json();
+    const serverStamp = cur && cur.meta && cur.meta.savedAt;
+    if(serverStamp && lastServerStamp && serverStamp !== lastServerStamp){
+      const go = confirm('这份档案在另一个页签（或恢复操作）中已被更新。\n\n「确定」→ 用本页内容覆盖服务器版本\n「取消」→ 放弃本页未保存改动，载入服务器最新内容');
+      if(!go){
+        dirty = false;
+        state = cur;
+        if(typeof App!=='undefined'){ App.renderAll(); App.updateSummary(); }
+        return true;
+      }
+    }
+  }catch(_){ /* 服务器不可达/首存无档案：跳过对账 */ }
   try{
     const ok = await Store.save(state);
-    if(ok) dirty=false;
+    if(ok){
+      dirty=false;
+      lastServerStamp = (state.meta && state.meta.savedAt) || null;
+    }
     return ok;
   }catch(e){
     /* 保存失败时保持 dirty，状态栏仍显示未保存 */
@@ -2685,6 +2736,22 @@ async function saveNow(){
 function autosave(){
   markDirty();
 }
+
+// BIZ08：关页/刷新前有未保存改动则尽力同步——先 sendBeacon，失败
+// （浏览器 keepalive 载荷 ~64KB 上限）再试 keepalive fetch，都失败静默，
+// 超大档案仍由 2 分钟周期保存兜底。
+window.addEventListener('pagehide', ()=>{
+  if(!dirty || !state) return;
+  try{
+    const pid = (typeof Store!=='undefined' && Store.projectId) || 'default';
+    const payload = JSON.stringify({project_id: pid, state});
+    const blob = new Blob([payload], {type:'application/json'});
+    if(!navigator.sendBeacon || !navigator.sendBeacon(apiUrl('/api/state'), blob)){
+      fetch(apiUrl('/api/state'), {method:'POST', keepalive:true,
+        headers:{'Content-Type':'application/json'}, body:payload}).catch(()=>{});
+    }
+  }catch(_){}
+});
 
 /* ============================================================
    LLM API ENGINE
@@ -2696,6 +2763,7 @@ const API = {
   // never reaches the browser. Backend returns the provider response plus
   // a normalized `_text` field with the extracted content.
   async call(messages, opts={}){
+    if(state && state.meta && state.meta.isDemo) throw new Error('案例浏览中，不可调用 AI'); // BIZ02
     const res = await fetch(apiUrl('/api/llm'), {
       method:'POST',
       headers:{'Content-Type':'application/json'},
@@ -2719,6 +2787,7 @@ const API = {
 
   // Call with JSON mode and parse. Falls back to extracting JSON from text.
   async callJson(messages, opts={}){
+    if(state && state.meta && state.meta.isDemo) throw new Error('案例浏览中，不可调用 AI'); // BIZ02
     const opts2={...opts};
     const provider=this.config().provider, model=this.config().model;
     const mode=(typeof Providers!=='undefined' && Providers.getMode)
@@ -2799,7 +2868,16 @@ const API = {
     const parseBtn = el('button',{type:'button',class:'ai-parse',onclick:()=>{
       let parsed=null;
       try{ parsed=JSON.parse(ta.value); }catch{ parsed=API.extractJson(ta.value); }
-      if(!parsed){ showToast('未能解析 JSON'); return; }
+      if(!parsed){
+        showToast('未能解析 JSON');
+        // AI08：rawOnly（纯字段目标）解析失败时也给出口——正文区保存，
+        // 与「作为文本填入」按钮同语义（onParse(null, raw) 由调用方决定落点）
+        if(opts.rawOnly){
+          pasteRow.appendChild(el('button',{type:'button',class:'ai-parse-ghost',
+            onclick:()=>onParse(null, ta.value)}, '仅保存为段落文本'));
+        }
+        return;
+      }
       onParse(parsed, ta.value);
     }}, '解析并填入');
     const pasteRow = el('div',{class:'ai-paste-row'}, ta, parseBtn);
@@ -2812,6 +2890,7 @@ const API = {
 
   // One-button AI helper with progress + manual fallback + abort.
   async aiButton(opts){
+    if(state && state.meta && state.meta.isDemo){ showToast('案例浏览中，不可用 AI'); return; } // BIZ02
     const { button, container, buildPrompt, onResult, jsonMode=true, label='用 AI 生成' } = opts;
     const useManual = state.settings.manualMode || !this.config().apiKey;
     if(useManual){
@@ -2845,8 +2924,7 @@ const API = {
 
   // ai_context.js 版按钮：ai-box = 主按键 + 「消息设置」折叠区。
   // cfg: {workId, needs, system(fn|str), instruction(fn|str), fewShotKey,
-  //       fewShotDefault, jsonMode=true, label, onResult(r,raw,mode),
-  //       aiScope（AI 溯源标记）}
+  //       fewShotDefault, jsonMode=true, label, onResult(r,raw,mode)}
   aiCtxBox(cfg){
     const box=el('div',{class:'ai-box'});
     const mid=el('div',{class:'ai-box-mid'});
@@ -2880,7 +2958,7 @@ const API = {
       await this.aiButton({
         button:btn, container:mid, buildPrompt,
         jsonMode:cfg.jsonMode!==false, label:cfg.label||'用 AI 生成',
-        aiScope:cfg.aiScope, onResult:cfg.onResult
+        onResult:cfg.onResult
       });
     });
     box.appendChild(mid);
@@ -2892,6 +2970,7 @@ const API = {
   // opts: {button, container, label, units:[{key,label,buildPrompt(fn),
   //        onResult(r,raw,mode), jsonMode}], store:{get,set} 完成单元持久化}
   async aiPipeline(opts){
+    if(state && state.meta && state.meta.isDemo){ showToast('案例浏览中，不可用 AI'); return; } // BIZ02
     const {button, container, label, units, store} = opts;
     const done = new Set(store ? (store.get()||[]) : []);
     const markDone = k => { done.add(k); if(store){ store.set([...done]); } autosave(); };
@@ -2921,10 +3000,12 @@ const API = {
             if(task.aborted || (e&&e.name==='AbortError')) break;
             showToast(label+' · 单元失败：'+e.message);
             Runner.finish();
-            // 降级手动箱：完成/跳过后从下一单元继续（新 Runner 批次）
+            // 降级手动箱：完成/跳过后从下一单元继续（新 Runner 批次）。
+            // AI04：跳过 ≠ 放弃整条流水线——跳过不 markDone，
+            // 后续单元照跑，下次运行会回到被跳过的单元。
             const ok = await this._manualUnit(container, u, () => markDone(u.key), `${label} · ${u.label}`);
             i++;
-            if(!ok || i>=units.length) return ok;
+            if(i>=units.length) return ok;
             return runBatch();
           }
           i++; task.done++;
@@ -3125,13 +3206,11 @@ var Work5={steps:[],defaultData:()=>({})};
 <!-- ============================================================
      WORKSHOP MODULES (injected below)
      ============================================================ -->
-<script src="lib/demo_notes.js?v=50007"></script>
 <script src="lib/ai_context.js?v=50002"></script>
 <script src="lib/json_extract.js?v=1"></script>
 <script src="lib/schema_check.js?v=1"></script>
 <script src="lib/call_json_strict.js?v=1"></script>
 <script src="lib/likert_parse.js?v=1"></script>
-<script src="lib/ai_provenance.js?v=1"></script>
 <script src="lib/providers.js?v=1"></script>
 <script src="lib/archive.js?v=1"></script>
 <script src="lib/runner.js?v=2"></script>
