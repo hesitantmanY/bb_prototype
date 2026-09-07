@@ -447,34 +447,67 @@ Work5.channelTreeSvg = function(structure, partners){
   const ROW_H = 34, GROUP_X = 20, GROUP_W = 180;
   const CONN_X = GROUP_X + GROUP_W + 18, ROW_X = CONN_X + 32;
   const BAR_W = 220, TEXT_X = ROW_X + BAR_W + 8;
-  const height = groups.reduce((acc,g,gi)=>{
-    const rows = (g.children||[]).length + (byGroup[gi]||[]).length;
-    return acc + Math.max(1, rows) * ROW_H;
-  }, 20) + 10;
+  // 2026-09-07（用户标注）：伙伴不再画成右侧虚线行，改为列在左侧 group 框内
+  // 标题下方（「线上下面加伙伴 / 线下下面加伙伴」）；右侧只保留渠道 bar。
+  // 伙伴名按宽度换行，框高 = max(渠道行数, 标题+伙伴行)，保证两侧都不挤。
+  const wrapLines = (text, maxUnits) => {
+    const out = [];
+    let cur = '', units = 0;
+    for(const ch of String(text)){
+      const w = /[⺀-鿿　-〿＀-￯]/.test(ch) ? 2 : 1;  // 中文/全角 2 单位
+      if(units + w > maxUnits && cur){ out.push(cur); cur = ''; units = 0; }
+      cur += ch; units += w;
+    }
+    if(cur) out.push(cur);
+    return out;
+  };
+  const MAX_UNITS = 26, PARTNER_LINE_H = 17, INNER_PAD = 12;
+  const meta = groups.map((g, gi)=>{
+    const kids = g.children || [];
+    const pns = byGroup[gi] || [];
+    // 每个伙伴先自行换行；首行带 ·、续行缩进对齐（不再重复加 ·）
+    const partnerBlocks = pns.map(pn => wrapLines(pn, MAX_UNITS));
+    const partnerLines = partnerBlocks.reduce((a, ls) => a + ls.length, 0);
+    const barsH = Math.max(1, kids.length) * ROW_H;
+    // 标题 y+22；有伙伴：标签 y+42 + 行 y+60 起；底部留 10
+    const boxH = pns.length
+      ? (50 + PARTNER_LINE_H * partnerLines + 10)
+      : 34;
+    return { g, kids, pns, partnerBlocks, gh: Math.max(barsH, boxH) };
+  });
+  const height = meta.reduce((acc, m) => acc + m.gh, 20) + meta.length * 8;
   let svg = `<svg class="chart channel-tree-svg" viewBox="0 0 ${TEXT_X + 260} ${height}" role="img" aria-label="渠道结构树">`;
   let y = 20;
-  groups.forEach((g,gi)=>{
-    const kids = g.children||[];
-    const partnerNames = byGroup[gi]||[];
-    const rows = kids.length + partnerNames.length;
-    const gh = Math.max(1, rows) * ROW_H;
+  meta.forEach(m=>{
+    const { g, kids, pns, partnerBlocks, gh } = m;
     const gy = y + gh / 2;
-    const total = Work5.groupTotal(g);
     svg += `<rect x="${GROUP_X}" y="${y}" width="${GROUP_W}" height="${gh}" fill="var(--color-paper-2)" stroke="var(--color-ink)"/>`;
-    svg += `<text x="${GROUP_X + GROUP_W / 2}" y="${gy + 4}" text-anchor="middle" font-family="Playfair Display" font-style="normal" font-size="14" fill="var(--color-ink)">${esc(g.name||'')} ${esc(String(total))}%</text>`;
+    if(pns.length){
+      // 有伙伴：标题靠上，伙伴列在下方（框内）；首行 ·、续行缩进
+      svg += `<text x="${GROUP_X + INNER_PAD}" y="${y + 22}" font-family="Playfair Display" font-style="normal" font-size="14" fill="var(--color-ink)">${esc(g.name||'')}</text>`;
+      svg += `<text x="${GROUP_X + INNER_PAD}" y="${y + 42}" font-family="JetBrains Mono" font-size="9" letter-spacing="1" fill="var(--color-ink-2)">伙伴</text>`;
+      let li = 0;
+      partnerBlocks.forEach(lines => lines.forEach((ln, j)=>{
+        const prefix = j === 0 ? '· ' : '   ';
+        svg += `<text x="${GROUP_X + INNER_PAD}" y="${y + 60 + li * PARTNER_LINE_H}" font-family="Playfair Display" font-style="normal" font-size="11" fill="var(--color-ink)">${prefix}${esc(ln)}</text>`;
+        li++;
+      }));
+    } else {
+      // 无伙伴：标题垂直居中
+      svg += `<text x="${GROUP_X + GROUP_W / 2}" y="${gy + 4}" text-anchor="middle" font-family="Playfair Display" font-style="normal" font-size="14" fill="var(--color-ink)">${esc(g.name||'')}</text>`;
+    }
+    // 2026-09-07（用户要求）：bar 行距按框高 gh 平均分布（spread），
+    // 伙伴多时框被撑高，bar 自动均匀散开铺满框高，连接线从框中心 gy 对称发散。
+    // gh >= kids*ROW_H，故 step = gh/n >= ROW_H，bar 不会重叠。
+    const step = kids.length ? gh / kids.length : ROW_H;
     kids.forEach((ch,ci)=>{
-      const cy = y + ci * ROW_H + ROW_H / 2;
+      const cy = y + step * (ci + 0.5);
       svg += `<line x1="${CONN_X}" y1="${gy}" x2="${ROW_X}" y2="${cy}" stroke="var(--color-rule)"/>`;
       const barW = Math.max(0, Math.min(1, (Number(ch.share)||0) / 100)) * BAR_W;
       svg += `<rect x="${ROW_X}" y="${cy - 10}" width="${BAR_W}" height="20" fill="var(--color-paper-2)" stroke="var(--color-rule)"/>`;
       svg += `<rect x="${ROW_X}" y="${cy - 10}" width="${barW}" height="20" fill="var(--color-ink)"/>`;
       svg += `<text x="${TEXT_X}" y="${cy + 4}" font-family="JetBrains Mono" font-size="11" fill="var(--color-ink)">${esc(ch.name||'')} ${Number(ch.share)||0}%</text>`;
     });
-    if(partnerNames.length){
-      const cy = y + kids.length * ROW_H + ROW_H / 2;
-      svg += `<line x1="${CONN_X}" y1="${gy}" x2="${ROW_X}" y2="${cy}" stroke="var(--color-ink-2)" stroke-dasharray="4 3"/>`;
-      svg += `<text x="${TEXT_X}" y="${cy + 4}" font-family="JetBrains Mono" font-size="11" fill="var(--color-ink)">◇ 伙伴：${esc(partnerNames.join('、'))}</text>`;
-    }
     y += gh + 8;
   });
   svg += '</svg>';

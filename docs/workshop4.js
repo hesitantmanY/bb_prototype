@@ -1450,7 +1450,7 @@ Work4.refreshCharts = function(stepId){
     if(kind === 'place-channel'){
       const p = state.work4.place;
       if(p.structure && p.structure.length){
-        Work4.renderChannelTree(host, p.structure);
+        Work4.renderChannelTree(host, p.structure, p.keyPartners);
         Work4.renderTreemap(host, p.structure);
       }
     } else if(kind === 'promo-budget'){
@@ -1472,7 +1472,7 @@ Work4.refreshCharts = function(stepId){
 // 三个 render helper：让 refreshCharts 和初次 render 走同一份代码（DRY）
 Work4.renderPlaceChannel = function(host, p){
   if(!p.structure || !p.structure.length) return;
-  Work4.renderChannelTree(host, p.structure);
+  Work4.renderChannelTree(host, p.structure, p.keyPartners);
   Work4.renderTreemap(host, p.structure);
 };
 Work4.renderHundredBudget = function(host, p){
@@ -1500,27 +1500,76 @@ Work4.rerender=function(id){
   Work4.renderStep(id);
 };
 
-Work4.renderChannelTree=function(container, structure){
-  const W=640,H=40+structure.reduce((a,g)=>a+Math.max(1,g.children.length)*34,0);
-  let svg=`<svg class="chart" viewBox="0 0 ${W} ${H}">`;
-  let y=20;
-  structure.forEach((grp,gi)=>{
-    const gh=Math.max(1,grp.children.length)*34;
-    const gx=80, gy=y+gh/2;
-    svg+=`<rect x="20" y="${y}" width="120" height="${gh}" fill="var(--color-paper-2)" stroke="var(--color-ink)"/>`;
-    svg+=`<text x="80" y="${gy+4}" text-anchor="middle" font-family="Playfair Display" font-style="normal" font-size="14" fill="var(--color-ink)">${esc(grp.name)}</text>`;
-    grp.children.forEach((ch,ci)=>{
-      const cy=y+ci*34+17;
-      const cw=10+String(ch.share)+4;
-      svg+=`<line x1="140" y1="${gy}" x2="220" y2="${cy}" stroke="var(--color-rule)"/>`;
-      const barW=(ch.share/100)*260;
-      svg+=`<rect x="220" y="${cy-10}" width="260" height="20" fill="var(--color-paper-2)" stroke="var(--color-rule)"/>`;
-      svg+=`<rect x="220" y="${cy-10}" width="${barW}" height="20" fill="var(--color-ink)"/>`;
-      svg+=`<text x="490" y="${cy+4}" font-family="JetBrains Mono" font-size="11" fill="var(--color-ink)">${esc(ch.name)} ${ch.share}%</text>`;
-    });
-    y+=gh+10;
+Work4.renderChannelTree=function(container, structure, partners){
+  // 2026-09-07（用户标注）：伙伴不再画成右侧虚线行，改为列在左侧 group 框内
+  // 标题下方（「线上下面加伙伴 / 线下下面加伙伴」）；右侧只保留渠道 bar。
+  // 与 work5 channelTreeSvg 同构：框加宽到 180，伙伴名按宽度换行，
+  // 框高 = max(渠道行数, 标题+伙伴行)。
+  const partnerArr = Array.isArray(partners) ? partners : [];
+  const partnerOfSide = (side) => partnerArr
+    .map(p => (p && typeof p === 'object' && !Array.isArray(p)) ? p : { name: String(p || '').trim(), side: '' })
+    .filter(p => p.name && p.side === side)
+    .map(p => p.name);
+  const ROW_H = 34, GROUP_X = 20, GROUP_W = 180, INNER_PAD = 12;
+  const CONN_X = GROUP_X + GROUP_W + 18, ROW_X = CONN_X + 32, BAR_W = 230, TEXT_X = ROW_X + BAR_W + 8;
+  const PARTNER_LINE_H = 17;
+  const wrapLines = (text, maxUnits) => {
+    const out = [];
+    let cur = '', units = 0;
+    for(const ch of String(text)){
+      const w = /[⺀-鿿　-〿＀-￯]/.test(ch) ? 2 : 1;
+      if(units + w > maxUnits && cur){ out.push(cur); cur = ''; units = 0; }
+      cur += ch; units += w;
+    }
+    if(cur) out.push(cur);
+    return out;
+  };
+  const MAX_UNITS = 26;
+  const meta = (structure||[]).map(grp => {
+    const kids = grp.children || [];
+    const pns = partnerOfSide(grp.name);
+    // 每个伙伴先自行换行；首行带 ·、续行缩进对齐
+    const partnerBlocks = pns.map(pn => wrapLines(pn, MAX_UNITS));
+    const partnerLineCount = partnerBlocks.reduce((a, ls) => a + ls.length, 0);
+    const barsH = Math.max(1, kids.length) * ROW_H;
+    const boxH = pns.length ? (50 + PARTNER_LINE_H * partnerLineCount + 10) : 34;
+    return { grp, kids, pns, partnerBlocks, gh: Math.max(barsH, boxH) };
   });
-  svg+=`</svg>`;
+  const totalH = meta.reduce((a, m) => a + m.gh, 20) + meta.length * 8;
+  const W = 640, H = totalH;
+  let svg = `<svg class="chart" viewBox="0 0 ${W} ${H}">`;
+  let y = 20;
+  meta.forEach(m => {
+    const { grp, kids, pns, partnerBlocks, gh } = m;
+    const gy = y + gh / 2;
+    svg += `<rect x="${GROUP_X}" y="${y}" width="${GROUP_W}" height="${gh}" fill="var(--color-paper-2)" stroke="var(--color-ink)"/>`;
+    if(pns.length){
+      svg += `<text x="${GROUP_X + INNER_PAD}" y="${y + 22}" font-family="Playfair Display" font-style="normal" font-size="14" fill="var(--color-ink)">${esc(grp.name)}</text>`;
+      svg += `<text x="${GROUP_X + INNER_PAD}" y="${y + 42}" font-family="JetBrains Mono" font-size="9" letter-spacing="1" fill="var(--color-ink-2)">伙伴</text>`;
+      let li = 0;
+      partnerBlocks.forEach(lines => lines.forEach((ln, j)=>{
+        const prefix = j === 0 ? '· ' : '   ';
+        svg += `<text x="${GROUP_X + INNER_PAD}" y="${y + 60 + li * PARTNER_LINE_H}" font-family="Playfair Display" font-style="normal" font-size="11" fill="var(--color-ink)">${prefix}${esc(ln)}</text>`;
+        li++;
+      }));
+    } else {
+      svg += `<text x="${GROUP_X + GROUP_W / 2}" y="${gy + 4}" text-anchor="middle" font-family="Playfair Display" font-style="normal" font-size="14" fill="var(--color-ink)">${esc(grp.name)}</text>`;
+    }
+    // 2026-09-07（用户要求）：bar 行距按框高 gh 平均分布（spread），
+    // 伙伴多时框被撑高，bar 自动均匀散开铺满框高，连接线从框中心 gy 对称发散。
+    // gh >= kids*ROW_H，故 step = gh/n >= ROW_H，bar 不会重叠。
+    const step = kids.length ? gh / kids.length : ROW_H;
+    kids.forEach((ch, ci) => {
+      const cy = y + step * (ci + 0.5);
+      svg += `<line x1="${CONN_X}" y1="${gy}" x2="${ROW_X}" y2="${cy}" stroke="var(--color-rule)"/>`;
+      const barW = (ch.share / 100) * BAR_W;
+      svg += `<rect x="${ROW_X}" y="${cy - 10}" width="${BAR_W}" height="20" fill="var(--color-paper-2)" stroke="var(--color-rule)"/>`;
+      svg += `<rect x="${ROW_X}" y="${cy - 10}" width="${barW}" height="20" fill="var(--color-ink)"/>`;
+      svg += `<text x="${TEXT_X}" y="${cy + 4}" font-family="JetBrains Mono" font-size="11" fill="var(--color-ink)">${esc(ch.name)} ${ch.share}%</text>`;
+    });
+    y += gh + 8;
+  });
+  svg += `</svg>`;
   container.insertAdjacentHTML('beforeend', svg);
 };
 
