@@ -55,7 +55,7 @@
       offlineDistrib:[],
       offlineRetail:[],
       offlineNotes:'5 家直营连锁，第一阶段不开放加盟；川渝同城为主',
-      keyPartners:['小红书养宠 KOC','抖音同城 MCN','本地宠物医院/猫舍（异业）','CKU 认证机构'],
+      keyPartners:[{name:'小红书养宠 KOC',side:'线上'},{name:'抖音同城 MCN',side:'线上'},{name:'本地宠物医院/猫舍（异业）',side:'线下'},{name:'CKU 认证机构',side:'线下'}],
       channelIncentives:'KOC 体验券+佣金 10%；MCN 坑位费 + GMV 提成 5%；异业互换优惠券',
       structure:[
         {name:'线下', children:[{name:'成都门店', share:75},{name:'重庆门店', share:20},{name:'其他川渝', share:5}]},

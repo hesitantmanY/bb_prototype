@@ -55,7 +55,7 @@
       offlineDistrib:[],
       offlineRetail:[],
       offlineNotes:'直营连锁为主，第一阶段不开放加盟',
-      keyPartners:['小红书探店 KOC','抖音同城 MCN','清远/顺德食材基地'],
+      keyPartners:[{name:'小红书探店 KOC',side:'线上'},{name:'抖音同城 MCN',side:'线上'},{name:'清远/顺德食材基地',side:'线下'}],
       channelIncentives:'KOC 免单+佣金 10%；MCN 坑位费 + GMV 提成 5%',
       structure:[
         {name:'线下', children:[{name:'广州本店', share:60},{name:'深圳新店', share:25},{name:'上海新店', share:15}]},

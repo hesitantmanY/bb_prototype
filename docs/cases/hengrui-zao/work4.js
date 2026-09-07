@@ -55,7 +55,7 @@
       offlineDistrib:['专精特新渠道商','行业展会（SIMM/CIMT）'],
       offlineRetail:[],
       offlineNotes:'直销团队+渠道商双线，第一阶段以 B 端为主',
-      keyPartners:['专精特新渠道商 10+','阿里 1688 工业品牌','SIMM/CIMT 展会'],
+      keyPartners:[{name:'专精特新渠道商 10+',side:'线下'},{name:'阿里 1688 工业品牌',side:'线上'},{name:'SIMM/CIMT 展会',side:'线下'}],
       channelIncentives:'渠道商佣金 10%+年返 2%；直销奖金按 GMV 5%',
       structure:[
         {name:'线下', children:[{name:'直销团队', share:50},{name:'专精特新渠道商', share:25},{name:'行业展会', share:25}]},

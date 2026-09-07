@@ -55,7 +55,7 @@
       offlineDistrib:[],
       offlineRetail:[],
       offlineNotes:'3 校区直营，第一阶段不开放加盟；职业课与 K12 共享校区',
-      keyPartners:['本地 3-5 家合作企业（就业内推）','小红书 KOC','抖音教育 MCN'],
+      keyPartners:[{name:'本地 3-5 家合作企业（就业内推）',side:'线下'},{name:'小红书 KOC',side:'线上'},{name:'抖音教育 MCN',side:'线上'}],
       channelIncentives:'KOC 试听课免费+佣金 10%；MCN 坑位费 + GMV 提成 5%',
       structure:[
         {name:'线下', children:[{name:'杭州校区', share:45},{name:'宁波校区', share:30},{name:'绍兴校区', share:25}]},

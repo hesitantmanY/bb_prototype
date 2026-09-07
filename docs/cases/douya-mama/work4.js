@@ -54,7 +54,7 @@
       offlineDistrib:['精品超市'],
       offlineRetail:[],
       offlineNotes:'第一年以线上为主，线下仅做品牌展示',
-      keyPartners:['小红书 KOC','儿科医生顾问','抖音直播 MCN'],
+      keyPartners:[{name:'小红书 KOC',side:'线上'},{name:'儿科医生顾问',side:'线下'},{name:'抖音直播 MCN',side:'线上'}],
       channelIncentives:'KOC 寄送样品+佣金 15%；MCN 直播坑位费 + GMV 提成 5%',
       structure:[
         {name:'线上', children:[{name:'淘宝', share:55},{name:'抖音', share:25},{name:'其他', share:20}]}

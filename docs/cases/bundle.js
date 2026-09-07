@@ -606,7 +606,7 @@
       offlineDistrib:['精品超市'],
       offlineRetail:[],
       offlineNotes:'第一年以线上为主，线下仅做品牌展示',
-      keyPartners:['小红书 KOC','儿科医生顾问','抖音直播 MCN'],
+      keyPartners:[{name:'小红书 KOC',side:'线上'},{name:'儿科医生顾问',side:'线下'},{name:'抖音直播 MCN',side:'线上'}],
       channelIncentives:'KOC 寄送样品+佣金 15%；MCN 直播坑位费 + GMV 提成 5%',
       structure:[
         {name:'线上', children:[{name:'淘宝', share:55},{name:'抖音', share:25},{name:'其他', share:20}]}
@@ -1582,7 +1582,7 @@
       offlineDistrib:[],
       offlineRetail:[],
       offlineNotes:'直营连锁为主，第一阶段不开放加盟',
-      keyPartners:['小红书探店 KOC','抖音同城 MCN','清远/顺德食材基地'],
+      keyPartners:[{name:'小红书探店 KOC',side:'线上'},{name:'抖音同城 MCN',side:'线上'},{name:'清远/顺德食材基地',side:'线下'}],
       channelIncentives:'KOC 免单+佣金 10%；MCN 坑位费 + GMV 提成 5%',
       structure:[
         {name:'线下', children:[{name:'广州本店', share:60},{name:'深圳新店', share:25},{name:'上海新店', share:15}]},
@@ -2558,7 +2558,7 @@
       offlineDistrib:[],
       offlineRetail:[],
       offlineNotes:'3 校区直营，第一阶段不开放加盟；职业课与 K12 共享校区',
-      keyPartners:['本地 3-5 家合作企业（就业内推）','小红书 KOC','抖音教育 MCN'],
+      keyPartners:[{name:'本地 3-5 家合作企业（就业内推）',side:'线下'},{name:'小红书 KOC',side:'线上'},{name:'抖音教育 MCN',side:'线上'}],
       channelIncentives:'KOC 试听课免费+佣金 10%；MCN 坑位费 + GMV 提成 5%',
       structure:[
         {name:'线下', children:[{name:'杭州校区', share:45},{name:'宁波校区', share:30},{name:'绍兴校区', share:25}]},
@@ -3538,7 +3538,7 @@
       offlineDistrib:['专精特新渠道商','行业展会（SIMM/CIMT）'],
       offlineRetail:[],
       offlineNotes:'直销团队+渠道商双线，第一阶段以 B 端为主',
-      keyPartners:['专精特新渠道商 10+','阿里 1688 工业品牌','SIMM/CIMT 展会'],
+      keyPartners:[{name:'专精特新渠道商 10+',side:'线下'},{name:'阿里 1688 工业品牌',side:'线上'},{name:'SIMM/CIMT 展会',side:'线下'}],
       channelIncentives:'渠道商佣金 10%+年返 2%；直销奖金按 GMV 5%',
       structure:[
         {name:'线下', children:[{name:'直销团队', share:50},{name:'专精特新渠道商', share:25},{name:'行业展会', share:25}]},
@@ -4516,7 +4516,7 @@
       offlineDistrib:[],
       offlineRetail:[],
       offlineNotes:'5 家直营连锁，第一阶段不开放加盟；川渝同城为主',
-      keyPartners:['小红书养宠 KOC','抖音同城 MCN','本地宠物医院/猫舍（异业）','CKU 认证机构'],
+      keyPartners:[{name:'小红书养宠 KOC',side:'线上'},{name:'抖音同城 MCN',side:'线上'},{name:'本地宠物医院/猫舍（异业）',side:'线下'},{name:'CKU 认证机构',side:'线下'}],
       channelIncentives:'KOC 体验券+佣金 10%；MCN 坑位费 + GMV 提成 5%；异业互换优惠券',
       structure:[
         {name:'线下', children:[{name:'成都门店', share:75},{name:'重庆门店', share:20},{name:'其他川渝', share:5}]},

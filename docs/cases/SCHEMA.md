@@ -94,7 +94,8 @@ one sub-field filled). The exact list per work:
 - `route`: `{scope, oemType, entryMode, light[], politicalPower}`
 - `product`: `{name, description, coreDifferentiators[], physicalFeatures, serviceOffering, technologyMoat, skus[], businessType, certifications, localization, serviceLocalization, people, process, physicalEvidence}`
 - `price`: `{strategy, strategyNote, tiers[], channelPricing[], promotions[], competitorPrices, ppp, pricingNumbers, fxSensitivity}`
-- `place`: `{onlineSelf[], onlineThird[], onlineNotes, offlineDirect[], offlineDistrib[], offlineRetail[], offlineNotes, keyPartners[], channelIncentives, structure[], localChannelRelations}`
+- `place`: `{onlineSelf[], onlineThird[], onlineNotes, offlineDirect[], offlineDistrib[], offlineRetail[], offlineNotes, keyPartners[{name, side}], channelIncentives, structure[], localChannelRelations}`
+  （2026-09-07 起 `keyPartners` 为对象数组，`side` 枚举 线上/线下；案例源数据必须写死 side）
 - `promotion`: `{advertising[], pr[], salesPromotion[], crm{tool,membership,repurchase,notes}, contentStrategy, theme, context, taboos, kolTiers, language}`
 
 ### work5 (策划书) — 2026-09-01 契约（封面/摘要/参考文献已删除）
