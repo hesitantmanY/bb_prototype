@@ -5,6 +5,8 @@
    - 删封面/摘要/参考文献与全部眉标；编辑正文满内容列
    - 第 3 章合并市场选择与定位（矩阵→决策卡→痛点→卖点→STP）
    - SWOT/4C 进入即 AI 预生成（仅空时）；4P 摘要表（IEEE 风格）+ 预算横条图
+   - 第 4 章：4.1 渠道路径 / 4.2 4P（4.2.1 摘要表、4.2.2 树图、4.2.3 媒介预算）
+     / 4.3 4C / 4.4 反应机制（W1 指标 Δ 同步 + 块内 AI 起草，2026-09-07）
    - CSS 由 global-brand-building.html <link> 引入，不再 JS 注入
      （重复注入曾致无版本号缓存压住新样式，2026-09-01 根因修复）
    ============================================================ */
@@ -22,6 +24,7 @@ Work5.defaultData = () => ({
   ch3_strategy: { segmentation:'', targeting:'', positioning:'' },
   ch4_mix: { route:'', product:'', price:'', place:'', promotion:'',
              customerValue:'', customerCost:'', convenience:'', communication:'',
+             reactionMechanism:'',
              pTable:{ product:{core:'',actions:'',nums:''}, price:{core:'',actions:'',nums:''},
                       place:{core:'',actions:'',nums:''}, promotion:{core:'',actions:'',nums:''} } },
   ch5_outlook:'',
@@ -174,36 +177,38 @@ Work5.renderStep = function(id){
   // ---------- 4 营销组合 ----------
   sec.appendChild(Work5.chapter('4','营销组合', body=>{
     const m=state.work5.ch4_mix;
-    body.appendChild(Work5.provenance(4,'出海路径 · 4P · 4C'));
+    body.appendChild(Work5.provenance(4,'渠道路径 · 4P · 4C · 反应机制'));
     body.appendChild(el('div',{class:'ai-actions'},
       el('button',{class:'ghost small',onclick:()=>Work5.import4P()},(m.product?'重新导入':'从 Work 4 导入')),
       el('button',{class:'ghost small',onclick:e=>Work5.aiPolish4P(e.currentTarget)},'AI 润色 4P（保持结构）')
     ));
 
-    body.appendChild(Work5.subhead('4.1','增长路径'));
+    body.appendChild(Work5.subhead('4.1','渠道路径'));
     body.appendChild(el('div',{class:'chapter-text',contenteditable:'true',
       oninput:e=>{m.route=Work5.readEd(e.target);autosave();}},
       m.route||'〔点击此处输入——模式/路径/节奏……〕'));
 
     body.appendChild(Work5.subhead('4.2','营销组合 4P'));
+    body.appendChild(Work5.subhead('4.2.1','4P 摘要表'));
     body.appendChild(el('div',{class:'ai-actions'},
       el('button',{class:'ghost small',onclick:e=>Work5.aiSummary4P(e.currentTarget)},(Work5._pTableHas()?'重新生成 4P 表':'AI 总结 4P 表'))
     ));
     Work5.fourPTableBlock(body);
-    // 原 4P 全文：默认折叠（打印/导出全量展开）
+
+    body.appendChild(Work5.subhead('4.2.2','渠道结构'));
+    Work5.channelBlock(body);
+
+    body.appendChild(Work5.subhead('4.2.3','媒介预算构成'));
+    Work5.budgetBarBlock(body);
+
+    // 4P 详述不占编号：默认折叠（打印/导出全量展开）
     body.appendChild(Work5.detail('4P 详述（可编辑）',
       ...[['product','产品'],['price','价格'],['place','渠道'],['promotion','促销']].map(([k,zh])=>
         el('div',{class:'chapter-text',contenteditable:'true',
           oninput:e=>{m[k]=Work5.readEd(e.target);autosave();}},
           m[k]||('〔'+zh+'——点击此处输入……〕')))));
 
-    body.appendChild(Work5.subhead('4.3','渠道结构'));
-    Work5.channelBlock(body);
-
-    body.appendChild(Work5.subhead('4.4','媒介预算构成'));
-    Work5.budgetBarBlock(body);
-
-    body.appendChild(Work5.subhead('4.5','4C：客户价值 / 成本 / 便利 / 沟通'));
+    body.appendChild(Work5.subhead('4.3','4C：客户价值 / 成本 / 便利 / 沟通'));
     body.appendChild(el('div',{class:'ai-actions'},
       el('button',{class:'ghost small',onclick:e=>Work5.convert4C(e.currentTarget)},(Work5._fourCEmpty()?'AI 生成 4C':'重新生成 4C'))
     ));
@@ -221,6 +226,9 @@ Work5.renderStep = function(id){
       ));
     });
     body.appendChild(cGrid);
+
+    body.appendChild(Work5.subhead('4.4','反应机制'));
+    Work5.reactionBlock(body);
   }));
 
   // ---------- 5 总结与展望 ----------
@@ -401,7 +409,77 @@ Work5.painMapBlock = function(container){
   container.appendChild(Work5.syncedBadge(3));
 };
 
-// W4 渠道结构：结构树 + 关键伙伴
+// W4 渠道结构：G7 树图单载体（结构 + 关键伙伴）+ 树图下执行机制文字
+Work5.groupTotal = function(g){
+  return (g && Array.isArray(g.children) ? g.children : [])
+    .reduce((s,c)=>s+(Number(c.share)||0),0);
+};
+Work5.partnerName = function(kp){
+  if(kp && typeof kp === 'object' && !Array.isArray(kp)) return String(kp.name==null?'':kp.name).trim();
+  return String(kp==null?'':kp).trim();
+};
+Work5.partnerSide = function(kp){
+  if(kp && typeof kp === 'object' && !Array.isArray(kp)) return (kp.side==='线上'||kp.side==='线下') ? kp.side : '';
+  return '';
+};
+// 展示层按位置挂伙伴：线上 → structure[0]、线下 → structure[1]（ticket 01-b）。
+// 前置：Work4.migrations 已把反序 [线下,线上] 归位、单组结构补位（04 票实现承接），
+// 组缺失只是防御路径——伙伴不丢失，进“未挂载”兜底行。
+Work5.channelTreeSvg = function(structure, partners){
+  const groups = (structure||[]).filter(g => g && typeof g === 'object');
+  const byGroup = groups.map(()=>[]);
+  const unclassified = [];
+  const unmounted = [];
+  (partners||[]).forEach(kp=>{
+    const name = Work5.partnerName(kp);
+    if(!name) return;
+    const side = Work5.partnerSide(kp);
+    if(side === '线上'){
+      if(groups[0]) byGroup[0].push(name);
+      else unmounted.push(name);
+    } else if(side === '线下'){
+      if(groups[1]) byGroup[1].push(name);
+      else unmounted.push(name);
+    } else {
+      unclassified.push(name);
+    }
+  });
+  const ROW_H = 34, GROUP_X = 20, GROUP_W = 180;
+  const CONN_X = GROUP_X + GROUP_W + 18, ROW_X = CONN_X + 32;
+  const BAR_W = 220, TEXT_X = ROW_X + BAR_W + 8;
+  const height = groups.reduce((acc,g,gi)=>{
+    const rows = (g.children||[]).length + (byGroup[gi]||[]).length;
+    return acc + Math.max(1, rows) * ROW_H;
+  }, 20) + 10;
+  let svg = `<svg class="chart channel-tree-svg" viewBox="0 0 ${TEXT_X + 260} ${height}" role="img" aria-label="渠道结构树">`;
+  let y = 20;
+  groups.forEach((g,gi)=>{
+    const kids = g.children||[];
+    const partnerNames = byGroup[gi]||[];
+    const rows = kids.length + partnerNames.length;
+    const gh = Math.max(1, rows) * ROW_H;
+    const gy = y + gh / 2;
+    const total = Work5.groupTotal(g);
+    svg += `<rect x="${GROUP_X}" y="${y}" width="${GROUP_W}" height="${gh}" fill="var(--color-paper-2)" stroke="var(--color-ink)"/>`;
+    svg += `<text x="${GROUP_X + GROUP_W / 2}" y="${gy + 4}" text-anchor="middle" font-family="Playfair Display" font-style="normal" font-size="14" fill="var(--color-ink)">${esc(g.name||'')} ${esc(String(total))}%</text>`;
+    kids.forEach((ch,ci)=>{
+      const cy = y + ci * ROW_H + ROW_H / 2;
+      svg += `<line x1="${CONN_X}" y1="${gy}" x2="${ROW_X}" y2="${cy}" stroke="var(--color-rule)"/>`;
+      const barW = Math.max(0, Math.min(1, (Number(ch.share)||0) / 100)) * BAR_W;
+      svg += `<rect x="${ROW_X}" y="${cy - 10}" width="${BAR_W}" height="20" fill="var(--color-paper-2)" stroke="var(--color-rule)"/>`;
+      svg += `<rect x="${ROW_X}" y="${cy - 10}" width="${barW}" height="20" fill="var(--color-ink)"/>`;
+      svg += `<text x="${TEXT_X}" y="${cy + 4}" font-family="JetBrains Mono" font-size="11" fill="var(--color-ink)">${esc(ch.name||'')} ${Number(ch.share)||0}%</text>`;
+    });
+    if(partnerNames.length){
+      const cy = y + kids.length * ROW_H + ROW_H / 2;
+      svg += `<line x1="${CONN_X}" y1="${gy}" x2="${ROW_X}" y2="${cy}" stroke="var(--color-ink-2)" stroke-dasharray="4 3"/>`;
+      svg += `<text x="${TEXT_X}" y="${cy + 4}" font-family="JetBrains Mono" font-size="11" fill="var(--color-ink)">◇ 伙伴：${esc(partnerNames.join('、'))}</text>`;
+    }
+    y += gh + 8;
+  });
+  svg += '</svg>';
+  return svg;
+};
 Work5.channelBlock = function(container){
   const p=((state&&state.work4)||{}).place||{};
   const struct=p.structure||[], partners=p.keyPartners||[];
@@ -410,13 +488,41 @@ Work5.channelBlock = function(container){
       el('button',{class:'ghost small',onclick:()=>{ if(typeof App!=='undefined'&&App.goWork) App.goWork(4); }},'去 Work 4 完成 →')));
     return;
   }
+  if(!struct.length){
+    container.appendChild(el('div',{class:'warning'},'渠道结构尚未生成，先去 Work4 完成渠道步',
+      el('button',{class:'ghost small',onclick:()=>{ if(typeof App!=='undefined'&&App.goWork) App.goWork(4); }},'去 Work 4 完成 →')));
+    return;
+  }
   const plate=el('section',{class:'plate'});
-  plate.appendChild(el('span',{class:'plate-label'},'E4 · 渠道结构 · 结构树 + 关键伙伴'));
-  struct.forEach(g=>{
-    const kids=(g.children||[]).map(c=>c.name+((c.share!=null)?(' '+c.share+'%'):'')).join('、');
-    plate.appendChild(el('div',{class:'evidence-line'},'· '+(g.name||'')+(kids?('：'+kids):'')));
+  plate.appendChild(el('span',{class:'plate-label'},'G7 · TREE LR · 渠道结构 + 关键伙伴'));
+  const treeHost=el('div',{class:'channel-tree'});
+  treeHost.innerHTML=Work5.channelTreeSvg(struct, partners);
+  plate.appendChild(treeHost);
+  const unclassified=[];
+  const unmounted=[];
+  (partners||[]).forEach(kp=>{
+    const name=Work5.partnerName(kp);
+    if(!name) return;
+    const side=Work5.partnerSide(kp);
+    if(side==='线上'&&!struct[0]) unmounted.push(name);
+    else if(side==='线下'&&!struct[1]) unmounted.push(name);
+    else if(!side) unclassified.push(name);
   });
-  partners.forEach(kp=>plate.appendChild(el('div',{class:'evidence-line'},'· 关键伙伴：'+kp)));
+  if(unclassified.length){
+    plate.appendChild(el('div',{class:'evidence-line channel-hint'},'◇ 未分类伙伴：'+unclassified.join('、')+' — 回 Work4 标注线上/线下'));
+  }
+  if(unmounted.length){
+    plate.appendChild(el('div',{class:'evidence-line channel-hint'},'◇ 未挂载伙伴：'+unmounted.join('、')+' — 回 Work4 补齐对应渠道组'));
+  }
+  const mech=[];
+  if((p.channelIncentives||'').trim()) mech.push('渠道激励：'+p.channelIncentives.trim());
+  if((p.localChannelRelations||'').trim()) mech.push('本地渠道关系：'+p.localChannelRelations.trim());
+  if(mech.length){
+    const mechBlock=el('div',{class:'channel-mech'});
+    mechBlock.appendChild(el('div',{class:'plate-label'},'执行机制'));
+    mech.forEach(line=>mechBlock.appendChild(el('div',{class:'evidence-line'},line)));
+    plate.appendChild(mechBlock);
+  }
   container.appendChild(plate);
   container.appendChild(Work5.syncedBadge(4));
 };
@@ -636,12 +742,46 @@ Work5.channelMd = function(){
   const p=((state&&state.work4)||{}).place||{};
   const struct=p.structure||[], partners=p.keyPartners||[];
   if(!struct.length&&!partners.length) return '';
-  const lines=['### 渠道结构'];
-  struct.forEach(g=>{
-    const kids=(g.children||[]).map(c=>c.name+((c.share!=null)?(' '+c.share+'%'):'')).join('、');
-    lines.push('- '+(g.name||'')+(kids?('：'+kids):''));
+  const lines=[];
+  if(!struct.length){
+    lines.push('- 渠道结构尚未生成，先去 Work4 完成渠道步');
+    return lines.join('\n');
+  }
+  const byGroup = struct.map(()=>[]);
+  const unclassified=[], unmounted=[];
+  (partners||[]).forEach(kp=>{
+    const name=Work5.partnerName(kp);
+    if(!name) return;
+    const side=Work5.partnerSide(kp);
+    if(side==='线上'){ if(struct[0]) byGroup[0].push(name); else unmounted.push(name); }
+    else if(side==='线下'){ if(struct[1]) byGroup[1].push(name); else unmounted.push(name); }
+    else unclassified.push(name);
   });
-  partners.forEach(kp=>lines.push('- 关键伙伴：'+kp));
+  struct.forEach((g,gi)=>{
+    const total=Work5.groupTotal(g);
+    lines.push('- '+(g.name||'')+'（'+total+'%）');
+    (g.children||[]).forEach(c=>{
+      lines.push('  - '+(c.name||'')+' '+(Number(c.share)||0)+'%');
+    });
+    if((byGroup[gi]||[]).length){
+      lines.push('  - ◇ 伙伴：'+byGroup[gi].join('、'));
+    }
+  });
+  if(unmounted.length){
+    lines.push('- ◇ 未挂载伙伴：'+unmounted.join('、')+' — 回 Work4 补齐对应渠道组');
+  }
+  if(unclassified.length){
+    lines.push('- ◇ 未分类伙伴：'+unclassified.join('、')+' — 回 Work4 标注线上/线下');
+  }
+  const pushBlock=(label,value)=>{
+    const segs=String(value||'').trim().split(/\r?\n/).filter(Boolean);
+    if(!segs.length) return;
+    lines.push('- '+label+'：'+segs[0]);
+    segs.slice(1).forEach(s=>lines.push('  '+s));
+  };
+  pushBlock('渠道激励', p.channelIncentives);
+  pushBlock('本地渠道关系', p.localChannelRelations);
+  lines.push('（渠道结构图见应用内视图）');
   return lines.join('\n');
 };
 Work5.weightsMd = function(){
@@ -846,6 +986,25 @@ Work5.structureP=function(key){
   if(!String(base||'').trim()){
     const m=(state&&state.work5&&state.work5.ch4_mix)||{};
     base=m[key]||'';
+  }
+  if(key==='place'){
+    // 00 号票 (b)：渠道激励 + 本地渠道关系升入 4.2.2 树图下方执行机制，
+    // 不再留在 4P 折叠详述里（summaryText 仍保留，Work4 自身导出不受影响）。
+    const dropKeys=['渠道激励','本地渠道关系'];
+    const FIELD_HEAD=/^(线上自营|第三方平台|线下直营|经销商|KA|关键伙伴|本地渠道关系|渠道激励|渠道结构)：/;
+    const lines=String(base||'').split(/\r?\n/);
+    const kept=[];
+    let dropping=false;
+    lines.forEach(line=>{
+      const m=String(line).trim().match(FIELD_HEAD);
+      if(m){
+        dropping=dropKeys.includes(m[1]);
+        if(!dropping) kept.push(line);
+        return;
+      }
+      if(!dropping) kept.push(line);
+    });
+    base=kept.join('\n');
   }
   return Work5.normalizeBullets(base);
 };
@@ -1109,6 +1268,101 @@ Work5.convert4C=async function(button){
   });
 };
 
+/* ---------- 4.4 反应机制（2026-09-07 新节） ----------
+   同步区块直读 state.work1 指标 Δ（与表 1-1 同源），只取偏差最大的 3 项；
+   AI 起草只针对块内按钮，不进顶部一键汇总。 */
+Work5.w1DeltaRows=function(limit){
+  const dims=(((state&&state.work1)||{}).metrics||{}).dimensions||[];
+  const rows=[];
+  dims.forEach(d=>{
+    (d.secondaries||[]).forEach(s2=>{
+      if(s2.selfScore==null || s2.actual==null) return;
+      rows.push({
+        dim:d.name||'',
+        name:s2.name||'',
+        self:s2.selfScore,
+        actual:s2.actual,
+        delta:s2.actual-s2.selfScore
+      });
+    });
+  });
+  rows.sort((a,b)=>Math.abs(b.delta)-Math.abs(a.delta));
+  return typeof limit==='number' ? rows.slice(0,limit) : rows;
+};
+Work5._reactionEmpty=function(){
+  const m=(state&&state.work5&&state.work5.ch4_mix)||{};
+  return !(m.reactionMechanism||'').trim();
+};
+Work5.reactionBlock=function(container){
+  const m=state.work5.ch4_mix||(state.work5.ch4_mix={});
+  if(!m.reactionMechanism) m.reactionMechanism='';
+  const rows=Work5.w1DeltaRows(3);
+  if(!rows.length){
+    container.appendChild(el('div',{class:'warning'},
+      'Work 1 尚未完成实测调研，先去 Work 1 完成调研后再起草反应机制。',
+      el('button',{class:'ghost small',onclick:()=>{ if(typeof App!=='undefined'&&App.goWork) App.goWork(1); }},'去 Work 1 完成 →')));
+  } else {
+    const plate=el('section',{class:'plate'});
+    plate.appendChild(el('span',{class:'plate-label'},'反应机制 · W1 指标 Δ（偏差最大 3 项）'));
+    rows.forEach(r=>{
+      const fmt=v=>(v==null)?'—':String(Math.round(v*100)/100);
+      plate.appendChild(el('div',{class:'evidence-line'},
+        (r.dim||'—')+' · '+(r.name||'—')+'：自评 '+fmt(r.self)+' → 实测 '+fmt(r.actual)
+        +'（Δ '+(r.delta>0?'+':'')+r.delta.toFixed(1)+'）'));
+    });
+    container.appendChild(plate);
+  }
+  const btn=el('button',{class:'ghost small'+(rows.length?'':' is-disabled'),disabled:!rows.length},
+    Work5._reactionEmpty() ? 'AI 起草反应机制' : '重新生成反应机制');
+  if(rows.length) btn.addEventListener('click',()=>Work5.aiReaction(btn));
+  container.appendChild(el('div',{class:'ai-actions'},btn));
+  container.appendChild(el('div',{class:'chapter-text',contenteditable:'true',
+    oninput:e=>{m.reactionMechanism=Work5.readEd(e.target);autosave();}},
+    m.reactionMechanism||'〔点击此处输入或点上方 AI 起草——针对认知断点给出监测与反应机制……〕'));
+};
+Work5._genReaction=async function(signal){
+  const rows=Work5.w1DeltaRows(3);
+  if(!rows.length) return null;
+  const m=state.work5.ch4_mix;
+  const fmt=v=>String(Math.round(v*100)/100);
+  const sys='你是品牌策划顾问。基于品牌资产自评与实测的偏差，为偏差最大的指标设计反应机制：给出监测指标、触发阈值与响应动作，每项一行要点，直接给事实和数字。'+Work5._humanRule;
+  const user='SBU：'+(((state.work1||{}).sbu||{}).name||'')
+    +'\n\n指标 Δ（实测 − 自评，偏差最大 3 项）：\n'
+    +rows.map(r=>`- ${r.dim||''} · ${r.name||''}：自评 ${fmt(r.self)} → 实测 ${fmt(r.actual)}（Δ ${r.delta>0?'+':''}${r.delta.toFixed(1)}）`).join('\n');
+  const text=await API.call(Work5._msgs(sys,user,['sbu','positioning','metrics']),{signal});
+  if(text){
+    m.reactionMechanism=Work5.normalizeBullets(text);
+    return text;
+  }
+  return null;
+};
+Work5.aiReaction=async function(button){
+  return Work5._run(button,'反应机制', async signal=>{
+    const r=await Work5._genReaction(signal);
+    if(r){ autosave(); Work5.rerender('plan'); showToast('已起草反应机制'); }
+  });
+};
+// 4.4 导出与视图同构：Δ 同步读数 + 块内成稿正文。
+Work5.reactionMd=function(){
+  const m=(state&&state.work5&&state.work5.ch4_mix)||{};
+  const rows=Work5.w1DeltaRows(3);
+  const lines=[];
+  if(rows.length){
+    lines.push('W1 指标 Δ（偏差最大 3 项）');
+    rows.forEach(r=>{
+      const fmt=v=>String(Math.round(v*100)/100);
+      lines.push('- '+(r.dim||'—')+' · '+(r.name||'—')+'：自评 '+fmt(r.self)+' → 实测 '+fmt(r.actual)
+        +'（Δ '+(r.delta>0?'+':'')+r.delta.toFixed(1)+'）');
+    });
+  }
+  const body=(m.reactionMechanism||'').trim();
+  if(body) lines.push(body);
+  else lines.push(rows.length
+    ? '（未生成：在 4.4 节点“AI 起草反应机制”）'
+    : '（Work 1 尚未完成实测调研，无法起草反应机制）');
+  return lines.join('\n');
+};
+
 /* ---------- 4P 摘要表（2026-09-01 决策 4：IEEE 风格表 + AI 总结） ---------- */
 // 幂等补齐 pTable（旧存档无此字段；嵌套合并，符合 AGENTS.md 迁移约定）
 Work5.healPTable=function(){
@@ -1323,20 +1577,28 @@ Work5.exportMd = function(){
         '#### 目标 T\n'+(s3.targeting||'（待完成）'),
         '#### 定位 P\n'+(s3.positioning||'（待完成）'))),
     part('## 4 营销组合（来自 Work 4）',
-      part('### 4.1 增长路径', mix.route||'（待完成）'),
-      part('### 4.2 4P 摘要表', tblMd||'（未生成：在 4.2 节点「AI 总结 4P 表」）',
-        '### 4.2.1 4P 详述',
-        '#### 产品\n'+(mix.product||'（待完成）'),
-        '#### 价格\n'+(mix.price||'（待完成）'),
-        '#### 渠道\n'+(mix.place||'（待完成）'),
-        '#### 促销\n'+(mix.promotion||'（待完成）')),
-      part('### 4.3 渠道结构', c4||'（Work 4 尚未完成渠道结构）'),
-      part('### 4.4 媒介预算构成', m4||'（Work 4 尚未完成媒介预算组合）'),
-      part('### 4.5 4C',
+      part('### 4.1 渠道路径', mix.route||'（待完成）'),
+      part('### 4.2 营销组合 4P',
+        part('### 4.2.1 4P 摘要表', tblMd||'（未生成：在 4.2.1 节点“AI 总结 4P 表”）'),
+        part('### 4.2.2 渠道结构', c4||'（Work 4 尚未完成渠道结构）'),
+        part('### 4.2.3 媒介预算构成', m4||'（Work 4 尚未完成媒介预算组合）'),
+        part('### 4P 详述',
+          '#### 产品\n'+(mix.product||'（待完成）'),
+          '#### 价格\n'+(mix.price||'（待完成）'),
+          '#### 渠道\n'+(mix.place||'（待完成）'),
+          '#### 促销\n'+(mix.promotion||'（待完成）')
+        )
+      ),
+      part('### 4.3 4C',
         '- **客户价值**：'+(mix.customerValue||'（待生成）'),
         '- **客户成本**：'+(mix.customerCost||'（待生成）'),
         '- **客户便利**：'+(mix.convenience||'（待生成）'),
-        '- **客户沟通**：'+(mix.communication||'（待生成）'))),
+        '- **客户沟通**：'+(mix.communication||'（待生成）')
+      ),
+      part('### 4.4 反应机制',
+        Work5.reactionMd()
+      )
+    ),
     part('## 5 总结与展望', w.ch5_outlook||'（待完成）')
   );
 };

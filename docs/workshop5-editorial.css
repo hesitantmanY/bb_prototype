@@ -282,6 +282,17 @@
 #steps5 .budget-val{ font-family: var(--font-mono); font-size: 12px; color: var(--color-ink-2); text-align: right; }
 #steps5 .budget-note{ font-size: 12px; line-height: 1.5; color: var(--color-ink-2); padding: 0 0 6px; margin-left: calc(9em + 12px); }
 
+/* ----- 4.2.2 渠道结构 G7 树图（单载体：结构 + 关键伙伴） ----- */
+#steps5 .channel-tree{ margin: 0 0 10px; }
+#steps5 .channel-tree svg{ display:block; width:100%; height:auto; background:var(--color-paper); }
+#steps5 .channel-hint{ font-size:.9375rem; color:var(--color-ink-2); }
+#steps5 .channel-mech{ margin-top:14px; padding-top:12px; border-top:1px solid var(--color-rule); }
+#steps5 .channel-mech .plate-label{ display:block; margin-bottom:8px; }
+
+/* ----- 4.4 反应机制：只读 Δ 读数 + 块内 AI 起草 ----- */
+#steps5 .reaction-rows{ margin: 2px 0 0; }
+#steps5 button:disabled{ opacity:.45; cursor:not-allowed; }
+
 /* ----- CHAPTER TEXT（正文：body 字体、满列宽、pre-wrap） ----- */
 #steps5 .chapter-text{
   font-family: var(--font-body);

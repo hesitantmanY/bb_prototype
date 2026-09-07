@@ -66,6 +66,19 @@ async function main(){
     ok('compose4P 走 structureP 结构化', product.includes('产品名：奶粉') && product.includes('· 差异化甲'));
   }
 
+  // 3b. place 详述：渠道激励 / 本地渠道关系已升入 4.2.2，不再留在 4P 折叠详述里
+  {
+    sandbox.Work4.summaryText = key => {
+      if(key==='place') return '线上自营：官网\n渠道激励：返点 10%\n新店年度支持金\n本地渠道关系：本地账期 60 天\n季度对账\n渠道结构：\n- 线上: 官网 100%';
+      return '';
+    };
+    const place = W5.structureP('place');
+    ok('place 详述不含已升层的执行机制字段',
+      !place.includes('渠道激励') && !place.includes('本地渠道关系')
+      && !place.includes('新店年度支持金') && !place.includes('季度对账'),
+      place);
+  }
+
   // 3. convert4C：输出受格式约束（normalize 兜底）
   {
     sandbox.state.work5.ch4_mix = { product:'p', price:'p', place:'p', promotion:'p' };

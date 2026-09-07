@@ -96,7 +96,9 @@ sandbox.state={
     proposition:{}, identity:{}
   },
   work4:{
-    place:{ structure:[{name:'线上',children:[{name:'自营站',share:40},{name:'平台',share:60}]}], keyPartners:['本地仓配'] }
+    place:{ structure:[{name:'线上',children:[{name:'自营站',share:40},{name:'平台',share:60}]}],
+            keyPartners:[{name:'本地仓配',side:'线上'}],
+            channelIncentives:'返点 12%', localChannelRelations:'本地账期 45 天' }
   },
   work5:W5.defaultData()
 };
@@ -109,13 +111,14 @@ ok('E1 价值体系摘要嵌入', txt.includes('品牌价值体系') && txt.incl
 ok('E1 认知断点高亮类', (function(){ let f=false; (function walk(n){ if(n.className&&String(n.className).includes('hot')) f=true; (n.children||[]).forEach(walk); })(sec); return f; })());
 ok('表 3-1 三档决策表嵌入（主战场行 + 里程碑）', txt.includes('表 3-1 三档资源决策') && txt.includes('主战场') && txt.includes('印尼') && txt.includes('里程碑：6 个月铺货'));
 ok('表 3-2 痛点地图嵌入（类型/频次/场景/原声列 + 语料构成表尾）', txt.includes('表 3-2 客户痛点地图') && txt.includes('真实 3 + 模拟 2') && txt.includes('怕买错') && txt.includes('新手妈妈'));
-ok('E4 渠道结构嵌入', txt.includes('渠道结构') && txt.includes('自营站 40%') && txt.includes('本地仓配'));
+ok('E4 渠道结构树图嵌入', txt.includes('渠道结构') && txt.includes('自营站 40%') && txt.includes('◇ 伙伴：本地仓配'));
+ok('E4 树图旁执行机制嵌入', txt.includes('渠道激励：返点 12%') && txt.includes('本地渠道关系：本地账期 45 天'));
 
 const md=W5.exportMd();
 ok('导出含 E1 价值体系', md.includes('### 品牌价值体系（自评 → 实测）') && md.includes('Δ +2.0'));
 ok('导出含 E2 决策卡', md.includes('### 三档决策卡') && md.includes('主战场：印尼'));
 ok('导出含 E3 痛点地图', md.includes('### 痛点地图（语料构成：真实 3 + 模拟 2）') && md.includes('怕买错'));
-ok('导出含 E4 渠道结构', md.includes('### 渠道结构') && md.includes('自营站 40%'));
+ok('导出含 E4 渠道结构缩进投影', md.includes('### 4.2.2 渠道结构') && md.includes('- 线上（100%）') && md.includes('  - 自营站 40%') && md.includes('  - ◇ 伙伴：本地仓配'));
 
 console.log(`\n${pass} pass / ${fail} fail`);
 process.exit(fail===0?0:1);
