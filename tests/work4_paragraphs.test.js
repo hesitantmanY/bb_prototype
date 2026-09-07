@@ -416,7 +416,7 @@ function freshState(){
     ok('fieldAiButton / _fieldWithAi 已删除', typeof W4.fieldAiButton === 'undefined' && typeof W4._fieldWithAi === 'undefined');
     ok('targetFieldMap / writeStructuredField 已删除', typeof W4.targetFieldMap === 'undefined' && typeof W4.writeStructuredField === 'undefined');
     ok('mergeAiResult / _appendAiResult 已删除', typeof W4.mergeAiResult === 'undefined' && typeof W4._appendAiResult === 'undefined');
-    ok('RENDER_VERSION 已 bump 到 5', W4.RENDER_VERSION === '5');
+    ok('RENDER_VERSION 已 bump 到 6', W4.RENDER_VERSION === '6');
     // 源码级：新入口文案统一「AI 起草」，无 emoji
     const src = w4Src;
     ok('源码含 4 个统一步级按钮', ['AI 起草产品卖点','AI 起草定价建议','AI 起草渠道策略','AI 起草传播方案'].every(s => src.includes(s)));

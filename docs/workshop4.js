@@ -65,7 +65,7 @@ Work4.defaultData = () => ({
 });
 
 // Bump when changing render output so cached steps re-render for existing users.
-Work4.RENDER_VERSION = '5';
+Work4.RENDER_VERSION = '6';
 
 // 段落切分（按 Markdown 二级/三级标题）
 // 返回 [{segId, level, heading, body}]；segId 形如 'seg-1' / 'seg-2-1'（含子段时）。
@@ -305,7 +305,7 @@ Work4.buildStepPrompt = function(pKey){
 
 ${lines}
 
-只输出：正文若干段 + 末尾一个 \`\`\`json\`\`\` 块。JSON 键名严格用上述 key；tags 类为字符串数组、table 类为对象数组、text 类为字符串、crm 为对象、structure 为渠道结构数组。除末尾 JSON 块外不要输出其他代码块。`;
+只输出：正文若干段 + 末尾一个 \`\`\`json\`\`\` 块。JSON 键名严格用上述 key；tags 类为字符串数组、partners 类为 [{name, side}] 对象数组（side 只能填 线上 或 线下，无法判断就省略 side）、table 类为对象数组、text 类为字符串、crm 为对象、structure 为渠道结构数组。除末尾 JSON 块外不要输出其他代码块。`;
 };
 
 // 提取末尾字段 JSON 对象（prompt 契约：最后一个能解析的对象块；无 fence 时整段裸 JSON 兜底）
@@ -387,6 +387,10 @@ Work4.applyStepAll = function(pKey, text){
     if(s.kind === 'tags'){
       const arr = Array.isArray(v) ? v : String(v).split(/[,，、;；\n]/).map(x=>x.replace(/^[\s\-\*•·]+/,'').trim()).filter(Boolean);
       if(arr.length){ p[s.key] = arr; n++; }
+    } else if(s.kind === 'partners'){
+      const parsed = Work4.parseStructured('```json\n' + JSON.stringify(v) + '\n```', 'partnerList');
+      if(parsed && parsed.ok){ p[s.key] = parsed.value; n++; }
+      else warnings.push(s.name + ' 解析失败' + (parsed && parsed.reason ? '：' + parsed.reason : ''));
     } else if(s.kind === 'table'){
       const parsed = Work4.parseStructured('```json\n' + JSON.stringify(v) + '\n```', s.schema);
       if(parsed && parsed.ok){ p[s.key] = parsed.value; n++; }
@@ -1039,8 +1043,8 @@ Work4.PLACE_FIELD_AI = [
     guide:'建议的商超零售渠道（连锁商超、便利店、KA 卖场等），逐项列出，key 值为字符串数组' },
   { label:'线下备注', key:'offlineNotes', kind:'text', group:'offline', rows:2, name:'线下备注',
     guide:'1-2 句话补充线下渠道要点（业态组合、覆盖区域、与线上的协作），key 值为字符串' },
-  { label:'关键合作伙伴', key:'keyPartners', kind:'tags', name:'关键合作伙伴',
-    guide:'值得优先合作的关键伙伴类型（区域经销商、行业集成商、连锁商超、平台采销等），逐项列出，key 值为字符串数组' },
+  { label:'关键合作伙伴', key:'keyPartners', kind:'partners', name:'关键合作伙伴',
+    guide:'值得优先合作的关键伙伴对象数组 [{name, side}]，name 为伙伴名，side 只填 线上 或 线下，判断不了就省略 side' },
   { label:'渠道激励机制', key:'channelIncentives', kind:'text', rows:3, name:'渠道激励机制',
     guide:'1-3 句话给出按渠道差异化的激励建议（返点、账期、进场费、支持政策），key 值为字符串' },
   { label:'本地渠道关系', key:'localChannelRelations', kind:'text', rows:3, name:'本地渠道关系', xc:true,
@@ -1050,7 +1054,7 @@ Work4.PLACE_FIELD_AI = [
 // 步级规格补挂（place = 渲染清单 + 渠道结构；2026-09-01 ADR 0008）
 Work4.STEP_FIELD_SPEC = Work4.STEP_FIELD_SPEC || {};
 Work4.STEP_FIELD_SPEC.place = Work4.PLACE_FIELD_AI.concat([
-  { key:'structure', kind:'structure', name:'渠道结构', guide:'渠道结构对象数组（一级 share 总和 100）：[{"name":"线上","children":[{"name":"自营","share":40}]}]' }
+  { key:'structure', kind:'structure', name:'渠道结构', guide:'渠道结构对象数组，一级固定为“线上”“线下”两组且线上在前（一级 share 总和 100）：[{"name":"线上","children":[{"name":"自营","share":40}]},{"name":"线下","children":[{"name":"经销商","share":60}]}]' }
 ]);
 
 Work4.render.place = function(sec){
@@ -1070,9 +1074,11 @@ Work4.render.place = function(sec){
 
   // 2. 渠道清单（渲染循环不变：规格驱动逐字段画，AI 起草统一走步首按钮）
   const renderPlaceField = (spec) => {
-    const content = spec.kind === 'tags'
-      ? Work4.tagBox(p[spec.key], v => { p[spec.key] = v; autosave(); })
-      : el('textarea', {rows: spec.rows || 2, placeholder: spec.placeholder || '', oninput: e => { p[spec.key] = e.target.value; autosave(); }}, p[spec.key] || '');
+    const content = spec.kind === 'partners'
+      ? Work4.partnerBox(p[spec.key], v => { p[spec.key] = v; autosave(); })
+      : (spec.kind === 'tags'
+        ? Work4.tagBox(p[spec.key], v => { p[spec.key] = v; autosave(); })
+        : el('textarea', {rows: spec.rows || 2, placeholder: spec.placeholder || '', oninput: e => { p[spec.key] = e.target.value; autosave(); }}, p[spec.key] || ''));
     return UI.field(spec.label, content);
   };
   let curGroup = '';
@@ -1080,7 +1086,10 @@ Work4.render.place = function(sec){
   let hasXcH4 = false;
   Work4.PLACE_FIELD_AI.forEach(spec => {
     if(spec.xc){
-      if(!hasXcH4){ hasXcH4 = true; xc.appendChild(el('h4',{},'本地渠道关系')); }
+      // 2026-09-06：xc 字段不再单加 <h4>「本地渠道关系」——
+      // renderPlaceField 已经把 spec.label 作为 field label 渲染，
+      // 再叠一个手写 h4 会和 LLM 输出的 ## 本地渠道关系 段头撞成"两个同名小标题"。
+      // xc 容器保留（继承跨文化样式），xc<h4> 占位去掉。
       xc.appendChild(renderPlaceField(spec));
       return;
     }
@@ -1131,6 +1140,11 @@ Work4.render.place = function(sec){
     el('button',{class:'small',onclick:()=>{p.structure[0].children.push({name:'',share:0});autosave();Work4.rerender('place')}},'+ 线上二级'),
     el('button',{class:'small',onclick:()=>{p.structure[1].children.push({name:'',share:0});autosave();Work4.rerender('place')}},'+ 线下二级')
   ));
+
+  // 合计 ≠100 只提示不阻断（01 号票 (e) / 03 号票 (e)）
+  const mismatchHost=el('div',{'data-channel-mismatch':''});
+  Work4.renderStructureMismatches(mismatchHost, p.structure);
+  plate.appendChild(mismatchHost);
 
   // 渠道图（chart-slot 由 refreshCharts 识别）
   if(p.structure && p.structure.length){
@@ -1263,7 +1277,8 @@ Work4.summaryText = function(key){
     p.offlineDirect.length?`线下直营：${p.offlineDirect.join('、')}`:'',
     p.offlineDistrib.length?`经销商：${p.offlineDistrib.join('、')}`:'',
     p.offlineRetail.length?`KA：${p.offlineRetail.join('、')}`:'',
-    p.keyPartners.length?`关键伙伴：${p.keyPartners.join('、')}`:'',
+    p.keyPartners.length?`关键伙伴：${p.keyPartners.map(x=>(x&&typeof x==='object'&&!Array.isArray(x)?x.name:x)).join('、')}`:'',
+    p.localChannelRelations?`本地渠道关系：${p.localChannelRelations}`:'',
     p.channelIncentives?`渠道激励：${p.channelIncentives}`:'',
     p.structure.length?`渠道结构：\n${p.structure.map(g=>`- ${g.name}: ${g.children.map(c=>c.name+' '+c.share+'%').join('、')}`).join('\n')}`:''
   ].filter(Boolean).join('\n');
@@ -1335,11 +1350,97 @@ Work4.tagBox=function(arr, onChange){
   return ti.el;
 };
 
+// 关键伙伴专用 chip 变体（03 号票 (a)）：chip 内嵌「线上 | 线下」双键段控，
+// 未分类 = 两键都不亮，点亮键再点一次取消；手动新增默认未分类。
+// 通用 Work4.tagBox 与其他 tags 字段零波及。
+Work4.partnerBox=function(arr, onChange){
+  const wrap=el('div',{class:'chip-row partner-row'});
+  const input=el('input',{type:'text',placeholder:'输入伙伴名称回车添加'});
+  const items=(arr||[]).map(p=>{
+    if(p && typeof p==='object' && !Array.isArray(p)){
+      return {
+        name:String(p.name==null?'':p.name).trim(),
+        side:(p.side==='线上'||p.side==='线下') ? p.side : ''
+      };
+    }
+    return {name:String(p==null?'':p).trim(), side:''};
+  }).filter(p=>p.name);
+  const sync=()=>onChange(items.map(p=>({name:p.name,side:p.side})));
+  const render=()=>{
+    wrap.innerHTML='';
+    items.forEach((item,i)=>{
+      const chip=el('span',{class:'partner-chip'});
+      chip.appendChild(el('span',{class:'partner-name'},item.name));
+      const seg=el('span',{class:'sbu-segmented partner-seg',role:'group','aria-label':item.name+' 渠道归属'});
+      ['线上','线下'].forEach(side=>{
+        const on=item.side===side;
+        const btn=el('button',{type:'button',class:'sbu-seg partner-seg-btn'+(on?' is-on':''),
+          'aria-pressed':on?'true':'false','aria-label':item.name+'：'+side},side);
+        btn.addEventListener('click',()=>{
+          item.side = on ? '' : side;
+          sync(); render(); autosave();
+        });
+        seg.appendChild(btn);
+      });
+      chip.appendChild(seg);
+      chip.appendChild(el('span',{class:'sbu-seg-status partner-status'},item.side||'未分类'));
+      chip.appendChild(el('button',{type:'button',class:'partner-remove','aria-label':'删除 '+item.name,
+        onclick:()=>{ items.splice(i,1); sync(); render(); autosave(); }},'×'));
+      wrap.appendChild(chip);
+    });
+    wrap.appendChild(input);
+  };
+  input.addEventListener('keydown',e=>{
+    if(e.key==='Enter' && input.value.trim()){
+      e.preventDefault();
+      items.push({name:input.value.trim(), side:''});
+      input.value='';
+      sync(); render(); autosave();
+    }
+  });
+  render();
+  return wrap;
+};
+
+// 渠道结构合计 ≠100 的组（只提示不阻断，01 号票 (e)）
+Work4.structureMismatches=function(structure){
+  const out=[];
+  (structure||[]).forEach(g=>{
+    if(!g || !Array.isArray(g.children)) return;
+    const total=g.children.reduce((s,c)=>s+(Number(c.share)||0),0);
+    if(total>0 && Math.abs(total-100)>0.5) out.push({name:g.name||'', total:Math.round(total*10)/10});
+  });
+  return out;
+};
+// 把 mismatch 结果渲染进宿主（宿主常驻，数字编辑时可实时刷新）。
+Work4.renderStructureMismatches=function(host, structure){
+  if(!host) return;
+  host.innerHTML='';
+  const mismatches=Work4.structureMismatches(structure);
+  if(!mismatches.length) return;
+  const callout=el('div',{class:'callout', style:{margin:'12px 0',fontSize:'13px'}},
+    el('span',{class:'callout-title'},'合计提示'));
+  mismatches.forEach(m=>{
+    callout.appendChild(el('div',{},'渠道结构“'+(m.name||'未命名')+'”当前合计 '+m.total+'%，应为 100%'));
+  });
+  host.appendChild(callout);
+};
+// 结构表行内编辑走 refreshCharts，这里同步刷新 callout，避免等整步重渲染。
+Work4.refreshStructureMismatches=function(stepId){
+  const sec=document.querySelector('#steps4 .step[data-step="'+stepId+'"]');
+  if(!sec) return;
+  const host=sec.querySelector('[data-channel-mismatch]');
+  if(!host) return;
+  const p=state.work4.place;
+  Work4.renderStructureMismatches(host, p.structure);
+};
+
 // 局部 chart 重画（不重渲染整步，避免输入失焦）
 Work4.refreshCharts = function(stepId){
   if(!stepId) return;
   const sec = document.querySelector('#steps4 .step[data-step="'+stepId+'"]');
   if(!sec) return;
+  if(stepId === 'place') Work4.refreshStructureMismatches(stepId);
   const hosts = sec.querySelectorAll('.chart-slot [data-chart-host]');
   hosts.forEach(host => {
     // 整体替换 host 内部：先清空，再调用对应 renderer 重建
@@ -1459,6 +1560,47 @@ Work4.exportMd = function(){
   return `\n## IV. 营销组合\n\n### 出海路径\n${Work4.summaryText('route')}\n\n### 产品\n${Work4.summaryText('product')}\n\n### 价格\n${Work4.summaryText('price')}\n\n### 渠道\n${Work4.summaryText('place')}\n\n### 促销\n${Work4.summaryText('promotion')}\n`;
 };
 
-// 2026-09-01 候选 4：迁移注册契约（ADR 0008 已移除段落采纳流，无迁移）
+// 2026-09-01 候选 4：迁移注册契约（ADR 0008 已移除段落采纳流）
+// 04 号票：旧存档 keyPartners string[] → [{name, side}] + 词表启发式初值；
+// 顺手把 [线下,线上] 结构归位成 [线上,线下]（位置映射前提，幂等）。
+Work4.PARTNER_ONLINE_WORDS = ['平台','电商','Amazon','TikTok','Shopee','Lazada','独立站','官网','小程序','App','直播','KOC','KOL','MCN','博主','UP 主','种草','社媒'];
+Work4.PARTNER_OFFLINE_WORDS = ['经销','代理','商超','KA','超市','门店','专柜','直营','批发','分销','连锁','终端','医院','基地','展会'];
+Work4.guessPartnerSide=function(name){
+  const n=String(name||'').toLowerCase();
+  if(Work4.PARTNER_ONLINE_WORDS.some(w=>n.includes(String(w).toLowerCase()))) return '线上';
+  if(Work4.PARTNER_OFFLINE_WORDS.some(w=>n.includes(String(w).toLowerCase()))) return '线下';
+  return '';
+};
+Work4.migrateKeyPartners=function(w4){
+  if(!w4 || typeof w4!=='object') return w4;
+  const place=w4.place;
+  if(place && Array.isArray(place.keyPartners)){
+    const normalized=place.keyPartners.map(p=>{
+      if(p && typeof p==='object' && !Array.isArray(p)){
+        const name=String(p.name==null?'':p.name).trim();
+        if(!name) return null;
+        return {name, side:(p.side==='线上'||p.side==='线下') ? p.side : ''};
+      }
+      const name=String(p==null?'':p).trim();
+      return name ? {name, side:Work4.guessPartnerSide(name)} : null;
+    }).filter(Boolean);
+    place.keyPartners=normalized;
+  }
+  if(place && Array.isArray(place.structure) && place.structure.length===2){
+    const a=place.structure[0], b=place.structure[1];
+    if(a && b && String(a.name||'').trim()==='线下' && String(b.name||'').trim()==='线上'){
+      place.structure=[b,a];
+    }
+  } else if(place && Array.isArray(place.structure) && place.structure.length===1){
+    // 2026-09-07 诊断：单组旧案例（如 douya-mama）会让另一侧伙伴落“未挂载”，
+    // 补一个空的位置桶（不编造 share），Work4 结构表仍可手工添加二级渠道。
+    const only=place.structure[0];
+    const name=String(only && only.name || '').trim();
+    if(name==='线下') place.structure.unshift({name:'线上', children:[]});
+    else if(name==='线上') place.structure.push({name:'线下', children:[]});
+    else place.structure.push({name:'线下', children:[]});
+  }
+  return w4;
+};
 Work4.workKey = 'work4';
-Work4.migrations = [];
+Work4.migrations = [Work4.migrateKeyPartners];

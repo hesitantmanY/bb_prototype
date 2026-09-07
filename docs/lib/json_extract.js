@@ -366,6 +366,26 @@ function overlaySalvaged(rows, salvRows, schemaKey){
   }
 }
 
+// partnerList 清洗（2026-09-07，ticket 03-b）：宽进——字符串项升格
+// {name, side:null}、side 缺失/非法归 null、单项缺 name 丢弃但不毁整组。
+function cleanPartnerList(list){
+  const cleaned=[];
+  (list||[]).forEach(item=>{
+    if(item == null) return;
+    if(typeof item === 'string'){
+      const name=String(item).trim();
+      if(name) cleaned.push({name, side:null});
+      return;
+    }
+    if(typeof item === 'object' && !Array.isArray(item)){
+      const name=String(item.name==null?'':item.name).trim();
+      if(!name) return;
+      cleaned.push({name, side:(item.side==='线上'||item.side==='线下') ? item.side : null});
+    }
+  });
+  return cleaned;
+}
+
 // 结构化输出唯一入口：JsonExtract.run → multi-fence → 归一化 → 截断抢救 → 表格 → schema 清洗
 function structured(rawText, schemaKey){
   if(!rawText || typeof rawText !== 'string') return {ok:false, raw:rawText||'', reason:'empty input'};
@@ -434,6 +454,17 @@ function structured(rawText, schemaKey){
     } else if(salv && Array.isArray(salv.value) && salv.value.length){
       parsed = salv.value;
       warnings.push('fallback:truncated-json-salvaged');
+    } else if(schemaKey === 'partnerList' && !/[[{]/.test(rawText)){
+      // JSON 全挂的兜底：顿号/逗号/换行切分，每段升格为未分类伙伴。
+      const parts=String(rawText).trim().split(/[,，、;；\r\n]+/)
+        .map(s=>s.replace(/^[\s\-\*•·]+/, '').trim())
+        .filter(Boolean);
+      if(parts.length){
+        parsed=parts.map(name=>({name, side:null}));
+        warnings.push('fallback:delimiter-split');
+      } else {
+        return {ok:false, raw, reason:'partnerList empty after split'};
+      }
     } else {
       return {ok:false, raw, reason: '无法解析为结构化字段：未找到 JSON 块或 Markdown 表格'};
     }
@@ -508,6 +539,11 @@ function structured(rawText, schemaKey){
     })).filter(g=>g.name);
     // AI01：空数组 = 解析失败，不许静默清空已有渠道结构
     if(!cleaned.length) return {ok:false, raw, reason:'structure array empty after clean'};
+    // 2026-09-07（03 号票 (f)）：AI 返回的一级若写成 [线下,线上] 也归位成
+    // [线上,线下]——Work5 树图按位置 structure[0]/[1] 挂伙伴的前提。
+    if(cleaned.length===2 && cleaned[0].name==='线下' && cleaned[1].name==='线上'){
+      const tmp=cleaned[0]; cleaned[0]=cleaned[1]; cleaned[1]=tmp;
+    }
     cleaned.forEach(g=>{
       const total = g.children.reduce((s,c)=>s+(c.share||0),0);
       if(total > 0 && Math.abs(total-100) > 0.5){
@@ -543,6 +579,28 @@ function structured(rawText, schemaKey){
   if(schemaKey === 'differentiators'){
     if(!Array.isArray(parsed)) return {ok:false, raw, reason:'expected array of strings'};
     return {ok:true, value: parsed.map(x=>String(x||'').trim()).filter(Boolean), raw, warnings};
+  }
+  if(schemaKey === 'partnerList'){
+    if(!Array.isArray(parsed)){
+      // 宽进兜底：LLM 把 keyPartners 写成 JSON 字符串值（非数组）时，
+      // 按字符串内容做顿号/换行切分，而不是直接判失败。
+      if(typeof parsed === 'string'){
+        const parts=String(parsed).split(/[,，、;；\r\n]+/)
+          .map(s=>s.replace(/^[\s\-\*•·]+/, '').trim())
+          .filter(Boolean);
+        if(parts.length){
+          const cleaned=cleanPartnerList(parts);
+          if(cleaned.length){
+            warnings.push('fallback:delimiter-split');
+            return {ok:true, value:cleaned, raw, warnings};
+          }
+        }
+      }
+      return {ok:false, raw, reason:'expected array of partner items'};
+    }
+    const cleaned=cleanPartnerList(parsed);
+    if(!cleaned.length) return {ok:false, raw, reason:'partnerList array empty after clean'};
+    return {ok:true, value:cleaned, raw, warnings};
   }
   if(schemaKey === 'skus'){
     if(!Array.isArray(parsed)) return {ok:false, raw, reason:'expected array of SKUs'};
