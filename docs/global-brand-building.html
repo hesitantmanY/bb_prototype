@@ -8,7 +8,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=Lora:wght@400;500;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="tokens.css?v=7">
-<link rel="stylesheet" href="workshop5-editorial.css?v=8">
+<link rel="stylesheet" href="workshop5-editorial.css?v=9">
 <style>
 /* ============================================================
    HALLMARK · GRID 01 — design.md is the source of truth
@@ -1073,6 +1073,27 @@ table.data textarea{font-family:var(--font-body);font-style:normal;font-size:14p
 }
 .chip button:hover{color:var(--color-warn);background:transparent}
 .chip button::after{display:none}
+
+/* 关键伙伴 chip 变体（ticket 03-a）：chip 内嵌“线上 | 线下”段控，复用 sbu-seg */
+.partner-row{align-items:center}
+.partner-chip{
+  display:inline-flex;align-items:center;flex-wrap:wrap;gap:6px;
+  padding:5px 8px;background:var(--color-paper-2);border:1px solid var(--color-rule);
+  font-family:var(--font-body);font-size:13px;color:var(--color-ink);
+}
+.partner-chip .partner-name{font-family:var(--font-mono);font-size:13px;font-weight:500;color:var(--color-ink)}
+.partner-chip .sbu-segmented{border:1px solid var(--color-ink);background:var(--color-paper)}
+.partner-chip .sbu-seg{padding:3px 9px;min-width:0;font-size:11px;letter-spacing:.08em;border-right:1px solid var(--color-rule)}
+.partner-chip .sbu-seg:last-child{border-right:none}
+.partner-chip .sbu-seg.is-on{background:var(--color-ink);color:var(--color-paper)}
+.partner-chip .partner-status{font-family:var(--font-mono);font-size:10px;letter-spacing:.08em;text-transform:none;color:var(--color-ink-2)}
+.partner-chip .partner-remove{
+  border:none;background:transparent;color:var(--color-ink-2);cursor:pointer;
+  padding:0;font-size:15px;line-height:1;width:16px;height:16px;
+  display:inline-flex;align-items:center;justify-content:center;
+}
+.partner-chip .partner-remove::after{display:none}
+.partner-chip .partner-remove:hover{color:var(--color-warn);background:transparent}
 
 /* question designer cards (workshop1 survey) */
 .q-card-list{display:flex;flex-direction:column;gap:14px;margin:18px 0}
@@ -2215,7 +2236,7 @@ body[data-w4-entry="greenfield"] .x-entry-heavy { display:block; }
   transition:all 160ms var(--ease-out);
 }
 .sbu-chip:hover{border-color:var(--color-ink);color:var(--color-ink)}
-.sbu-chip.on{background:var(--color-accent);color:var(--color-paper);border-color:var(--color-accent)}
+.sbu-chip.on{background:var(--color-ink);color:var(--color-paper);border-color:var(--color-ink)}
 .sbu-countries-hint{
   font-family:var(--font-mono);font-size:11px;letter-spacing:.18em;
   text-transform:uppercase;color:var(--color-ink-2);
@@ -3211,7 +3232,7 @@ var Work5={steps:[],defaultData:()=>({})};
      WORKSHOP MODULES (injected below)
      ============================================================ -->
 <script src="lib/ai_context.js?v=50002"></script>
-<script src="lib/json_extract.js?v=2"></script>
+<script src="lib/json_extract.js?v=3"></script>
 <script src="lib/schema_check.js?v=1"></script>
 <script src="lib/call_json_strict.js?v=1"></script>
 <script src="lib/likert_parse.js?v=2"></script>
@@ -3228,13 +3249,13 @@ var Work5={steps:[],defaultData:()=>({})};
 <script src="lib/savepanel.js?v=2"></script>
 <script src="lib/demomenu.js?v=1"></script>
 <script src="lib/history.js?v=2"></script>
-<script src="lib/app.js?v=5"></script>
+<script src="lib/app.js?v=6"></script>
 <script src="workshop1.js?v=50041"></script>
 <script src="workshop2.js?v=50021"></script>
 <script src="workshop3.js?v=50021"></script>
-<script src="workshop4.js?v=50026"></script>
-<script src="workshop5.js?v=50021"></script>
-<script src="cases/bundle.js?v=3"></script>
+<script src="workshop4.js?v=50027"></script>
+<script src="workshop5.js?v=50022"></script>
+<script src="cases/bundle.js?v=4"></script>
 <script src="cases/loader.js?v=50037"></script>
 <script>
 document.addEventListener('DOMContentLoaded', ()=>{
