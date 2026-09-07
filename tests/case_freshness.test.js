@@ -20,7 +20,18 @@ function ok(name, cond, detail){
 
 global.saveNow = async () => true;
 let migrations = 0;
-global.runSchemaMigrations = () => { migrations++; };
+global.runSchemaMigrations = (st) => {
+  migrations++;
+  // 模拟 Work4.migrateKeyPartners 之类的幂等结构迁移：迁移会原地改数据。
+  if(st && st.work4 && st.work4.place && Array.isArray(st.work4.place.structure)
+    && st.work4.place.structure.length === 2
+    && st.work4.place.structure[0].name === '线下'
+    && st.work4.place.structure[1].name === '线上'){
+    const tmp = st.work4.place.structure[0];
+    st.work4.place.structure[0] = st.work4.place.structure[1];
+    st.work4.place.structure[1] = tmp;
+  }
+};
 const CASE_DATA = {
   work1: { a: 1 },
   work2: { scoring: { m1: { i1: { score: 8 } } } },
@@ -70,5 +81,55 @@ global.Cases = { has: () => false, load: () => { throw new Error('no bundle'); }
 st = { meta:{ demoCase:'ghost' }, work1:{}, work2:{}, work3:{}, work4:{}, work5:{} };
 ok('案例缺失静默跳过', App.refreshCaseIfStale(st) === false);
 
-console.log(fail ? `\n${fail} FAILED` : `\nall ${pass} passed`);
-process.exit(fail ? 1 : 0);
+// 8. 案例指纹应基于迁移后数据：进入案例写入迁移后指纹，刷新时不能把
+//    “迁移前 → 迁移后”误判成源数据更新（否则会重置案例内编辑）。
+{
+  global.Cases = { has: () => true, load: () => JSON.parse(JSON.stringify(CASE_DATA)) };
+  CASE_DATA.work4 = {
+    place: {
+      keyPartners: ['小红书 KOC'],
+      structure: [
+        { name:'线下', children:[{ name:'门店', share:60 }] },
+        { name:'线上', children:[{ name:'官网', share:40 }] }
+      ]
+    }
+  };
+  const loaded = Cases.load('demo');
+  runSchemaMigrations(loaded);
+  st = { meta:{ demoCase:'demo', caseFp: App.caseFp(loaded) }, work1:{ userEdit:'保留的编辑' }, work2:{}, work3:{}, work4:{ old:1 }, work5:{ old:1 } };
+  let saveCalls = 0;
+  const origSave = global.saveNow;
+  global.saveNow = async () => { saveCalls++; return true; };
+  const ret = App.refreshCaseIfStale(st);
+  ok('迁移后指纹一致 → 不重载、不重置案例内编辑', ret === false && st.work1.userEdit === '保留的编辑');
+  ok('不因指纹归一额外落盘', saveCalls === 0);
+  global.saveNow = origSave;
+}
+
+(async function(){
+  // 9. toggleDemo 也必须写“迁移后”指纹：进入案例与刷新比较用同一口径，
+  //    否则刷新第一次就把新进入的案例误判成“源数据已更新”并重载。
+  global.Cases = { has: () => true, load: () => JSON.parse(JSON.stringify(CASE_DATA)) };
+  const origSave = global.saveNow;
+  global.saveNow = async () => true;
+  global.$ = () => ({ classList:{ add(){}, remove(){} }, textContent:'' });
+  global.requestAnimationFrame = fn => fn();
+  global.window = { scrollTo(){} };
+  global.document = { body:{ classList:{ add(){}, remove(){} } }, addEventListener(){}, getElementById(){ return null; } };
+  global.Work1 = { steps:[{ id:'metrics' }] };
+  global.state = { meta:{ demoCase:null, demoSnapshot:null, isDemo:false, loadedFrom:null, loadedFromId:null }, work1:{}, work2:{}, work3:{}, work4:{}, work5:{}, settings:{ api:{} } };
+  App.renderAll = () => {};
+  App.updateSummary = () => {};
+  await App.toggleDemo('demo');
+  const expectedFp = App.caseFpMigrated(Cases.load('demo'));
+  ok('进入案例写入迁移后指纹（与刷新口径一致）', state.meta.caseFp === expectedFp,
+    'stored=' + state.meta.caseFp + ' expected=' + expectedFp);
+  ok('进入案例后 work4 已迁移（结构归位/补桶）',
+    state.work4.place.structure[0].name === '线上'
+    && state.work4.place.structure[1].name === '线下',
+    JSON.stringify((state.work4.place.structure || []).map(g => g && g.name)));
+  global.saveNow = origSave;
+
+  console.log(fail ? `\n${fail} FAILED` : `\nall ${pass} passed`);
+  process.exit(fail ? 1 : 0);
+})();

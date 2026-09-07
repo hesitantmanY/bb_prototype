@@ -280,6 +280,15 @@ const App = {
     for(let i=0;i<j.length;i++) h=((h<<5)+h+j.charCodeAt(i))|0;
     return h;
   },
+  // 指纹必须按“迁移后”数据计算：Work4.migrations 等会把旧形状/反序结构
+  // 原地归一，进入案例时存的指纹是迁移后的；刷新若拿迁移前数据比较，
+  // 会误判“案例源已更新”并重置案例内编辑（2026-09-07 诊断）。
+  caseFpMigrated(loaded){
+    let probe;
+    try{ probe=JSON.parse(JSON.stringify(loaded)); }catch(e){ probe=loaded; }
+    if(typeof runSchemaMigrations==='function') runSchemaMigrations(probe);
+    return this.caseFp(probe);
+  },
   // 进入案例与刷新重载共用的同一套载入语义（2026-09-01：work4/5 必须整体
   // 替换——合并会混入进入前工作区内容；work1-3 合并、旧 schema 运行时迁移）。
   applyCaseWorks(st, loaded){
@@ -297,7 +306,7 @@ const App = {
     let loaded;
     try{ loaded=Cases.load(m.demoCase); }catch(e){ return false; }
     if(!loaded) return false;
-    const fp=this.caseFp(loaded);
+    const fp=this.caseFpMigrated(loaded);
     if(fp === m.caseFp) return false;   // 案例未更新：保留现场（含案例内编辑）
     this.applyCaseWorks(st, loaded);
     m.caseFp=fp;
