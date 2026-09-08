@@ -1483,10 +1483,15 @@ Work3.guardProposition = function(){
 Work3.updatePositioning = function(){
   const p=state.work3.proposition.positioning;
   const sentence=`${p.brand||'〔品牌〕'} 是为 ${p.audience||'〔目标客群〕'} 提供 ${p.coreValue||'〔核心价值〕'} 的 ${p.category||'〔品类〕'}。`;
-  state.work3.proposition.positioningStatement=sentence;
+  // BIZ15：只有句子真的变了才写 state + autosave。本函数会被渲染路径
+  // （Work3.render.proposition）无条件调用——若每次都 autosave，则每次刷新
+  // 都置 dirty（"未保存"），即使数据没有任何变化。
+  if(state.work3.proposition.positioningStatement !== sentence){
+    state.work3.proposition.positioningStatement=sentence;
+    autosave();
+  }
   const el2=document.getElementById('posPreview');
   if(el2) el2.textContent=sentence;
-  autosave();
 };
 
 /* ---------- 6. 人格与 Slogan ---------- */

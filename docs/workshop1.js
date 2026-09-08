@@ -1130,8 +1130,19 @@ Work1.render.environment = function(sec){
 
   // 3.3 我们的资源盘点（4 步手风琴：5 维 → 3 段 → 收口 → 趋势）
   plate.appendChild(el('h4',{},'资源盘点'));
-  // 手风琴：4 步
+  // 手风琴：4 步（BIZ10 数据驱动智能展开，见 issues/2026-09-07-fix/BIZ10-w1-resource-accordion.md）
+  // - 第 1 层「事实」：始终展开（地基，无上游）
+  // - 第 2 层「提炼」：5 维 >5 chars 全填 → 展开（与 workshop1.js:193 MVO 判据对齐）
+  // - 第 3 层「收敛」：3 段 >0 chars 全填 → 展开（项目里未给 3 段写 MVO，最简「非空即填」）
+  // - 第 4 层「变量」：始终展开（独立观察，无上游）
+  // 用户点 head 切换视为 peek：填好数据的层每次 autosave → Work1.rerender 会被本判据重置回 open。
   const cap = d.ourCapabilities;
+  const isFilled = {
+    1: true,
+    2: ['delivery','core','brand','customer','compliance'].every(k => (cap[k]||'').trim().length > 5),
+    3: ['defensive','critical','structural'].every(k => (cap[k]||'').trim().length > 0),
+    4: true,
+  };
   const capField = (label, key, ph, rows, extraClass) => {
     const labelDiv = el('div',{class:'cap-field-label'},
       label,
@@ -1170,7 +1181,7 @@ Work1.render.environment = function(sec){
   };
   // 第 1 步：5 维能力（默认展开）
   plate.appendChild(el('div',{class:'cap-accordion'},
-    mkAccStep(1, '第 1 层 · 事实', '5 维能力', '我们有什么？客观描述家底清单，不需要下结论。', true, (body) => {
+    mkAccStep(1, '第 1 层 · 事实', '5 维能力', '我们有什么？客观描述家底清单，不需要下结论。', isFilled[1], (body) => {
       body.appendChild(capField('交付', 'delivery', '产品或服务？我们能交付什么？'));
       body.appendChild(capField('核心', 'core', '别人没有的？能力/资源/关系？'));
       body.appendChild(capField('品牌', 'brand', '资产？知名度？溢价？'));
@@ -1180,7 +1191,7 @@ Work1.render.environment = function(sec){
   ));
   // 第 2 步：3 段判断
   plate.appendChild(el('div',{class:'cap-accordion'},
-    mkAccStep(2, '第 2 层 · 提炼（依赖第 1 层）', '3 段判断', '什么是真本事、什么是软肋？不能空想，必须从第 1 层 5 维里"找出来"。', false, (body) => {
+    mkAccStep(2, '第 2 层 · 提炼（依赖第 1 层）', '3 段判断', '什么是真本事、什么是软肋？不能空想，必须从第 1 层 5 维里"找出来"。', isFilled[2], (body) => {
       body.appendChild(capField('防御性优势', 'defensive', '对手短期难复制的 1-2 点（最值钱）'));
       body.appendChild(capField('关键劣势', 'critical', '客户能直接感知的致命短板'));
       body.appendChild(capField('结构性劣势', 'structural', '受资源/位置限制、宜绕开而非硬拼'));
@@ -1191,7 +1202,7 @@ Work1.render.environment = function(sec){
   ));
   // 第 3 步：微笑曲线
   plate.appendChild(el('div',{class:'cap-accordion'},
-    mkAccStep(3, '第 3 层 · 收敛（依赖第 2 层）', '微笑曲线收口', '优势/劣势落在价值链哪一端？这一句决定后续定位方向。', false, (body) => {
+    mkAccStep(3, '第 3 层 · 收敛（依赖第 2 层）', '微笑曲线收口', '优势/劣势落在价值链哪一端？这一句决定后续定位方向。', isFilled[3], (body) => {
       // 微笑曲线图（SVG）: 价值链 6 环节, 左高-谷-右高的 U 形
       // 门禁：先 AI 起草（写入 d.valueChain）才显示曲线 + 拖拽；演示案例跳过
       const gate = Work1.renderSmileCurveGate();
@@ -1222,7 +1233,7 @@ Work1.render.environment = function(sec){
   ));
   // 第 4 步：关键趋势
   plate.appendChild(el('div',{class:'cap-accordion'},
-    mkAccStep(4, '第 4 层 · 变量（独立观察）', '关键趋势', '未来 12-24 个月要盯什么？与第 3 层定位方向关联。', false, (body) => {
+    mkAccStep(4, '第 4 层 · 变量（独立观察）', '关键趋势', '未来 12-24 个月要盯什么？与第 3 层定位方向关联。', isFilled[4], (body) => {
       body.appendChild(capField('3 个值得追踪的方向', 'trends', '例：节气营销、可追溯供应链、KOC 内容种草、私域订阅', 3));
       // AI 按钮放在第 4 步末尾
       body.appendChild(el('button',{class:'cap-ai-btn', onclick:()=>{

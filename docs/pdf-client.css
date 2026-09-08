@@ -1,0 +1,156 @@
+/* ============================================================
+   PDF 客户版 · 导出版式（2026-09-08）
+   - 数据/内容层由 docs/lib/pdf_export.js 生成
+   - 渠道结构等图表克隆自 Work5 当前渲染 DOM，只允许 PDF 侧改色，
+     不改变任何图形结构（几何、文字、连线顺序均保持原样）
+   - 服务端渲染时页面必须先落在本地服务源（保证 CSS 变量生效）
+   ============================================================ */
+
+@page {
+  size: A4;
+}
+
+html, body {
+  background: var(--color-paper, #ffffff);
+  color: var(--color-ink, #1a1a1a);
+  font-family: var(--font-body, Georgia, "Songti SC", serif);
+  font-size: 10.5pt;
+  line-height: 1.65;
+}
+
+/* ---------- 封面区 ---------- */
+.client-cover {
+  border-bottom: 2px solid var(--color-ink, #1a1a1a);
+  padding: 0 0 18px 0;
+  margin-bottom: 22px;
+}
+.client-eyebrow {
+  font-family: var(--font-mono, ui-monospace, monospace);
+  font-size: 8.5pt;
+  letter-spacing: .14em;
+  text-transform: uppercase;
+  color: var(--color-ink-2, #6b6b6b);
+  margin-bottom: 8px;
+}
+.client-title {
+  font-family: var(--font-display, Georgia, "Songti SC", serif);
+  font-size: 25pt;
+  font-weight: 700;
+  line-height: 1.15;
+  margin: 0 0 6px 0;
+  color: var(--color-ink, #1a1a1a);
+}
+.client-sub {
+  font-size: 10.5pt;
+  color: var(--color-ink-2, #6b6b6b);
+}
+.client-meta {
+  margin-top: 12px;
+  font-family: var(--font-mono, ui-monospace, monospace);
+  font-size: 8.5pt;
+  color: var(--color-ink-2, #6b6b6b);
+  display: flex;
+  gap: 20px;
+}
+
+/* ---------- 上游关键结论 ---------- */
+.client-summary {
+  break-inside: avoid;
+  margin: 0 0 18px 0;
+}
+.sum-head {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  border-bottom: 1px solid var(--color-rule, #dcdcdc);
+  padding-bottom: 5px;
+  margin-bottom: 8px;
+}
+.sum-no {
+  font-family: var(--font-mono, ui-monospace, monospace);
+  font-size: 9pt;
+  color: var(--color-accent, #6b2e1a);
+  letter-spacing: .1em;
+}
+.sum-head h2 {
+  font-family: var(--font-display, Georgia, "Songti SC", serif);
+  font-size: 13pt;
+  margin: 0;
+  color: var(--color-ink, #1a1a1a);
+}
+.sum-body {
+  display: grid;
+  gap: 4px;
+}
+.sum-line {
+  font-size: 9.5pt;
+  color: var(--color-ink, #1a1a1a);
+  white-space: pre-wrap;
+}
+
+/* ---------- Work5 成稿 ---------- */
+#client-plan {
+  break-before: page;
+}
+#work5,
+#work5 .workshop,
+#work5 #steps5 {
+  display: block !important;
+  padding: 0;
+}
+#work5 .workshop.active .step.active,
+#work5 .step {
+  display: block !important;
+}
+#steps5 .chapter {
+  break-before: auto;
+  margin: 0 0 26px 0;
+}
+#steps5 .chapter-head h2 {
+  font-size: 17pt;
+}
+#steps5 [contenteditable] {
+  outline: none;
+}
+.provenance-go,
+.ai-actions,
+.no-print {
+  display: none !important;
+}
+
+/* Work1–4 按 step 全量：客户端克隆仍沿用内容成果版结构 */
+#printRoot .pv-workshop {
+  page-break-before: always;
+  break-before: page;
+  padding: 24px 0 16px;
+}
+#printRoot .pv-workshop:first-child {
+  page-break-before: avoid;
+  break-before: auto;
+}
+#printRoot .pv-workshop-title {
+  font-family: var(--font-display, Georgia, "Songti SC", serif);
+  font-size: 20pt;
+  font-weight: 700;
+  border-bottom: 2px solid var(--color-ink, #1a1a1a);
+  padding-bottom: 8px;
+  margin: 0 0 14px;
+}
+#printRoot .workshop,
+#printRoot .workshop .step,
+#printRoot .workshop .step.active {
+  display: block !important;
+}
+#printRoot .workshop .step {
+  margin: 0 0 26px;
+}
+
+/* ---------- PDF 侧图表配色 ----------
+   仅改填充色。数据点与渠道条的几何、文字、连线仍与 Work4/5 一致，
+   具体颜色由 pdf_export.js 以 fill 属性写入（不改变节点/形状）。 */
+#steps5 svg.chart circle[data-pid] {
+  stroke-width: 2px;
+}
+#steps5 svg.chart rect {
+  stroke-width: 0.75px;
+}

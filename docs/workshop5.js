@@ -911,8 +911,6 @@ Work5.readinessPanel=function(){
 Work5.toolbar=function(){
   return el('div',{class:'plate no-print',style:{display:'flex',gap:'10px','flex-wrap':'wrap',alignItems:'center','margin-bottom':'20px'}},
     el('button',{class:'primary small',onclick:()=>Work5.aggregateAll()},'从 Work 1–4 一键汇总',el('span',{class:'arrow'})),
-    el('button',{class:'ghost small',onclick:()=>window.print()},'打印 / PDF'),
-    el('button',{class:'ghost small',onclick:()=>App.exportMd()},'导出 Markdown'),
     el('button',{class:'ghost small',onclick:e=>Work5.aiPolishAll(e.currentTarget)},'AI 润色全文')
   );
 };

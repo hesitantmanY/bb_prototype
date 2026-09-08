@@ -856,6 +856,91 @@ footer.doc-foot .doc{display:flex;justify-content:space-between;flex-wrap:wrap;g
 }
 .save-popup.open{display:block}
 .save-popup-actions{display:flex;justify-content:flex-end;gap:10px;margin-top:16px}
+.export-wrap{position:relative}
+.export-menu-popup{
+  display:none;position:absolute;top:100%;right:0;margin-top:6px;
+  background:var(--color-paper);border:1px solid var(--color-ink);
+  padding:6px;min-width:220px;z-index:200;
+}
+.export-menu-popup.open{display:block}
+.export-menu-item{
+  display:block;width:100%;text-align:left;border:none;background:transparent;
+  padding:10px 12px;font-family:var(--font-mono);font-size:12px;letter-spacing:.08em;
+  text-transform:uppercase;color:var(--color-ink);cursor:pointer;
+}
+.export-menu-item:hover{background:var(--color-paper-2)}
+#exportBtn[disabled]{opacity:.45;cursor:not-allowed}
+.print-pick-list{display:flex;flex-direction:column;gap:8px;margin:18px 0}
+.print-pick-row{
+  display:flex;align-items:center;gap:10px;border:1px solid var(--color-rule);
+  padding:12px 14px;cursor:pointer;background:var(--color-paper);
+}
+.print-pick-row:hover{border-color:var(--color-ink)}
+.print-pick-row input{width:auto}
+.print-pick-name{font-family:var(--font-display);font-size:1.0625rem;color:var(--color-ink)}
+.print-pick-count{font-family:var(--font-mono);font-size:11px;color:var(--color-ink-2);margin-left:auto;letter-spacing:.12em}
+.print-pick-foot{display:flex;justify-content:flex-end;gap:10px;margin-top:20px}
+#printRoot{display:none}
+#printRoot .pv-step{display:block;margin:0 0 44px;padding:0}
+#printRoot .pv-step-title{
+  font-family:var(--font-display);font-size:1.375rem;font-weight:700;color:var(--color-ink);
+  border-bottom:1px solid var(--color-rule);padding-bottom:8px;margin:0 0 16px;
+}
+#printRoot .pv-workshop{
+  page-break-before:always;break-before:page;padding:36px 0 20px;
+}
+#printRoot .pv-workshop:first-child{page-break-before:avoid;break-before:auto}
+#printRoot .pv-workshop-title{
+  font-family:var(--font-display);font-size:2rem;font-weight:900;color:var(--color-ink);
+  letter-spacing:-.01em;margin:0 0 8px;padding-bottom:12px;
+  border-bottom:2px solid var(--color-ink);
+}
+#printRoot table.data{width:100%;border-collapse:collapse;margin:10px 0 18px}
+#printRoot table.data th,
+#printRoot table.data td{
+  border:1px solid var(--color-rule);padding:7px 9px;font-size:12px;line-height:1.5;
+  vertical-align:top;text-align:left;
+}
+#printRoot table.data th{
+  font-family:var(--font-mono);font-size:10px;letter-spacing:.1em;
+  text-transform:uppercase;color:var(--color-ink-2);background:var(--color-paper-2);
+}
+#printRoot svg.chart,#printRoot .smile-curve-wrap svg,#printRoot .channel-tree svg{
+  display:block;width:100%;height:auto;background:var(--color-paper);
+}
+#printRoot .bar-track,#printRoot .budget-track{
+  background:var(--color-paper-2);border:1px solid var(--color-rule);
+}
+#printRoot .bar-row,#printRoot .budget-row{margin-bottom:10px;page-break-inside:avoid}
+#printRoot .plate,#printRoot .card{border:none;background:transparent;padding:0;margin:0 0 16px}
+#printRoot button,#printRoot input,#printRoot select,#printRoot textarea,
+#printRoot .mvo-card,#printRoot .metric-next,#printRoot .ai-box,
+#printRoot .ai-settings,#printRoot .ai-context,#printRoot .ai-actions,
+#printRoot .edit-hint,#printRoot .lede{display:none!important}
+#printRoot [data-pv-empty]{display:none!important}
+#printRoot .item-add{display:none!important}
+#printRoot [contenteditable]{white-space:pre-wrap;outline:none}
+#printRoot .pv-value{white-space:pre-wrap}
+#printRoot .sbu-field .sbu-label::after,
+#printRoot .field > label::after,
+#printRoot .cap-field-label::after,
+#printRoot .persona-row-label::after{content:"：";}
+/* 清洗后克隆仍带原工作坊类；编辑控件已由 JS 文本化，剩余编辑区只读输出 */
+#printRoot .ai-box,#printRoot .ai-actions,#printRoot .ai-settings-check,
+#printRoot .progress-bar,#printRoot .runner-bar,#printRoot .metric-next,
+#printRoot .metric-card-actions,#printRoot .metric-legend,#printRoot .metric-health,
+#printRoot .metric-empty,#printRoot .metric-suggest,#printRoot .notice,
+#printRoot .muted,
+#printRoot .edit-hint,#printRoot .item-add,#printRoot .sbu-toolbar,
+#printRoot .cap-ai-btn,#printRoot .cap-ai-hint,#printRoot .q-del,
+#printRoot .warning,#printRoot .lede,#printRoot .cap-acc-derive,#printRoot .cap-acc-arrow{
+  display:none!important;
+}
+/* 表格里的 .hint 常常是 AI 解释/依据，属于成果，不被上面隐藏规则误伤 */
+#printRoot td.hint{
+  display:table-cell!important;color:inherit;font-size:11px;
+  text-transform:none;letter-spacing:0;white-space:normal;
+}
 .snap-search{display:block;margin:14px 0 4px}
 .snap-rename{font-size:13px;padding:4px 0;width:100%}
 .demo-menu-title{
@@ -987,9 +1072,9 @@ main{max-width:1320px;margin:0 auto;padding:0 40px 96px}
 .step-header h2{font-size:2.5rem;font-weight:900;letter-spacing:-.01em}
 .step-header p{font-size:1.125rem;line-height:1.55;text-align:left;color:var(--color-ink-2)}
 /* BIZ02：案例 = 只读浏览。body.is-demo 由 App 在进入案例时挂上——
-   steps 区全部编辑控件与 AI 按钮 inert；顶栏（导出 / API 设定 / 退出案例）
-   不受影响。注意 contenteditable 禁 pointer-events 后不可选中文本，
-   复制走顶栏「导出 Markdown」。 */
+   steps 区全部编辑控件与 AI 按钮 inert；顶栏 API 设定 / 退出案例
+   不受影响。注意 contenteditable 禁 pointer-events 后不可选中文本。
+   2026-09-07：顶栏「导出 ▼」在案例中禁用——案例内不提供 MD 导出 / 打印。 */
 body.is-demo .chip-row input{display:none}
 body.is-demo .edit-hint{display:none}
 body.is-demo #steps1 button,
@@ -1023,6 +1108,17 @@ body.is-demo #steps3 svg,
 body.is-demo #steps4 svg,
 body.is-demo #steps5 svg{
   opacity:.55;cursor:not-allowed;pointer-events:none;transform:none;
+}
+/* BIZ09（2026-09-07）：案例浏览（body.is-demo）下，步间 / 跨坊 CTA 属于「导航控件」，
+   不属于「编辑控件或 AI 按钮」。按 CONTEXT.md「步骤导航始终可用」豁免 case 只读锁。
+   特异性 (1,2,0,1) > 上方原规则 (1,1,0,1)，靠级联覆盖；MVO 未过时的 .metric-next--hidden
+   仍以 !important 压住，CTA 不可见即「过门槛才显形」语义保留不变。 */
+body.is-demo #steps1 .metric-next button,
+body.is-demo #steps2 .metric-next button,
+body.is-demo #steps3 .metric-next button,
+body.is-demo #steps4 .metric-next button,
+body.is-demo #steps5 .metric-next button{
+  opacity:1;cursor:pointer;pointer-events:auto;
 }
 .step-number{
   font-family:var(--font-mono);font-size:12px;letter-spacing:.22em;color:var(--color-ink-2);
@@ -1920,10 +2016,26 @@ body[data-w4-entry="greenfield"] .x-entry-heavy { display:block; }
 
 @media print{
   .masthead,.tabs,.subtabs,.no-print,.modal-backdrop,.toast,.demo-banner{display:none!important}
-  .workshop,.step{display:block!important}
-  main{padding:0;max-width:none}
+  main,#workArea,#subtabsBar{display:none!important}
+  #printRoot{display:block!important;padding:0 24px}
+  #printRoot .workshop{display:block!important}
+  #printRoot .workshop .step,
+  #printRoot .workshop .step.active{display:block!important}
   body{background:#fff}
-  .card,.plate,.step{break-inside:avoid}
+  #printRoot .workshop .step{
+    margin:0 0 44px;padding:0;border:none;background:transparent;
+  }
+  #printRoot .workshop .step.active{
+    margin:0 0 44px;padding:0;border:none;background:transparent;
+  }
+  #printRoot .workshop .step > .plate{
+    border:none;background:transparent;padding:0;margin:0 0 28px;
+  }
+  #printRoot .card,#printRoot .plate,#printRoot table,#printRoot .chart-slot,
+  #printRoot .cap-acc-item,#printRoot .scenario-card,#printRoot .q-card,
+  #printRoot .metric-dim,#printRoot .persona-block,#printRoot .chapter{
+    break-inside:avoid;
+  }
 }
 
 /* ============================================================
@@ -2437,9 +2549,14 @@ body[data-w4-entry="greenfield"] .x-entry-heavy { display:block; }
         <button class="archive-rename" id="archiveRenameBtn" type="button" title="重命名此档案" aria-label="重命名">✎</button>
       </span>
       <button class="ghost" onclick="App.importMd()">导入 .md</button>
-      <button class="ghost" onclick="App.exportMd()">导出 MD</button>
+      <div class="export-wrap">
+        <button class="ghost" id="exportBtn" type="button">导出 ▼</button>
+        <div class="export-menu-popup" id="exportMenuPopup" role="menu">
+          <button class="export-menu-item" type="button" onclick="ExportMenu.md()">导出 Markdown</button>
+          <button class="export-menu-item" type="button" onclick="ExportMenu.openPrint()">导出 PDF</button>
+        </div>
+      </div>
       <button class="ghost" onclick="History.open()">历史记录</button>
-      <button class="ghost" onclick="window.print()">打印 / PDF</button>
       <div class="save-wrap">
         <button class="ghost" id="saveBtn" type="button" onclick="SavePanel.open()">保存</button>
         <div class="save-popup" id="savePopup">
@@ -2574,6 +2691,20 @@ body[data-w4-entry="greenfield"] .x-entry-heavy { display:block; }
   </div>
 </div>
 
+<!-- Print / PDF picker modal -->
+<div class="modal-backdrop" id="printModal">
+  <div class="modal">
+    <button class="modal-close" onclick="ExportMenu.closePrint()">×</button>
+    <h2>导出 PDF</h2>
+    <p class="muted">选择要纳入客户版 PDF 的工作坊（可多选；Work5 策划书成稿会放在最后，前序工作坊只提炼关键结论）。</p>
+    <div class="print-pick-list" id="printPickList"></div>
+    <div class="print-pick-foot">
+      <button type="button" onclick="ExportMenu.closePrint()">取消</button>
+      <button type="button" class="primary" id="printGoBtn" disabled onclick="ExportMenu.doPrint()">导出 PDF</button>
+    </div>
+  </div>
+</div>
+
 <!-- Backend blocker -->
 <div id="backendBlocker">
   <div class="blocker-card">
@@ -2586,6 +2717,7 @@ body[data-w4-entry="greenfield"] .x-entry-heavy { display:block; }
 
 <div class="tooltip" id="tooltip"></div>
 <div class="toast" id="toast"></div>
+<div id="printRoot" aria-hidden="true"></div>
 
 <script>
 /* ============================================================
@@ -2605,6 +2737,10 @@ const DEFAULT_SETTINGS = {
 function defaultState(){
   return {
     meta: { savedAt: null, isDemo: false, demoSnapshot: null, currentWork: 1, currentStep: null,
+            // BIZ14（2026-09-07）：位置真值改为 URL（?w=&s=&case=）。state.meta.currentWork/
+            // currentStep 只是 URL 的镜像（init 时从 URL 写入、导航时同步更新），
+            // 不再参与持久化/刷新恢复。旧 lastSavedStep/lastSavedWork 字段已退役，
+            // 遗留存档里的值由 mergeWithDefaults 忽略，无迁移成本。
             // 2026-08-28：当前档案名。History.load 时写入 name+id，导出 MD 驱动
             // 文件名与文档标题；demoCase 存在时由它驱动；两者都无时隐藏。
             loadedFrom: null, loadedFromId: null },
@@ -2762,9 +2898,9 @@ function autosave(){
   markDirty();
 }
 
-// BIZ08：关页/刷新前有未保存改动则尽力同步——先 sendBeacon，失败
-// （浏览器 keepalive 载荷 ~64KB 上限）再试 keepalive fetch，都失败静默，
-// 超大档案仍由 2 分钟周期保存兜底。
+// BIZ08 + BIZ14：关页/刷新前尽力同步——只守 dirty（用户输入改动）。位置（w/s/case）
+// 已由 URL 承担（BIZ14），导航不产生"未保存"、也不需要在 pagehide 补位。
+// 失败静默，超大档案仍由 2 分钟周期保存兜底。
 window.addEventListener('pagehide', ()=>{
   if(!dirty || !state) return;
   try{
@@ -3249,12 +3385,14 @@ var Work5={steps:[],defaultData:()=>({})};
 <script src="lib/savepanel.js?v=2"></script>
 <script src="lib/demomenu.js?v=1"></script>
 <script src="lib/history.js?v=2"></script>
-<script src="lib/app.js?v=6"></script>
+<script src="lib/export_menu.js?v=1"></script>
+<script src="lib/app.js?v=7"></script>
 <script src="workshop1.js?v=50041"></script>
 <script src="workshop2.js?v=50021"></script>
 <script src="workshop3.js?v=50021"></script>
 <script src="workshop4.js?v=50027"></script>
-<script src="workshop5.js?v=50022"></script>
+<script src="workshop5.js?v=50023"></script>
+<script src="lib/pdf_export.js?v=1"></script>
 <script src="cases/bundle.js?v=4"></script>
 <script src="cases/loader.js?v=50037"></script>
 <script>

@@ -11,3 +11,4 @@ pyyaml>=6.0
 python-dotenv>=1.0
 httpx>=0.27
 pypdf>=4.0
+playwright>=1.40

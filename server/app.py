@@ -13,7 +13,7 @@ mimetypes.add_type("font/woff2", ".woff2")
 
 from fastapi import FastAPI, File, HTTPException, Query, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import FileResponse, JSONResponse
+from fastapi.responses import FileResponse, JSONResponse, Response
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, Field, field_validator
 
@@ -88,7 +88,7 @@ async def _api_trust_gate(request, call_next):
         if not _origin_allowed(origin):
             return JSONResponse(status_code=403,
                                 content={"error": "cross-origin request denied"})
-        if request.method in ("PUT", "POST") and path in ("/api/state", "/api/lda"):
+        if request.method in ("PUT", "POST") and path in ("/api/state", "/api/lda", "/api/pdf"):
             cl = request.headers.get("content-length")
             if cl and cl.isdigit() and int(cl) > _MAX_JSON_BODY:
                 return JSONResponse(status_code=413,
@@ -112,6 +112,19 @@ class LdaRequest(BaseModel):
     no_below: int = Field(default=2, ge=0, le=50)
     no_above: float = Field(default=0.5, gt=0, le=1.0)
     language: str = "zh"
+
+
+class PdfRequest(BaseModel):
+    html: str = Field(..., min_length=80)
+    filename: str = Field(default="brand-client-plan.pdf", max_length=160)
+
+    @field_validator("filename")
+    @classmethod
+    def _safe_filename(cls, name: str) -> str:
+        safe = re.sub(r"[\\/:*?\"<>|\s]+", "-", name).strip(".-") or "brand-client-plan.pdf"
+        if not safe.lower().endswith(".pdf"):
+            safe += ".pdf"
+        return safe[:160]
 
 
 class ConfigUpdate(BaseModel):
@@ -184,6 +197,54 @@ class ProviderAction(BaseModel):
 @app.get("/api/health")
 def health() -> dict:
     return {"status": "ok", "version": "0.2.0"}
+
+
+@app.post("/api/pdf")
+def pdf_endpoint(req: PdfRequest) -> Response:
+    """Render a client PDF from the HTML produced by docs/lib/pdf_export.js.
+
+    The page is first opened on the local service origin so the project's
+    tokens.css custom properties apply, then the submitted HTML replaces the
+    document. Playwright/Chromium is already part of server/.venv; the browser
+    binary must be installed once via `playwright install chromium`.
+    """
+    try:
+        from playwright.sync_api import sync_playwright
+    except Exception as exc:  # pragma: no cover - import error only
+        raise HTTPException(status_code=503,
+                            detail="Playwright 未安装，请在 server/.venv 执行 pip install playwright") from exc
+
+    try:
+        with sync_playwright() as p:
+            browser = p.chromium.launch(headless=True)
+            try:
+                page = browser.new_page(viewport={"width": 1440, "height": 1100})
+                page.goto("http://127.0.0.1:8765/", wait_until="domcontentloaded")
+                page.set_content(req.html, wait_until="networkidle")
+                page.wait_for_timeout(1600)  # fonts / SVG / webfont settle
+                pdf = page.pdf(
+                    format="A4",
+                    print_background=True,
+                    display_header_footer=False,
+                    margin={"top": "14mm", "bottom": "16mm", "left": "15mm", "right": "15mm"},
+                )
+            finally:
+                browser.close()
+    except Exception as exc:
+        raise HTTPException(status_code=500,
+                            detail=f"PDF 渲染失败：{exc}") from exc
+
+    return Response(
+        content=pdf,
+        media_type="application/pdf",
+        headers={
+            # ASCII-only header; the browser uses <a download> to set the real
+            # Chinese filename, so no RFC5987 dance is needed here.
+            "Content-Disposition": 'attachment; filename="brand-client-plan.pdf"',
+            "Access-Control-Allow-Origin": "*",
+            "Access-Control-Expose-Headers": "Content-Disposition",
+        },
+    )
 
 
 # ---------------------------------------------------------------------------

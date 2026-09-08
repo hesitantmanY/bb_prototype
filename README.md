@@ -74,7 +74,6 @@ Arora、Chakraborty 与 Nishimura 于 2025 年在《Journal of Marketing》发�
 - **分析与解析**：LDA 主题建模（jieba + gensim，`lda.py`）、八爪鱼/问卷星表格解析（pandas + openpyxl，`excel_parser.py`）（未测试）、文档文本提取（`doc_extract.py`：txt/md/csv 直接读、docx 用标准库解、pdf 用 pypdf）。
 - **测试**：`tests/` 下 50+ 个 Node 直跑测试（`node tests/<name>.test.js`），另含 `server/test_lda.py`；仓库根执行 `node scripts/run-tests.js` 可顺序跑全部测试并汇总退出码。
 - **安全回归**：`server/test_security.py` + `tests/security_frontend.test.js` 覆盖 API Key 不外泄、`project_id`/快照路径穿越、上传大小上限、Markdown/SVG 转义。
-- 整体架构图见 `docs/architecture.html`。
 
 ## 运行
 
@@ -86,6 +85,8 @@ python -m venv .venv
 .venv\Scripts\activate        # Windows
 # source .venv/bin/activate   # macOS/Linux
 pip install -r requirements.txt
+# 导出 PDF 需要 Chromium（首次安装后执行一次）
+python -m playwright install chromium
 python app.py
 ```
 
@@ -130,16 +131,17 @@ node scripts/run-tests.js
 | II | 目标市场（3 步） | 4×2 指标模板、5 位合成专家 Delphi 赋权（LLM 招募视角 → 画像赋权 → 均值收敛）、加权评分、吸引力 × 竞争力矩阵、三档决策 |
 | III | 价值主张（6 步） | 场景细分、语料导入（xlsx/csv/txt）+ LDA 主题建模（本地 Python；语料 = 真实 + 画像模拟混合，依据 JM 2025）、痛点地图、备选卖点、合意性 × 可实施性矩阵、最优决策扇面、迁移路径、定位句、MBTI 人格、slogan |
 | IV | 营销组合（5 步） | 渠道路径、4P 表单与步级 AI 起草（每步一按钮整组回填）、渠道结构树、媒介预算百点图 |
-| V | 策划书（1 步） | 5 章国标编号文档（业务与市场 / 环境分析 / 市场选择与定位 / 营销组合 / 总结与展望）、SWOT 2×2 与 4C 一键 AI 生成、4P 摘要表 + 预算横条图、打印 / PDF、导出 Markdown |
+| V | 策划书（1 步） | 5 章国标编号文档（业务与市场 / 环境分析 / 市场选择与定位 / 营销组合 / 总结与展望）、SWOT 2×2 与 4C 一键 AI 生成、4P 摘要表 + 预算横条图；导出 ▼ 统一入口（Markdown / 多选工作坊打印 PDF） |
 
 ## 数据、版本与导入导出
 
 - **自动保存**：内容有改动时约每 2 分钟自动落盘；切换步骤/工作坊、刷新或关闭页面前会立即同步（sendBeacon）。关页面再打开，内容还在。
 - **保存与版本**：顶栏“保存”弹出命名框，保存 = 持久化当前内容 + 建一个版本；留空则按时间命名。内容无变化不会新建版本。时间命名版本自动清理、只保留最近 10 个，手动命名版本永久保留。
 - **历史记录**：右上角“历史记录”列出全部版本，可一键恢复（直接载入，不做额外备份）、重命名、删除。重置、导入 .md 前会自动建“重置前 / 导入前存档”版本，都可在历史记录中回退。
-- **导入 / 导出**：“导出 MD”生成可阅读的 Markdown，文件末尾嵌入完整数据；文件名与首行标题由档案名决定（进入过某版本或案例时顶栏显示当前档案名，可用 ✎ 重命名；无档案名时回退 `brand-workshop.md`）。“导入 .md”解析该数据块并覆盖当前内容，API 配置不会被导入。
+- **导入 / 导出**：顶栏「导出 ▼」统一菜单含「导出 Markdown」「打印 / PDF」两项。导出 Markdown 生成可阅读的 .md，文件末尾嵌入完整数据；文件名与首行标题由档案名决定（进入过某版本时顶栏显示当前档案名，可用 ✎ 重命名；无档案名时回退 `brand-workshop.md`）。“导入 .md”解析该数据块并覆盖当前内容，API 配置不会被导入。
+- **打印 / PDF**：「打印 / PDF」打开多选面板，勾选要打印的工作坊（默认全不勾，至少勾一个才能打印；选中某坊即自动包含该坊全部步骤，按 I → V 输出）。打印产物为“内容成果版”：不含输入框 / 按钮 / MVO 卡等编辑骨架，保留已填内容、表格与 SVG 图表。
 - **语料导入（Work III）**：卖点挖掘步可上传 xlsx / xls / csv / txt，经后端解析（`/api/parse-excel`）后进入 LDA 语料列表。
-- **演示案例**：顶栏“演示案例”提供 5 个完整案例（豆芽妈妈、小镬记、问渠书院、恒锐造、毛孩子之家），覆盖母婴电商、餐饮、教培、B2B 制造、宠物服务等行业。进入即只读沙箱：进入前内容先存快照；浏览期间编辑控件与 AI 全部禁用、不写盘（可查看 / 复制文本 / 导出 Markdown），顶栏按钮变“退出案例”，点击丢弃案例数据、恢复进入前的工作区。
+- **演示案例**：顶栏“演示案例”提供 5 个完整案例（豆芽妈妈、小镬记、问渠书院、恒锐造、毛孩子之家），覆盖母婴电商、餐饮、教培、B2B 制造、宠物服务等行业。进入即只读沙箱：进入前内容先存快照；浏览期间编辑控件与 AI 全部禁用、不写盘，顶栏「导出 ▼」同时禁用（案例内不提供 MD 导出与打印），顶栏按钮变“退出案例”，点击丢弃案例数据、恢复进入前的工作区。
 
 ## 写作辅助
 
@@ -180,6 +182,7 @@ docs/
     savepanel.js                       # 保存弹层
     history.js                         # 历史版本弹层
     demomenu.js                        # 案例选择菜单
+    export_menu.js                     # 「导出 ▼」菜单 + 多选工作坊内容成果版打印
     app.js                             # 应用编排（init / 导航 / 导出 / 案例切换）
   charts/ fonts/ pics/                 # 静态资源（图示 / 字体 / 截图）
 server/

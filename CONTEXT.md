@@ -18,14 +18,31 @@ _Avoid_: 闭环按钮、坊间跳转
 
 **闸门语义**:
 最小可交付是步间 CTA 与跨坊 CTA 的唯一显隐闸门：全过即显示、未过则留空。CTA 是"过后的捷径"，不是"禁行栅栏"——步骤导航始终可用，未过步也可手动进入下一步骤（只提醒、不阻断）。
-_Avoid_: 锁定、解锁、关卡
+_Avoid_: 锁定、解锁、关门
+
+**案例只读锁**（2026-09-07，参见 BIZ09）:
+顶栏「载入案例」后，浏览器进入只读浏览模式。`body.is-demo` 触发的 CSS 锁覆盖 steps 区编辑控件（input / textarea / select / contenteditable / AI 按钮 / 复制按钮 / SVG），使其 `opacity:.55` + `pointer-events:none` + `cursor:not-allowed`；同步在 JS 闸门处拦下 saveNow、AI 调用、W5 autoSync、测试运行器、archive 写入。**豁免**：步间 CTA、跨坊 CTA、subtab 跳转、顶栏 W1-W5 切换、API 设定 / 退出案例按钮——这些是「导航控件」或「管理控件」，不属于被锁的「编辑 / AI 控件」；顶栏「导出 ▼」不豁免（2026-09-07 导出菜单决策：案例内菜单不可打开，不提供 MD 导出与打印）。豁免是级联覆盖（override 规则特异性 (1,2,0,1) > 原规则 (1,1,0,1)），不依赖 `!important`；`.metric-next--hidden` 仍以 `!important` 压住，MVO 未过即「过门槛才显形」语义不变。退出案例时 `state` 从 `demoSnapshot` 整体回放，案例内 navigation 不污染真实工作区。
+_Avoid_: 沙箱、气泡房、安全网（这些隐含「完全隔离」；案例只读锁只锁编辑 / AI，**允许**导航）
+
+**位置 URL 路由**（2026-09-07，参见 BIZ14）:
+页面位置（在哪个 workshop 的哪个 step、是否在案例中）的真值是 URL query：`?w=&s=&case=`。
+`state.meta.currentWork/currentStep` 只是 URL 的镜像：init 时从 URL 恢复、导航时同步写回
+（`history.replaceState`，不污染 history 栈）。刷新由浏览器原生保留 URL——天然回到当前页面，
+无 sendBeacon 64KB 限制、不依赖网络、纯导航不产生「未保存」。进入案例写 `case=`、
+退出案例清 `case=` 并回到进入前位置。非法参数（w 非 1-5、step 不存在、case 未知）静默 fallback。
+内容改动（textarea 输入）仍是 dirty → beforeunload 弹窗 + pagehide sendBeacon 的唯一来源（BIZ08）。
+_Avoid_: lastSavedStep / lastSavedWork / brand.lastPos、把位置塞进 server 持久化或 localStorage
+
+**数据驱动手风琴**（2026-09-07，参见 BIZ10）:
+UI 上分层的折叠/展开控件（如 W1 step 2 资源盘点的 4 步手风琴 5 维 → 3 段 → 收口 → 趋势），其开闭完全由数据决定，不留"用户手动关"的有效路径：第 1 层（事实层，无上游）始终展开；中间层（依赖上游层）需上游数据满足 MVO 阈值才展开；末层（独立观察，无上游）始终展开。阈值与项目 MVO 对齐——过 MVO 瞬间 = 下一层自动展开 = "过门槛奖励下一层"闭环。用户在 accordion head 上的点击是 peek-only：填好数据的层每次 autosave → rerender 会被本判据重置回 open。**不引入新 state 字段、不改 schema**——BIZ10 拒了"加 `_userClosed` 跟踪用户关过哪些层"那条路径，因为 `autosave` 频率下任何手动关都会被下一帧重画覆盖，"用户能关"是伪需求。
+_Avoid_: 折叠记忆、用户偏好持久化（高 friction rerender 下形同虚设）
 
 **步骤重渲染**:
 步骤内容依赖上游步骤的状态（例如"评估候选市场"的闸门依赖"构建评估体系"保留的市场数），因此每次切换步骤都会以当前状态重新渲染目标步骤，旧渲染不会残留。
 _Avoid_: 缓存、刷新、失效
 
 **档案名**:
-当前正在编辑的策划档：来源 = `state.meta.loadedFrom`（History.load 写入快照名），或在案例中时 = `state.meta.demoCase`。无源时（如全新工作区/重置后）顶栏「当前：xxx」标签隐藏，导出 MD 回退 `brand-workshop.md`。导出文件名 = `{档案名}-brand-workshop.md`，文档第一行标题 = `# {档案名}`。autosave 叠加改动不影响该绑定；顶栏的 ✎ 按钮直接调 History.rename，列表同步。
+当前正在编辑的策划档：来源 = `state.meta.loadedFrom`（History.load 写入快照名），或在案例中时 = `state.meta.demoCase`。无源时（如全新工作区/重置后）顶栏「当前：xxx」标签隐藏，导出 ▼ 里的「导出 Markdown」回退 `brand-workshop.md`。导出文件名 = `{档案名}-brand-workshop.md`，文档第一行标题 = `# {档案名}`。autosave 叠加改动不影响该绑定；顶栏的 ✎ 按钮直接调 History.rename，列表同步。
 _Avoid_: 项目名、工程名、存档版本名
 
 **AI 任务**:

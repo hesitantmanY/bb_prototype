@@ -17,6 +17,57 @@ const App = {
     st.work2 = (typeof Work2!=='undefined' && Work2.defaultData) ? Work2.defaultData() : {};
     return true;
   },
+  // BIZ14：位置真值 = URL（?w=&s=&case=），state.meta.currentWork/currentStep 只是镜像。
+  // syncUrl —— 导航后把当前 work/step/case 写回 URL（replaceState，不污染 history 栈）。
+  syncUrl(){
+    try{
+      const p = new URLSearchParams(location.search);
+      const w = state && state.meta ? state.meta.currentWork : null;
+      const s = state && state.meta ? state.meta.currentStep : null;
+      const c = state && state.meta ? state.meta.demoCase : null;
+      if([1,2,3,4,5].includes(w)) p.set('w', String(w)); else p.delete('w');
+      if(s) p.set('s', String(s)); else p.delete('s');
+      if(c) p.set('case', String(c)); else p.delete('case');
+      const qs = p.toString();
+      history.replaceState(null, '', location.pathname + (qs ? '?'+qs : '') + (location.hash || ''));
+    }catch(_){}
+  },
+  // BIZ14：从 URL 恢复位置。返回 {work, step, case} 或 null（无有效参数）。
+  posFromUrl(){
+    try{
+      const p = new URLSearchParams(location.search);
+      const rawW = parseInt(p.get('w')||'', 10);
+      const rawS = p.get('s')||'';
+      const rawCase = p.get('case')||'';
+      if(![1,2,3,4,5].includes(rawW) && !rawS && !rawCase) return null;
+      return {
+        work: [1,2,3,4,5].includes(rawW) ? rawW : null,
+        step: rawS || null,
+        case: rawCase || null
+      };
+    }catch(_){ return null; }
+  },
+  // BIZ14：init 时从 URL 恢复位置（含 case 深链/刷新在案例中）。必须 await：
+  // 首次带 case 参数打开时需先 toggleDemo 进入案例（会 async saveNow + renderAll）。
+  async restoreFromUrl(){
+    if(!state || !state.meta) return;
+    const pos = this.posFromUrl();
+    if(!pos) return;
+    // case 参数：确保进入该案例。刷新在案例中时 server 存的是进入前工作区，
+    // state.meta.demoCase 为空——URL 的 case 参数负责把它重新打开。
+    if(pos.case && state.meta.demoCase !== pos.case){
+      if(typeof Cases!=='undefined' && Cases.has && Cases.has(pos.case)){
+        await this.toggleDemo(pos.case);
+      }else{
+        pos.case = null;   // 未知案例：忽略 case 参数
+      }
+    }
+    if(pos.work && [1,2,3,4,5].includes(pos.work)) state.meta.currentWork = pos.work;
+    if(pos.step){
+      const mod={1:Work1,2:Work2,3:Work3,4:Work4,5:Work5}[state.meta.currentWork];
+      if(mod && mod.steps && mod.steps.some(s => s.id === pos.step)) state.meta.currentStep = pos.step;
+    }
+  },
   async init(){
     // 1. Backend is mandatory — block with instructions if unreachable.
     const ok = await Backend.health();
@@ -43,6 +94,9 @@ const App = {
       // 刷新后若在案例中（demoCase+demoSnapshot 都在），保留现场，
       // 由用户点「退出案例」主动还原——旧版"存在即污染"守卫已移除。
     }
+    // BIZ14：位置从 URL 恢复（?w=&s=&case=），取代 BIZ13 的 localStorage 兜底。
+    // URL 由浏览器原生保留——刷新天然回到当前页面，且无 64KB 限制、不依赖网络。
+    try{ await this.restoreFromUrl(); }catch(e){ console.warn('[URL restore]', e); }
     // 4. 未保存时关闭/刷新 → 浏览器原生确认弹窗。
     window.addEventListener('beforeunload', e=>{
       if(dirty){
@@ -160,6 +214,8 @@ const App = {
     if(!validIds.includes(id)) return;
     this.currentStep=id;
     state.meta.currentStep = id;
+    // BIZ14：位置同步到 URL（浏览器原生负责"刷新后回到当前页面"）。
+    this.syncUrl();
     const wEl = document.querySelector(`.workshop[data-workshop="${this.currentWork}"]`);
     if(!wEl) return;
     $$('.step', wEl).forEach(s=>s.classList.toggle('active', s.dataset.step===id));
@@ -220,6 +276,14 @@ const App = {
     if(st && this.workshopSteps(w).some(s=>s.id===st)) this.goStep(st);
     // 2026-08-28：刷新顶栏「当前档案」标签（meta.loadedFrom / demoCase 状态）
     this.updateArchiveLabel();
+    // BIZ14：renderAll 是所有 state 替换路径（init/案例/历史/导入/重置）的必经点，
+    // 结束时让 URL 与最终恢复的位置保持一致。
+    this.syncUrl();
+    // 2026-09-07 导出菜单：案例模式禁用「导出 ▼」（不提供 MD/PDF 导出）。
+    if(typeof ExportMenu!=='undefined' && ExportMenu.sync) ExportMenu.sync();
+  },
+  syncExportLock(){
+    if(typeof ExportMenu!=='undefined' && ExportMenu.sync) ExportMenu.sync();
   },
   updateSummary(){
     const sbu=state.work1?.sbu?.name||'';
@@ -376,12 +440,15 @@ const App = {
         state.meta.currentStep = Work1.steps[0].id;
       }
       $('#demoBanner').classList.add('show');
-      $('#demoBannerText').textContent = '当前案例：'+(caseKey||'')+' · 只读浏览（可查看 / 复制文本 / 导出）· 点「退出案例」回到进入前内容';
+      $('#demoBannerText').textContent = '当前案例：'+(caseKey||'')+' · 只读浏览（可查看 / 复制文本）· 点「退出案例」回到进入前内容';
       $('#demoBtn').textContent='退出案例';
       document.body.classList.add('is-demo');   // BIZ02：steps 区全部编辑控件 inert
     }
     this.renderAll();
     this.updateSummary();
+    // BIZ14：进入案例写入 ?case=，退出案例清除 ?case= 并回到进入前位置。
+    this.syncUrl();
+    this.syncExportLock();
     // 退出案例：renderAll 已按快照的 meta 恢复原 work/step（回到进入前的位置与内容）。
     // 进入案例：已导航到案例起点，滚动回顶部。
     if(state.meta.demoCase){

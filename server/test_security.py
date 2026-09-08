@@ -318,6 +318,13 @@ def test_docx_decompression_bomb_rejected() -> None:
        str(result)[:120])
 
 
+def test_pdf_endpoint_validation() -> None:
+    r = client.post("/api/pdf", json={"html": "<p>x</p>", "filename": "x.pdf"})
+    ok("PDF endpoint rejects too-short html -> 422", r.status_code == 422, str(r.status_code))
+    r = client.post("/api/pdf", json={"html": "<p>x</p>", "filename": "../bad name?.pdf"})
+    ok("PDF endpoint rejects short html even with hostile filename -> 422", r.status_code == 422, str(r.status_code))
+
+
 test_project_id_cannot_escape_data_dir()
 test_state_api_rejects_traversal_project_id()
 test_snapshot_id_is_never_a_path()
@@ -333,6 +340,7 @@ test_snapshot_name_sanitized()
 test_config_rejects_invalid_provider_and_scheme()
 test_config_accepts_all_ui_providers()
 test_docx_decompression_bomb_rejected()
+test_pdf_endpoint_validation()
 
 print(f"\n{passed} pass / {failed} fail")
 raise SystemExit(1 if failed else 0)
