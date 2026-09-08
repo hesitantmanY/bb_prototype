@@ -39,5 +39,5 @@ labels: [wayfinder:map]
 - 案例模式下任何导出/打印豁免（已锁决策 8）。
 - step 级或章节级打印粒度（已锁决策 5）。
 - 服务端 PDF 生成（2026-09-08 修订）：导出菜单「打印 / PDF」升级为「导出 PDF」——
-  前端 `docs/lib/pdf_export.js` 生成客户版 A4 HTML（前序工作坊关键结论 + Work5 成稿），
+  前端 `docs/lib/pdf_export.js` 生成 A4 HTML（前序工作坊关键结论 + Work5 成稿），
   本地后端 `/api/pdf` 用 Playwright 渲染下载；不再走浏览器 `window.print()`。

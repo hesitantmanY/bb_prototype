@@ -1,5 +1,5 @@
 /* ============================================================
-   PdfExport — 客户版 PDF 内容/版式生成（2026-09-08）
+   PdfExport — PDF 内容/版式生成（2026-09-08）
 
    用途：导出菜单多选 Work I–V 后，生成一份可直接交付的 HTML：
    1. 勾选的 Work1–4 → 按 step 全量输出（沿用内容成果版清洗逻辑）；
@@ -137,9 +137,9 @@
 <html lang="zh-CN">
 <head>
 <meta charset="UTF-8">
-<title>${esc(title)} · 客户版</title>
+<title>${esc(title)}</title>
 <meta name="author" content="Brand Project">
-<meta name="description" content="选中工作坊按 step 全量输出 + Work5 策划书成稿">
+<!-- <meta name="description" content="选中工作坊按 step 全量输出 + Work5 策划书成稿"> -->
 <meta name="generator" content="Brand-Workshop PDF Export">
 <link rel="stylesheet" href="${origin}/tokens.css">
 <link rel="stylesheet" href="${origin}/workshop5-editorial.css">
@@ -150,8 +150,8 @@ ${appCssBlock}
 <div class="client-cover">
   <div class="client-eyebrow">品牌策划书 · Client Edition</div>
   <h1 class="client-title">${esc(title)}</h1>
-  <div class="client-sub">选中工作坊按 step 全量输出 + Work5 策划书成稿</div>
-  <div class="client-meta"><span>${date}</span><span>客户版 · V1</span></div>
+  <!-- <div class="client-sub">选中工作坊按 step 全量输出 + Work5 策划书成稿</div> -->
+  <!-- <div class="client-meta"><span>${date}</span><span>客户版 · V1</span></div> -->
 </div>
 ${printRootBlock}
 ${planBody}

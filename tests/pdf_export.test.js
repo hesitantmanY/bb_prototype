@@ -1,4 +1,4 @@
-/* Node test: 客户版 PDF HTML 生成与自检（2026-09-08）。
+/* Node test: PDF HTML 生成与自检（2026-09-08）。
    Run: node tests/pdf_export.test.js
 */
 'use strict';
