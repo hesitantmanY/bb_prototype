@@ -329,67 +329,720 @@
   //   政治法律←a4 成分党（监管端代理）；社会文化←a2 增长率（社交渗透）
   //   风险←新构造的获客成本/舆情
   const data = {
-    // ===== Tab 1: 构建评估体系 =====
-    candidates: [
-      { id:'mc1', name:'抖音兴趣电商新客（兴趣电商）', reason:'新流量红利，但老客品牌力弱', source:'user' },
-      { id:'mc2', name:'成分党跨境海淘妈妈', reason:'海淘竞品多，转化链路长', source:'user' }
-    ],
-    screening: { criteria: [] },
-    retained: [
-      { id:'m1', name:'一线精致妈妈', region:'北京/上海/广州/深圳', population:'约 300 万', gdpPerCapita:'家庭年收入 50 万+',
-        notes:'成分党、价格不敏感、抖音渗透高', source:'user' },
-      { id:'m2', name:'二线价格敏感妈妈', region:'成都/武汉/西安/南京', population:'约 800 万', gdpPerCapita:'家庭年收入 15-30 万',
-        notes:'淘宝老客多、复购稳定', source:'user' },
-      { id:'m3', name:'抖音新客（兴趣电商）', region:'抖音兴趣电商', population:'潜在 2000 万+', gdpPerCapita:'参差',
-        notes:'新流量红利，但老客品牌力弱', source:'user' }
-    ],
-    attractiveness: { categories: buildCats(attractTemplate) },
-    competitiveness: { categories: buildCats(competeTemplate) },
-    // 重新按 v2 默认 4×2 桶铺评分（沿用原 a1..a4 / c1..c4 的语义，但落到新 4×2 维度）
-    scoring: { m1: { "ind_经济_市场规模": { score: 8.5,source: "user" }, "ind_经济_客单价与": { score: 7.5,source: "user" }, "ind_政治法律_成分与安": { score: 9,source: "user" }, "ind_政治法律_电商合规": { score: 7,source: "user" }, "ind_社会文化_成分党妈": { score: 8,source: "user" },"ind_社会文化_小红书/": { score: 8.5,source: "user" }, "ind_风险_获客成本": { score: 7,source: "user" }, "ind_风险_舆情与负": { score: 8.5,source: "user" }, "ind_市场信息_需求与竞": { score: 8.5,source: "user" }, "ind_市场信息_妈妈群体": { score: 7.5,source: "user" }, "ind_营销渠道_抖音电商": { score: 9,source: "user" },"ind_营销渠道_小红书 ": { score: 7,source: "user" }, "ind_认证合规_成分检测": { score: 8,source: "user" }, "ind_认证合规_儿科医生": { score: 8.5,source: "user" }, "ind_产品品牌_5 年老": { score: 7,source: "user" }, "ind_产品品牌_C 端品": { score: 8.5,source: "user" } },m2: { "ind_经济_市场规模": { score: 6,source: "user" }, "ind_经济_客单价与": { score: 5,source: "user" }, "ind_政治法律_成分与安": { score: 6.5,source: "user" }, "ind_政治法律_电商合规": { score: 4.5,source: "user" }, "ind_社会文化_成分党妈": { score: 5.5,source: "user" },"ind_社会文化_小红书/": { score: 6,source: "user" }, "ind_风险_获客成本": { score: 4.5,source: "user" }, "ind_风险_舆情与负": { score: 6,source: "user" }, "ind_市场信息_需求与竞": { score: 7.5,source: "user" }, "ind_市场信息_妈妈群体": { score: 6.5,source: "user" }, "ind_营销渠道_抖音电商": { score: 8,source: "user" },"ind_营销渠道_小红书 ": { score: 6,source: "user" }, "ind_认证合规_成分检测": { score: 7,source: "user" }, "ind_认证合规_儿科医生": { score: 7.5,source: "user" }, "ind_产品品牌_5 年老": { score: 6,source: "user" }, "ind_产品品牌_C 端品": { score: 7.5,source: "user" } },m3: { "ind_经济_市场规模": { score: 7.5,source: "user" }, "ind_经济_客单价与": { score: 6.5,source: "user" }, "ind_政治法律_成分与安": { score: 8,source: "user" }, "ind_政治法律_电商合规": { score: 6,source: "user" }, "ind_社会文化_成分党妈": { score: 7,source: "user" },"ind_社会文化_小红书/": { score: 7.5,source: "user" }, "ind_风险_获客成本": { score: 6,source: "user" }, "ind_风险_舆情与负": { score: 7.5,source: "user" }, "ind_市场信息_需求与竞": { score: 4.5,source: "user" }, "ind_市场信息_妈妈群体": { score: 3.5,source: "user" }, "ind_营销渠道_抖音电商": { score: 5,source: "user" },"ind_营销渠道_小红书 ": { score: 3,source: "user" }, "ind_认证合规_成分检测": { score: 4,source: "user" }, "ind_认证合规_儿科医生": { score: 4.5,source: "user" }, "ind_产品品牌_5 年老": { score: 3,source: "user" }, "ind_产品品牌_C 端品": { score: 4.5,source: "user" } }
+  "candidates": [
+    {
+      "id": "mc1",
+      "name": "抖音兴趣电商新客（兴趣电商）",
+      "reason": "新流量红利，但老客品牌力弱",
+      "source": "user"
     },
-    delphi: {
-      // === Hybrid 2 升级版 ===
-      recruitment: { perspectives: [
-        { id:'p_brand', role:'品牌策略专家', why:'衡量成分党迁移路径与品牌差异化' },
-        { id:'p_growth', role:'抖音电商运营', why:'评估兴趣电商投放 ROI 与渗透率' },
-        { id:'p_product', role:'婴幼儿洗护产品经理', why:'解读成分表与竞品配方差异' },
-        { id:'p_retail', role:'线下母婴渠道商', why:'识别二线城市复购驱动力' },
-        { id:'p_mom', role:'一线妈妈 KOC', why:'翻译红 PP 焦虑与试用装决策门槛' }
-      ] },
-      personas: [
-        { id:'pe1', name:'品牌策略专家', perspective:'看品牌资产与迁移', stance:'中性' },
-        { id:'pe2', name:'抖音运营', perspective:'看流量与转化', stance:'增长向' },
-        { id:'pe3', name:'产品经理', perspective:'看配方与差异化', stance:'产品向' },
-        { id:'pe4', name:'线下渠道', perspective:'看复购与铺货', stance:'渠道向' },
-        { id:'pe5', name:'妈妈 KOC', perspective:'看决策与口碑', stance:'用户向' }
+    {
+      "id": "mc2",
+      "name": "成分党跨境海淘妈妈",
+      "reason": "海淘竞品多，转化链路长",
+      "source": "user"
+    },
+    {
+      "id": "mc3",
+      "name": "高端月子中心合作渠道",
+      "reason": "精准触达但门槛高",
+      "source": "user"
+    },
+    {
+      "id": "mc4",
+      "name": "儿科医院皮肤科推荐",
+      "reason": "信任度高但合规严",
+      "source": "user"
+    },
+    {
+      "id": "mc5",
+      "name": "跨境海淘成分党妈妈",
+      "reason": "客单价高但链路长",
+      "source": "user"
+    }
+  ],
+  "screening": {
+    "criteria": [
+      "市场规模 ≥ 100 万目标人群",
+      "客单价 ≥ 150 元且复购周期 ≤ 3 月",
+      "6 个月内可验证 ROI，获客成本可控"
+    ]
+  },
+  "retained": [
+    {
+      "id": "m1",
+      "name": "一线精致妈妈",
+      "region": "北京/上海/广州/深圳",
+      "population": "约 300 万",
+      "gdpPerCapita": "家庭年收入 50 万+",
+      "notes": "成分党、价格不敏感、抖音渗透高",
+      "source": "user"
+    },
+    {
+      "id": "m2",
+      "name": "二线价格敏感妈妈",
+      "region": "成都/武汉/西安/南京",
+      "population": "约 800 万",
+      "gdpPerCapita": "家庭年收入 15-30 万",
+      "notes": "淘宝老客多、复购稳定",
+      "source": "user"
+    },
+    {
+      "id": "m3",
+      "name": "抖音新客（兴趣电商）",
+      "region": "抖音兴趣电商",
+      "population": "潜在 2000 万+",
+      "gdpPerCapita": "参差",
+      "notes": "新流量红利，但老客品牌力弱",
+      "source": "user"
+    }
+  ],
+  "attractiveness": {
+    "categories": [
+      {
+        "id": "cat_经济",
+        "name": "经济",
+        "weight": 0.25,
+        "indicators": [
+          {
+            "id": "ind_经济_市场规模",
+            "name": "市场规模 / 中高端容量",
+            "weight": 0.5,
+            "rubric": {
+              "high": "目标人群 ≥ 500 万，年增速 ≥ 20%",
+              "mid": "中等水平，介于高分与低分之间",
+              "low": "低于行业平均，存在明显短板"
+            },
+            "support": 0,
+            "source": "delphi"
+          },
+          {
+            "id": "ind_经济_客单价与",
+            "name": "客单价与客单宽度",
+            "weight": 0.5,
+            "rubric": {
+              "high": "客单价 ≥ 200 元，年消费 ≥ 4 次",
+              "mid": "中等水平，介于高分与低分之间",
+              "low": "低于行业平均，存在明显短板"
+            },
+            "support": 0,
+            "source": "delphi"
+          }
+        ]
+      },
+      {
+        "id": "cat_政治法律",
+        "name": "政治法律",
+        "weight": 0.25,
+        "indicators": [
+          {
+            "id": "ind_政治法律_成分与安",
+            "name": "成分与安全监管",
+            "weight": 0.5,
+            "rubric": {
+              "high": "监管清晰，备案齐全，无重大政策风险",
+              "mid": "中等水平，介于高分与低分之间",
+              "low": "低于行业平均，存在明显短板"
+            },
+            "support": 0,
+            "source": "delphi"
+          },
+          {
+            "id": "ind_政治法律_电商合规",
+            "name": "电商合规与广告法",
+            "weight": 0.5,
+            "rubric": {
+              "high": "广告法风险低，宣称可验证",
+              "mid": "中等水平，介于高分与低分之间",
+              "low": "低于行业平均，存在明显短板"
+            },
+            "support": 0,
+            "source": "delphi"
+          }
+        ]
+      },
+      {
+        "id": "cat_社会文化",
+        "name": "社会文化",
+        "weight": 0.25,
+        "indicators": [
+          {
+            "id": "ind_社会文化_成分党妈",
+            "name": "成分党妈妈占比",
+            "weight": 0.5,
+            "rubric": {
+              "high": "成分党占比 ≥ 60%，主动查配方",
+              "mid": "中等水平，介于高分与低分之间",
+              "low": "低于行业平均，存在明显短板"
+            },
+            "support": 0,
+            "source": "delphi"
+          },
+          {
+            "id": "ind_社会文化_小红书/",
+            "name": "小红书/抖音种草渗透",
+            "weight": 0.5,
+            "rubric": {
+              "high": "小红书种草渗透率 ≥ 50%，KOL 储备充足",
+              "mid": "中等水平，介于高分与低分之间",
+              "low": "低于行业平均，存在明显短板"
+            },
+            "support": 0,
+            "source": "delphi"
+          }
+        ]
+      },
+      {
+        "id": "cat_风险",
+        "name": "风险",
+        "weight": 0.25,
+        "indicators": [
+          {
+            "id": "ind_风险_获客成本",
+            "name": "获客成本波动",
+            "weight": 0.5,
+            "rubric": {
+              "high": "CAC ≤ 客单价 30%，ROI 回收期 ≤ 3 月",
+              "mid": "中等水平，介于高分与低分之间",
+              "low": "低于行业平均，存在明显短板"
+            },
+            "support": 0,
+            "source": "delphi"
+          },
+          {
+            "id": "ind_风险_舆情与负",
+            "name": "舆情与负面评价放大",
+            "weight": 0.5,
+            "rubric": {
+              "high": "负面舆情发生率低，危机应对成本小",
+              "mid": "中等水平，介于高分与低分之间",
+              "low": "低于行业平均，存在明显短板"
+            },
+            "support": 0,
+            "source": "delphi"
+          }
+        ]
+      }
+    ]
+  },
+  "competitiveness": {
+    "categories": [
+      {
+        "id": "cat_市场信息",
+        "name": "市场信息",
+        "weight": 0.25,
+        "indicators": [
+          {
+            "id": "ind_市场信息_需求与竞",
+            "name": "需求与竞品数据可获取性",
+            "weight": 0.5,
+            "rubric": {
+              "high": "需求数据透明，竞品格局清晰",
+              "mid": "中等水平，介于高分与低分之间",
+              "low": "低于行业平均，存在明显短板"
+            },
+            "support": 0,
+            "source": "delphi"
+          },
+          {
+            "id": "ind_市场信息_妈妈群体",
+            "name": "妈妈群体画像可监测",
+            "weight": 0.5,
+            "rubric": {
+              "high": "用户画像精准，行为数据可监测",
+              "mid": "中等水平，介于高分与低分之间",
+              "low": "低于行业平均，存在明显短板"
+            },
+            "support": 0,
+            "source": "delphi"
+          }
+        ]
+      },
+      {
+        "id": "cat_营销渠道",
+        "name": "营销渠道",
+        "weight": 0.25,
+        "indicators": [
+          {
+            "id": "ind_营销渠道_抖音电商",
+            "name": "抖音电商成熟度",
+            "weight": 0.5,
+            "rubric": {
+              "high": "抖音电商成熟，直播带货 ROI ≥ 2",
+              "mid": "中等水平，介于高分与低分之间",
+              "low": "低于行业平均，存在明显短板"
+            },
+            "support": 0,
+            "source": "delphi"
+          },
+          {
+            "id": "ind_营销渠道_小红书 ",
+            "name": "小红书 KOL 储备",
+            "weight": 0.5,
+            "rubric": {
+              "high": "小红书 KOL/KOC 储备 ≥ 50 位",
+              "mid": "中等水平，介于高分与低分之间",
+              "low": "低于行业平均，存在明显短板"
+            },
+            "support": 0,
+            "source": "delphi"
+          }
+        ]
+      },
+      {
+        "id": "cat_认证合规",
+        "name": "认证合规",
+        "weight": 0.25,
+        "indicators": [
+          {
+            "id": "ind_认证合规_成分检测",
+            "name": "成分检测报告完备",
+            "weight": 0.5,
+            "rubric": {
+              "high": "第三方检测报告齐全，SGS 等可出",
+              "mid": "中等水平，介于高分与低分之间",
+              "low": "低于行业平均，存在明显短板"
+            },
+            "support": 0,
+            "source": "delphi"
+          },
+          {
+            "id": "ind_认证合规_儿科医生",
+            "name": "儿科医生背书体系",
+            "weight": 0.5,
+            "rubric": {
+              "high": "儿科医生/皮肤科医生背书可获取",
+              "mid": "中等水平，介于高分与低分之间",
+              "low": "低于行业平均，存在明显短板"
+            },
+            "support": 0,
+            "source": "delphi"
+          }
+        ]
+      },
+      {
+        "id": "cat_产品品牌",
+        "name": "产品品牌",
+        "weight": 0.25,
+        "indicators": [
+          {
+            "id": "ind_产品品牌_5 年老",
+            "name": "5 年老客基础可迁移",
+            "weight": 0.5,
+            "rubric": {
+              "high": "现有 5 万+ 老客可迁移，复购率 ≥ 40%",
+              "mid": "中等水平，介于高分与低分之间",
+              "low": "低于行业平均，存在明显短板"
+            },
+            "support": 0,
+            "source": "delphi"
+          },
+          {
+            "id": "ind_产品品牌_C 端品",
+            "name": "C 端品牌认知起点",
+            "weight": 0.5,
+            "rubric": {
+              "high": "C 端有一定品牌认知，搜索量稳定",
+              "mid": "中等水平，介于高分与低分之间",
+              "low": "低于行业平均，存在明显短板"
+            },
+            "support": 0,
+            "source": "delphi"
+          }
+        ]
+      }
+    ]
+  },
+  "scoring": {
+    "m1": {
+      "ind_经济_市场规模": {
+        "score": 8.5,
+        "source": "user",
+        "evidence": "一线精致妈妈在\"市场规模 / 中高端容量\"上表现高，综合行业报告与专家访谈判断。"
+      },
+      "ind_经济_客单价与": {
+        "score": 7.5,
+        "source": "user",
+        "evidence": "一线精致妈妈在\"客单价与客单宽度\"上表现中，综合行业报告与专家访谈判断。"
+      },
+      "ind_政治法律_成分与安": {
+        "score": 9,
+        "source": "user",
+        "evidence": "一线精致妈妈在\"成分与安全监管\"上表现高，综合行业报告与专家访谈判断。"
+      },
+      "ind_政治法律_电商合规": {
+        "score": 7,
+        "source": "user",
+        "evidence": "一线精致妈妈在\"电商合规与广告法\"上表现中，综合行业报告与专家访谈判断。"
+      },
+      "ind_社会文化_成分党妈": {
+        "score": 8,
+        "source": "user",
+        "evidence": "一线精致妈妈在\"成分党妈妈占比\"上表现高，综合行业报告与专家访谈判断。"
+      },
+      "ind_社会文化_小红书/": {
+        "score": 8.5,
+        "source": "user",
+        "evidence": "一线精致妈妈在\"小红书/抖音种草渗透\"上表现高，综合行业报告与专家访谈判断。"
+      },
+      "ind_风险_获客成本": {
+        "score": 7,
+        "source": "user",
+        "evidence": "一线精致妈妈在\"获客成本波动\"上表现中，综合行业报告与专家访谈判断。"
+      },
+      "ind_风险_舆情与负": {
+        "score": 8.5,
+        "source": "user",
+        "evidence": "一线精致妈妈在\"舆情与负面评价放大\"上表现高，综合行业报告与专家访谈判断。"
+      },
+      "ind_市场信息_需求与竞": {
+        "score": 8.5,
+        "source": "user",
+        "evidence": "一线精致妈妈在\"需求与竞品数据可获取性\"上表现高，综合行业报告与专家访谈判断。"
+      },
+      "ind_市场信息_妈妈群体": {
+        "score": 7.5,
+        "source": "user",
+        "evidence": "一线精致妈妈在\"妈妈群体画像可监测\"上表现中，综合行业报告与专家访谈判断。"
+      },
+      "ind_营销渠道_抖音电商": {
+        "score": 9,
+        "source": "user",
+        "evidence": "一线精致妈妈在\"抖音电商成熟度\"上表现高，综合行业报告与专家访谈判断。"
+      },
+      "ind_营销渠道_小红书 ": {
+        "score": 7,
+        "source": "user",
+        "evidence": "一线精致妈妈在\"小红书 KOL 储备\"上表现中，综合行业报告与专家访谈判断。"
+      },
+      "ind_认证合规_成分检测": {
+        "score": 8,
+        "source": "user",
+        "evidence": "一线精致妈妈在\"成分检测报告完备\"上表现高，综合行业报告与专家访谈判断。"
+      },
+      "ind_认证合规_儿科医生": {
+        "score": 8.5,
+        "source": "user",
+        "evidence": "一线精致妈妈在\"儿科医生背书体系\"上表现高，综合行业报告与专家访谈判断。"
+      },
+      "ind_产品品牌_5 年老": {
+        "score": 7,
+        "source": "user",
+        "evidence": "一线精致妈妈在\"5 年老客基础可迁移\"上表现中，综合行业报告与专家访谈判断。"
+      },
+      "ind_产品品牌_C 端品": {
+        "score": 8.5,
+        "source": "user",
+        "evidence": "一线精致妈妈在\"C 端品牌认知起点\"上表现高，综合行业报告与专家访谈判断。"
+      }
+    },
+    "m2": {
+      "ind_经济_市场规模": {
+        "score": 6,
+        "source": "user",
+        "evidence": "二线价格敏感妈妈在\"市场规模 / 中高端容量\"上表现中，综合行业报告与专家访谈判断。"
+      },
+      "ind_经济_客单价与": {
+        "score": 5,
+        "source": "user",
+        "evidence": "二线价格敏感妈妈在\"客单价与客单宽度\"上表现中低，综合行业报告与专家访谈判断。"
+      },
+      "ind_政治法律_成分与安": {
+        "score": 6.5,
+        "source": "user",
+        "evidence": "二线价格敏感妈妈在\"成分与安全监管\"上表现中，综合行业报告与专家访谈判断。"
+      },
+      "ind_政治法律_电商合规": {
+        "score": 4.5,
+        "source": "user",
+        "evidence": "二线价格敏感妈妈在\"电商合规与广告法\"上表现中低，综合行业报告与专家访谈判断。"
+      },
+      "ind_社会文化_成分党妈": {
+        "score": 5.5,
+        "source": "user",
+        "evidence": "二线价格敏感妈妈在\"成分党妈妈占比\"上表现中低，综合行业报告与专家访谈判断。"
+      },
+      "ind_社会文化_小红书/": {
+        "score": 6,
+        "source": "user",
+        "evidence": "二线价格敏感妈妈在\"小红书/抖音种草渗透\"上表现中，综合行业报告与专家访谈判断。"
+      },
+      "ind_风险_获客成本": {
+        "score": 4.5,
+        "source": "user",
+        "evidence": "二线价格敏感妈妈在\"获客成本波动\"上表现中低，综合行业报告与专家访谈判断。"
+      },
+      "ind_风险_舆情与负": {
+        "score": 6,
+        "source": "user",
+        "evidence": "二线价格敏感妈妈在\"舆情与负面评价放大\"上表现中，综合行业报告与专家访谈判断。"
+      },
+      "ind_市场信息_需求与竞": {
+        "score": 7.5,
+        "source": "user",
+        "evidence": "二线价格敏感妈妈在\"需求与竞品数据可获取性\"上表现中，综合行业报告与专家访谈判断。"
+      },
+      "ind_市场信息_妈妈群体": {
+        "score": 6.5,
+        "source": "user",
+        "evidence": "二线价格敏感妈妈在\"妈妈群体画像可监测\"上表现中，综合行业报告与专家访谈判断。"
+      },
+      "ind_营销渠道_抖音电商": {
+        "score": 8,
+        "source": "user",
+        "evidence": "二线价格敏感妈妈在\"抖音电商成熟度\"上表现高，综合行业报告与专家访谈判断。"
+      },
+      "ind_营销渠道_小红书 ": {
+        "score": 6,
+        "source": "user",
+        "evidence": "二线价格敏感妈妈在\"小红书 KOL 储备\"上表现中，综合行业报告与专家访谈判断。"
+      },
+      "ind_认证合规_成分检测": {
+        "score": 7,
+        "source": "user",
+        "evidence": "二线价格敏感妈妈在\"成分检测报告完备\"上表现中，综合行业报告与专家访谈判断。"
+      },
+      "ind_认证合规_儿科医生": {
+        "score": 7.5,
+        "source": "user",
+        "evidence": "二线价格敏感妈妈在\"儿科医生背书体系\"上表现中，综合行业报告与专家访谈判断。"
+      },
+      "ind_产品品牌_5 年老": {
+        "score": 6,
+        "source": "user",
+        "evidence": "二线价格敏感妈妈在\"5 年老客基础可迁移\"上表现中，综合行业报告与专家访谈判断。"
+      },
+      "ind_产品品牌_C 端品": {
+        "score": 7.5,
+        "source": "user",
+        "evidence": "二线价格敏感妈妈在\"C 端品牌认知起点\"上表现中，综合行业报告与专家访谈判断。"
+      }
+    },
+    "m3": {
+      "ind_经济_市场规模": {
+        "score": 7.5,
+        "source": "user",
+        "evidence": "抖音新客（兴趣电商）在\"市场规模 / 中高端容量\"上表现中，综合行业报告与专家访谈判断。"
+      },
+      "ind_经济_客单价与": {
+        "score": 6.5,
+        "source": "user",
+        "evidence": "抖音新客（兴趣电商）在\"客单价与客单宽度\"上表现中，综合行业报告与专家访谈判断。"
+      },
+      "ind_政治法律_成分与安": {
+        "score": 8,
+        "source": "user",
+        "evidence": "抖音新客（兴趣电商）在\"成分与安全监管\"上表现高，综合行业报告与专家访谈判断。"
+      },
+      "ind_政治法律_电商合规": {
+        "score": 6,
+        "source": "user",
+        "evidence": "抖音新客（兴趣电商）在\"电商合规与广告法\"上表现中，综合行业报告与专家访谈判断。"
+      },
+      "ind_社会文化_成分党妈": {
+        "score": 7,
+        "source": "user",
+        "evidence": "抖音新客（兴趣电商）在\"成分党妈妈占比\"上表现中，综合行业报告与专家访谈判断。"
+      },
+      "ind_社会文化_小红书/": {
+        "score": 7.5,
+        "source": "user",
+        "evidence": "抖音新客（兴趣电商）在\"小红书/抖音种草渗透\"上表现中，综合行业报告与专家访谈判断。"
+      },
+      "ind_风险_获客成本": {
+        "score": 6,
+        "source": "user",
+        "evidence": "抖音新客（兴趣电商）在\"获客成本波动\"上表现中，综合行业报告与专家访谈判断。"
+      },
+      "ind_风险_舆情与负": {
+        "score": 7.5,
+        "source": "user",
+        "evidence": "抖音新客（兴趣电商）在\"舆情与负面评价放大\"上表现中，综合行业报告与专家访谈判断。"
+      },
+      "ind_市场信息_需求与竞": {
+        "score": 4.5,
+        "source": "user",
+        "evidence": "抖音新客（兴趣电商）在\"需求与竞品数据可获取性\"上表现中低，综合行业报告与专家访谈判断。"
+      },
+      "ind_市场信息_妈妈群体": {
+        "score": 3.5,
+        "source": "user",
+        "evidence": "抖音新客（兴趣电商）在\"妈妈群体画像可监测\"上表现低，综合行业报告与专家访谈判断。"
+      },
+      "ind_营销渠道_抖音电商": {
+        "score": 5,
+        "source": "user",
+        "evidence": "抖音新客（兴趣电商）在\"抖音电商成熟度\"上表现中低，综合行业报告与专家访谈判断。"
+      },
+      "ind_营销渠道_小红书 ": {
+        "score": 3,
+        "source": "user",
+        "evidence": "抖音新客（兴趣电商）在\"小红书 KOL 储备\"上表现低，综合行业报告与专家访谈判断。"
+      },
+      "ind_认证合规_成分检测": {
+        "score": 4,
+        "source": "user",
+        "evidence": "抖音新客（兴趣电商）在\"成分检测报告完备\"上表现中低，综合行业报告与专家访谈判断。"
+      },
+      "ind_认证合规_儿科医生": {
+        "score": 4.5,
+        "source": "user",
+        "evidence": "抖音新客（兴趣电商）在\"儿科医生背书体系\"上表现中低，综合行业报告与专家访谈判断。"
+      },
+      "ind_产品品牌_5 年老": {
+        "score": 3,
+        "source": "user",
+        "evidence": "抖音新客（兴趣电商）在\"5 年老客基础可迁移\"上表现低，综合行业报告与专家访谈判断。"
+      },
+      "ind_产品品牌_C 端品": {
+        "score": 4.5,
+        "source": "user",
+        "evidence": "抖音新客（兴趣电商）在\"C 端品牌认知起点\"上表现中低，综合行业报告与专家访谈判断。"
+      }
+    }
+  },
+  "delphi": {
+    "recruitment": {
+      "perspectives": [
+        {
+          "id": "p_brand",
+          "role": "品牌策略专家",
+          "why": "衡量成分党迁移路径与品牌差异化"
+        },
+        {
+          "id": "p_growth",
+          "role": "抖音电商运营",
+          "why": "评估兴趣电商投放 ROI 与渗透率"
+        },
+        {
+          "id": "p_product",
+          "role": "婴幼儿洗护产品经理",
+          "why": "解读成分表与竞品配方差异"
+        },
+        {
+          "id": "p_retail",
+          "role": "线下母婴渠道商",
+          "why": "识别二线城市复购驱动力"
+        },
+        {
+          "id": "p_mom",
+          "role": "一线妈妈 KOC",
+          "why": "翻译红 PP 焦虑与试用装决策门槛"
+        }
+      ]
+    },
+    "personas": [
+      {
+        "id": "pe1",
+        "name": "品牌策略专家",
+        "perspective": "看品牌资产与迁移",
+        "stance": "中性"
+      },
+      {
+        "id": "pe2",
+        "name": "抖音运营",
+        "perspective": "看流量与转化",
+        "stance": "增长向"
+      },
+      {
+        "id": "pe3",
+        "name": "产品经理",
+        "perspective": "看配方与差异化",
+        "stance": "产品向"
+      },
+      {
+        "id": "pe4",
+        "name": "线下渠道",
+        "perspective": "看复购与铺货",
+        "stance": "渠道向"
+      },
+      {
+        "id": "pe5",
+        "name": "妈妈 KOC",
+        "perspective": "看决策与口碑",
+        "stance": "用户向"
+      }
+    ],
+    "userHosted": true,
+    "finalWeights": {
+      "attractiveness": {
+        "ind_经济_市场规模": 0.2,
+        "ind_经济_客单价": 0.15,
+        "ind_政治法律_成分": 0.1,
+        "ind_政治法律_电商": 0.05,
+        "ind_社会文化_成分": 0.15,
+        "ind_社会文化_渗透": 0.1,
+        "ind_风险_获客成本": 0.05,
+        "ind_风险_舆情": 0.05
+      },
+      "competitiveness": {
+        "ind_市场信息_需求": 0.06,
+        "ind_市场信息_画像": 0.06,
+        "ind_营销渠道_抖音": 0.1,
+        "ind_营销渠道_小红书": 0.08,
+        "ind_认证合规_检测": 0.1,
+        "ind_认证合规_医生": 0.1,
+        "ind_产品品牌_老客": 0.15,
+        "ind_产品品牌_品牌": 0.1
+      }
+    },
+    "summary": "两轮 Delphi 后专家对\"小红书渗透\"\"老客基础\"赋权最高。一线精致妈妈客单价高、成分党占比高、抖音渗透高，6 个月内可贡献 30% 营收；二线老客稳定但增长见顶；抖音新客是渠道维度不是细分市场。",
+    "status": "done",
+    "phase": "converged",
+    "panel": [],
+    "round1": null,
+    "round2": null,
+    "synthesis": null,
+    "finalSynthesis": null,
+    "weights": null
+  },
+  "matrix": {
+    "xCut": null,
+    "yCut": null,
+    "notes": "短期保 m2 老客复盘，中期重点攻 m1 抖音+小红书种草，长期考虑 m3 抖音兴趣电商。"
+  },
+  "decision": {
+    "explanations": {
+      "m1": "高吸引力（成分党+高客单）+ 强竞争力（5 万老客可迁移、抖音渠道成熟）",
+      "m2": "高吸引力（市场规模大）+ 极强竞争力（老客粘性）但增长见顶",
+      "m3": "中吸引力（新流量红利）+ 弱竞争力（无老客、品牌认知弱）"
+    },
+    "tier1": {
+      "marketId": "m1",
+      "rationale": "一线精致妈妈客单价高、成分党、抖音渗透高，6 个月内可贡献 30% 营收",
+      "resourcesPct": 80,
+      "milestones": [
+        "6 月内招 1 名抖音运营+1 名内容策划",
+        "启动小红书+抖音\"成分透明\"系列内容"
       ],
-      userHosted: true,
-      finalWeights: {
-        attractiveness: { 'ind_经济_市场规模':0.20, 'ind_经济_客单价':0.15, 'ind_政治法律_成分':0.10, 'ind_政治法律_电商':0.05, 'ind_社会文化_成分':0.15, 'ind_社会文化_渗透':0.10, 'ind_风险_获客成本':0.05, 'ind_风险_舆情':0.05 },
-        competitiveness: { 'ind_市场信息_需求':0.06, 'ind_市场信息_画像':0.06, 'ind_营销渠道_抖音':0.10, 'ind_营销渠道_小红书':0.08, 'ind_认证合规_检测':0.10, 'ind_认证合规_医生':0.10, 'ind_产品品牌_老客':0.15, 'ind_产品品牌_品牌':0.10 }
-      },
-      summary: '两轮 Delphi 后专家对"小红书渗透""老客基础"赋权最高。一线精致妈妈客单价高、成分党占比高、抖音渗透高，6 个月内可贡献 30% 营收；二线老客稳定但增长见顶；抖音新客是渠道维度不是细分市场。',
-      status: 'done',
-      phase: 'converged',
-      // === 旧字段（保留兼容，不再使用） ===
-      panel: [], round1: null, round2: null, synthesis: null, finalSynthesis: null, weights: null
+      "reEvalTrigger": "3 个月复盘：抖音 ROI < 1.5 或小红书互动 < 5%"
     },
-    // ===== Tab 3: 矩阵 + 三档决策 =====
-    matrix: { xCut: null, yCut: null, notes:'短期保 m2 老客复盘，中期重点攻 m1 抖音+小红书种草，长期考虑 m3 抖音兴趣电商。' },
-    decision: {
-      explanations: {
-        m1:'高吸引力（成分党+高客单）+ 强竞争力（5 万老客可迁移、抖音渠道成熟）',
-        m2:'高吸引力（市场规模大）+ 极强竞争力（老客粘性）但增长见顶',
-        m3:'中吸引力（新流量红利）+ 弱竞争力（无老客、品牌认知弱）'
-      },
-      tier1: { marketId:'m1', rationale:'一线精致妈妈客单价高、成分党、抖音渗透高，6 个月内可贡献 30% 营收', resourcesPct:80, milestones:['6 月内招 1 名抖音运营+1 名内容策划','启动小红书+抖音"成分透明"系列内容'], reEvalTrigger:'3 个月复盘：抖音 ROI < 1.5 或小红书互动 < 5%' },
-      tier2: { marketIds:['m2'], observationMetrics:['月复购率','客服响应时长'], reEvalTrigger:'复购率连续 2 月 < 30%' },
-      tier3: { marketIds:['m3'], reEvalTrigger:'一线 ROI 跑通后再启动' }
+    "tier2": {
+      "marketIds": [
+        "m2"
+      ],
+      "observationMetrics": [
+        "月复购率",
+        "客服响应时长"
+      ],
+      "reEvalTrigger": "复购率连续 2 月 < 30%"
     },
-    meta: { schemaVersion: 2, work1Linked: false },
-    _pipeDone: ['framework','evaluate']
-  };
+    "tier3": {
+      "marketIds": [
+        "m3"
+      ],
+      "reEvalTrigger": "一线 ROI 跑通后再启动"
+    }
+  },
+  "meta": {
+    "schemaVersion": 2,
+    "work1Linked": false
+  },
+  "_pipeDone": [
+    "framework",
+    "evaluate"
+  ]
+};
 
   if(typeof window!== 'undefined') window.__case_douya_mama_work2 = data;
 })();
@@ -404,146 +1057,566 @@
  ============================================================ */
 (function(){
   const data = {
-    context: {
-      sbuName: '豆芽妈妈',
-      sbuOneLine: '婴幼儿洗护专业品牌，5 年配方稳定',
-      targetMarket: '一线精致妈妈',
-      targetMarketReason: '客单价高、成分党、抖音渗透高，6 个月内可贡献 30% 营收',
-      tier1: { marketId:'m1', name:'一线精致妈妈', rationale:'客单价高、成分党、抖音渗透高' },
-      tier2: [{ marketId:'m2', name:'二线价格敏感妈妈' }],
-      personas: [
-        { id:'p1', name:'林小满', painPoints:'宝宝红 PP 反复、担心成分刺激' },
-        { id:'p2', name:'周晓燕', painPoints:'价格敏感、囤货焦虑' },
-        { id:'p3', name:'苏雅', painPoints:'信任门槛高、需要医生背书' }
-      ],
-      valueFramework: ['看得见成分','安心呵护','红 PP 急救','专业背书'],
-      hasSurvey: true
+  "context": {
+    "sbuName": "豆芽妈妈",
+    "sbuOneLine": "婴幼儿洗护专业品牌，5 年配方稳定",
+    "targetMarket": "一线精致妈妈",
+    "targetMarketReason": "客单价高、成分党、抖音渗透高，6 个月内可贡献 30% 营收",
+    "tier1": {
+      "marketId": "m1",
+      "name": "一线精致妈妈",
+      "rationale": "客单价高、成分党、抖音渗透高"
     },
-    scenarios: [
-      { id:'s1', name:'一线妈妈红 PP 应急', description:'宝宝突发红 PP 急需低刺激护臀膏+医生解读', personaIds:['p1','p3'], needStrength:{pain:'高',willingness:'高',frequency:'季节性高发'}, selected:true },
-      { id:'s2', name:'成分党日常囤货', description:'一线成分党妈妈日常对比配料表、品牌可信度', personaIds:['p1','p3'], needStrength:{pain:'中',willingness:'高',frequency:'月度'}, selected:true },
-      { id:'s3', name:'价格敏感跨品牌决策', description:'二线妈妈在豆芽与其他国货之间反复比价', personaIds:['p2'], needStrength:{pain:'中',willingness:'中',frequency:'低频'}, selected:false }
+    "tier2": [
+      {
+        "marketId": "m2",
+        "name": "二线价格敏感妈妈"
+      }
     ],
-    mining: {
-      documents: [
-        '豆芽的成分表我截图发过群，便宜又安心。',
-        '宝宝红 PP 试了松达没用，换豆芽护臀膏就好。',
-        '配料表没看懂，有没有医生能解读一下？',
-        '闺蜜推荐买的，5 年了，配方一直没变。',
-        '抖音上看到成分党妈妈推这个，但价格比袋鼠妈妈贵。',
-        '想要试用装，红 PP 严重不敢直接买。',
-        '儿科医生推荐才买的，比贝亲便宜。',
-        '我买豆芽是看老客评论多，新牌子不敢试。',
-        '护臀膏味道很重，宝宝不喜欢，能改进吗？',
-        '能否出个亲子装系列，全家都能用？'
+    "personas": [
+      {
+        "id": "p1",
+        "name": "林小满",
+        "painPoints": "宝宝红 PP 反复、担心成分刺激"
+      },
+      {
+        "id": "p2",
+        "name": "周晓燕",
+        "painPoints": "价格敏感、囤货焦虑"
+      },
+      {
+        "id": "p3",
+        "name": "苏雅",
+        "painPoints": "信任门槛高、需要医生背书"
+      }
+    ],
+    "valueFramework": [
+      "看得见成分",
+      "安心呵护",
+      "红 PP 急救",
+      "专业背书"
+    ],
+    "hasSurvey": true
+  },
+  "scenarios": [
+    {
+      "id": "s1",
+      "name": "一线妈妈红 PP 应急",
+      "description": "宝宝突发红 PP 急需低刺激护臀膏+医生解读",
+      "personaIds": [
+        "p1",
+        "p3"
       ],
-      includeWork1Open: true,
-      includeWork1Themes: true,
-      ldaParams: { k: 3, passes: 15, iterations: 100, no_below: 2, no_above: 0.5 },
-      ldaResult: null,
-      ldaError: null,
-      topics: [
-        { id:0, label:'成分与配方透明', share:40, keywords:[
-          {word:'成分',weight:0.09},{word:'配方',weight:0.08},{word:'配料表',weight:0.07},{word:'检测',weight:0.04},{word:'解读',weight:0.03}
-        ], representative_docs:['配料表没看懂，有没有医生能解读一下？','豆芽的成分表我截图发过群'] },
-        { id:1, label:'红 PP 应急与医生背书', share:35, keywords:[
-          {word:'红PP',weight:0.09},{word:'护臀膏',weight:0.08},{word:'医生',weight:0.06},{word:'推荐',weight:0.05},{word:'儿科',weight:0.03}
-        ], representative_docs:['宝宝红 PP 试了松达没用，换豆芽护臀膏就好','儿科医生推荐才买的'] },
-        { id:2, label:'老客信任与价格', share:25, keywords:[
-          {word:'老客',weight:0.08},{word:'闺蜜',weight:0.06},{word:'新牌子',weight:0.05},{word:'价格',weight:0.05},{word:'便宜',weight:0.04}
-        ], representative_docs:['闺蜜推荐买的，5 年了','抖音上看到但价格比袋鼠妈妈贵'] }
-      ],
-      wordFreqTop: [
-        {word:'成分',count:5},{word:'配方',count:4},{word:'红PP',count:4},{word:'医生',count:3},{word:'推荐',count:3},
-        {word:'老客',count:3},{word:'价格',count:2},{word:'护臀膏',count:2},{word:'闺蜜',count:2},{word:'检测',count:2}
-      ],
-      stats: { raw_count: 10, valid_count: 10, total_words: 142, vocab_size: 38, coherence: 0.45 },
-      painMap: [
-        { id:'pa1', pain:'成分表看不懂，担心不安全', evidence:'配料表没看懂，有没有医生能解读',
-          frequency:'高', linkedNeeds:['成分透明','医生背书'], linkedTopicId:0, type:'痛点', scenarioId:'s2' },
-        { id:'pa2', pain:'红 PP 反复，试错成本高', evidence:'试了松达没用，换豆芽就好',
-          frequency:'高', linkedNeeds:['红 PP 急救','医生推荐'], linkedTopicId:1, type:'痛点', scenarioId:'s1' },
-        { id:'pa3', pain:'新牌子不敢试，需要信任锚点', evidence:'我买豆芽是看老客评论多，新牌子不敢试',
-          frequency:'中', linkedNeeds:['老客背书','品牌历史'], linkedTopicId:2, type:'痛点', scenarioId:'s2' },
-        { id:'pa4', pain:'价格相对竞品偏高', evidence:'抖音上看到但价格比袋鼠妈妈贵',
-          frequency:'中', linkedNeeds:['价值证明'], linkedTopicId:2, type:'痒点', scenarioId:'s3' },
-        { id:'pa5', pain:'想要试用装降低首次决策成本', evidence:'红 PP 严重不敢直接买，想要试用装',
-          frequency:'中', linkedNeeds:['试用装'], linkedTopicId:1, type:'痒点', scenarioId:'s1' }
-      ]
+      "needStrength": {
+        "pain": "高",
+        "willingness": "高",
+        "frequency": "季节性高发"
+      },
+      "selected": true
     },
-    candidates: [
-      { id:'c1', name:'成分透明配方', pain:'成分焦虑',
-        description:'每件产品展示完整成分表+检测报告+配方白名单', evidence:'10 篇评论中 5 篇提及成分',
-        source:'user', scenarioId:'s2', selected:true,
-        importance: 9, uniqueness: 9, credibility: 8,
-        feasibility: 9, communicability: 9, sustainability: 8,
-        extraDims:{}},
-      { id:'c2', name:'儿科医生背书', pain:'信任门槛',
-        description:'三甲医院儿科医生推荐+在线问诊+医生解读成分', evidence:'3 篇评论提及医生推荐',
-        source:'user', scenarioId:'s2', selected:false,
-        importance: 8, uniqueness: 9, credibility: 9,
-        feasibility: 7, communicability: 9, sustainability: 7,
-        extraDims:{}},
-      { id:'c3', name:'红 PP 急救包', pain:'红 PP 反复',
-        description:'护臀膏试用装+皮肤咨询+无效退款', evidence:'4 篇评论提及红 PP',
-        source:'user', scenarioId:'s1', selected:true,
-        importance: 9, uniqueness: 8, credibility: 7,
-        feasibility: 8, communicability: 8, sustainability: 7,
-        extraDims:{}},
-      { id:'c4', name:'抖音成分实验室', pain:'新客难触达',
-        description:'抖音"成分实验室"系列内容（30 秒短剧+配方表动画）', evidence:'内部策略，无评论',
-        source:'user', scenarioId:'s2', selected:false,
-        importance: 7, uniqueness: 7, credibility: 6,
-        feasibility: 6, communicability: 8, sustainability: 6,
-        extraDims:{}}
+    {
+      "id": "s2",
+      "name": "成分党日常囤货",
+      "description": "一线成分党妈妈日常对比配料表、品牌可信度",
+      "personaIds": [
+        "p1",
+        "p3"
+      ],
+      "needStrength": {
+        "pain": "中",
+        "willingness": "高",
+        "frequency": "月度"
+      },
+      "selected": true
+    },
+    {
+      "id": "s3",
+      "name": "价格敏感跨品牌决策",
+      "description": "二线妈妈在豆芽与其他国货之间反复比价",
+      "personaIds": [
+        "p2"
+      ],
+      "needStrength": {
+        "pain": "中",
+        "willingness": "中",
+        "frequency": "低频"
+      },
+      "selected": false
+    }
+  ],
+  "mining": {
+    "documents": [
+      "豆芽的成分表我截图发过群，便宜又安心。",
+      "宝宝红 PP 试了松达没用，换豆芽护臀膏就好。",
+      "配料表没看懂，有没有医生能解读一下？",
+      "闺蜜推荐买的，5 年了，配方一直没变。",
+      "抖音上看到成分党妈妈推这个，但价格比袋鼠妈妈贵。",
+      "想要试用装，红 PP 严重不敢直接买。",
+      "儿科医生推荐才买的，比贝亲便宜。",
+      "我买豆芽是看老客评论多，新牌子不敢试。",
+      "护臀膏味道很重，宝宝不喜欢，能改进吗？",
+      "能否出个亲子装系列，全家都能用？"
     ],
-    dimensions: {
-      desirability: (typeof Work3!== 'undefined' && Work3.DEFAULT_DESIRABILITY_DIMS)
-        ? Work3.DEFAULT_DESIRABILITY_DIMS.map(d=>({...d}))
-        : [
-          {key:'importance', label:'重要性', definition:'这个卖点对客户有多重要'},
-          {key:'uniqueness', label:'独特性', definition:'竞品是否也在说/做'},
-          {key:'credibility', label:'可信性', definition:'客户凭什么相信你能做到'}
+    "includeWork1Open": true,
+    "includeWork1Themes": true,
+    "ldaParams": {
+      "k": 3,
+      "passes": 15,
+      "iterations": 100,
+      "no_below": 2,
+      "no_above": 0.5
+    },
+    "ldaResult": null,
+    "ldaError": null,
+    "topics": [
+      {
+        "id": 0,
+        "label": "成分与配方透明",
+        "share": 40,
+        "keywords": [
+          {
+            "word": "成分",
+            "weight": 0.09
+          },
+          {
+            "word": "配方",
+            "weight": 0.08
+          },
+          {
+            "word": "配料表",
+            "weight": 0.07
+          },
+          {
+            "word": "检测",
+            "weight": 0.04
+          },
+          {
+            "word": "解读",
+            "weight": 0.03
+          }
         ],
-      implementability: (typeof Work3!== 'undefined' && Work3.DEFAULT_IMPLEMENTABILITY_DIMS)
-        ? Work3.DEFAULT_IMPLEMENTABILITY_DIMS.map(d=>({...d}))
-        : [
-          {key:'feasibility', label:'可行性', definition:'技术/供应链/成本能否实现'},
-          {key:'communicability', label:'可传播性', definition:'能否用一句话让客户听懂'},
-          {key:'sustainability', label:'可持续性', definition:'能否长期维持、不被轻易复制'}
+        "representative_docs": [
+          "配料表没看懂，有没有医生能解读一下？",
+          "豆芽的成分表我截图发过群"
         ]
+      },
+      {
+        "id": 1,
+        "label": "红 PP 应急与医生背书",
+        "share": 35,
+        "keywords": [
+          {
+            "word": "红PP",
+            "weight": 0.09
+          },
+          {
+            "word": "护臀膏",
+            "weight": 0.08
+          },
+          {
+            "word": "医生",
+            "weight": 0.06
+          },
+          {
+            "word": "推荐",
+            "weight": 0.05
+          },
+          {
+            "word": "儿科",
+            "weight": 0.03
+          }
+        ],
+        "representative_docs": [
+          "宝宝红 PP 试了松达没用，换豆芽护臀膏就好",
+          "儿科医生推荐才买的"
+        ]
+      },
+      {
+        "id": 2,
+        "label": "老客信任与价格",
+        "share": 25,
+        "keywords": [
+          {
+            "word": "老客",
+            "weight": 0.08
+          },
+          {
+            "word": "闺蜜",
+            "weight": 0.06
+          },
+          {
+            "word": "新牌子",
+            "weight": 0.05
+          },
+          {
+            "word": "价格",
+            "weight": 0.05
+          },
+          {
+            "word": "便宜",
+            "weight": 0.04
+          }
+        ],
+        "representative_docs": [
+          "闺蜜推荐买的，5 年了",
+          "抖音上看到但价格比袋鼠妈妈贵"
+        ]
+      }
+    ],
+    "wordFreqTop": [
+      {
+        "word": "成分",
+        "count": 5
+      },
+      {
+        "word": "配方",
+        "count": 4
+      },
+      {
+        "word": "红PP",
+        "count": 4
+      },
+      {
+        "word": "医生",
+        "count": 3
+      },
+      {
+        "word": "推荐",
+        "count": 3
+      },
+      {
+        "word": "老客",
+        "count": 3
+      },
+      {
+        "word": "价格",
+        "count": 2
+      },
+      {
+        "word": "护臀膏",
+        "count": 2
+      },
+      {
+        "word": "闺蜜",
+        "count": 2
+      },
+      {
+        "word": "检测",
+        "count": 2
+      }
+    ],
+    "stats": {
+      "raw_count": 10,
+      "valid_count": 10,
+      "total_words": 142,
+      "vocab_size": 38,
+      "coherence": 0.45
     },
-    matrix: { showSector:true, sectorWidth:1.5, xCut:7, yCut:7, manualSelected:['c1','c3'] },
-    migration: { prompt:'', analyses:[
-      { from:'贝亲客户', to:'c1', reason:'同价格带, 豆芽补足成分透明', cost:5 },
-      { from:'松达客户', to:'c1', reason:'山茶油成分党迁移到豆芽配方', cost:6 },
-      { from:'戴可思客户', to:'c3', reason:'金盏花成分派迁移到红 PP 急救', cost:7 }
-    ] },
-    proposition: {
-      coreValueIds:['c1','c2','c3','c4'],
-      alternatives:[
-        {id:'a1', text:'看得见的成分，安心的呵护。'},
-        {id:'a2', text:'成分党妈妈，选豆芽。'},
-        {id:'a3', text:'5 年妈妈，5 年放心。'}
-      ],
-      chosenValueText: '看得见的成分，安心的呵护。',
-      positioning:{brand:'豆芽妈妈', audience:'25-35 岁精致妈妈/成分党', coreValue:'成分透明+医生背书+红 PP 急救', category:'国货婴幼儿洗护专业品牌'},
-      positioningStatement: '对于 25-35 岁精致妈妈/成分党, 豆芽妈妈是唯一一个用 5 年配方稳定 + 完整成分表 + 儿科医生背书 + 红 PP 急救包, 让"看得见的成分, 安心的呵护"落到实处的国货婴幼儿洗护专业品牌。'
+    "painMap": [
+      {
+        "id": "pa1",
+        "pain": "成分表看不懂，担心不安全",
+        "evidence": "配料表没看懂，有没有医生能解读",
+        "frequency": "高",
+        "linkedNeeds": [
+          "成分透明",
+          "医生背书"
+        ],
+        "linkedTopicId": 0,
+        "type": "痛点",
+        "scenarioId": "s2"
+      },
+      {
+        "id": "pa2",
+        "pain": "红 PP 反复，试错成本高",
+        "evidence": "试了松达没用，换豆芽就好",
+        "frequency": "高",
+        "linkedNeeds": [
+          "红 PP 急救",
+          "医生推荐"
+        ],
+        "linkedTopicId": 1,
+        "type": "痛点",
+        "scenarioId": "s1"
+      },
+      {
+        "id": "pa3",
+        "pain": "新牌子不敢试，需要信任锚点",
+        "evidence": "我买豆芽是看老客评论多，新牌子不敢试",
+        "frequency": "中",
+        "linkedNeeds": [
+          "老客背书",
+          "品牌历史"
+        ],
+        "linkedTopicId": 2,
+        "type": "痛点",
+        "scenarioId": "s2"
+      },
+      {
+        "id": "pa4",
+        "pain": "价格相对竞品偏高",
+        "evidence": "抖音上看到但价格比袋鼠妈妈贵",
+        "frequency": "中",
+        "linkedNeeds": [
+          "价值证明"
+        ],
+        "linkedTopicId": 2,
+        "type": "痒点",
+        "scenarioId": "s3"
+      },
+      {
+        "id": "pa5",
+        "pain": "想要试用装降低首次决策成本",
+        "evidence": "红 PP 严重不敢直接买，想要试用装",
+        "frequency": "中",
+        "linkedNeeds": [
+          "试用装"
+        ],
+        "linkedTopicId": 1,
+        "type": "痒点",
+        "scenarioId": "s1"
+      }
+    ]
+  },
+  "candidates": [
+    {
+      "id": "c1",
+      "name": "成分透明配方",
+      "pain": "成分焦虑",
+      "description": "每件产品展示完整成分表+检测报告+配方白名单",
+      "evidence": "10 篇评论中 5 篇提及成分",
+      "source": "user",
+      "scenarioId": "s2",
+      "selected": true,
+      "importance": 9,
+      "uniqueness": 9,
+      "credibility": 8,
+      "feasibility": 9,
+      "communicability": 9,
+      "sustainability": 8,
+      "extraDims": {}
     },
-    identity: {
-      mbti: 'ISFJ (守护者型 — 偏温暖、专业、稳定)',
-      personalityTraits: ['安心','专业','透明','温暖','信任'],
-      sloganOptions: [
-        {text:'看得见的成分，安心的呵护', source:'agent'},
-        {text:'成分党妈妈，选豆芽', source:'user'},
-        {text:'5 年妈妈，5 年放心', source:'user'}
-      ],
-      chosenSlogan: '看得见的成分，安心的呵护'
+    {
+      "id": "c2",
+      "name": "儿科医生背书",
+      "pain": "信任门槛",
+      "description": "三甲医院儿科医生推荐+在线问诊+医生解读成分",
+      "evidence": "3 篇评论提及医生推荐",
+      "source": "user",
+      "scenarioId": "s2",
+      "selected": false,
+      "importance": 8,
+      "uniqueness": 9,
+      "credibility": 9,
+      "feasibility": 7,
+      "communicability": 9,
+      "sustainability": 7,
+      "extraDims": {}
     },
-    _scoreDone: ['c1','c2','c3','c4'],
-    _pipeProp: ['coreValueIds','chosenValueText','positioning'],
-    _pipeIdentity: ['mbti','sloganOptions','chosenSlogan']
-  };
+    {
+      "id": "c3",
+      "name": "红 PP 急救包",
+      "pain": "红 PP 反复",
+      "description": "护臀膏试用装+皮肤咨询+无效退款",
+      "evidence": "4 篇评论提及红 PP",
+      "source": "user",
+      "scenarioId": "s1",
+      "selected": true,
+      "importance": 9,
+      "uniqueness": 8,
+      "credibility": 7,
+      "feasibility": 8,
+      "communicability": 8,
+      "sustainability": 7,
+      "extraDims": {}
+    },
+    {
+      "id": "c4",
+      "name": "抖音成分实验室",
+      "pain": "新客难触达",
+      "description": "抖音\"成分实验室\"系列内容（30 秒短剧+配方表动画）",
+      "evidence": "内部策略，无评论",
+      "source": "user",
+      "scenarioId": "s2",
+      "selected": false,
+      "importance": 7,
+      "uniqueness": 7,
+      "credibility": 6,
+      "feasibility": 6,
+      "communicability": 8,
+      "sustainability": 6,
+      "extraDims": {}
+    },
+    {
+      "id": "c5",
+      "name": "0 添加无泪配方",
+      "pain": "担心刺激眼睛",
+      "scenarioId": "s1",
+      "importance": 8,
+      "uniqueness": 6,
+      "credibility": 7,
+      "feasibility": 7,
+      "communicability": 8,
+      "sustainability": 6,
+      "selected": false,
+      "evidence": "内部研发资料"
+    },
+    {
+      "id": "c6",
+      "name": "儿科医生联合研发背书",
+      "pain": "担心成分不安全",
+      "scenarioId": "s2",
+      "importance": 9,
+      "uniqueness": 7,
+      "credibility": 9,
+      "feasibility": 5,
+      "communicability": 9,
+      "sustainability": 7,
+      "selected": false,
+      "evidence": "合作意向书"
+    }
+  ],
+  "dimensions": {
+    "desirability": [
+      {
+        "key": "importance",
+        "label": "重要性",
+        "definition": "这个卖点对客户有多重要"
+      },
+      {
+        "key": "uniqueness",
+        "label": "独特性",
+        "definition": "竞品是否也在说/做"
+      },
+      {
+        "key": "credibility",
+        "label": "可信性",
+        "definition": "客户凭什么相信你能做到"
+      }
+    ],
+    "implementability": [
+      {
+        "key": "feasibility",
+        "label": "可行性",
+        "definition": "技术/供应链/成本能否实现"
+      },
+      {
+        "key": "communicability",
+        "label": "可传播性",
+        "definition": "能否用一句话让客户听懂"
+      },
+      {
+        "key": "sustainability",
+        "label": "可持续性",
+        "definition": "能否长期维持、不被轻易复制"
+      }
+    ]
+  },
+  "matrix": {
+    "showSector": true,
+    "sectorWidth": 1.5,
+    "xCut": 7,
+    "yCut": 7,
+    "manualSelected": [
+      "c1",
+      "c3"
+    ]
+  },
+  "migration": {
+    "prompt": "",
+    "analyses": [
+      {
+        "from": "贝亲客户",
+        "to": "c1",
+        "reason": "同价格带, 豆芽补足成分透明",
+        "cost": 5
+      },
+      {
+        "from": "松达客户",
+        "to": "c1",
+        "reason": "山茶油成分党迁移到豆芽配方",
+        "cost": 6
+      },
+      {
+        "from": "戴可思客户",
+        "to": "c3",
+        "reason": "金盏花成分派迁移到红 PP 急救",
+        "cost": 7
+      }
+    ]
+  },
+  "proposition": {
+    "coreValueIds": [
+      "c1",
+      "c2",
+      "c3",
+      "c4"
+    ],
+    "alternatives": [
+      {
+        "id": "a1",
+        "text": "看得见的成分，安心的呵护。"
+      },
+      {
+        "id": "a2",
+        "text": "成分党妈妈，选豆芽。"
+      },
+      {
+        "id": "a3",
+        "text": "5 年妈妈，5 年放心。"
+      }
+    ],
+    "chosenValueText": "看得见的成分，安心的呵护。",
+    "positioning": {
+      "brand": "豆芽妈妈",
+      "audience": "25-35 岁精致妈妈/成分党",
+      "coreValue": "成分透明+医生背书+红 PP 急救",
+      "category": "国货婴幼儿洗护专业品牌"
+    },
+    "positioningStatement": "对于 25-35 岁精致妈妈/成分党, 豆芽妈妈是唯一一个用 5 年配方稳定 + 完整成分表 + 儿科医生背书 + 红 PP 急救包, 让\"看得见的成分, 安心的呵护\"落到实处的国货婴幼儿洗护专业品牌。"
+  },
+  "identity": {
+    "mbti": "ISFJ (守护者型 — 偏温暖、专业、稳定)",
+    "personalityTraits": [
+      "安心",
+      "专业",
+      "透明",
+      "温暖",
+      "信任"
+    ],
+    "sloganOptions": [
+      {
+        "text": "看得见的成分，安心的呵护",
+        "source": "agent"
+      },
+      {
+        "text": "成分党妈妈，选豆芽",
+        "source": "user"
+      },
+      {
+        "text": "5 年妈妈，5 年放心",
+        "source": "user"
+      }
+    ],
+    "chosenSlogan": "看得见的成分，安心的呵护"
+  },
+  "_scoreDone": [
+    "c1",
+    "c2",
+    "c3",
+    "c4"
+  ],
+  "_pipeProp": [
+    "coreValueIds",
+    "chosenValueText",
+    "positioning"
+  ],
+  "_pipeIdentity": [
+    "mbti",
+    "sloganOptions",
+    "chosenSlogan"
+  ]
+};
 
   if(typeof window!== 'undefined') window.__case_douya_mama_work3 = data;
 })();
@@ -558,79 +1631,232 @@
  ============================================================ */
 (function(){
   const data = {
-    route:{
-      scope:'domestic',           // 豆芽妈妈是国内品牌，本阶段聚焦国内市场
-      oemType:'OBM',              // 有自有品牌（豆芽妈妈），从研发到品牌营销全链条
-      entryMode:'',
-      light:[],
-      politicalPower:''
+  "route": {
+    "scope": "domestic",
+    "oemType": "OBM",
+    "entryMode": "",
+    "light": [],
+    "politicalPower": ""
+  },
+  "product": {
+    "name": "豆芽妈妈婴幼儿洗护系列",
+    "description": "0-3 岁婴幼儿洗护全品类，成分透明+配方安心",
+    "coreDifferentiators": [
+      "成分透明展示",
+      "儿科医生背书",
+      "红 PP 急救",
+      "5 年配方稳定"
+    ],
+    "physicalFeatures": "无泪配方 / 无香精 / 通过敏感肌测试 / 包装可溯源二维码",
+    "serviceOffering": "7 天无理由 / 在线儿科咨询 / 成分查询小程序",
+    "technologyMoat": "5 年 OEM 配方数据库 + 儿科医生顾问团",
+    "skus": [
+      {
+        "name": "洗发沐浴二合一",
+        "specs": "300ml",
+        "price_range": "88-128 元",
+        "differentiator": "无泪配方"
+      },
+      {
+        "name": "护臀膏",
+        "specs": "50g",
+        "price_range": "108-158 元",
+        "differentiator": "氧化锌配方+红 PP 急救"
+      },
+      {
+        "name": "洗面奶（0+）",
+        "specs": "100g",
+        "price_range": "98-138 元",
+        "differentiator": "氨基酸温和"
+      },
+      {
+        "name": "待产包礼盒",
+        "specs": "6 件套",
+        "price_range": "588-888 元",
+        "differentiator": "颜值+全套"
+      }
+    ]
+  },
+  "price": {
+    "strategy": "value",
+    "strategyNote": "中端定价，强调成分与安全的价值感；待产包礼盒承接高客单。",
+    "tiers": [
+      {
+        "name": "日常单件",
+        "targetSegment": "复购老客",
+        "price": 88,
+        "unit": "元/件",
+        "notes": ""
+      },
+      {
+        "name": "核心单品",
+        "targetSegment": "新客转化",
+        "price": 128,
+        "unit": "元/件",
+        "notes": "护臀膏"
+      },
+      {
+        "name": "待产包礼盒",
+        "targetSegment": "新手妈妈",
+        "price": 688,
+        "unit": "元/套",
+        "notes": "6 件套"
+      }
+    ],
+    "channelPricing": [
+      {
+        "channel": "淘宝旗舰店",
+        "priceAdjustment": "与官网同价",
+        "rationale": "维护品牌价格"
+      },
+      {
+        "channel": "抖音直播间",
+        "priceAdjustment": "首发立减 30",
+        "rationale": "拉新"
+      },
+      {
+        "channel": "小红书",
+        "priceAdjustment": "挂车链接 9 折",
+        "rationale": "种草转化"
+      }
+    ],
+    "promotions": [
+      {
+        "occasion": "双 11",
+        "discount": "待产包礼盒立减 100",
+        "period": "11.1-11.11"
+      },
+      {
+        "occasion": "618",
+        "discount": "单件 8.5 折",
+        "period": "6.1-6.18"
+      }
+    ],
+    "competitorPrices": "贝亲 100-250；红色小象 80-150；松达 60-120；戴可思 70-140；袋鼠妈妈 50-100"
+  },
+  "place": {
+    "onlineSelf": [
+      "淘宝旗舰店",
+      "抖音旗舰店"
+    ],
+    "onlineThird": [
+      "天猫",
+      "京东",
+      "拼多多"
+    ],
+    "onlineNotes": "淘宝为主阵地，抖音为新增长极；天猫维持品牌",
+    "offlineDirect": [
+      "高端母婴店展示"
+    ],
+    "offlineDistrib": [
+      "精品超市"
+    ],
+    "offlineRetail": [],
+    "offlineNotes": "第一年以线上为主，线下仅做品牌展示",
+    "keyPartners": [
+      {
+        "name": "小红书 KOC",
+        "side": "线上"
+      },
+      {
+        "name": "儿科医生顾问",
+        "side": "线下"
+      },
+      {
+        "name": "抖音直播 MCN",
+        "side": "线上"
+      }
+    ],
+    "channelIncentives": "KOC 寄送样品+佣金 15%；MCN 直播坑位费 + GMV 提成 5%",
+    "structure": [
+      {
+        "name": "线上",
+        "children": [
+          {
+            "name": "淘宝",
+            "share": 55
+          },
+          {
+            "name": "抖音",
+            "share": 25
+          },
+          {
+            "name": "其他",
+            "share": 20
+          }
+        ]
+      },
+      {
+        "name": "线下",
+        "children": [
+          {
+            "name": "高端母婴店",
+            "share": 60
+          },
+          {
+            "name": "精品超市",
+            "share": 40
+          }
+        ]
+      }
+    ]
+  },
+  "promotion": {
+    "theme": "看得见的成分，安心的呵护",
+    "advertising": [
+      {
+        "media": "抖音短视频",
+        "budgetShare": 40,
+        "message": "成分透明实验",
+        "kpi": "GMV/ROAS"
+      },
+      {
+        "media": "小红书 KOC",
+        "budgetShare": 25,
+        "message": "真实使用+成分表",
+        "kpi": "互动率"
+      },
+      {
+        "media": "淘宝直通车",
+        "budgetShare": 20,
+        "message": "复购优惠",
+        "kpi": "ROI"
+      },
+      {
+        "media": "直播带货",
+        "budgetShare": 15,
+        "message": "红 PP 急救包",
+        "kpi": "转化率"
+      }
+    ],
+    "pr": [
+      {
+        "event": "儿科医生直播+成分解读",
+        "timing": "每月 1 次",
+        "expectedReach": "50 万妈妈群体"
+      }
+    ],
+    "salesPromotion": [
+      {
+        "tactic": "老客 9 折",
+        "mechanic": "私域推送",
+        "period": "每月"
+      },
+      {
+        "tactic": "待产包立减 100",
+        "mechanic": "预产期前 1 月",
+        "period": "全年"
+      }
+    ],
+    "crm": {
+      "tool": "企业微信+淘宝 CRM",
+      "membership": "VIP 妈妈群（消费满 2000）",
+      "repurchase": "每 60 天推送适配产品",
+      "notes": "老客复购是基本盘"
     },
-    product:{
-      name:'豆芽妈妈婴幼儿洗护系列',
-      description:'0-3 岁婴幼儿洗护全品类，成分透明+配方安心',
-      coreDifferentiators:['成分透明展示','儿科医生背书','红 PP 急救','5 年配方稳定'],
-      physicalFeatures:'无泪配方 / 无香精 / 通过敏感肌测试 / 包装可溯源二维码',
-      serviceOffering:'7 天无理由 / 在线儿科咨询 / 成分查询小程序',
-      technologyMoat:'5 年 OEM 配方数据库 + 儿科医生顾问团',
-      skus:[
-        {name:'洗发沐浴二合一', specs:'300ml', price_range:'88-128 元', differentiator:'无泪配方'},
-        {name:'护臀膏', specs:'50g', price_range:'108-158 元', differentiator:'氧化锌配方+红 PP 急救'},
-        {name:'洗面奶（0+）', specs:'100g', price_range:'98-138 元', differentiator:'氨基酸温和'},
-        {name:'待产包礼盒', specs:'6 件套', price_range:'588-888 元', differentiator:'颜值+全套'}
-      ]
-    },
-    price:{
-      strategy:'value',
-      strategyNote:'中端定价，强调成分与安全的价值感；待产包礼盒承接高客单。',
-      tiers:[
-        {name:'日常单件', targetSegment:'复购老客', price:88, unit:'元/件', notes:''},
-        {name:'核心单品', targetSegment:'新客转化', price:128, unit:'元/件', notes:'护臀膏'},
-        {name:'待产包礼盒', targetSegment:'新手妈妈', price:688, unit:'元/套', notes:'6 件套'}
-      ],
-      channelPricing:[
-        {channel:'淘宝旗舰店', priceAdjustment:'与官网同价', rationale:'维护品牌价格'},
-        {channel:'抖音直播间', priceAdjustment:'首发立减 30', rationale:'拉新'},
-        {channel:'小红书', priceAdjustment:'挂车链接 9 折', rationale:'种草转化'}
-      ],
-      promotions:[
-        {occasion:'双 11', discount:'待产包礼盒立减 100', period:'11.1-11.11'},
-        {occasion:'618', discount:'单件 8.5 折', period:'6.1-6.18'}
-      ],
-      competitorPrices:'贝亲 100-250；红色小象 80-150；松达 60-120；戴可思 70-140；袋鼠妈妈 50-100'
-    },
-    place:{
-      onlineSelf:['淘宝旗舰店','抖音旗舰店'],
-      onlineThird:['天猫','京东','拼多多'],
-      onlineNotes:'淘宝为主阵地，抖音为新增长极；天猫维持品牌',
-      offlineDirect:['高端母婴店展示'],
-      offlineDistrib:['精品超市'],
-      offlineRetail:[],
-      offlineNotes:'第一年以线上为主，线下仅做品牌展示',
-      keyPartners:[{name:'小红书 KOC',side:'线上'},{name:'儿科医生顾问',side:'线下'},{name:'抖音直播 MCN',side:'线上'}],
-      channelIncentives:'KOC 寄送样品+佣金 15%；MCN 直播坑位费 + GMV 提成 5%',
-      structure:[
-        {name:'线上', children:[{name:'淘宝', share:55},{name:'抖音', share:25},{name:'其他', share:20}]}
-      ]
-    },
-    promotion:{
-      theme:'看得见的成分，安心的呵护',
-      advertising:[
-        {media:'抖音短视频', budgetShare:40, message:'成分透明实验', kpi:'GMV/ROAS'},
-        {media:'小红书 KOC', budgetShare:25, message:'真实使用+成分表', kpi:'互动率'},
-        {media:'淘宝直通车', budgetShare:20, message:'复购优惠', kpi:'ROI'},
-        {media:'直播带货', budgetShare:15, message:'红 PP 急救包', kpi:'转化率'}
-      ],
-      pr:[
-        {event:'儿科医生直播+成分解读', timing:'每月 1 次', expectedReach:'50 万妈妈群体'}
-      ],
-      salesPromotion:[
-        {tactic:'老客 9 折', mechanic:'私域推送', period:'每月'},
-        {tactic:'待产包立减 100', mechanic:'预产期前 1 月', period:'全年'}
-      ],
-      crm:{tool:'企业微信+淘宝 CRM', membership:'VIP 妈妈群（消费满 2000）', repurchase:'每 60 天推送适配产品', notes:'老客复购是基本盘'},
-      contentStrategy:'抖音"成分实验室"系列 + 小红书"妈妈真实体验"系列 + 淘宝"配方溯源"长图。'
-    }
-  };
+    "contentStrategy": "抖音\"成分实验室\"系列 + 小红书\"妈妈真实体验\"系列 + 淘宝\"配方溯源\"长图。"
+  }
+};
 
   if(typeof window!== 'undefined') window.__case_douya_mama_work4 = data;
 })();
@@ -1031,35 +2257,716 @@
     }));
   }
   const data = {
-    candidates: [{"id":"mc1","name":"北京/杭州（跨省拓展）","reason":"粤菜认知弱、客群基础薄","source":"user"},{"id":"mc2","name":"加盟路线","reason":"资金效率高但品控风险大","source":"user"}],
-    screening: { criteria: [] },
-    retained: [{"id":"m1","name":"深圳（粤菜融合新客）","region":"深圳南山/福田","population":"潜在 50 万粤菜+融合菜客户","gdpPerCapita":"人均可支配 7 万+","notes":"融合菜渗透高、抖音同城生态成熟","source":"user"},{"id":"m2","name":"上海（精致中餐客）","region":"上海静安/徐汇","population":"潜在 30 万精致中餐客","gdpPerCapita":"人均可支配 8 万+","notes":"人均 200 元接受度高、出片文化强","source":"user"},{"id":"m3","name":"广州本店（老客+品牌升级）","region":"广州荔湾/珠江新城","population":"已有 600 万老客基础","gdpPerCapita":"人均可支配 6 万+","notes":"老店信任强，新店运营经验可复制","source":"user"}],
-    attractiveness: { categories: buildCats(attractTemplate) },
-    competitiveness: { categories: buildCats(competeTemplate) },
-    scoring: { m1: { "ind_经济_市场规模": { score: 8.5,source: "user" }, "ind_经济_客单价与": { score: 7.5,source: "user" }, "ind_政治法律_行业监管": { score: 9,source: "user" }, "ind_政治法律_广告法与": { score: 7,source: "user" }, "ind_社会文化_客群需求": { score: 8,source: "user" },"ind_社会文化_种草 /": { score: 8.5,source: "user" }, "ind_风险_核心资源": { score: 7,source: "user" }, "ind_风险_新客获客": { score: 8.5,source: "user" }, "ind_市场信息_目标客群": { score: 8.5,source: "user" }, "ind_市场信息_竞品表现": { score: 7.5,source: "user" }, "ind_营销渠道_核心渠道": { score: 9,source: "user" },"ind_营销渠道_KOL ": { score: 7,source: "user" }, "ind_认证合规_核心资质": { score: 8,source: "user" }, "ind_认证合规_关键背书": { score: 8.5,source: "user" }, "ind_产品品牌_现有老客": { score: 7,source: "user" }, "ind_产品品牌_C 端品": { score: 8.5,source: "user" } },m2: { "ind_经济_市场规模": { score: 6,source: "user" }, "ind_经济_客单价与": { score: 5,source: "user" }, "ind_政治法律_行业监管": { score: 6.5,source: "user" }, "ind_政治法律_广告法与": { score: 4.5,source: "user" }, "ind_社会文化_客群需求": { score: 5.5,source: "user" },"ind_社会文化_种草 /": { score: 6,source: "user" }, "ind_风险_核心资源": { score: 4.5,source: "user" }, "ind_风险_新客获客": { score: 6,source: "user" }, "ind_市场信息_目标客群": { score: 7.5,source: "user" }, "ind_市场信息_竞品表现": { score: 6.5,source: "user" }, "ind_营销渠道_核心渠道": { score: 8,source: "user" },"ind_营销渠道_KOL ": { score: 6,source: "user" }, "ind_认证合规_核心资质": { score: 7,source: "user" }, "ind_认证合规_关键背书": { score: 7.5,source: "user" }, "ind_产品品牌_现有老客": { score: 6,source: "user" }, "ind_产品品牌_C 端品": { score: 7.5,source: "user" } },m3: { "ind_经济_市场规模": { score: 7.5,source: "user" }, "ind_经济_客单价与": { score: 6.5,source: "user" }, "ind_政治法律_行业监管": { score: 8,source: "user" }, "ind_政治法律_广告法与": { score: 6,source: "user" }, "ind_社会文化_客群需求": { score: 7,source: "user" },"ind_社会文化_种草 /": { score: 7.5,source: "user" }, "ind_风险_核心资源": { score: 6,source: "user" }, "ind_风险_新客获客": { score: 7.5,source: "user" }, "ind_市场信息_目标客群": { score: 4.5,source: "user" }, "ind_市场信息_竞品表现": { score: 3.5,source: "user" }, "ind_营销渠道_核心渠道": { score: 5,source: "user" },"ind_营销渠道_KOL ": { score: 3,source: "user" }, "ind_认证合规_核心资质": { score: 4,source: "user" }, "ind_认证合规_关键背书": { score: 4.5,source: "user" }, "ind_产品品牌_现有老客": { score: 3,source: "user" }, "ind_产品品牌_C 端品": { score: 4.5,source: "user" } } },
-    delphi: {
-      recruitment: { perspectives: [{"id":"p_brand","role":"餐饮品牌策略","why":"识别老店+融合差异化"},{"id":"p_growth","role":"抖音同城运营","why":"评估同城生态成熟度"},{"id":"p_chef","role":"主厨顾问","why":"判断师傅团队复制能力"},{"id":"p_invest","role":"餐饮投资人","why":"评估客单价与回收期"},{"id":"p_mom","role":"年轻食客 KOC","why":"翻译融合菜与出片需求"}] },
-      personas: [{"id":"pe1","name":"餐饮品牌策略","perspective":"看品牌资产","stance":"中性"},{"id":"pe2","name":"抖音同城运营","perspective":"看同城流量","stance":"增长向"},{"id":"pe3","name":"主厨顾问","perspective":"看团队复制","stance":"产品向"},{"id":"pe4","name":"餐饮投资人","perspective":"看回本周期","stance":"财务向"},{"id":"pe5","name":"年轻食客 KOC","perspective":"看出片与体验","stance":"用户向"}],
-      userHosted: true,
-      finalWeights: {
-        attractiveness: { 'ind_经济_市场规模':0.20, 'ind_经济_客单价':0.15, 'ind_政治法律_行业':0.10, 'ind_政治法律_广告':0.05, 'ind_社会文化_客群':0.15, 'ind_社会文化_渗透':0.10, 'ind_风险_资源':0.05, 'ind_风险_获客':0.05 },
-        competitiveness: { 'ind_市场信息_目标':0.06, 'ind_市场信息_竞品':0.06, 'ind_营销渠道_核心':0.10, 'ind_营销渠道_KOL':0.08, 'ind_认证合规_资质':0.10, 'ind_认证合规_背书':0.10, 'ind_产品品牌_老客':0.15, 'ind_产品品牌_品牌':0.10 }
+  "candidates": [
+    {
+      "id": "mc1",
+      "name": "北京/杭州（跨省拓展）",
+      "reason": "粤菜认知弱、客群基础薄",
+      "source": "user"
+    },
+    {
+      "id": "mc2",
+      "name": "加盟路线",
+      "reason": "资金效率高但品控风险大",
+      "source": "user"
+    },
+    {
+      "id": "mc3",
+      "name": "团餐/企业食堂承包",
+      "reason": "量大但利润薄、账期长",
+      "source": "user"
+    },
+    {
+      "id": "mc4",
+      "name": "速冻食品零售渠道",
+      "reason": "渠道广但品牌投入大",
+      "source": "user"
+    },
+    {
+      "id": "mc5",
+      "name": "旅游景区餐饮",
+      "reason": "客单价高但季节性强",
+      "source": "user"
+    }
+  ],
+  "screening": {
+    "criteria": [
+      "目标区域客流稳定，日均翻台 ≥ 3",
+      "客单价 ≥ 60 元，毛利率 ≥ 55%",
+      "可标准化复制，不依赖单一厨师"
+    ]
+  },
+  "retained": [
+    {
+      "id": "m1",
+      "name": "深圳（粤菜融合新客）",
+      "region": "深圳南山/福田",
+      "population": "潜在 50 万粤菜+融合菜客户",
+      "gdpPerCapita": "人均可支配 7 万+",
+      "notes": "融合菜渗透高、抖音同城生态成熟",
+      "source": "user"
+    },
+    {
+      "id": "m2",
+      "name": "上海（精致中餐客）",
+      "region": "上海静安/徐汇",
+      "population": "潜在 30 万精致中餐客",
+      "gdpPerCapita": "人均可支配 8 万+",
+      "notes": "人均 200 元接受度高、出片文化强",
+      "source": "user"
+    },
+    {
+      "id": "m3",
+      "name": "广州本店（老客+品牌升级）",
+      "region": "广州荔湾/珠江新城",
+      "population": "已有 600 万老客基础",
+      "gdpPerCapita": "人均可支配 6 万+",
+      "notes": "老店信任强，新店运营经验可复制",
+      "source": "user"
+    }
+  ],
+  "attractiveness": {
+    "categories": [
+      {
+        "id": "cat_经济",
+        "name": "经济",
+        "weight": 0.25,
+        "indicators": [
+          {
+            "id": "ind_经济_市场规模",
+            "name": "市场规模 / 行业容量",
+            "weight": 0.5,
+            "rubric": {
+              "high": "粤菜正餐市场 ≥ 500 亿，年增速 ≥ 8%",
+              "mid": "中等水平，介于高分与低分之间",
+              "low": "低于行业平均，存在明显短板"
+            },
+            "support": 0,
+            "source": "delphi"
+          },
+          {
+            "id": "ind_经济_客单价与",
+            "name": "客单价与续费能力",
+            "weight": 0.5,
+            "rubric": {
+              "high": "客单价 ≥ 80 元，月复购 ≥ 2 次",
+              "mid": "中等水平，介于高分与低分之间",
+              "low": "低于行业平均，存在明显短板"
+            },
+            "support": 0,
+            "source": "delphi"
+          }
+        ]
       },
-      summary: "两轮 Delphi 后专家对\"增长率\"与\"老店信任\"赋权最高。深圳/上海融合菜渗透高、客单价高、抖音同城种草生态成熟，老陈 30 年粤菜功底+小陈互联网运营能形成\"老店+融合\"差异化。",
-      status: 'done',
-      phase: 'converged',
-      panel: [], round1: null, round2: null, synthesis: null, finalSynthesis: null, weights: null
+      {
+        "id": "cat_政治法律",
+        "name": "政治法律",
+        "weight": 0.25,
+        "indicators": [
+          {
+            "id": "ind_政治法律_行业监管",
+            "name": "行业监管 / 资质门槛",
+            "weight": 0.5,
+            "rubric": {
+              "high": "食安监管清晰，证照办理规范",
+              "mid": "中等水平，介于高分与低分之间",
+              "low": "低于行业平均，存在明显短板"
+            },
+            "support": 0,
+            "source": "delphi"
+          },
+          {
+            "id": "ind_政治法律_广告法与",
+            "name": "广告法与合规风险",
+            "weight": 0.5,
+            "rubric": {
+              "high": "餐饮广告合规风险低",
+              "mid": "中等水平，介于高分与低分之间",
+              "low": "低于行业平均，存在明显短板"
+            },
+            "support": 0,
+            "source": "delphi"
+          }
+        ]
+      },
+      {
+        "id": "cat_社会文化",
+        "name": "社会文化",
+        "weight": 0.25,
+        "indicators": [
+          {
+            "id": "ind_社会文化_客群需求",
+            "name": "客群需求强度",
+            "weight": 0.5,
+            "rubric": {
+              "high": "粤菜接受度广，宴请/聚餐需求强",
+              "mid": "中等水平，介于高分与低分之间",
+              "low": "低于行业平均，存在明显短板"
+            },
+            "support": 0,
+            "source": "delphi"
+          },
+          {
+            "id": "ind_社会文化_种草 /",
+            "name": "种草 / 社交渗透",
+            "weight": 0.5,
+            "rubric": {
+              "high": "小红书/抖音美食探店渗透率高",
+              "mid": "中等水平，介于高分与低分之间",
+              "low": "低于行业平均，存在明显短板"
+            },
+            "support": 0,
+            "source": "delphi"
+          }
+        ]
+      },
+      {
+        "id": "cat_风险",
+        "name": "风险",
+        "weight": 0.25,
+        "indicators": [
+          {
+            "id": "ind_风险_核心资源",
+            "name": "核心资源复制难度",
+            "weight": 0.5,
+            "rubric": {
+              "high": "厨师团队/配方可复制性低，壁垒高",
+              "mid": "中等水平，介于高分与低分之间",
+              "low": "低于行业平均，存在明显短板"
+            },
+            "support": 0,
+            "source": "delphi"
+          },
+          {
+            "id": "ind_风险_新客获客",
+            "name": "新客获客成本",
+            "weight": 0.5,
+            "rubric": {
+              "high": "CAC ≤ 客单价 20%，回收期 ≤ 1 月",
+              "mid": "中等水平，介于高分与低分之间",
+              "low": "低于行业平均，存在明显短板"
+            },
+            "support": 0,
+            "source": "delphi"
+          }
+        ]
+      }
+    ]
+  },
+  "competitiveness": {
+    "categories": [
+      {
+        "id": "cat_市场信息",
+        "name": "市场信息",
+        "weight": 0.25,
+        "indicators": [
+          {
+            "id": "ind_市场信息_目标客群",
+            "name": "目标客群数据可获取性",
+            "weight": 0.5,
+            "rubric": {
+              "high": "商圈客流数据可查，人群画像清晰",
+              "mid": "中等水平，介于高分与低分之间",
+              "low": "低于行业平均，存在明显短板"
+            },
+            "support": 0,
+            "source": "delphi"
+          },
+          {
+            "id": "ind_市场信息_竞品表现",
+            "name": "竞品表现可监测",
+            "weight": 0.5,
+            "rubric": {
+              "high": "竞品点评/客流数据可监测",
+              "mid": "中等水平，介于高分与低分之间",
+              "low": "低于行业平均，存在明显短板"
+            },
+            "support": 0,
+            "source": "delphi"
+          }
+        ]
+      },
+      {
+        "id": "cat_营销渠道",
+        "name": "营销渠道",
+        "weight": 0.25,
+        "indicators": [
+          {
+            "id": "ind_营销渠道_核心渠道",
+            "name": "核心渠道成熟度",
+            "weight": 0.5,
+            "rubric": {
+              "high": "大众点评/抖音本地生活渠道成熟",
+              "mid": "中等水平，介于高分与低分之间",
+              "low": "低于行业平均，存在明显短板"
+            },
+            "support": 0,
+            "source": "delphi"
+          },
+          {
+            "id": "ind_营销渠道_KOL ",
+            "name": "KOL / 达人储备",
+            "weight": 0.5,
+            "rubric": {
+              "high": "本地美食 KOL/KOC 储备 ≥ 20 位",
+              "mid": "中等水平，介于高分与低分之间",
+              "low": "低于行业平均，存在明显短板"
+            },
+            "support": 0,
+            "source": "delphi"
+          }
+        ]
+      },
+      {
+        "id": "cat_认证合规",
+        "name": "认证合规",
+        "weight": 0.25,
+        "indicators": [
+          {
+            "id": "ind_认证合规_核心资质",
+            "name": "核心资质完备度",
+            "weight": 0.5,
+            "rubric": {
+              "high": "食品经营许可证/卫生评级齐全",
+              "mid": "中等水平，介于高分与低分之间",
+              "low": "低于行业平均，存在明显短板"
+            },
+            "support": 0,
+            "source": "delphi"
+          },
+          {
+            "id": "ind_认证合规_关键背书",
+            "name": "关键背书可复用",
+            "weight": 0.5,
+            "rubric": {
+              "high": "米其林/必吃榜等行业背书可争取",
+              "mid": "中等水平，介于高分与低分之间",
+              "low": "低于行业平均，存在明显短板"
+            },
+            "support": 0,
+            "source": "delphi"
+          }
+        ]
+      },
+      {
+        "id": "cat_产品品牌",
+        "name": "产品品牌",
+        "weight": 0.25,
+        "indicators": [
+          {
+            "id": "ind_产品品牌_现有老客",
+            "name": "现有老客基础可迁移",
+            "weight": 0.5,
+            "rubric": {
+              "high": "30 年老店积累老客 ≥ 2 万",
+              "mid": "中等水平，介于高分与低分之间",
+              "low": "低于行业平均，存在明显短板"
+            },
+            "support": 0,
+            "source": "delphi"
+          },
+          {
+            "id": "ind_产品品牌_C 端品",
+            "name": "C 端品牌资产起点",
+            "weight": 0.5,
+            "rubric": {
+              "high": "本地品牌认知度高，口碑基础好",
+              "mid": "中等水平，介于高分与低分之间",
+              "low": "低于行业平均，存在明显短板"
+            },
+            "support": 0,
+            "source": "delphi"
+          }
+        ]
+      }
+    ]
+  },
+  "scoring": {
+    "m1": {
+      "ind_经济_市场规模": {
+        "score": 8.5,
+        "source": "user",
+        "evidence": "深圳（粤菜融合新客）在\"市场规模 / 行业容量\"上表现高，综合行业报告与专家访谈判断。"
+      },
+      "ind_经济_客单价与": {
+        "score": 7.5,
+        "source": "user",
+        "evidence": "深圳（粤菜融合新客）在\"客单价与续费能力\"上表现中，综合行业报告与专家访谈判断。"
+      },
+      "ind_政治法律_行业监管": {
+        "score": 9,
+        "source": "user",
+        "evidence": "深圳（粤菜融合新客）在\"行业监管 / 资质门槛\"上表现高，综合行业报告与专家访谈判断。"
+      },
+      "ind_政治法律_广告法与": {
+        "score": 7,
+        "source": "user",
+        "evidence": "深圳（粤菜融合新客）在\"广告法与合规风险\"上表现中，综合行业报告与专家访谈判断。"
+      },
+      "ind_社会文化_客群需求": {
+        "score": 8,
+        "source": "user",
+        "evidence": "深圳（粤菜融合新客）在\"客群需求强度\"上表现高，综合行业报告与专家访谈判断。"
+      },
+      "ind_社会文化_种草 /": {
+        "score": 8.5,
+        "source": "user",
+        "evidence": "深圳（粤菜融合新客）在\"种草 / 社交渗透\"上表现高，综合行业报告与专家访谈判断。"
+      },
+      "ind_风险_核心资源": {
+        "score": 7,
+        "source": "user",
+        "evidence": "深圳（粤菜融合新客）在\"核心资源复制难度\"上表现中，综合行业报告与专家访谈判断。"
+      },
+      "ind_风险_新客获客": {
+        "score": 8.5,
+        "source": "user",
+        "evidence": "深圳（粤菜融合新客）在\"新客获客成本\"上表现高，综合行业报告与专家访谈判断。"
+      },
+      "ind_市场信息_目标客群": {
+        "score": 8.5,
+        "source": "user",
+        "evidence": "深圳（粤菜融合新客）在\"目标客群数据可获取性\"上表现高，综合行业报告与专家访谈判断。"
+      },
+      "ind_市场信息_竞品表现": {
+        "score": 7.5,
+        "source": "user",
+        "evidence": "深圳（粤菜融合新客）在\"竞品表现可监测\"上表现中，综合行业报告与专家访谈判断。"
+      },
+      "ind_营销渠道_核心渠道": {
+        "score": 9,
+        "source": "user",
+        "evidence": "深圳（粤菜融合新客）在\"核心渠道成熟度\"上表现高，综合行业报告与专家访谈判断。"
+      },
+      "ind_营销渠道_KOL ": {
+        "score": 7,
+        "source": "user",
+        "evidence": "深圳（粤菜融合新客）在\"KOL / 达人储备\"上表现中，综合行业报告与专家访谈判断。"
+      },
+      "ind_认证合规_核心资质": {
+        "score": 8,
+        "source": "user",
+        "evidence": "深圳（粤菜融合新客）在\"核心资质完备度\"上表现高，综合行业报告与专家访谈判断。"
+      },
+      "ind_认证合规_关键背书": {
+        "score": 8.5,
+        "source": "user",
+        "evidence": "深圳（粤菜融合新客）在\"关键背书可复用\"上表现高，综合行业报告与专家访谈判断。"
+      },
+      "ind_产品品牌_现有老客": {
+        "score": 7,
+        "source": "user",
+        "evidence": "深圳（粤菜融合新客）在\"现有老客基础可迁移\"上表现中，综合行业报告与专家访谈判断。"
+      },
+      "ind_产品品牌_C 端品": {
+        "score": 8.5,
+        "source": "user",
+        "evidence": "深圳（粤菜融合新客）在\"C 端品牌资产起点\"上表现高，综合行业报告与专家访谈判断。"
+      }
     },
-    matrix: { xCut: null, yCut: null, notes: "m1 深圳融合菜渗透高、抖音同城生态成熟、老陈 30 年粤菜功底+小陈运营可快速形成差异化，12 个月内可贡献 30% 营收；m3 老店稳定但增长见顶；m2 上海人均高但师傅团队仅 5 人风险大。" },
-    decision: {
-      explanations: {},
-      tier1: { marketId:'m1', rationale:"m1 深圳融合菜渗透高、抖音同城生态成熟、老陈 30 年粤菜功底+小陈运营可快速形成差异化，12 个月内可贡献 30% 营收；m3 老店稳定但增长见顶；m2 上海人均高但师傅团队仅 5 人风险大。", resourcesPct:80, milestones:["6 月内启动深圳选址+招 1 名店长+1 名探店博主运营","同步上线小程序会员+明厨亮灶直播"], reEvalTrigger:'3 个月复盘：核心指标未达预期' },
-      tier2: { marketIds:["m2"], observationMetrics:['月复购率','客单价'], reEvalTrigger:'复购率连续 2 月 < 阈值' },
-      tier3: { marketIds:["m3"], reEvalTrigger:'tier1 ROI 跑通后再启动' }
+    "m2": {
+      "ind_经济_市场规模": {
+        "score": 6,
+        "source": "user",
+        "evidence": "上海（精致中餐客）在\"市场规模 / 行业容量\"上表现中，综合行业报告与专家访谈判断。"
+      },
+      "ind_经济_客单价与": {
+        "score": 5,
+        "source": "user",
+        "evidence": "上海（精致中餐客）在\"客单价与续费能力\"上表现中低，综合行业报告与专家访谈判断。"
+      },
+      "ind_政治法律_行业监管": {
+        "score": 6.5,
+        "source": "user",
+        "evidence": "上海（精致中餐客）在\"行业监管 / 资质门槛\"上表现中，综合行业报告与专家访谈判断。"
+      },
+      "ind_政治法律_广告法与": {
+        "score": 4.5,
+        "source": "user",
+        "evidence": "上海（精致中餐客）在\"广告法与合规风险\"上表现中低，综合行业报告与专家访谈判断。"
+      },
+      "ind_社会文化_客群需求": {
+        "score": 5.5,
+        "source": "user",
+        "evidence": "上海（精致中餐客）在\"客群需求强度\"上表现中低，综合行业报告与专家访谈判断。"
+      },
+      "ind_社会文化_种草 /": {
+        "score": 6,
+        "source": "user",
+        "evidence": "上海（精致中餐客）在\"种草 / 社交渗透\"上表现中，综合行业报告与专家访谈判断。"
+      },
+      "ind_风险_核心资源": {
+        "score": 4.5,
+        "source": "user",
+        "evidence": "上海（精致中餐客）在\"核心资源复制难度\"上表现中低，综合行业报告与专家访谈判断。"
+      },
+      "ind_风险_新客获客": {
+        "score": 6,
+        "source": "user",
+        "evidence": "上海（精致中餐客）在\"新客获客成本\"上表现中，综合行业报告与专家访谈判断。"
+      },
+      "ind_市场信息_目标客群": {
+        "score": 7.5,
+        "source": "user",
+        "evidence": "上海（精致中餐客）在\"目标客群数据可获取性\"上表现中，综合行业报告与专家访谈判断。"
+      },
+      "ind_市场信息_竞品表现": {
+        "score": 6.5,
+        "source": "user",
+        "evidence": "上海（精致中餐客）在\"竞品表现可监测\"上表现中，综合行业报告与专家访谈判断。"
+      },
+      "ind_营销渠道_核心渠道": {
+        "score": 8,
+        "source": "user",
+        "evidence": "上海（精致中餐客）在\"核心渠道成熟度\"上表现高，综合行业报告与专家访谈判断。"
+      },
+      "ind_营销渠道_KOL ": {
+        "score": 6,
+        "source": "user",
+        "evidence": "上海（精致中餐客）在\"KOL / 达人储备\"上表现中，综合行业报告与专家访谈判断。"
+      },
+      "ind_认证合规_核心资质": {
+        "score": 7,
+        "source": "user",
+        "evidence": "上海（精致中餐客）在\"核心资质完备度\"上表现中，综合行业报告与专家访谈判断。"
+      },
+      "ind_认证合规_关键背书": {
+        "score": 7.5,
+        "source": "user",
+        "evidence": "上海（精致中餐客）在\"关键背书可复用\"上表现中，综合行业报告与专家访谈判断。"
+      },
+      "ind_产品品牌_现有老客": {
+        "score": 6,
+        "source": "user",
+        "evidence": "上海（精致中餐客）在\"现有老客基础可迁移\"上表现中，综合行业报告与专家访谈判断。"
+      },
+      "ind_产品品牌_C 端品": {
+        "score": 7.5,
+        "source": "user",
+        "evidence": "上海（精致中餐客）在\"C 端品牌资产起点\"上表现中，综合行业报告与专家访谈判断。"
+      }
     },
-    meta: { schemaVersion: 2, work1Linked: false },
-    _pipeDone: ['framework','evaluate']
-  };
+    "m3": {
+      "ind_经济_市场规模": {
+        "score": 7.5,
+        "source": "user",
+        "evidence": "广州本店（老客+品牌升级）在\"市场规模 / 行业容量\"上表现中，综合行业报告与专家访谈判断。"
+      },
+      "ind_经济_客单价与": {
+        "score": 6.5,
+        "source": "user",
+        "evidence": "广州本店（老客+品牌升级）在\"客单价与续费能力\"上表现中，综合行业报告与专家访谈判断。"
+      },
+      "ind_政治法律_行业监管": {
+        "score": 8,
+        "source": "user",
+        "evidence": "广州本店（老客+品牌升级）在\"行业监管 / 资质门槛\"上表现高，综合行业报告与专家访谈判断。"
+      },
+      "ind_政治法律_广告法与": {
+        "score": 6,
+        "source": "user",
+        "evidence": "广州本店（老客+品牌升级）在\"广告法与合规风险\"上表现中，综合行业报告与专家访谈判断。"
+      },
+      "ind_社会文化_客群需求": {
+        "score": 7,
+        "source": "user",
+        "evidence": "广州本店（老客+品牌升级）在\"客群需求强度\"上表现中，综合行业报告与专家访谈判断。"
+      },
+      "ind_社会文化_种草 /": {
+        "score": 7.5,
+        "source": "user",
+        "evidence": "广州本店（老客+品牌升级）在\"种草 / 社交渗透\"上表现中，综合行业报告与专家访谈判断。"
+      },
+      "ind_风险_核心资源": {
+        "score": 6,
+        "source": "user",
+        "evidence": "广州本店（老客+品牌升级）在\"核心资源复制难度\"上表现中，综合行业报告与专家访谈判断。"
+      },
+      "ind_风险_新客获客": {
+        "score": 7.5,
+        "source": "user",
+        "evidence": "广州本店（老客+品牌升级）在\"新客获客成本\"上表现中，综合行业报告与专家访谈判断。"
+      },
+      "ind_市场信息_目标客群": {
+        "score": 4.5,
+        "source": "user",
+        "evidence": "广州本店（老客+品牌升级）在\"目标客群数据可获取性\"上表现中低，综合行业报告与专家访谈判断。"
+      },
+      "ind_市场信息_竞品表现": {
+        "score": 3.5,
+        "source": "user",
+        "evidence": "广州本店（老客+品牌升级）在\"竞品表现可监测\"上表现低，综合行业报告与专家访谈判断。"
+      },
+      "ind_营销渠道_核心渠道": {
+        "score": 5,
+        "source": "user",
+        "evidence": "广州本店（老客+品牌升级）在\"核心渠道成熟度\"上表现中低，综合行业报告与专家访谈判断。"
+      },
+      "ind_营销渠道_KOL ": {
+        "score": 3,
+        "source": "user",
+        "evidence": "广州本店（老客+品牌升级）在\"KOL / 达人储备\"上表现低，综合行业报告与专家访谈判断。"
+      },
+      "ind_认证合规_核心资质": {
+        "score": 4,
+        "source": "user",
+        "evidence": "广州本店（老客+品牌升级）在\"核心资质完备度\"上表现中低，综合行业报告与专家访谈判断。"
+      },
+      "ind_认证合规_关键背书": {
+        "score": 4.5,
+        "source": "user",
+        "evidence": "广州本店（老客+品牌升级）在\"关键背书可复用\"上表现中低，综合行业报告与专家访谈判断。"
+      },
+      "ind_产品品牌_现有老客": {
+        "score": 3,
+        "source": "user",
+        "evidence": "广州本店（老客+品牌升级）在\"现有老客基础可迁移\"上表现低，综合行业报告与专家访谈判断。"
+      },
+      "ind_产品品牌_C 端品": {
+        "score": 4.5,
+        "source": "user",
+        "evidence": "广州本店（老客+品牌升级）在\"C 端品牌资产起点\"上表现中低，综合行业报告与专家访谈判断。"
+      }
+    }
+  },
+  "delphi": {
+    "recruitment": {
+      "perspectives": [
+        {
+          "id": "p_brand",
+          "role": "餐饮品牌策略",
+          "why": "识别老店+融合差异化"
+        },
+        {
+          "id": "p_growth",
+          "role": "抖音同城运营",
+          "why": "评估同城生态成熟度"
+        },
+        {
+          "id": "p_chef",
+          "role": "主厨顾问",
+          "why": "判断师傅团队复制能力"
+        },
+        {
+          "id": "p_invest",
+          "role": "餐饮投资人",
+          "why": "评估客单价与回收期"
+        },
+        {
+          "id": "p_mom",
+          "role": "年轻食客 KOC",
+          "why": "翻译融合菜与出片需求"
+        }
+      ]
+    },
+    "personas": [
+      {
+        "id": "pe1",
+        "name": "餐饮品牌策略",
+        "perspective": "看品牌资产",
+        "stance": "中性"
+      },
+      {
+        "id": "pe2",
+        "name": "抖音同城运营",
+        "perspective": "看同城流量",
+        "stance": "增长向"
+      },
+      {
+        "id": "pe3",
+        "name": "主厨顾问",
+        "perspective": "看团队复制",
+        "stance": "产品向"
+      },
+      {
+        "id": "pe4",
+        "name": "餐饮投资人",
+        "perspective": "看回本周期",
+        "stance": "财务向"
+      },
+      {
+        "id": "pe5",
+        "name": "年轻食客 KOC",
+        "perspective": "看出片与体验",
+        "stance": "用户向"
+      }
+    ],
+    "userHosted": true,
+    "finalWeights": {
+      "attractiveness": {
+        "ind_经济_市场规模": 0.2,
+        "ind_经济_客单价": 0.15,
+        "ind_政治法律_行业": 0.1,
+        "ind_政治法律_广告": 0.05,
+        "ind_社会文化_客群": 0.15,
+        "ind_社会文化_渗透": 0.1,
+        "ind_风险_资源": 0.05,
+        "ind_风险_获客": 0.05
+      },
+      "competitiveness": {
+        "ind_市场信息_目标": 0.06,
+        "ind_市场信息_竞品": 0.06,
+        "ind_营销渠道_核心": 0.1,
+        "ind_营销渠道_KOL": 0.08,
+        "ind_认证合规_资质": 0.1,
+        "ind_认证合规_背书": 0.1,
+        "ind_产品品牌_老客": 0.15,
+        "ind_产品品牌_品牌": 0.1
+      }
+    },
+    "summary": "两轮 Delphi 后专家对\"增长率\"与\"老店信任\"赋权最高。深圳/上海融合菜渗透高、客单价高、抖音同城种草生态成熟，老陈 30 年粤菜功底+小陈互联网运营能形成\"老店+融合\"差异化。",
+    "status": "done",
+    "phase": "converged",
+    "panel": [],
+    "round1": null,
+    "round2": null,
+    "synthesis": null,
+    "finalSynthesis": null,
+    "weights": null
+  },
+  "matrix": {
+    "xCut": null,
+    "yCut": null,
+    "notes": "m1 深圳融合菜渗透高、抖音同城生态成熟、老陈 30 年粤菜功底+小陈运营可快速形成差异化，12 个月内可贡献 30% 营收；m3 老店稳定但增长见顶；m2 上海人均高但师傅团队仅 5 人风险大。"
+  },
+  "decision": {
+    "explanations": {},
+    "tier1": {
+      "marketId": "m1",
+      "rationale": "m1 深圳融合菜渗透高、抖音同城生态成熟、老陈 30 年粤菜功底+小陈运营可快速形成差异化，12 个月内可贡献 30% 营收；m3 老店稳定但增长见顶；m2 上海人均高但师傅团队仅 5 人风险大。",
+      "resourcesPct": 80,
+      "milestones": [
+        "6 月内启动深圳选址+招 1 名店长+1 名探店博主运营",
+        "同步上线小程序会员+明厨亮灶直播"
+      ],
+      "reEvalTrigger": "3 个月复盘：核心指标未达预期"
+    },
+    "tier2": {
+      "marketIds": [
+        "m2"
+      ],
+      "observationMetrics": [
+        "月复购率",
+        "客单价"
+      ],
+      "reEvalTrigger": "复购率连续 2 月 < 阈值"
+    },
+    "tier3": {
+      "marketIds": [
+        "m3"
+      ],
+      "reEvalTrigger": "tier1 ROI 跑通后再启动"
+    }
+  },
+  "meta": {
+    "schemaVersion": 2,
+    "work1Linked": false
+  },
+  "_pipeDone": [
+    "framework",
+    "evaluate"
+  ]
+};
   if(typeof window!== 'undefined') window.__case_xiaohuo_ji_work2 = data;
 })();
 
@@ -1073,453 +2980,568 @@
  ============================================================ */
 (function(){
   const data = {
-    context: {
-      sbuName: "小镬记",
-      sbuOneLine: "30 年粤菜老店，主厨手作+融合菜",
-      targetMarket: "深圳粤菜融合新客",
-      targetMarketReason: "融合菜渗透高、抖音同城生态成熟、老陈 30 年粤菜功底+小陈运营可快速形成差异化，12 个月内可贡献 30% 营收",
-      tier1: { marketId:'m1', name:"深圳（粤菜融合新客）", rationale:"融合菜渗透高、抖音同城生态成熟、老陈 30 年粤菜功底+小陈运营可快速形成差异化，12 个月内可贡献 30% 营收" },
-      tier2: [{"marketId":"m3","name":"广州本店（老客+品牌升级）"}],
-      personas: [{"id":"p1","name":"林晓棠","painPoints":"传统粤菜环境老气、缺社交分享点"},{"id":"p2","name":"陈家明","painPoints":"食材不透明、节假日排队久"},{"id":"p3","name":"周小溪","painPoints":"探店同质化、缺独家菜品"}],
-      valueFramework: ["30 年老店信任","主厨手作","食材原产地","融合菜创新"],
-      hasSurvey: true
+  "context": {
+    "sbuName": "小镬记",
+    "sbuOneLine": "30 年粤菜老店，主厨手作+融合菜",
+    "targetMarket": "深圳粤菜融合新客",
+    "targetMarketReason": "融合菜渗透高、抖音同城生态成熟、老陈 30 年粤菜功底+小陈运营可快速形成差异化，12 个月内可贡献 30% 营收",
+    "tier1": {
+      "marketId": "m1",
+      "name": "深圳（粤菜融合新客）",
+      "rationale": "融合菜渗透高、抖音同城生态成熟、老陈 30 年粤菜功底+小陈运营可快速形成差异化，12 个月内可贡献 30% 营收"
     },
-    scenarios: [
-  {
-    "id": "s1",
-    "name": "年轻食客探店打卡",
-    "description": "25-35 岁年轻食客找融合菜+出片新店",
-    "personaIds": [
-      "p1",
-      "p3"
+    "tier2": [
+      {
+        "marketId": "m3",
+        "name": "广州本店（老客+品牌升级）"
+      }
     ],
-    "needStrength": {
-      "pain": "中",
-      "willingness": "高",
-      "frequency": "月度"
-    },
-    "selected": true
+    "personas": [
+      {
+        "id": "p1",
+        "name": "林晓棠",
+        "painPoints": "传统粤菜环境老气、缺社交分享点"
+      },
+      {
+        "id": "p2",
+        "name": "陈家明",
+        "painPoints": "食材不透明、节假日排队久"
+      },
+      {
+        "id": "p3",
+        "name": "周小溪",
+        "painPoints": "探店同质化、缺独家菜品"
+      }
+    ],
+    "valueFramework": [
+      "30 年老店信任",
+      "主厨手作",
+      "食材原产地",
+      "融合菜创新"
+    ],
+    "hasSurvey": true
   },
-  {
-    "id": "s2",
-    "name": "老客品牌升级",
-    "description": "广州老客期待新店主厨手作+食材溯源",
-    "personaIds": [
-      "p2"
-    ],
-    "needStrength": {
-      "pain": "低",
-      "willingness": "高",
-      "frequency": "季度"
+  "scenarios": [
+    {
+      "id": "s1",
+      "name": "年轻食客探店打卡",
+      "description": "25-35 岁年轻食客找融合菜+出片新店",
+      "personaIds": [
+        "p1",
+        "p3"
+      ],
+      "needStrength": {
+        "pain": "中",
+        "willingness": "高",
+        "frequency": "月度"
+      },
+      "selected": true
     },
-    "selected": true
-  },
-  {
-    "id": "s3",
-    "name": "节假日家庭聚餐",
-    "description": "家庭客找正餐+明厨亮灶+预约",
-    "personaIds": [
-      "p2",
-      "p3"
-    ],
-    "needStrength": {
-      "pain": "中",
-      "willingness": "中",
-      "frequency": "节假日"
+    {
+      "id": "s2",
+      "name": "老客品牌升级",
+      "description": "广州老客期待新店主厨手作+食材溯源",
+      "personaIds": [
+        "p2"
+      ],
+      "needStrength": {
+        "pain": "低",
+        "willingness": "高",
+        "frequency": "季度"
+      },
+      "selected": true
     },
-    "selected": false
-  }
-],
-    mining: {
-      documents: [
-  "小镬记是我吃 20 年的老店，荔湾那家味道最正。",
-  "珠江新城店装修太现代，没有老店的感觉。",
-  "能不能出一道粤菜+日料融合的刺身，小陈是产品经理应该懂。",
-  "清远鸡从哪进的？想看溯源。",
-  "主厨老陈 30 年了，能不能拍个纪录片？",
-  "探店博主来了两次都说\"和其他粤菜馆没差别\"。",
-  "小程序点单能不能加个\"食材故事\"页面？",
-  "等位太久了，能不能预约取号？",
-  "明厨亮灶看着安心，但师傅太忙没空讲菜。",
-  "广州酒家出了预制菜，小镬记做不做？"
-],
-      includeWork1Open: true,
-      includeWork1Themes: true,
-      ldaParams: { k: 3, passes: 15, iterations: 100, no_below: 2, no_above: 0.5 },
-      ldaResult: null,
-      ldaError: null,
-      topics: [
-  {
-    "id": 0,
-    "label": "老店信任与原产地",
-    "share": 38,
-    "keywords": [
+    {
+      "id": "s3",
+      "name": "节假日家庭聚餐",
+      "description": "家庭客找正餐+明厨亮灶+预约",
+      "personaIds": [
+        "p2",
+        "p3"
+      ],
+      "needStrength": {
+        "pain": "中",
+        "willingness": "中",
+        "frequency": "节假日"
+      },
+      "selected": false
+    }
+  ],
+  "mining": {
+    "documents": [
+      "小镬记是我吃 20 年的老店，荔湾那家味道最正。",
+      "珠江新城店装修太现代，没有老店的感觉。",
+      "能不能出一道粤菜+日料融合的刺身，小陈是产品经理应该懂。",
+      "清远鸡从哪进的？想看溯源。",
+      "主厨老陈 30 年了，能不能拍个纪录片？",
+      "探店博主来了两次都说\"和其他粤菜馆没差别\"。",
+      "小程序点单能不能加个\"食材故事\"页面？",
+      "等位太久了，能不能预约取号？",
+      "明厨亮灶看着安心，但师傅太忙没空讲菜。",
+      "广州酒家出了预制菜，小镬记做不做？"
+    ],
+    "includeWork1Open": true,
+    "includeWork1Themes": true,
+    "ldaParams": {
+      "k": 3,
+      "passes": 15,
+      "iterations": 100,
+      "no_below": 2,
+      "no_above": 0.5
+    },
+    "ldaResult": null,
+    "ldaError": null,
+    "topics": [
+      {
+        "id": 0,
+        "label": "老店信任与原产地",
+        "share": 38,
+        "keywords": [
+          {
+            "word": "老店",
+            "weight": 0.09
+          },
+          {
+            "word": "荔湾",
+            "weight": 0.07
+          },
+          {
+            "word": "清远",
+            "weight": 0.06
+          },
+          {
+            "word": "溯源",
+            "weight": 0.05
+          },
+          {
+            "word": "食材",
+            "weight": 0.04
+          }
+        ],
+        "representative_docs": [
+          "小镬记是我吃 20 年的老店",
+          "清远鸡从哪进的？想看溯源"
+        ]
+      },
+      {
+        "id": 1,
+        "label": "融合菜创新与年轻化",
+        "share": 35,
+        "keywords": [
+          {
+            "word": "融合",
+            "weight": 0.09
+          },
+          {
+            "word": "日料",
+            "weight": 0.07
+          },
+          {
+            "word": "刺身",
+            "weight": 0.06
+          },
+          {
+            "word": "小陈",
+            "weight": 0.05
+          },
+          {
+            "word": "创新",
+            "weight": 0.04
+          }
+        ],
+        "representative_docs": [
+          "能不能出一道粤菜+日料融合的刺身",
+          "探店博主来了两次都说没差别"
+        ]
+      },
+      {
+        "id": 2,
+        "label": "体验与服务",
+        "share": 27,
+        "keywords": [
+          {
+            "word": "小程序",
+            "weight": 0.08
+          },
+          {
+            "word": "预约",
+            "weight": 0.06
+          },
+          {
+            "word": "明厨",
+            "weight": 0.05
+          },
+          {
+            "word": "等位",
+            "weight": 0.05
+          },
+          {
+            "word": "故事",
+            "weight": 0.04
+          }
+        ],
+        "representative_docs": [
+          "小程序点单能不能加食材故事",
+          "等位太久了"
+        ]
+      }
+    ],
+    "wordFreqTop": [
       {
         "word": "老店",
-        "weight": 0.09
-      },
-      {
-        "word": "荔湾",
-        "weight": 0.07
-      },
-      {
-        "word": "清远",
-        "weight": 0.06
-      },
-      {
-        "word": "溯源",
-        "weight": 0.05
+        "count": 4
       },
       {
         "word": "食材",
-        "weight": 0.04
-      }
-    ],
-    "representative_docs": [
-      "小镬记是我吃 20 年的老店",
-      "清远鸡从哪进的？想看溯源"
-    ]
-  },
-  {
-    "id": 1,
-    "label": "融合菜创新与年轻化",
-    "share": 35,
-    "keywords": [
+        "count": 3
+      },
       {
         "word": "融合",
-        "weight": 0.09
-      },
-      {
-        "word": "日料",
-        "weight": 0.07
-      },
-      {
-        "word": "刺身",
-        "weight": 0.06
-      },
-      {
-        "word": "小陈",
-        "weight": 0.05
-      },
-      {
-        "word": "创新",
-        "weight": 0.04
-      }
-    ],
-    "representative_docs": [
-      "能不能出一道粤菜+日料融合的刺身",
-      "探店博主来了两次都说没差别"
-    ]
-  },
-  {
-    "id": 2,
-    "label": "体验与服务",
-    "share": 27,
-    "keywords": [
-      {
-        "word": "小程序",
-        "weight": 0.08
-      },
-      {
-        "word": "预约",
-        "weight": 0.06
+        "count": 3
       },
       {
         "word": "明厨",
-        "weight": 0.05
+        "count": 2
       },
       {
-        "word": "等位",
-        "weight": 0.05
+        "word": "小陈",
+        "count": 2
       },
       {
-        "word": "故事",
-        "weight": 0.04
+        "word": "小程序",
+        "count": 2
+      },
+      {
+        "word": "溯源",
+        "count": 2
+      },
+      {
+        "word": "刺身",
+        "count": 2
+      },
+      {
+        "word": "预约",
+        "count": 2
+      },
+      {
+        "word": "创新",
+        "count": 2
       }
     ],
-    "representative_docs": [
-      "小程序点单能不能加食材故事",
-      "等位太久了"
-    ]
-  }
-],
-      wordFreqTop: [
-  {
-    "word": "老店",
-    "count": 4
-  },
-  {
-    "word": "食材",
-    "count": 3
-  },
-  {
-    "word": "融合",
-    "count": 3
-  },
-  {
-    "word": "明厨",
-    "count": 2
-  },
-  {
-    "word": "小陈",
-    "count": 2
-  },
-  {
-    "word": "小程序",
-    "count": 2
-  },
-  {
-    "word": "溯源",
-    "count": 2
-  },
-  {
-    "word": "刺身",
-    "count": 2
-  },
-  {
-    "word": "预约",
-    "count": 2
-  },
-  {
-    "word": "创新",
-    "count": 2
-  }
-],
-      stats: {"raw_count":10,"valid_count":10,"total_words":148,"vocab_size":42,"coherence":0.42},
-      painMap: [
-  {
-    "id": "pa1",
-    "pain": "新店缺老店感，年轻客户群认知弱",
-    "evidence": "珠江新城店装修太现代，没有老店的感觉",
-    "frequency": "高",
-    "linkedNeeds": [
-      "老店故事化",
-      "环境统一"
-    ],
-    "linkedTopicId": 0,
-    "type": "痛点",
-    "scenarioId": "s1"
-  },
-  {
-    "id": "pa2",
-    "pain": "融合菜研发节奏慢，缺差异化",
-    "evidence": "探店博主来了两次都说没差别",
-    "frequency": "高",
-    "linkedNeeds": [
-      "融合菜实验室",
-      "季度上新"
-    ],
-    "linkedTopicId": 1,
-    "type": "痛点",
-    "scenarioId": "s1"
-  },
-  {
-    "id": "pa3",
-    "pain": "食材溯源展示不足，缺信任锚点",
-    "evidence": "清远鸡从哪进的？想看溯源",
-    "frequency": "中",
-    "linkedNeeds": [
-      "明厨亮灶",
-      "食材二维码"
-    ],
-    "linkedTopicId": 0,
-    "type": "痛点",
-    "scenarioId": "s2"
-  },
-  {
-    "id": "pa4",
-    "pain": "等位久/小程序体验差",
-    "evidence": "等位太久了，能不能预约取号",
-    "frequency": "中",
-    "linkedNeeds": [
-      "预约系统",
-      "等位服务"
-    ],
-    "linkedTopicId": 2,
-    "type": "痒点",
-    "scenarioId": "s3"
-  },
-  {
-    "id": "pa5",
-    "pain": "主厨故事缺内容化，难以传播",
-    "evidence": "主厨老陈 30 年了，能不能拍个纪录片",
-    "frequency": "中",
-    "linkedNeeds": [
-      "主厨 IP",
-      "老店故事"
-    ],
-    "linkedTopicId": 1,
-    "type": "痒点",
-    "scenarioId": "s2"
-  }
-]
+    "stats": {
+      "raw_count": 10,
+      "valid_count": 10,
+      "total_words": 148,
+      "vocab_size": 42,
+      "coherence": 0.42
     },
-    candidates: [
-  {
-    "id": "c1",
-    "name": "30 年老店信任",
-    "pain": "老店感弱",
-    "description": "老陈 30 年粤菜功底+荔湾老店故事化，明厨亮灶+主厨手作纪录片",
-    "evidence": "10 篇评论中 4 篇提及老店",
-    "source": "user",
-    "scenarioId": "s2",
-    "selected": true,
-    "importance": 9,
-    "uniqueness": 8,
-    "credibility": 9,
-    "feasibility": 9,
-    "communicability": 9,
-    "sustainability": 9,
-    "extraDims": {}
-  },
-  {
-    "id": "c2",
-    "name": "食材原产地溯源",
-    "pain": "信任不足",
-    "description": "清远鸡/顺德鱼生原产地直供，明厨亮灶+二维码溯源",
-    "evidence": "3 篇评论提及溯源",
-    "source": "user",
-    "scenarioId": "s2",
-    "selected": false,
-    "importance": 8,
-    "uniqueness": 9,
-    "credibility": 8,
-    "feasibility": 6,
-    "communicability": 8,
-    "sustainability": 6,
-    "extraDims": {}
-  },
-  {
-    "id": "c3",
-    "name": "融合菜实验室",
-    "pain": "缺差异化",
-    "description": "小陈主导粤菜+日料/西式/东南亚融合季度上新，3-5 道招牌融合菜",
-    "evidence": "4 篇评论提及融合",
-    "source": "user",
-    "scenarioId": "s1",
-    "selected": true,
-    "importance": 9,
-    "uniqueness": 9,
-    "credibility": 7,
-    "feasibility": 7,
-    "communicability": 8,
-    "sustainability": 7,
-    "extraDims": {}
-  },
-  {
-    "id": "c4",
-    "name": "主厨手作纪录片",
-    "pain": "传播难",
-    "description": "老陈手作 30 年系列短视频，抖音同城号+小红书分发",
-    "evidence": "2 篇评论提及纪录片",
-    "source": "user",
-    "scenarioId": "s2",
-    "selected": false,
-    "importance": 7,
-    "uniqueness": 9,
-    "credibility": 7,
-    "feasibility": 7,
-    "communicability": 9,
-    "sustainability": 6,
-    "extraDims": {}
-  }
-],
-    dimensions: {
-      desirability: (typeof Work3!== 'undefined' && Work3.DEFAULT_DESIRABILITY_DIMS)
-        ? Work3.DEFAULT_DESIRABILITY_DIMS.map(d=>({...d}))
-        : [
-          {key:'importance', label:'重要性', definition:'这个卖点对客户有多重要'},
-          {key:'uniqueness', label:'独特性', definition:'竞品是否也在说/做'},
-          {key:'credibility', label:'可信性', definition:'客户凭什么相信你能做到'}
+    "painMap": [
+      {
+        "id": "pa1",
+        "pain": "新店缺老店感，年轻客户群认知弱",
+        "evidence": "珠江新城店装修太现代，没有老店的感觉",
+        "frequency": "高",
+        "linkedNeeds": [
+          "老店故事化",
+          "环境统一"
         ],
-      implementability: (typeof Work3!== 'undefined' && Work3.DEFAULT_IMPLEMENTABILITY_DIMS)
-        ? Work3.DEFAULT_IMPLEMENTABILITY_DIMS.map(d=>({...d}))
-        : [
-          {key:'feasibility', label:'可行性', definition:'技术/供应链/成本能否实现'},
-          {key:'communicability', label:'可传播性', definition:'能否用一句话让客户听懂'},
-          {key:'sustainability', label:'可持续性', definition:'能否长期维持、不被轻易复制'}
-        ]
+        "linkedTopicId": 0,
+        "type": "痛点",
+        "scenarioId": "s1"
+      },
+      {
+        "id": "pa2",
+        "pain": "融合菜研发节奏慢，缺差异化",
+        "evidence": "探店博主来了两次都说没差别",
+        "frequency": "高",
+        "linkedNeeds": [
+          "融合菜实验室",
+          "季度上新"
+        ],
+        "linkedTopicId": 1,
+        "type": "痛点",
+        "scenarioId": "s1"
+      },
+      {
+        "id": "pa3",
+        "pain": "食材溯源展示不足，缺信任锚点",
+        "evidence": "清远鸡从哪进的？想看溯源",
+        "frequency": "中",
+        "linkedNeeds": [
+          "明厨亮灶",
+          "食材二维码"
+        ],
+        "linkedTopicId": 0,
+        "type": "痛点",
+        "scenarioId": "s2"
+      },
+      {
+        "id": "pa4",
+        "pain": "等位久/小程序体验差",
+        "evidence": "等位太久了，能不能预约取号",
+        "frequency": "中",
+        "linkedNeeds": [
+          "预约系统",
+          "等位服务"
+        ],
+        "linkedTopicId": 2,
+        "type": "痒点",
+        "scenarioId": "s3"
+      },
+      {
+        "id": "pa5",
+        "pain": "主厨故事缺内容化，难以传播",
+        "evidence": "主厨老陈 30 年了，能不能拍个纪录片",
+        "frequency": "中",
+        "linkedNeeds": [
+          "主厨 IP",
+          "老店故事"
+        ],
+        "linkedTopicId": 1,
+        "type": "痒点",
+        "scenarioId": "s2"
+      }
+    ]
+  },
+  "candidates": [
+    {
+      "id": "c1",
+      "name": "30 年老店信任",
+      "pain": "老店感弱",
+      "description": "老陈 30 年粤菜功底+荔湾老店故事化，明厨亮灶+主厨手作纪录片",
+      "evidence": "10 篇评论中 4 篇提及老店",
+      "source": "user",
+      "scenarioId": "s2",
+      "selected": true,
+      "importance": 9,
+      "uniqueness": 8,
+      "credibility": 9,
+      "feasibility": 9,
+      "communicability": 9,
+      "sustainability": 9,
+      "extraDims": {}
     },
-    matrix: {"showSector":true,"sectorWidth":1.5,"xCut":7,"yCut":7,"manualSelected":["c1","c3"]},
-    migration: { prompt:'', analyses:[
-  {
-    "from": "广州酒家客户",
-    "to": "c1",
-    "reason": "同为老字号，小镬记更年轻融合",
-    "cost": 6
+    {
+      "id": "c2",
+      "name": "食材原产地溯源",
+      "pain": "信任不足",
+      "description": "清远鸡/顺德鱼生原产地直供，明厨亮灶+二维码溯源",
+      "evidence": "3 篇评论提及溯源",
+      "source": "user",
+      "scenarioId": "s2",
+      "selected": false,
+      "importance": 8,
+      "uniqueness": 9,
+      "credibility": 8,
+      "feasibility": 6,
+      "communicability": 8,
+      "sustainability": 6,
+      "extraDims": {}
+    },
+    {
+      "id": "c3",
+      "name": "融合菜实验室",
+      "pain": "缺差异化",
+      "description": "小陈主导粤菜+日料/西式/东南亚融合季度上新，3-5 道招牌融合菜",
+      "evidence": "4 篇评论提及融合",
+      "source": "user",
+      "scenarioId": "s1",
+      "selected": true,
+      "importance": 9,
+      "uniqueness": 9,
+      "credibility": 7,
+      "feasibility": 7,
+      "communicability": 8,
+      "sustainability": 7,
+      "extraDims": {}
+    },
+    {
+      "id": "c4",
+      "name": "主厨手作纪录片",
+      "pain": "传播难",
+      "description": "老陈手作 30 年系列短视频，抖音同城号+小红书分发",
+      "evidence": "2 篇评论提及纪录片",
+      "source": "user",
+      "scenarioId": "s2",
+      "selected": false,
+      "importance": 7,
+      "uniqueness": 9,
+      "credibility": 7,
+      "feasibility": 7,
+      "communicability": 9,
+      "sustainability": 6,
+      "extraDims": {}
+    },
+    {
+      "id": "c5",
+      "name": "30 年秘制酱料配方",
+      "pain": "想吃地道老广味找不到",
+      "scenarioId": "s1",
+      "importance": 7,
+      "uniqueness": 8,
+      "credibility": 8,
+      "feasibility": 9,
+      "communicability": 8,
+      "sustainability": 8,
+      "selected": false,
+      "evidence": "老店传承配方"
+    },
+    {
+      "id": "c6",
+      "name": "镬气现炒明厨亮灶",
+      "pain": "怕预制菜、不新鲜",
+      "scenarioId": "s2",
+      "importance": 8,
+      "uniqueness": 6,
+      "credibility": 9,
+      "feasibility": 7,
+      "communicability": 9,
+      "sustainability": 7,
+      "selected": false,
+      "evidence": "明厨设计方案"
+    }
+  ],
+  "dimensions": {
+    "desirability": [
+      {
+        "key": "importance",
+        "label": "重要性",
+        "definition": "这个卖点对客户有多重要"
+      },
+      {
+        "key": "uniqueness",
+        "label": "独特性",
+        "definition": "竞品是否也在说/做"
+      },
+      {
+        "key": "credibility",
+        "label": "可信性",
+        "definition": "客户凭什么相信你能做到"
+      }
+    ],
+    "implementability": [
+      {
+        "key": "feasibility",
+        "label": "可行性",
+        "definition": "技术/供应链/成本能否实现"
+      },
+      {
+        "key": "communicability",
+        "label": "可传播性",
+        "definition": "能否用一句话让客户听懂"
+      },
+      {
+        "key": "sustainability",
+        "label": "可持续性",
+        "definition": "能否长期维持、不被轻易复制"
+      }
+    ]
   },
-  {
-    "from": "炳胜客户",
-    "to": "c1",
-    "reason": "同价位, 小镬记更出片",
-    "cost": 7
+  "matrix": {
+    "showSector": true,
+    "sectorWidth": 1.5,
+    "xCut": 7,
+    "yCut": 7,
+    "manualSelected": [
+      "c1",
+      "c3"
+    ]
   },
-  {
-    "from": "gaga 客户",
-    "to": "c3",
-    "reason": "颜值党迁移到有粤菜底蕴的融合菜",
-    "cost": 8
-  }
-] },
-    proposition: {
-  "coreValueIds": [
+  "migration": {
+    "prompt": "",
+    "analyses": [
+      {
+        "from": "广州酒家客户",
+        "to": "c1",
+        "reason": "同为老字号，小镬记更年轻融合",
+        "cost": 6
+      },
+      {
+        "from": "炳胜客户",
+        "to": "c1",
+        "reason": "同价位, 小镬记更出片",
+        "cost": 7
+      },
+      {
+        "from": "gaga 客户",
+        "to": "c3",
+        "reason": "颜值党迁移到有粤菜底蕴的融合菜",
+        "cost": 8
+      }
+    ]
+  },
+  "proposition": {
+    "coreValueIds": [
+      "c1",
+      "c2",
+      "c3",
+      "c4"
+    ],
+    "alternatives": [
+      {
+        "id": "a1",
+        "text": "30 年老店，新派粤菜。"
+      },
+      {
+        "id": "a2",
+        "text": "老陈的镬，老陈的味。"
+      },
+      {
+        "id": "a3",
+        "text": "粤菜老店，融合新味。"
+      }
+    ],
+    "chosenValueText": "30 年老店，地道新派粤味。",
+    "positioning": {
+      "brand": "小镬记",
+      "audience": "25-45 岁中端堂食客/年轻白领+家庭客+探店博主",
+      "coreValue": "30 年老店信任+融合菜创新+主厨手作+食材溯源",
+      "category": "粤菜融合专业品牌"
+    },
+    "positioningStatement": "对于 25-45 岁中端堂食客, 小镬记是唯一一个用 30 年老店信任 + 主厨手作 + 食材原产地溯源 + 小陈主导融合菜实验室, 让\"30 年老店, 新派粤菜\"既可讲述又可上桌的粤菜融合专业品牌。"
+  },
+  "identity": {
+    "mbti": "ESTJ (管理者型 — 偏务实、传承、长期主义)",
+    "personalityTraits": [
+      "老字号",
+      "专业",
+      "传承",
+      "温暖",
+      "创新"
+    ],
+    "sloganOptions": [
+      {
+        "text": "30 年老店，新派粤菜",
+        "source": "agent"
+      },
+      {
+        "text": "老陈的镬，老陈的味",
+        "source": "user"
+      },
+      {
+        "text": "粤菜老店，融合新味",
+        "source": "user"
+      }
+    ],
+    "chosenSlogan": "30 年老店，新派粤菜"
+  },
+  "_scoreDone": [
     "c1",
     "c2",
     "c3",
     "c4"
   ],
-  "alternatives": [
-    {
-      "id": "a1",
-      "text": "30 年老店，新派粤菜。"
-    },
-    {
-      "id": "a2",
-      "text": "老陈的镬，老陈的味。"
-    },
-    {
-      "id": "a3",
-      "text": "粤菜老店，融合新味。"
-    }
+  "_pipeProp": [
+    "coreValueIds",
+    "chosenValueText",
+    "positioning"
   ],
-  "chosenValueText": "30 年老店，新派粤菜。",
-  "positioning": {
-    "brand": "小镬记",
-    "audience": "25-45 岁中端堂食客/年轻白领+家庭客+探店博主",
-    "coreValue": "30 年老店信任+融合菜创新+主厨手作+食材溯源",
-    "category": "粤菜融合专业品牌"
-  },
-  "positioningStatement": "对于 25-45 岁中端堂食客, 小镬记是唯一一个用 30 年老店信任 + 主厨手作 + 食材原产地溯源 + 小陈主导融合菜实验室, 让\"30 年老店, 新派粤菜\"既可讲述又可上桌的粤菜融合专业品牌。"
-},
-    identity: {
-  "mbti": "ESTJ (管理者型 — 偏务实、传承、长期主义)",
-  "personalityTraits": [
-    "老字号",
-    "专业",
-    "传承",
-    "温暖",
-    "创新"
-  ],
-  "sloganOptions": [
-    {
-      "text": "30 年老店，新派粤菜",
-      "source": "agent"
-    },
-    {
-      "text": "老陈的镬，老陈的味",
-      "source": "user"
-    },
-    {
-      "text": "粤菜老店，融合新味",
-      "source": "user"
-    }
-  ],
-  "chosenSlogan": "30 年老店，新派粤菜"
-},
-    _scoreDone: ["c1","c2","c3","c4"],
-    _pipeProp: ['coreValueIds','chosenValueText','positioning'],
-    _pipeIdentity: ['mbti','sloganOptions','chosenSlogan']
-  };
+  "_pipeIdentity": [
+    "mbti",
+    "sloganOptions",
+    "chosenSlogan"
+  ]
+};
   if(typeof window!== 'undefined') window.__case_xiaohuo_ji_work3 = data;
 })();
 
@@ -1533,82 +3555,249 @@
  ============================================================ */
 (function(){
   const data = {
-    route:{
-      scope:'domestic',
-      oemType:'OBM',
-      entryMode:'',
-      light:[],
-      politicalPower:''
+  "route": {
+    "scope": "domestic",
+    "oemType": "OBM",
+    "entryMode": "offline-first",
+    "light": [],
+    "politicalPower": ""
+  },
+  "product": {
+    "name": "小镬记粤菜融合系列",
+    "description": "30 年老店+粤菜融合+明厨亮灶+主厨手作",
+    "coreDifferentiators": [
+      "30 年老店信任",
+      "主厨手作",
+      "食材原产地溯源",
+      "融合菜创新"
+    ],
+    "physicalFeatures": "明厨亮灶 / 食材二维码溯源 / 老陈手作纪录片 / 融合菜季度上新",
+    "serviceOffering": "等位茶点+主厨讲解 / 食材故事小程序页 / 会员积分+生日券 / 私域社群",
+    "technologyMoat": "5 位粤菜师傅 + 荔湾老店品牌资产 + 小陈互联网运营",
+    "skus": [
+      {
+        "name": "招牌粤菜 15 道",
+        "specs": "清远鸡/顺德鱼生/蜜汁叉烧等",
+        "price_range": "68-188 元/道",
+        "differentiator": "30 年老店配方"
+      },
+      {
+        "name": "融合菜季度上新",
+        "specs": "粤菜+日料/西式/东南亚",
+        "price_range": "88-268 元/道",
+        "differentiator": "小陈主导研发"
+      },
+      {
+        "name": "家庭套餐",
+        "specs": "4-6 人 8-10 道",
+        "price_range": "588-1288 元/套",
+        "differentiator": "食材溯源+主厨讲解"
+      },
+      {
+        "name": "主厨手作体验",
+        "specs": "1.5 小时 8 道菜",
+        "price_range": "298-498 元/位",
+        "differentiator": "主厨面对面"
+      }
+    ]
+  },
+  "price": {
+    "strategy": "value",
+    "strategyNote": "中端定价，融合菜承担溢价；家庭套餐+主厨体验提升客单。",
+    "tiers": [
+      {
+        "name": "招牌粤菜单道",
+        "targetSegment": "老客+家庭",
+        "price": 128,
+        "unit": "元/道",
+        "notes": "清远鸡等招牌"
+      },
+      {
+        "name": "融合菜单道",
+        "targetSegment": "年轻白领+博主",
+        "price": 168,
+        "unit": "元/道",
+        "notes": "季度上新"
+      },
+      {
+        "name": "家庭套餐",
+        "targetSegment": "家庭客",
+        "price": 888,
+        "unit": "元/套",
+        "notes": "4-6 人 8-10 道"
+      },
+      {
+        "name": "主厨体验",
+        "targetSegment": "高端客+团建",
+        "price": 398,
+        "unit": "元/位",
+        "notes": "1.5 小时"
+      }
+    ],
+    "channelPricing": [
+      {
+        "channel": "堂食",
+        "priceAdjustment": "原价",
+        "rationale": "主战场"
+      },
+      {
+        "channel": "美团/大众点评",
+        "priceAdjustment": "9 折团购",
+        "rationale": "拉新引流"
+      },
+      {
+        "channel": "抖音同城号",
+        "priceAdjustment": "套餐立减 50",
+        "rationale": "种草转化"
+      }
+    ],
+    "promotions": [
+      {
+        "occasion": "老店周年庆",
+        "discount": "招牌菜 8 折",
+        "period": "周年庆当月"
+      },
+      {
+        "occasion": "新店开业",
+        "discount": "双人套餐 5 折",
+        "period": "开业首月"
+      }
+    ],
+    "competitorPrices": "广州酒家 150；点都德 80；炳胜 200；太兴 90；gaga 120"
+  },
+  "place": {
+    "onlineSelf": [
+      "小镬记小程序",
+      "抖音同城号旗舰店"
+    ],
+    "onlineThird": [
+      "美团",
+      "大众点评",
+      "小红书企业号"
+    ],
+    "onlineNotes": "小程序会员+预约为主；美团/点评做拉新；抖音同城号种草",
+    "offlineDirect": [
+      "荔湾老店",
+      "珠江新城店",
+      "深圳新店（拟）",
+      "上海新店（拟）"
+    ],
+    "offlineDistrib": [],
+    "offlineRetail": [],
+    "offlineNotes": "直营连锁为主，第一阶段不开放加盟",
+    "keyPartners": [
+      {
+        "name": "小红书探店 KOC",
+        "side": "线上"
+      },
+      {
+        "name": "抖音同城 MCN",
+        "side": "线上"
+      },
+      {
+        "name": "清远/顺德食材基地",
+        "side": "线下"
+      }
+    ],
+    "channelIncentives": "KOC 免单+佣金 10%；MCN 坑位费 + GMV 提成 5%",
+    "structure": [
+      {
+        "name": "线下",
+        "children": [
+          {
+            "name": "广州本店",
+            "share": 60
+          },
+          {
+            "name": "深圳新店",
+            "share": 25
+          },
+          {
+            "name": "上海新店",
+            "share": 15
+          }
+        ]
+      },
+      {
+        "name": "线上",
+        "children": [
+          {
+            "name": "小程序",
+            "share": 50
+          },
+          {
+            "name": "美团/点评",
+            "share": 30
+          },
+          {
+            "name": "抖音同城",
+            "share": 20
+          }
+        ]
+      }
+    ]
+  },
+  "promotion": {
+    "theme": "30 年老店，新派粤菜",
+    "advertising": [
+      {
+        "media": "抖音同城短视频",
+        "budgetShare": 35,
+        "message": "老陈手作+融合菜",
+        "kpi": "同城曝光/团购 GMV"
+      },
+      {
+        "media": "小红书 KOC",
+        "budgetShare": 30,
+        "message": "出片+主厨互动",
+        "kpi": "互动率/UGC"
+      },
+      {
+        "media": "大众点评/美团",
+        "budgetShare": 20,
+        "message": "9 折团购+招牌菜",
+        "kpi": "到店转化率"
+      },
+      {
+        "media": "私域社群",
+        "budgetShare": 15,
+        "message": "老客回馈+新菜试吃",
+        "kpi": "复购率"
+      }
+    ],
+    "pr": [
+      {
+        "event": "老陈手作纪录片上线",
+        "timing": "30 周年庆",
+        "expectedReach": "同城 100 万曝光"
+      },
+      {
+        "event": "融合菜发布会",
+        "timing": "每季度 1 次",
+        "expectedReach": "小红书/同城 50 万"
+      }
+    ],
+    "salesPromotion": [
+      {
+        "tactic": "美团 9 折团购",
+        "mechanic": "招牌菜+融合菜",
+        "period": "常年"
+      },
+      {
+        "tactic": "老客 8 折日",
+        "mechanic": "会员日",
+        "period": "每月 1 次"
+      }
+    ],
+    "crm": {
+      "tool": "小程序+企业微信",
+      "membership": "消费满 1000 升级银卡/满 5000 金卡",
+      "repurchase": "每 30 天推送新菜/活动",
+      "notes": "老客复购是基本盘"
     },
-    product:{
-      name:'小镬记粤菜融合系列',
-      description:'30 年老店+粤菜融合+明厨亮灶+主厨手作',
-      coreDifferentiators:['30 年老店信任','主厨手作','食材原产地溯源','融合菜创新'],
-      physicalFeatures:'明厨亮灶 / 食材二维码溯源 / 老陈手作纪录片 / 融合菜季度上新',
-      serviceOffering:'等位茶点+主厨讲解 / 食材故事小程序页 / 会员积分+生日券 / 私域社群',
-      technologyMoat:'5 位粤菜师傅 + 荔湾老店品牌资产 + 小陈互联网运营',
-      skus:[
-        {name:'招牌粤菜 15 道', specs:'清远鸡/顺德鱼生/蜜汁叉烧等', price_range:'68-188 元/道', differentiator:'30 年老店配方'},
-        {name:'融合菜季度上新', specs:'粤菜+日料/西式/东南亚', price_range:'88-268 元/道', differentiator:'小陈主导研发'},
-        {name:'家庭套餐', specs:'4-6 人 8-10 道', price_range:'588-1288 元/套', differentiator:'食材溯源+主厨讲解'},
-        {name:'主厨手作体验', specs:'1.5 小时 8 道菜', price_range:'298-498 元/位', differentiator:'主厨面对面'}
-      ]
-    },
-    price:{
-      strategy:'value',
-      strategyNote:'中端定价，融合菜承担溢价；家庭套餐+主厨体验提升客单。',
-      tiers:[
-        {name:'招牌粤菜单道', targetSegment:'老客+家庭', price:128, unit:'元/道', notes:'清远鸡等招牌'},
-        {name:'融合菜单道', targetSegment:'年轻白领+博主', price:168, unit:'元/道', notes:'季度上新'},
-        {name:'家庭套餐', targetSegment:'家庭客', price:888, unit:'元/套', notes:'4-6 人 8-10 道'},
-        {name:'主厨体验', targetSegment:'高端客+团建', price:398, unit:'元/位', notes:'1.5 小时'}
-      ],
-      channelPricing:[
-        {channel:'堂食', priceAdjustment:'原价', rationale:'主战场'},
-        {channel:'美团/大众点评', priceAdjustment:'9 折团购', rationale:'拉新引流'},
-        {channel:'抖音同城号', priceAdjustment:'套餐立减 50', rationale:'种草转化'}
-      ],
-      promotions:[
-        {occasion:'老店周年庆', discount:'招牌菜 8 折', period:'周年庆当月'},
-        {occasion:'新店开业', discount:'双人套餐 5 折', period:'开业首月'}
-      ],
-      competitorPrices:'广州酒家 150；点都德 80；炳胜 200；太兴 90；gaga 120'
-    },
-    place:{
-      onlineSelf:['小镬记小程序','抖音同城号旗舰店'],
-      onlineThird:['美团','大众点评','小红书企业号'],
-      onlineNotes:'小程序会员+预约为主；美团/点评做拉新；抖音同城号种草',
-      offlineDirect:['荔湾老店','珠江新城店','深圳新店（拟）','上海新店（拟）'],
-      offlineDistrib:[],
-      offlineRetail:[],
-      offlineNotes:'直营连锁为主，第一阶段不开放加盟',
-      keyPartners:[{name:'小红书探店 KOC',side:'线上'},{name:'抖音同城 MCN',side:'线上'},{name:'清远/顺德食材基地',side:'线下'}],
-      channelIncentives:'KOC 免单+佣金 10%；MCN 坑位费 + GMV 提成 5%',
-      structure:[
-        {name:'线下', children:[{name:'广州本店', share:60},{name:'深圳新店', share:25},{name:'上海新店', share:15}]},
-        {name:'线上', children:[{name:'小程序', share:50},{name:'美团/点评', share:30},{name:'抖音同城', share:20}]}
-      ]
-    },
-    promotion:{
-      theme:'30 年老店，新派粤菜',
-      advertising:[
-        {media:'抖音同城短视频', budgetShare:35, message:'老陈手作+融合菜', kpi:'同城曝光/团购 GMV'},
-        {media:'小红书 KOC', budgetShare:30, message:'出片+主厨互动', kpi:'互动率/UGC'},
-        {media:'大众点评/美团', budgetShare:20, message:'9 折团购+招牌菜', kpi:'到店转化率'},
-        {media:'私域社群', budgetShare:15, message:'老客回馈+新菜试吃', kpi:'复购率'}
-      ],
-      pr:[
-        {event:'老陈手作纪录片上线', timing:'30 周年庆', expectedReach:'同城 100 万曝光'},
-        {event:'融合菜发布会', timing:'每季度 1 次', expectedReach:'小红书/同城 50 万'}
-      ],
-      salesPromotion:[
-        {tactic:'美团 9 折团购', mechanic:'招牌菜+融合菜', period:'常年'},
-        {tactic:'老客 8 折日', mechanic:'会员日', period:'每月 1 次'}
-      ],
-      crm:{tool:'小程序+企业微信', membership:'消费满 1000 升级银卡/满 5000 金卡', repurchase:'每 30 天推送新菜/活动', notes:'老客复购是基本盘'},
-      contentStrategy:'抖音"老陈手作 30 年"系列 + 小红书"融合菜出片"系列 + 大众点评"食材故事"长图。'
-    }
-  };
+    "contentStrategy": "抖音\"老陈手作 30 年\"系列 + 小红书\"融合菜出片\"系列 + 大众点评\"食材故事\"长图。"
+  }
+};
 
   if(typeof window!== 'undefined') window.__case_xiaohuo_ji_work4 = data;
 })();
@@ -2009,35 +4198,717 @@
     }));
   }
   const data = {
-    candidates: [{"id":"mc1","name":"艺考集训","reason":"客单价高但政策风险大","source":"user"},{"id":"mc2","name":"企业内训","reason":"周期长、客单高","source":"user"}],
-    screening: { criteria: [] },
-    retained: [{"id":"m1","name":"大学生/职场新人","region":"杭州/宁波/绍兴高校+职场","population":"约 200 万","gdpPerCapita":"家庭年收入 15-30 万","notes":"就业刚需强、客单价高、社交传播好","source":"user"},{"id":"m2","name":"K12 老客（鸡娃续费）","region":"3 校区周边家庭","population":"已有 1500 学员家庭","gdpPerCapita":"家庭年收入 25-50 万","notes":"老客粘性强，续费 70%","source":"user"},{"id":"m3","name":"30+ 转行者","region":"浙江省内待业/转行","population":"约 100 万","gdpPerCapita":"家庭年收入 10-20 万","notes":"人数多、就业兑现风险大","source":"user"}],
-    attractiveness: { categories: buildCats(attractTemplate) },
-    competitiveness: { categories: buildCats(competeTemplate) },
-    scoring: { m1: { 'ind_经济_市场规模': {score: 8.5, source: 'user'}, 'ind_经济_客单价与': {score: 7.5, source: 'user'}, 'ind_政治法律_行业监管': {score: 9, source: 'user'}, 'ind_政治法律_广告法与': {score: 7, source: 'user'}, 'ind_社会文化_客群需求': {score: 8, source: 'user'}, 'ind_社会文化_种草 /': {score: 8.5, source: 'user'}, 'ind_风险_核心资源': {score: 7, source: 'user'}, 'ind_风险_新客获客': {score: 8.5, source: 'user'}, 'ind_市场信息_目标客群': {score: 8.5, source: 'user'}, 'ind_市场信息_竞品表现': {score: 7.5, source: 'user'}, 'ind_营销渠道_核心渠道': {score: 9, source: 'user'}, 'ind_营销渠道_KOL ': {score: 7, source: 'user'}, 'ind_认证合规_核心资质': {score: 8, source: 'user'}, 'ind_认证合规_关键背书': {score: 8.5, source: 'user'}, 'ind_产品品牌_现有老客': {score: 7, source: 'user'}, 'ind_产品品牌_C 端品': {score: 8.5, source: 'user'} }, m2: { 'ind_经济_市场规模': {score: 6, source: 'user'}, 'ind_经济_客单价与': {score: 5, source: 'user'}, 'ind_政治法律_行业监管': {score: 6.5, source: 'user'}, 'ind_政治法律_广告法与': {score: 4.5, source: 'user'}, 'ind_社会文化_客群需求': {score: 5.5, source: 'user'}, 'ind_社会文化_种草 /': {score: 6, source: 'user'}, 'ind_风险_核心资源': {score: 4.5, source: 'user'}, 'ind_风险_新客获客': {score: 6, source: 'user'}, 'ind_市场信息_目标客群': {score: 7.5, source: 'user'}, 'ind_市场信息_竞品表现': {score: 6.5, source: 'user'}, 'ind_营销渠道_核心渠道': {score: 8, source: 'user'}, 'ind_营销渠道_KOL ': {score: 6, source: 'user'}, 'ind_认证合规_核心资质': {score: 7, source: 'user'}, 'ind_认证合规_关键背书': {score: 7.5, source: 'user'}, 'ind_产品品牌_现有老客': {score: 6, source: 'user'}, 'ind_产品品牌_C 端品': {score: 7.5, source: 'user'} }, m3: { 'ind_经济_市场规模': {score: 7.5, source: 'user'}, 'ind_经济_客单价与': {score: 6.5, source: 'user'}, 'ind_政治法律_行业监管': {score: 8, source: 'user'}, 'ind_政治法律_广告法与': {score: 6, source: 'user'}, 'ind_社会文化_客群需求': {score: 7, source: 'user'}, 'ind_社会文化_种草 /': {score: 7.5, source: 'user'}, 'ind_风险_核心资源': {score: 6, source: 'user'}, 'ind_风险_新客获客': {score: 7.5, source: 'user'}, 'ind_市场信息_目标客群': {score: 4.5, source: 'user'}, 'ind_市场信息_竞品表现': {score: 3.5, source: 'user'}, 'ind_营销渠道_核心渠道': {score: 5, source: 'user'}, 'ind_营销渠道_KOL ': {score: 3, source: 'user'}, 'ind_认证合规_核心资质': {score: 4, source: 'user'}, 'ind_认证合规_关键背书': {score: 4.5, source: 'user'}, 'ind_产品品牌_现有老客': {score: 3, source: 'user'}, 'ind_产品品牌_C 端品': {score: 4.5, source: 'user'} } },
-    delphi: {
-      recruitment: { perspectives: [{"id":"p_brand","role":"教育品牌策略","why":"看 K12 转职教品牌迁移"},{"id":"p_growth","role":"职业课运营","why":"看就业转化路径"},{"id":"p_teacher","role":"资深职业课老师","why":"判断师资复制"},{"id":"p_hr","role":"本地企业 HRD","why":"看就业兑现可行性"},{"id":"p_student","role":"大学生 KOC","why":"翻译求职焦虑"}] },
-      personas: [{"id":"pe1","name":"教育品牌策略","perspective":"看品牌迁移","stance":"中性"},{"id":"pe2","name":"职业课运营","perspective":"看转化","stance":"增长向"},{"id":"pe3","name":"职业课老师","perspective":"看师资","stance":"产品向"},{"id":"pe4","name":"企业 HRD","perspective":"看就业","stance":"渠道向"},{"id":"pe5","name":"大学生 KOC","perspective":"看决策","stance":"用户向"}],
-      userHosted: true,
-      finalWeights: {
-        attractiveness: { 'ind_经济_市场规模':0.20, 'ind_经济_客单价':0.15, 'ind_政治法律_行业':0.10, 'ind_政治法律_广告':0.05, 'ind_社会文化_客群':0.15, 'ind_社会文化_渗透':0.10, 'ind_风险_资源':0.05, 'ind_风险_获客':0.05 },
-        competitiveness: { 'ind_市场信息_目标':0.06, 'ind_市场信息_竞品':0.06, 'ind_营销渠道_核心':0.10, 'ind_营销渠道_KOL':0.08, 'ind_认证合规_资质':0.10, 'ind_认证合规_背书':0.10, 'ind_产品品牌_老客':0.15, 'ind_产品品牌_品牌':0.10 }
+  "candidates": [
+    {
+      "id": "mc1",
+      "name": "艺考集训",
+      "reason": "客单价高但政策风险大",
+      "source": "user"
+    },
+    {
+      "id": "mc2",
+      "name": "企业内训",
+      "reason": "周期长、客单高",
+      "source": "user"
+    },
+    {
+      "id": "mc3",
+      "name": "企业内训/职业培训 B 端",
+      "reason": "客单价高但决策链长",
+      "source": "user"
+    },
+    {
+      "id": "mc4",
+      "name": "K12 学科类培训",
+      "reason": "政策风险高、已在收缩",
+      "source": "user"
+    },
+    {
+      "id": "mc5",
+      "name": "留学语培/出国考试",
+      "reason": "客单价高但市场波动大",
+      "source": "user"
+    }
+  ],
+  "screening": {
+    "criteria": [
+      "目标人群规模 ≥ 500 万，需求刚性",
+      "客单价 ≥ 2000 元，完课率 ≥ 60%",
+      "政策风险低，不在\"双减\"监管范围内"
+    ]
+  },
+  "retained": [
+    {
+      "id": "m1",
+      "name": "大学生/职场新人",
+      "region": "杭州/宁波/绍兴高校+职场",
+      "population": "约 200 万",
+      "gdpPerCapita": "家庭年收入 15-30 万",
+      "notes": "就业刚需强、客单价高、社交传播好",
+      "source": "user"
+    },
+    {
+      "id": "m2",
+      "name": "K12 老客（鸡娃续费）",
+      "region": "3 校区周边家庭",
+      "population": "已有 1500 学员家庭",
+      "gdpPerCapita": "家庭年收入 25-50 万",
+      "notes": "老客粘性强，续费 70%",
+      "source": "user"
+    },
+    {
+      "id": "m3",
+      "name": "30+ 转行者",
+      "region": "浙江省内待业/转行",
+      "population": "约 100 万",
+      "gdpPerCapita": "家庭年收入 10-20 万",
+      "notes": "人数多、就业兑现风险大",
+      "source": "user"
+    }
+  ],
+  "attractiveness": {
+    "categories": [
+      {
+        "id": "cat_经济",
+        "name": "经济",
+        "weight": 0.25,
+        "indicators": [
+          {
+            "id": "ind_经济_市场规模",
+            "name": "市场规模 / 行业容量",
+            "weight": 0.5,
+            "rubric": {
+              "high": "市场规模 ≥ 200 亿，年增速 ≥ 10%",
+              "mid": "中等水平，介于高分与低分之间",
+              "low": "低于行业平均，存在明显短板"
+            },
+            "support": 0,
+            "source": "delphi"
+          },
+          {
+            "id": "ind_经济_客单价与",
+            "name": "客单价与续费能力",
+            "weight": 0.5,
+            "rubric": {
+              "high": "客单价 ≥ 3000 元，续费率 ≥ 50%",
+              "mid": "中等水平，介于高分与低分之间",
+              "low": "低于行业平均，存在明显短板"
+            },
+            "support": 0,
+            "source": "delphi"
+          }
+        ]
       },
-      summary: "两轮 Delphi 后专家对\"增长率\"与\"师资基础\"赋权最高。大学生/职场新人客单价高、就业刚需强、老学员可推荐，6 个月内可贡献 30% 营收。",
-      status: 'done',
-      phase: 'converged',
-      panel: [], round1: null, round2: null, synthesis: null, finalSynthesis: null, weights: null
+      {
+        "id": "cat_政治法律",
+        "name": "政治法律",
+        "weight": 0.25,
+        "indicators": [
+          {
+            "id": "ind_政治法律_行业监管",
+            "name": "行业监管 / 资质门槛",
+            "weight": 0.5,
+            "rubric": {
+              "high": "政策支持职业教育，监管清晰",
+              "mid": "中等水平，介于高分与低分之间",
+              "low": "低于行业平均，存在明显短板"
+            },
+            "support": 0,
+            "source": "delphi"
+          },
+          {
+            "id": "ind_政治法律_广告法与",
+            "name": "广告法与合规风险",
+            "weight": 0.5,
+            "rubric": {
+              "high": "教育广告合规，无虚假宣称风险",
+              "mid": "中等水平，介于高分与低分之间",
+              "low": "低于行业平均，存在明显短板"
+            },
+            "support": 0,
+            "source": "delphi"
+          }
+        ]
+      },
+      {
+        "id": "cat_社会文化",
+        "name": "社会文化",
+        "weight": 0.25,
+        "indicators": [
+          {
+            "id": "ind_社会文化_客群需求",
+            "name": "客群需求强度",
+            "weight": 0.5,
+            "rubric": {
+              "high": "就业焦虑驱动，需求刚性强",
+              "mid": "中等水平，介于高分与低分之间",
+              "low": "低于行业平均，存在明显短板"
+            },
+            "support": 0,
+            "source": "delphi"
+          },
+          {
+            "id": "ind_社会文化_种草 /",
+            "name": "种草 / 社交渗透",
+            "weight": 0.5,
+            "rubric": {
+              "high": "知乎/B站/小红书学习内容渗透率高",
+              "mid": "中等水平，介于高分与低分之间",
+              "low": "低于行业平均，存在明显短板"
+            },
+            "support": 0,
+            "source": "delphi"
+          }
+        ]
+      },
+      {
+        "id": "cat_风险",
+        "name": "风险",
+        "weight": 0.25,
+        "indicators": [
+          {
+            "id": "ind_风险_核心资源",
+            "name": "核心资源复制难度",
+            "weight": 0.5,
+            "rubric": {
+              "high": "名师/教研团队可复制性低，壁垒高",
+              "mid": "中等水平，介于高分与低分之间",
+              "low": "低于行业平均，存在明显短板"
+            },
+            "support": 0,
+            "source": "delphi"
+          },
+          {
+            "id": "ind_风险_新客获客",
+            "name": "新客获客成本",
+            "weight": 0.5,
+            "rubric": {
+              "high": "CAC ≤ 客单价 30%，转化周期 ≤ 1 月",
+              "mid": "中等水平，介于高分与低分之间",
+              "low": "低于行业平均，存在明显短板"
+            },
+            "support": 0,
+            "source": "delphi"
+          }
+        ]
+      }
+    ]
+  },
+  "competitiveness": {
+    "categories": [
+      {
+        "id": "cat_市场信息",
+        "name": "市场信息",
+        "weight": 0.25,
+        "indicators": [
+          {
+            "id": "ind_市场信息_目标客群",
+            "name": "目标客群数据可获取性",
+            "weight": 0.5,
+            "rubric": {
+              "high": "目标人群画像清晰，投放可精准触达",
+              "mid": "中等水平，介于高分与低分之间",
+              "low": "低于行业平均，存在明显短板"
+            },
+            "support": 0,
+            "source": "delphi"
+          },
+          {
+            "id": "ind_市场信息_竞品表现",
+            "name": "竞品表现可监测",
+            "weight": 0.5,
+            "rubric": {
+              "high": "竞品数据可监测，格局稳定",
+              "mid": "中等水平，介于高分与低分之间",
+              "low": "低于行业平均，存在明显短板"
+            },
+            "support": 0,
+            "source": "delphi"
+          }
+        ]
+      },
+      {
+        "id": "cat_营销渠道",
+        "name": "营销渠道",
+        "weight": 0.25,
+        "indicators": [
+          {
+            "id": "ind_营销渠道_核心渠道",
+            "name": "核心渠道成熟度",
+            "weight": 0.5,
+            "rubric": {
+              "high": "信息流/社群渠道成熟，ROI 可测",
+              "mid": "中等水平，介于高分与低分之间",
+              "low": "低于行业平均，存在明显短板"
+            },
+            "support": 0,
+            "source": "delphi"
+          },
+          {
+            "id": "ind_营销渠道_KOL ",
+            "name": "KOL / 达人储备",
+            "weight": 0.5,
+            "rubric": {
+              "high": "学习博主/职场 KOL 储备 ≥ 20 位",
+              "mid": "中等水平，介于高分与低分之间",
+              "low": "低于行业平均，存在明显短板"
+            },
+            "support": 0,
+            "source": "delphi"
+          }
+        ]
+      },
+      {
+        "id": "cat_认证合规",
+        "name": "认证合规",
+        "weight": 0.25,
+        "indicators": [
+          {
+            "id": "ind_认证合规_核心资质",
+            "name": "核心资质完备度",
+            "weight": 0.5,
+            "rubric": {
+              "high": "办学许可证/ICP 等资质齐全",
+              "mid": "中等水平，介于高分与低分之间",
+              "low": "低于行业平均，存在明显短板"
+            },
+            "support": 0,
+            "source": "delphi"
+          },
+          {
+            "id": "ind_认证合规_关键背书",
+            "name": "关键背书可复用",
+            "weight": 0.5,
+            "rubric": {
+              "high": "权威机构/名企合作背书可获取",
+              "mid": "中等水平，介于高分与低分之间",
+              "low": "低于行业平均，存在明显短板"
+            },
+            "support": 0,
+            "source": "delphi"
+          }
+        ]
+      },
+      {
+        "id": "cat_产品品牌",
+        "name": "产品品牌",
+        "weight": 0.25,
+        "indicators": [
+          {
+            "id": "ind_产品品牌_现有老客",
+            "name": "现有老客基础可迁移",
+            "weight": 0.5,
+            "rubric": {
+              "high": "5 年累计老学员 ≥ 5000，口碑转介绍 ≥ 30%",
+              "mid": "中等水平，介于高分与低分之间",
+              "low": "低于行业平均，存在明显短板"
+            },
+            "support": 0,
+            "source": "delphi"
+          },
+          {
+            "id": "ind_产品品牌_C 端品",
+            "name": "C 端品牌资产起点",
+            "weight": 0.5,
+            "rubric": {
+              "high": "本地有品牌认知，老学员推荐率高",
+              "mid": "中等水平，介于高分与低分之间",
+              "low": "低于行业平均，存在明显短板"
+            },
+            "support": 0,
+            "source": "delphi"
+          }
+        ]
+      }
+    ]
+  },
+  "scoring": {
+    "m1": {
+      "ind_经济_市场规模": {
+        "score": 8.5,
+        "source": "user",
+        "evidence": "大学生/职场新人在\"市场规模 / 行业容量\"上表现高，综合行业报告与专家访谈判断。"
+      },
+      "ind_经济_客单价与": {
+        "score": 7.5,
+        "source": "user",
+        "evidence": "大学生/职场新人在\"客单价与续费能力\"上表现中，综合行业报告与专家访谈判断。"
+      },
+      "ind_政治法律_行业监管": {
+        "score": 9,
+        "source": "user",
+        "evidence": "大学生/职场新人在\"行业监管 / 资质门槛\"上表现高，综合行业报告与专家访谈判断。"
+      },
+      "ind_政治法律_广告法与": {
+        "score": 7,
+        "source": "user",
+        "evidence": "大学生/职场新人在\"广告法与合规风险\"上表现中，综合行业报告与专家访谈判断。"
+      },
+      "ind_社会文化_客群需求": {
+        "score": 8,
+        "source": "user",
+        "evidence": "大学生/职场新人在\"客群需求强度\"上表现高，综合行业报告与专家访谈判断。"
+      },
+      "ind_社会文化_种草 /": {
+        "score": 8.5,
+        "source": "user",
+        "evidence": "大学生/职场新人在\"种草 / 社交渗透\"上表现高，综合行业报告与专家访谈判断。"
+      },
+      "ind_风险_核心资源": {
+        "score": 7,
+        "source": "user",
+        "evidence": "大学生/职场新人在\"核心资源复制难度\"上表现中，综合行业报告与专家访谈判断。"
+      },
+      "ind_风险_新客获客": {
+        "score": 8.5,
+        "source": "user",
+        "evidence": "大学生/职场新人在\"新客获客成本\"上表现高，综合行业报告与专家访谈判断。"
+      },
+      "ind_市场信息_目标客群": {
+        "score": 8.5,
+        "source": "user",
+        "evidence": "大学生/职场新人在\"目标客群数据可获取性\"上表现高，综合行业报告与专家访谈判断。"
+      },
+      "ind_市场信息_竞品表现": {
+        "score": 7.5,
+        "source": "user",
+        "evidence": "大学生/职场新人在\"竞品表现可监测\"上表现中，综合行业报告与专家访谈判断。"
+      },
+      "ind_营销渠道_核心渠道": {
+        "score": 9,
+        "source": "user",
+        "evidence": "大学生/职场新人在\"核心渠道成熟度\"上表现高，综合行业报告与专家访谈判断。"
+      },
+      "ind_营销渠道_KOL ": {
+        "score": 7,
+        "source": "user",
+        "evidence": "大学生/职场新人在\"KOL / 达人储备\"上表现中，综合行业报告与专家访谈判断。"
+      },
+      "ind_认证合规_核心资质": {
+        "score": 8,
+        "source": "user",
+        "evidence": "大学生/职场新人在\"核心资质完备度\"上表现高，综合行业报告与专家访谈判断。"
+      },
+      "ind_认证合规_关键背书": {
+        "score": 8.5,
+        "source": "user",
+        "evidence": "大学生/职场新人在\"关键背书可复用\"上表现高，综合行业报告与专家访谈判断。"
+      },
+      "ind_产品品牌_现有老客": {
+        "score": 7,
+        "source": "user",
+        "evidence": "大学生/职场新人在\"现有老客基础可迁移\"上表现中，综合行业报告与专家访谈判断。"
+      },
+      "ind_产品品牌_C 端品": {
+        "score": 8.5,
+        "source": "user",
+        "evidence": "大学生/职场新人在\"C 端品牌资产起点\"上表现高，综合行业报告与专家访谈判断。"
+      }
     },
-    matrix: { xCut: null, yCut: null, notes: "m1 大学生/职场新人客单价高、就业刚需强、老学员推荐可借力，6 个月内可贡献 30% 营收；m2 老客稳定但增长见顶；m3 转行者人数多但兑现风险大。" },
-    decision: {
-      explanations: {},
-      tier1: { marketId:'m1', rationale:"m1 大学生/职场新人客单价高、就业刚需强、老学员推荐可借力，6 个月内可贡献 30% 营收；m2 老客稳定但增长见顶；m3 转行者人数多但兑现风险大。", resourcesPct:80, milestones:["6 月内招 2 名职业课老师+1 名就业对接","与 3-5 家本地企业签就业合作协议","上线小程序学习报告+作品墙"], reEvalTrigger:'3 个月复盘：核心指标未达预期' },
-      tier2: { marketIds:["m2"], observationMetrics:['月复购率','客单价'], reEvalTrigger:'复购率连续 2 月 < 阈值' },
-      tier3: { marketIds:["m3"], reEvalTrigger:'tier1 ROI 跑通后再启动' }
+    "m2": {
+      "ind_经济_市场规模": {
+        "score": 6,
+        "source": "user",
+        "evidence": "K12 老客（鸡娃续费）在\"市场规模 / 行业容量\"上表现中，综合行业报告与专家访谈判断。"
+      },
+      "ind_经济_客单价与": {
+        "score": 5,
+        "source": "user",
+        "evidence": "K12 老客（鸡娃续费）在\"客单价与续费能力\"上表现中低，综合行业报告与专家访谈判断。"
+      },
+      "ind_政治法律_行业监管": {
+        "score": 6.5,
+        "source": "user",
+        "evidence": "K12 老客（鸡娃续费）在\"行业监管 / 资质门槛\"上表现中，综合行业报告与专家访谈判断。"
+      },
+      "ind_政治法律_广告法与": {
+        "score": 4.5,
+        "source": "user",
+        "evidence": "K12 老客（鸡娃续费）在\"广告法与合规风险\"上表现中低，综合行业报告与专家访谈判断。"
+      },
+      "ind_社会文化_客群需求": {
+        "score": 5.5,
+        "source": "user",
+        "evidence": "K12 老客（鸡娃续费）在\"客群需求强度\"上表现中低，综合行业报告与专家访谈判断。"
+      },
+      "ind_社会文化_种草 /": {
+        "score": 6,
+        "source": "user",
+        "evidence": "K12 老客（鸡娃续费）在\"种草 / 社交渗透\"上表现中，综合行业报告与专家访谈判断。"
+      },
+      "ind_风险_核心资源": {
+        "score": 4.5,
+        "source": "user",
+        "evidence": "K12 老客（鸡娃续费）在\"核心资源复制难度\"上表现中低，综合行业报告与专家访谈判断。"
+      },
+      "ind_风险_新客获客": {
+        "score": 6,
+        "source": "user",
+        "evidence": "K12 老客（鸡娃续费）在\"新客获客成本\"上表现中，综合行业报告与专家访谈判断。"
+      },
+      "ind_市场信息_目标客群": {
+        "score": 7.5,
+        "source": "user",
+        "evidence": "K12 老客（鸡娃续费）在\"目标客群数据可获取性\"上表现中，综合行业报告与专家访谈判断。"
+      },
+      "ind_市场信息_竞品表现": {
+        "score": 6.5,
+        "source": "user",
+        "evidence": "K12 老客（鸡娃续费）在\"竞品表现可监测\"上表现中，综合行业报告与专家访谈判断。"
+      },
+      "ind_营销渠道_核心渠道": {
+        "score": 8,
+        "source": "user",
+        "evidence": "K12 老客（鸡娃续费）在\"核心渠道成熟度\"上表现高，综合行业报告与专家访谈判断。"
+      },
+      "ind_营销渠道_KOL ": {
+        "score": 6,
+        "source": "user",
+        "evidence": "K12 老客（鸡娃续费）在\"KOL / 达人储备\"上表现中，综合行业报告与专家访谈判断。"
+      },
+      "ind_认证合规_核心资质": {
+        "score": 7,
+        "source": "user",
+        "evidence": "K12 老客（鸡娃续费）在\"核心资质完备度\"上表现中，综合行业报告与专家访谈判断。"
+      },
+      "ind_认证合规_关键背书": {
+        "score": 7.5,
+        "source": "user",
+        "evidence": "K12 老客（鸡娃续费）在\"关键背书可复用\"上表现中，综合行业报告与专家访谈判断。"
+      },
+      "ind_产品品牌_现有老客": {
+        "score": 6,
+        "source": "user",
+        "evidence": "K12 老客（鸡娃续费）在\"现有老客基础可迁移\"上表现中，综合行业报告与专家访谈判断。"
+      },
+      "ind_产品品牌_C 端品": {
+        "score": 7.5,
+        "source": "user",
+        "evidence": "K12 老客（鸡娃续费）在\"C 端品牌资产起点\"上表现中，综合行业报告与专家访谈判断。"
+      }
     },
-    meta: { schemaVersion: 2, work1Linked: false },
-    _pipeDone: ['framework','evaluate']
-  };
+    "m3": {
+      "ind_经济_市场规模": {
+        "score": 7.5,
+        "source": "user",
+        "evidence": "30+ 转行者在\"市场规模 / 行业容量\"上表现中，综合行业报告与专家访谈判断。"
+      },
+      "ind_经济_客单价与": {
+        "score": 6.5,
+        "source": "user",
+        "evidence": "30+ 转行者在\"客单价与续费能力\"上表现中，综合行业报告与专家访谈判断。"
+      },
+      "ind_政治法律_行业监管": {
+        "score": 8,
+        "source": "user",
+        "evidence": "30+ 转行者在\"行业监管 / 资质门槛\"上表现高，综合行业报告与专家访谈判断。"
+      },
+      "ind_政治法律_广告法与": {
+        "score": 6,
+        "source": "user",
+        "evidence": "30+ 转行者在\"广告法与合规风险\"上表现中，综合行业报告与专家访谈判断。"
+      },
+      "ind_社会文化_客群需求": {
+        "score": 7,
+        "source": "user",
+        "evidence": "30+ 转行者在\"客群需求强度\"上表现中，综合行业报告与专家访谈判断。"
+      },
+      "ind_社会文化_种草 /": {
+        "score": 7.5,
+        "source": "user",
+        "evidence": "30+ 转行者在\"种草 / 社交渗透\"上表现中，综合行业报告与专家访谈判断。"
+      },
+      "ind_风险_核心资源": {
+        "score": 6,
+        "source": "user",
+        "evidence": "30+ 转行者在\"核心资源复制难度\"上表现中，综合行业报告与专家访谈判断。"
+      },
+      "ind_风险_新客获客": {
+        "score": 7.5,
+        "source": "user",
+        "evidence": "30+ 转行者在\"新客获客成本\"上表现中，综合行业报告与专家访谈判断。"
+      },
+      "ind_市场信息_目标客群": {
+        "score": 4.5,
+        "source": "user",
+        "evidence": "30+ 转行者在\"目标客群数据可获取性\"上表现中低，综合行业报告与专家访谈判断。"
+      },
+      "ind_市场信息_竞品表现": {
+        "score": 3.5,
+        "source": "user",
+        "evidence": "30+ 转行者在\"竞品表现可监测\"上表现低，综合行业报告与专家访谈判断。"
+      },
+      "ind_营销渠道_核心渠道": {
+        "score": 5,
+        "source": "user",
+        "evidence": "30+ 转行者在\"核心渠道成熟度\"上表现中低，综合行业报告与专家访谈判断。"
+      },
+      "ind_营销渠道_KOL ": {
+        "score": 3,
+        "source": "user",
+        "evidence": "30+ 转行者在\"KOL / 达人储备\"上表现低，综合行业报告与专家访谈判断。"
+      },
+      "ind_认证合规_核心资质": {
+        "score": 4,
+        "source": "user",
+        "evidence": "30+ 转行者在\"核心资质完备度\"上表现中低，综合行业报告与专家访谈判断。"
+      },
+      "ind_认证合规_关键背书": {
+        "score": 4.5,
+        "source": "user",
+        "evidence": "30+ 转行者在\"关键背书可复用\"上表现中低，综合行业报告与专家访谈判断。"
+      },
+      "ind_产品品牌_现有老客": {
+        "score": 3,
+        "source": "user",
+        "evidence": "30+ 转行者在\"现有老客基础可迁移\"上表现低，综合行业报告与专家访谈判断。"
+      },
+      "ind_产品品牌_C 端品": {
+        "score": 4.5,
+        "source": "user",
+        "evidence": "30+ 转行者在\"C 端品牌资产起点\"上表现中低，综合行业报告与专家访谈判断。"
+      }
+    }
+  },
+  "delphi": {
+    "recruitment": {
+      "perspectives": [
+        {
+          "id": "p_brand",
+          "role": "教育品牌策略",
+          "why": "看 K12 转职教品牌迁移"
+        },
+        {
+          "id": "p_growth",
+          "role": "职业课运营",
+          "why": "看就业转化路径"
+        },
+        {
+          "id": "p_teacher",
+          "role": "资深职业课老师",
+          "why": "判断师资复制"
+        },
+        {
+          "id": "p_hr",
+          "role": "本地企业 HRD",
+          "why": "看就业兑现可行性"
+        },
+        {
+          "id": "p_student",
+          "role": "大学生 KOC",
+          "why": "翻译求职焦虑"
+        }
+      ]
+    },
+    "personas": [
+      {
+        "id": "pe1",
+        "name": "教育品牌策略",
+        "perspective": "看品牌迁移",
+        "stance": "中性"
+      },
+      {
+        "id": "pe2",
+        "name": "职业课运营",
+        "perspective": "看转化",
+        "stance": "增长向"
+      },
+      {
+        "id": "pe3",
+        "name": "职业课老师",
+        "perspective": "看师资",
+        "stance": "产品向"
+      },
+      {
+        "id": "pe4",
+        "name": "企业 HRD",
+        "perspective": "看就业",
+        "stance": "渠道向"
+      },
+      {
+        "id": "pe5",
+        "name": "大学生 KOC",
+        "perspective": "看决策",
+        "stance": "用户向"
+      }
+    ],
+    "userHosted": true,
+    "finalWeights": {
+      "attractiveness": {
+        "ind_经济_市场规模": 0.2,
+        "ind_经济_客单价": 0.15,
+        "ind_政治法律_行业": 0.1,
+        "ind_政治法律_广告": 0.05,
+        "ind_社会文化_客群": 0.15,
+        "ind_社会文化_渗透": 0.1,
+        "ind_风险_资源": 0.05,
+        "ind_风险_获客": 0.05
+      },
+      "competitiveness": {
+        "ind_市场信息_目标": 0.06,
+        "ind_市场信息_竞品": 0.06,
+        "ind_营销渠道_核心": 0.1,
+        "ind_营销渠道_KOL": 0.08,
+        "ind_认证合规_资质": 0.1,
+        "ind_认证合规_背书": 0.1,
+        "ind_产品品牌_老客": 0.15,
+        "ind_产品品牌_品牌": 0.1
+      }
+    },
+    "summary": "两轮 Delphi 后专家对\"增长率\"与\"师资基础\"赋权最高。大学生/职场新人客单价高、就业刚需强、老学员可推荐，6 个月内可贡献 30% 营收。",
+    "status": "done",
+    "phase": "converged",
+    "panel": [],
+    "round1": null,
+    "round2": null,
+    "synthesis": null,
+    "finalSynthesis": null,
+    "weights": null
+  },
+  "matrix": {
+    "xCut": null,
+    "yCut": null,
+    "notes": "m1 大学生/职场新人客单价高、就业刚需强、老学员推荐可借力，6 个月内可贡献 30% 营收；m2 老客稳定但增长见顶；m3 转行者人数多但兑现风险大。"
+  },
+  "decision": {
+    "explanations": {},
+    "tier1": {
+      "marketId": "m1",
+      "rationale": "m1 大学生/职场新人客单价高、就业刚需强、老学员推荐可借力，6 个月内可贡献 30% 营收；m2 老客稳定但增长见顶；m3 转行者人数多但兑现风险大。",
+      "resourcesPct": 80,
+      "milestones": [
+        "6 月内招 2 名职业课老师+1 名就业对接",
+        "与 3-5 家本地企业签就业合作协议",
+        "上线小程序学习报告+作品墙"
+      ],
+      "reEvalTrigger": "3 个月复盘：核心指标未达预期"
+    },
+    "tier2": {
+      "marketIds": [
+        "m2"
+      ],
+      "observationMetrics": [
+        "月复购率",
+        "客单价"
+      ],
+      "reEvalTrigger": "复购率连续 2 月 < 阈值"
+    },
+    "tier3": {
+      "marketIds": [
+        "m3"
+      ],
+      "reEvalTrigger": "tier1 ROI 跑通后再启动"
+    }
+  },
+  "meta": {
+    "schemaVersion": 2,
+    "work1Linked": false
+  },
+  "_pipeDone": [
+    "framework",
+    "evaluate"
+  ]
+};
   if(typeof window!== 'undefined') window.__case_wenqu_shuyuan_work2 = data;
 })();
 
@@ -2051,451 +4922,566 @@
  ============================================================ */
 (function(){
   const data = {
-    context: {
-      sbuName: "问渠书院",
-      sbuOneLine: "浙江素质+职业培训，5 年老师稳定",
-      targetMarket: "大学生/职场新人",
-      targetMarketReason: "客单价高、就业刚需强、老学员推荐可借力，6 个月内可贡献 30% 营收",
-      tier1: { marketId:'m1', name:"大学生/职场新人", rationale:"客单价高、就业刚需强、老学员推荐可借力，6 个月内可贡献 30% 营收" },
-      tier2: [{"marketId":"m2","name":"K12 老客（鸡娃续费）"}],
-      personas: [{"id":"p1","name":"李姐","painPoints":"孩子学习兴趣低、效果难量化"},{"id":"p2","name":"小王","painPoints":"简历没亮点、面试总被拒"},{"id":"p3","name":"张姐","painPoints":"30+ 转行难、培训机构套路多"}],
-      valueFramework: ["老师稳定","作品集可视化","就业推荐","学习报告"],
-      hasSurvey: true
+  "context": {
+    "sbuName": "问渠书院",
+    "sbuOneLine": "浙江素质+职业培训，5 年老师稳定",
+    "targetMarket": "大学生/职场新人",
+    "targetMarketReason": "客单价高、就业刚需强、老学员推荐可借力，6 个月内可贡献 30% 营收",
+    "tier1": {
+      "marketId": "m1",
+      "name": "大学生/职场新人",
+      "rationale": "客单价高、就业刚需强、老学员推荐可借力，6 个月内可贡献 30% 营收"
     },
-    scenarios: [
-  {
-    "id": "s1",
-    "name": "职业课作品集需求",
-    "description": "大学生/职场新人要作品集+面试能用",
-    "personaIds": [
-      "p2"
-    ],
-    "needStrength": {
-      "pain": "高",
-      "willingness": "高",
-      "frequency": "课程期间"
-    },
-    "selected": true
-  },
-  {
-    "id": "s2",
-    "name": "家长续费 K12",
-    "description": "K12 家长看孩子进步+老师稳定",
-    "personaIds": [
-      "p1"
-    ],
-    "needStrength": {
-      "pain": "中",
-      "willingness": "高",
-      "frequency": "学期续费"
-    },
-    "selected": true
-  },
-  {
-    "id": "s3",
-    "name": "30+ 转行试听",
-    "description": "30+ 转行者要试听课+职业规划",
-    "personaIds": [
-      "p3"
-    ],
-    "needStrength": {
-      "pain": "高",
-      "willingness": "中",
-      "frequency": "低频"
-    },
-    "selected": false
-  }
-],
-    mining: {
-      documents: [
-  "问渠书院的老师很负责，孩子学了一年进步很大。",
-  "我家娃学了编程后，学校选拔被选上了。",
-  "职业课能不能给个作品集，面试用得上？",
-  "我同学在开课吧学完没找到工作，不敢去。",
-  "30+ 转行很难，培训机构都收割焦虑。",
-  "希望有试听课，先看看老师讲得怎么样。",
-  "线上学不会，能去线下校区吗？",
-  "老学员推荐有优惠吗？",
-  "问渠的美术课不错，孩子喜欢。",
-  "口才课老师换了三次，娃都不想学了。"
-],
-      includeWork1Open: true,
-      includeWork1Themes: true,
-      ldaParams: { k: 3, passes: 15, iterations: 100, no_below: 2, no_above: 0.5 },
-      ldaResult: null,
-      ldaError: null,
-      topics: [
-  {
-    "id": 0,
-    "label": "老师稳定与教学效果",
-    "share": 42,
-    "keywords": [
+    "tier2": [
       {
-        "word": "老师",
-        "weight": 0.1
+        "marketId": "m2",
+        "name": "K12 老客（鸡娃续费）"
+      }
+    ],
+    "personas": [
+      {
+        "id": "p1",
+        "name": "李姐",
+        "painPoints": "孩子学习兴趣低、效果难量化"
       },
       {
-        "word": "负责",
-        "weight": 0.07
+        "id": "p2",
+        "name": "小王",
+        "painPoints": "简历没亮点、面试总被拒"
+      },
+      {
+        "id": "p3",
+        "name": "张姐",
+        "painPoints": "30+ 转行难、培训机构套路多"
+      }
+    ],
+    "valueFramework": [
+      "老师稳定",
+      "作品集可视化",
+      "就业推荐",
+      "学习报告"
+    ],
+    "hasSurvey": true
+  },
+  "scenarios": [
+    {
+      "id": "s1",
+      "name": "职业课作品集需求",
+      "description": "大学生/职场新人要作品集+面试能用",
+      "personaIds": [
+        "p2"
+      ],
+      "needStrength": {
+        "pain": "高",
+        "willingness": "高",
+        "frequency": "课程期间"
+      },
+      "selected": true
+    },
+    {
+      "id": "s2",
+      "name": "家长续费 K12",
+      "description": "K12 家长看孩子进步+老师稳定",
+      "personaIds": [
+        "p1"
+      ],
+      "needStrength": {
+        "pain": "中",
+        "willingness": "高",
+        "frequency": "学期续费"
+      },
+      "selected": true
+    },
+    {
+      "id": "s3",
+      "name": "30+ 转行试听",
+      "description": "30+ 转行者要试听课+职业规划",
+      "personaIds": [
+        "p3"
+      ],
+      "needStrength": {
+        "pain": "高",
+        "willingness": "中",
+        "frequency": "低频"
+      },
+      "selected": false
+    }
+  ],
+  "mining": {
+    "documents": [
+      "问渠书院的老师很负责，孩子学了一年进步很大。",
+      "我家娃学了编程后，学校选拔被选上了。",
+      "职业课能不能给个作品集，面试用得上？",
+      "我同学在开课吧学完没找到工作，不敢去。",
+      "30+ 转行很难，培训机构都收割焦虑。",
+      "希望有试听课，先看看老师讲得怎么样。",
+      "线上学不会，能去线下校区吗？",
+      "老学员推荐有优惠吗？",
+      "问渠的美术课不错，孩子喜欢。",
+      "口才课老师换了三次，娃都不想学了。"
+    ],
+    "includeWork1Open": true,
+    "includeWork1Themes": true,
+    "ldaParams": {
+      "k": 3,
+      "passes": 15,
+      "iterations": 100,
+      "no_below": 2,
+      "no_above": 0.5
+    },
+    "ldaResult": null,
+    "ldaError": null,
+    "topics": [
+      {
+        "id": 0,
+        "label": "老师稳定与教学效果",
+        "share": 42,
+        "keywords": [
+          {
+            "word": "老师",
+            "weight": 0.1
+          },
+          {
+            "word": "负责",
+            "weight": 0.07
+          },
+          {
+            "word": "进步",
+            "weight": 0.06
+          },
+          {
+            "word": "学完",
+            "weight": 0.05
+          },
+          {
+            "word": "喜欢",
+            "weight": 0.04
+          }
+        ],
+        "representative_docs": [
+          "问渠书院的老师很负责",
+          "口才课老师换了三次"
+        ]
+      },
+      {
+        "id": 1,
+        "label": "就业与作品集",
+        "share": 33,
+        "keywords": [
+          {
+            "word": "就业",
+            "weight": 0.09
+          },
+          {
+            "word": "作品集",
+            "weight": 0.07
+          },
+          {
+            "word": "面试",
+            "weight": 0.06
+          },
+          {
+            "word": "简历",
+            "weight": 0.05
+          },
+          {
+            "word": "找不到",
+            "weight": 0.04
+          }
+        ],
+        "representative_docs": [
+          "职业课能不能给个作品集",
+          "我同学学完没找到工作"
+        ]
+      },
+      {
+        "id": 2,
+        "label": "转行焦虑与试听",
+        "share": 25,
+        "keywords": [
+          {
+            "word": "转行",
+            "weight": 0.08
+          },
+          {
+            "word": "30+",
+            "weight": 0.06
+          },
+          {
+            "word": "焦虑",
+            "weight": 0.06
+          },
+          {
+            "word": "试听",
+            "weight": 0.05
+          },
+          {
+            "word": "推荐",
+            "weight": 0.04
+          }
+        ],
+        "representative_docs": [
+          "30+ 转行很难",
+          "希望有试听课"
+        ]
+      }
+    ],
+    "wordFreqTop": [
+      {
+        "word": "老师",
+        "count": 5
+      },
+      {
+        "word": "就业",
+        "count": 3
+      },
+      {
+        "word": "作品",
+        "count": 3
+      },
+      {
+        "word": "转行",
+        "count": 2
       },
       {
         "word": "进步",
-        "weight": 0.06
-      },
-      {
-        "word": "学完",
-        "weight": 0.05
-      },
-      {
-        "word": "喜欢",
-        "weight": 0.04
-      }
-    ],
-    "representative_docs": [
-      "问渠书院的老师很负责",
-      "口才课老师换了三次"
-    ]
-  },
-  {
-    "id": 1,
-    "label": "就业与作品集",
-    "share": 33,
-    "keywords": [
-      {
-        "word": "就业",
-        "weight": 0.09
-      },
-      {
-        "word": "作品集",
-        "weight": 0.07
-      },
-      {
-        "word": "面试",
-        "weight": 0.06
-      },
-      {
-        "word": "简历",
-        "weight": 0.05
-      },
-      {
-        "word": "找不到",
-        "weight": 0.04
-      }
-    ],
-    "representative_docs": [
-      "职业课能不能给个作品集",
-      "我同学学完没找到工作"
-    ]
-  },
-  {
-    "id": 2,
-    "label": "转行焦虑与试听",
-    "share": 25,
-    "keywords": [
-      {
-        "word": "转行",
-        "weight": 0.08
-      },
-      {
-        "word": "30+",
-        "weight": 0.06
-      },
-      {
-        "word": "焦虑",
-        "weight": 0.06
+        "count": 2
       },
       {
         "word": "试听",
-        "weight": 0.05
+        "count": 2
       },
       {
         "word": "推荐",
-        "weight": 0.04
+        "count": 2
+      },
+      {
+        "word": "面试",
+        "count": 2
+      },
+      {
+        "word": "简历",
+        "count": 2
+      },
+      {
+        "word": "孩子",
+        "count": 2
       }
     ],
-    "representative_docs": [
-      "30+ 转行很难",
-      "希望有试听课"
-    ]
-  }
-],
-      wordFreqTop: [
-  {
-    "word": "老师",
-    "count": 5
-  },
-  {
-    "word": "就业",
-    "count": 3
-  },
-  {
-    "word": "作品",
-    "count": 3
-  },
-  {
-    "word": "转行",
-    "count": 2
-  },
-  {
-    "word": "进步",
-    "count": 2
-  },
-  {
-    "word": "试听",
-    "count": 2
-  },
-  {
-    "word": "推荐",
-    "count": 2
-  },
-  {
-    "word": "面试",
-    "count": 2
-  },
-  {
-    "word": "简历",
-    "count": 2
-  },
-  {
-    "word": "孩子",
-    "count": 2
-  }
-],
-      stats: {"raw_count":10,"valid_count":10,"total_words":145,"vocab_size":40,"coherence":0.43},
-      painMap: [
-  {
-    "id": "pa1",
-    "pain": "老师频繁更换，学员粘性下降",
-    "evidence": "口才课老师换了三次",
-    "frequency": "高",
-    "linkedNeeds": [
-      "老师稳定",
-      "师徒制"
-    ],
-    "linkedTopicId": 0,
-    "type": "痛点",
-    "scenarioId": "s2"
-  },
-  {
-    "id": "pa2",
-    "pain": "职业课缺作品集，面试无亮点",
-    "evidence": "职业课能不能给个作品集",
-    "frequency": "高",
-    "linkedNeeds": [
-      "实战项目",
-      "作品墙"
-    ],
-    "linkedTopicId": 1,
-    "type": "痛点",
-    "scenarioId": "s1"
-  },
-  {
-    "id": "pa3",
-    "pain": "培训机构套路多，就业兑现差",
-    "evidence": "我同学学完没找到工作",
-    "frequency": "中",
-    "linkedNeeds": [
-      "就业案例",
-      "合作企业"
-    ],
-    "linkedTopicId": 1,
-    "type": "痛点",
-    "scenarioId": "s1"
-  },
-  {
-    "id": "pa4",
-    "pain": "30+ 转行难，无试听难决策",
-    "evidence": "30+ 转行很难，希望有试听课",
-    "frequency": "中",
-    "linkedNeeds": [
-      "试听课",
-      "职业规划"
-    ],
-    "linkedTopicId": 2,
-    "type": "痛点",
-    "scenarioId": "s3"
-  },
-  {
-    "id": "pa5",
-    "pain": "效果难量化，家长无感知",
-    "evidence": "效果难量化，孩子进步看不见",
-    "frequency": "中",
-    "linkedNeeds": [
-      "学习报告",
-      "学员成长档案"
-    ],
-    "linkedTopicId": 0,
-    "type": "痒点",
-    "scenarioId": "s2"
-  }
-]
+    "stats": {
+      "raw_count": 10,
+      "valid_count": 10,
+      "total_words": 145,
+      "vocab_size": 40,
+      "coherence": 0.43
     },
-    candidates: [
-  {
-    "id": "c1",
-    "name": "老师稳定承诺",
-    "pain": "老师流失",
-    "description": "5 年老师平均司龄+师徒制+教务关怀，承诺 1 年内不换老师",
-    "evidence": "10 篇评论中 5 篇提及老师",
-    "source": "user",
-    "scenarioId": "s2",
-    "selected": true,
-    "importance": 9,
-    "uniqueness": 9,
-    "credibility": 8,
-    "feasibility": 8,
-    "communicability": 9,
-    "sustainability": 7,
-    "extraDims": {}
-  },
-  {
-    "id": "c2",
-    "name": "学员作品集+作品墙",
-    "pain": "面试无亮点",
-    "description": "每期课产出 3-5 个实战作品，作品墙上墙+小程序可看",
-    "evidence": "3 篇评论提及作品集",
-    "source": "user",
-    "scenarioId": "s1",
-    "selected": true,
-    "importance": 9,
-    "uniqueness": 9,
-    "credibility": 8,
-    "feasibility": 9,
-    "communicability": 8,
-    "sustainability": 9,
-    "extraDims": {}
-  },
-  {
-    "id": "c3",
-    "name": "就业推荐+合作企业",
-    "pain": "兑现差",
-    "description": "与本地 3-5 家企业签就业协议，学员毕业内推+就业社群",
-    "evidence": "2 篇评论提及就业",
-    "source": "user",
-    "scenarioId": "s1",
-    "selected": false,
-    "importance": 8,
-    "uniqueness": 8,
-    "credibility": 9,
-    "feasibility": 6,
-    "communicability": 9,
-    "sustainability": 6,
-    "extraDims": {}
-  },
-  {
-    "id": "c4",
-    "name": "小程序学习报告",
-    "pain": "效果难量化",
-    "description": "每节课后生成学习报告，阶段评估+老师点评+成长档案",
-    "evidence": "内部策略，无评论",
-    "source": "user",
-    "scenarioId": "s2",
-    "selected": false,
-    "importance": 8,
-    "uniqueness": 7,
-    "credibility": 7,
-    "feasibility": 8,
-    "communicability": 6,
-    "sustainability": 8,
-    "extraDims": {}
-  }
-],
-    dimensions: {
-      desirability: (typeof Work3!== 'undefined' && Work3.DEFAULT_DESIRABILITY_DIMS)
-        ? Work3.DEFAULT_DESIRABILITY_DIMS.map(d=>({...d}))
-        : [
-          {key:'importance', label:'重要性', definition:'这个卖点对客户有多重要'},
-          {key:'uniqueness', label:'独特性', definition:'竞品是否也在说/做'},
-          {key:'credibility', label:'可信性', definition:'客户凭什么相信你能做到'}
+    "painMap": [
+      {
+        "id": "pa1",
+        "pain": "老师频繁更换，学员粘性下降",
+        "evidence": "口才课老师换了三次",
+        "frequency": "高",
+        "linkedNeeds": [
+          "老师稳定",
+          "师徒制"
         ],
-      implementability: (typeof Work3!== 'undefined' && Work3.DEFAULT_IMPLEMENTABILITY_DIMS)
-        ? Work3.DEFAULT_IMPLEMENTABILITY_DIMS.map(d=>({...d}))
-        : [
-          {key:'feasibility', label:'可行性', definition:'技术/供应链/成本能否实现'},
-          {key:'communicability', label:'可传播性', definition:'能否用一句话让客户听懂'},
-          {key:'sustainability', label:'可持续性', definition:'能否长期维持、不被轻易复制'}
-        ]
+        "linkedTopicId": 0,
+        "type": "痛点",
+        "scenarioId": "s2"
+      },
+      {
+        "id": "pa2",
+        "pain": "职业课缺作品集，面试无亮点",
+        "evidence": "职业课能不能给个作品集",
+        "frequency": "高",
+        "linkedNeeds": [
+          "实战项目",
+          "作品墙"
+        ],
+        "linkedTopicId": 1,
+        "type": "痛点",
+        "scenarioId": "s1"
+      },
+      {
+        "id": "pa3",
+        "pain": "培训机构套路多，就业兑现差",
+        "evidence": "我同学学完没找到工作",
+        "frequency": "中",
+        "linkedNeeds": [
+          "就业案例",
+          "合作企业"
+        ],
+        "linkedTopicId": 1,
+        "type": "痛点",
+        "scenarioId": "s1"
+      },
+      {
+        "id": "pa4",
+        "pain": "30+ 转行难，无试听难决策",
+        "evidence": "30+ 转行很难，希望有试听课",
+        "frequency": "中",
+        "linkedNeeds": [
+          "试听课",
+          "职业规划"
+        ],
+        "linkedTopicId": 2,
+        "type": "痛点",
+        "scenarioId": "s3"
+      },
+      {
+        "id": "pa5",
+        "pain": "效果难量化，家长无感知",
+        "evidence": "效果难量化，孩子进步看不见",
+        "frequency": "中",
+        "linkedNeeds": [
+          "学习报告",
+          "学员成长档案"
+        ],
+        "linkedTopicId": 0,
+        "type": "痒点",
+        "scenarioId": "s2"
+      }
+    ]
+  },
+  "candidates": [
+    {
+      "id": "c1",
+      "name": "老师稳定承诺",
+      "pain": "老师流失",
+      "description": "5 年老师平均司龄+师徒制+教务关怀，承诺 1 年内不换老师",
+      "evidence": "10 篇评论中 5 篇提及老师",
+      "source": "user",
+      "scenarioId": "s2",
+      "selected": true,
+      "importance": 9,
+      "uniqueness": 9,
+      "credibility": 8,
+      "feasibility": 8,
+      "communicability": 9,
+      "sustainability": 7,
+      "extraDims": {}
     },
-    matrix: {"showSector":true,"sectorWidth":1.5,"xCut":7,"yCut":7,"manualSelected":["c1","c2"]},
-    migration: { prompt:'', analyses:[
-  {
-    "from": "编程猫客户",
-    "to": "c1",
-    "reason": "同价更高, 问渠老师更稳定",
-    "cost": 5
+    {
+      "id": "c2",
+      "name": "学员作品集+作品墙",
+      "pain": "面试无亮点",
+      "description": "每期课产出 3-5 个实战作品，作品墙上墙+小程序可看",
+      "evidence": "3 篇评论提及作品集",
+      "source": "user",
+      "scenarioId": "s1",
+      "selected": true,
+      "importance": 9,
+      "uniqueness": 9,
+      "credibility": 8,
+      "feasibility": 9,
+      "communicability": 8,
+      "sustainability": 9,
+      "extraDims": {}
+    },
+    {
+      "id": "c3",
+      "name": "就业推荐+合作企业",
+      "pain": "兑现差",
+      "description": "与本地 3-5 家企业签就业协议，学员毕业内推+就业社群",
+      "evidence": "2 篇评论提及就业",
+      "source": "user",
+      "scenarioId": "s1",
+      "selected": false,
+      "importance": 8,
+      "uniqueness": 8,
+      "credibility": 9,
+      "feasibility": 6,
+      "communicability": 9,
+      "sustainability": 6,
+      "extraDims": {}
+    },
+    {
+      "id": "c4",
+      "name": "小程序学习报告",
+      "pain": "效果难量化",
+      "description": "每节课后生成学习报告，阶段评估+老师点评+成长档案",
+      "evidence": "内部策略，无评论",
+      "source": "user",
+      "scenarioId": "s2",
+      "selected": false,
+      "importance": 8,
+      "uniqueness": 7,
+      "credibility": 7,
+      "feasibility": 8,
+      "communicability": 6,
+      "sustainability": 8,
+      "extraDims": {}
+    },
+    {
+      "id": "c5",
+      "name": "名师 1v1 简历诊断",
+      "pain": "简历没人看、不知道问题在哪",
+      "scenarioId": "s1",
+      "importance": 8,
+      "uniqueness": 6,
+      "credibility": 8,
+      "feasibility": 7,
+      "communicability": 8,
+      "sustainability": 5,
+      "selected": false,
+      "evidence": "师资团队背景"
+    },
+    {
+      "id": "c6",
+      "name": "名企内推合作通道",
+      "pain": "投了没回应、简历石沉大海",
+      "scenarioId": "s2",
+      "importance": 9,
+      "uniqueness": 8,
+      "credibility": 6,
+      "feasibility": 4,
+      "communicability": 9,
+      "sustainability": 5,
+      "selected": false,
+      "evidence": "意向合作 HR 名单"
+    }
+  ],
+  "dimensions": {
+    "desirability": [
+      {
+        "key": "importance",
+        "label": "重要性",
+        "definition": "这个卖点对客户有多重要"
+      },
+      {
+        "key": "uniqueness",
+        "label": "独特性",
+        "definition": "竞品是否也在说/做"
+      },
+      {
+        "key": "credibility",
+        "label": "可信性",
+        "definition": "客户凭什么相信你能做到"
+      }
+    ],
+    "implementability": [
+      {
+        "key": "feasibility",
+        "label": "可行性",
+        "definition": "技术/供应链/成本能否实现"
+      },
+      {
+        "key": "communicability",
+        "label": "可传播性",
+        "definition": "能否用一句话让客户听懂"
+      },
+      {
+        "key": "sustainability",
+        "label": "可持续性",
+        "definition": "能否长期维持、不被轻易复制"
+      }
+    ]
   },
-  {
-    "from": "开课吧客户",
-    "to": "c3",
-    "reason": "开课吧暴雷, 问渠就业推荐更可信",
-    "cost": 7
+  "matrix": {
+    "showSector": true,
+    "sectorWidth": 1.5,
+    "xCut": 7,
+    "yCut": 7,
+    "manualSelected": [
+      "c1",
+      "c2"
+    ]
   },
-  {
-    "from": "三节课客户",
-    "to": "c2",
-    "reason": "作品集可视化弥补线上弱体验",
-    "cost": 6
-  }
-] },
-    proposition: {
-  "coreValueIds": [
+  "migration": {
+    "prompt": "",
+    "analyses": [
+      {
+        "from": "编程猫客户",
+        "to": "c1",
+        "reason": "同价更高, 问渠老师更稳定",
+        "cost": 5
+      },
+      {
+        "from": "开课吧客户",
+        "to": "c3",
+        "reason": "开课吧暴雷, 问渠就业推荐更可信",
+        "cost": 7
+      },
+      {
+        "from": "三节课客户",
+        "to": "c2",
+        "reason": "作品集可视化弥补线上弱体验",
+        "cost": 6
+      }
+    ]
+  },
+  "proposition": {
+    "coreValueIds": [
+      "c1",
+      "c2",
+      "c3",
+      "c4"
+    ],
+    "alternatives": [
+      {
+        "id": "a1",
+        "text": "老师稳定，成长可见。"
+      },
+      {
+        "id": "a2",
+        "text": "学得会，找得到。"
+      },
+      {
+        "id": "a3",
+        "text": "问渠书院，成长陪伴。"
+      }
+    ],
+    "chosenValueText": "问渠书院，看得见的成长陪伴。",
+    "positioning": {
+      "brand": "问渠书院",
+      "audience": "4-18 岁 K12 学员+18+ 大学生/职场新人/转行者",
+      "coreValue": "老师稳定+作品集+就业推荐+学习报告",
+      "category": "浙江素质+职业培训专业品牌"
+    },
+    "positioningStatement": "对于 4-18 岁 K12 学员与 18+ 大学生/职场新人/转行者, 问渠书院是唯一一个用 5 年老师稳定承诺 + 学员作品集 + 本地企业就业推荐 + 小程序学习报告, 让\"成长陪伴\"从少儿延续到成人的浙江素质+职业培训专业品牌。"
+  },
+  "identity": {
+    "mbti": "ISFJ (守护者型 — 偏陪伴、稳定、长期主义)",
+    "personalityTraits": [
+      "陪伴",
+      "稳定",
+      "专业",
+      "温暖",
+      "成长"
+    ],
+    "sloganOptions": [
+      {
+        "text": "老师稳定，成长可见",
+        "source": "agent"
+      },
+      {
+        "text": "学得会，找得到",
+        "source": "user"
+      },
+      {
+        "text": "问渠书院，成长陪伴",
+        "source": "user"
+      }
+    ],
+    "chosenSlogan": "问渠书院，成长陪伴"
+  },
+  "_scoreDone": [
     "c1",
     "c2",
     "c3",
     "c4"
   ],
-  "alternatives": [
-    {
-      "id": "a1",
-      "text": "老师稳定，成长可见。"
-    },
-    {
-      "id": "a2",
-      "text": "学得会，找得到。"
-    },
-    {
-      "id": "a3",
-      "text": "问渠书院，成长陪伴。"
-    }
+  "_pipeProp": [
+    "coreValueIds",
+    "chosenValueText",
+    "positioning"
   ],
-  "chosenValueText": "问渠书院，成长陪伴。",
-  "positioning": {
-    "brand": "问渠书院",
-    "audience": "4-18 岁 K12 学员+18+ 大学生/职场新人/转行者",
-    "coreValue": "老师稳定+作品集+就业推荐+学习报告",
-    "category": "浙江素质+职业培训专业品牌"
-  },
-  "positioningStatement": "对于 4-18 岁 K12 学员与 18+ 大学生/职场新人/转行者, 问渠书院是唯一一个用 5 年老师稳定承诺 + 学员作品集 + 本地企业就业推荐 + 小程序学习报告, 让\"成长陪伴\"从少儿延续到成人的浙江素质+职业培训专业品牌。"
-},
-    identity: {
-  "mbti": "ISFJ (守护者型 — 偏陪伴、稳定、长期主义)",
-  "personalityTraits": [
-    "陪伴",
-    "稳定",
-    "专业",
-    "温暖",
-    "成长"
-  ],
-  "sloganOptions": [
-    {
-      "text": "老师稳定，成长可见",
-      "source": "agent"
-    },
-    {
-      "text": "学得会，找得到",
-      "source": "user"
-    },
-    {
-      "text": "问渠书院，成长陪伴",
-      "source": "user"
-    }
-  ],
-  "chosenSlogan": "问渠书院，成长陪伴"
-},
-    _scoreDone: ["c1","c2","c3","c4"],
-    _pipeProp: ['coreValueIds','chosenValueText','positioning'],
-    _pipeIdentity: ['mbti','sloganOptions','chosenSlogan']
-  };
+  "_pipeIdentity": [
+    "mbti",
+    "sloganOptions",
+    "chosenSlogan"
+  ]
+};
   if(typeof window!== 'undefined') window.__case_wenqu_shuyuan_work3 = data;
 })();
 
@@ -2509,82 +5495,250 @@
  ============================================================ */
 (function(){
   const data = {
-    route:{
-      scope:'domestic',
-      oemType:'OBM',
-      entryMode:'',
-      light:[],
-      politicalPower:''
+  "route": {
+    "scope": "domestic",
+    "oemType": "OBM",
+    "entryMode": "omnichannel",
+    "light": [],
+    "politicalPower": ""
+  },
+  "product": {
+    "name": "问渠书院素质+职业双线课程",
+    "description": "K12 素质+职业培训双线，老师稳定+作品集+就业推荐",
+    "coreDifferentiators": [
+      "老师稳定承诺",
+      "学员作品集",
+      "就业推荐合作",
+      "学习报告可视化"
+    ],
+    "physicalFeatures": "5 年老师司龄 / 师徒制 / 3 校区直营 / 线上线下混合 / 小程序学习报告",
+    "serviceOffering": "0 元试听 / 1v1 职业规划 / 学习进度反馈 / 就业社群 / 老学员推荐奖励",
+    "technologyMoat": "5 年办学经验 + 8 位全职老师 + 教务体系 + 本地企业合作",
+    "skus": [
+      {
+        "name": "K12 编程年课",
+        "specs": "48 课时",
+        "price_range": "5800-8800 元/年",
+        "differentiator": "老师稳定+作品集"
+      },
+      {
+        "name": "K12 美术年课",
+        "specs": "48 课时",
+        "price_range": "5800-9800 元/年",
+        "differentiator": "老师稳定+作品集"
+      },
+      {
+        "name": "数字媒体职业课",
+        "specs": "3 个月 96 课时",
+        "price_range": "6800-9800 元/期",
+        "differentiator": "作品集+就业推荐"
+      },
+      {
+        "name": "电商运营职业课",
+        "specs": "3 个月 96 课时",
+        "price_range": "4800-7800 元/期",
+        "differentiator": "实战项目+合作企业"
+      }
+    ]
+  },
+  "price": {
+    "strategy": "value",
+    "strategyNote": "K12 中端定价+老客续费优惠；职业线中高端定价，以\"作品集+就业推荐\"承担溢价。",
+    "tiers": [
+      {
+        "name": "K12 单科年课",
+        "targetSegment": "K12 家长",
+        "price": 7800,
+        "unit": "元/年",
+        "notes": "编程/美术/口才"
+      },
+      {
+        "name": "K12 双科包",
+        "targetSegment": "鸡娃家长",
+        "price": 13800,
+        "unit": "元/年",
+        "notes": "任选两科 9 折"
+      },
+      {
+        "name": "数字媒体职业课",
+        "targetSegment": "大学生/职场新人",
+        "price": 8800,
+        "unit": "元/期",
+        "notes": "3 个月 96 课时"
+      },
+      {
+        "name": "电商运营职业课",
+        "targetSegment": "转行者/副业",
+        "price": 6800,
+        "unit": "元/期",
+        "notes": "3 个月 96 课时"
+      }
+    ],
+    "channelPricing": [
+      {
+        "channel": "校区直营",
+        "priceAdjustment": "原价",
+        "rationale": "主战场"
+      },
+      {
+        "channel": "美团/大众点评",
+        "priceAdjustment": "9 折试听卡",
+        "rationale": "拉新引流"
+      },
+      {
+        "channel": "抖音/小红书",
+        "priceAdjustment": "职业课 9 折",
+        "rationale": "种草转化"
+      }
+    ],
+    "promotions": [
+      {
+        "occasion": "暑期班",
+        "discount": "K12 双科包立减 1000",
+        "period": "6-8 月"
+      },
+      {
+        "occasion": "老学员推荐",
+        "discount": "推荐 1 人各得 500",
+        "period": "常年"
+      }
+    ],
+    "competitorPrices": "编程猫 6000-12000；核桃编程 4000-9000；开课吧 5000-15000；三节课 3000-8000；黑马 8000-20000"
+  },
+  "place": {
+    "onlineSelf": [
+      "问渠小程序",
+      "问渠官网"
+    ],
+    "onlineThird": [
+      "美团",
+      "大众点评",
+      "抖音企业号",
+      "小红书企业号",
+      "B 站"
+    ],
+    "onlineNotes": "小程序为主阵地（学习报告+作品墙+试听预约）；美团/点评做拉新；抖音/小红书/B 站种草",
+    "offlineDirect": [
+      "杭州西湖校区",
+      "宁波校区",
+      "绍兴校区"
+    ],
+    "offlineDistrib": [],
+    "offlineRetail": [],
+    "offlineNotes": "3 校区直营，第一阶段不开放加盟；职业课与 K12 共享校区",
+    "keyPartners": [
+      {
+        "name": "本地 3-5 家合作企业（就业内推）",
+        "side": "线下"
+      },
+      {
+        "name": "小红书 KOC",
+        "side": "线上"
+      },
+      {
+        "name": "抖音教育 MCN",
+        "side": "线上"
+      }
+    ],
+    "channelIncentives": "KOC 试听课免费+佣金 10%；MCN 坑位费 + GMV 提成 5%",
+    "structure": [
+      {
+        "name": "线下",
+        "children": [
+          {
+            "name": "杭州校区",
+            "share": 45
+          },
+          {
+            "name": "宁波校区",
+            "share": 30
+          },
+          {
+            "name": "绍兴校区",
+            "share": 25
+          }
+        ]
+      },
+      {
+        "name": "线上",
+        "children": [
+          {
+            "name": "小程序",
+            "share": 50
+          },
+          {
+            "name": "美团/点评",
+            "share": 25
+          },
+          {
+            "name": "抖音/小红书",
+            "share": 25
+          }
+        ]
+      }
+    ]
+  },
+  "promotion": {
+    "theme": "问渠书院，成长陪伴",
+    "advertising": [
+      {
+        "media": "抖音短视频",
+        "budgetShare": 30,
+        "message": "老师稳定+学员作品",
+        "kpi": "GMV/试听转化"
+      },
+      {
+        "media": "小红书 KOC",
+        "budgetShare": 25,
+        "message": "学员成长案例",
+        "kpi": "互动率/到店"
+      },
+      {
+        "media": "美团/点评",
+        "budgetShare": 20,
+        "message": "9 折试听",
+        "kpi": "到店率"
+      },
+      {
+        "media": "私域社群",
+        "budgetShare": 25,
+        "message": "老学员推荐+学习报告",
+        "kpi": "续费率/转介绍"
+      }
+    ],
+    "pr": [
+      {
+        "event": "学员作品展+就业案例发布会",
+        "timing": "每季度 1 次",
+        "expectedReach": "同城 30 万家庭/学员群体"
+      },
+      {
+        "event": "老师司龄纪念+师徒签约",
+        "timing": "每年 9 月",
+        "expectedReach": "本地 10 万家长群体"
+      }
+    ],
+    "salesPromotion": [
+      {
+        "tactic": "老学员推荐有奖",
+        "mechanic": "推荐 1 人各得 500",
+        "period": "常年"
+      },
+      {
+        "tactic": "暑期班双科包立减 1000",
+        "mechanic": "K12 双科",
+        "period": "6-8 月"
+      }
+    ],
+    "crm": {
+      "tool": "小程序+企业微信+教务系统",
+      "membership": "银卡（消费 5000）/金卡（消费 15000）/钻石卡（消费 30000）",
+      "repurchase": "每 90 天推送续费/新课程",
+      "notes": "老客续费是基本盘"
     },
-    product:{
-      name:'问渠书院素质+职业双线课程',
-      description:'K12 素质+职业培训双线，老师稳定+作品集+就业推荐',
-      coreDifferentiators:['老师稳定承诺','学员作品集','就业推荐合作','学习报告可视化'],
-      physicalFeatures:'5 年老师司龄 / 师徒制 / 3 校区直营 / 线上线下混合 / 小程序学习报告',
-      serviceOffering:'0 元试听 / 1v1 职业规划 / 学习进度反馈 / 就业社群 / 老学员推荐奖励',
-      technologyMoat:'5 年办学经验 + 8 位全职老师 + 教务体系 + 本地企业合作',
-      skus:[
-        {name:'K12 编程年课', specs:'48 课时', price_range:'5800-8800 元/年', differentiator:'老师稳定+作品集'},
-        {name:'K12 美术年课', specs:'48 课时', price_range:'5800-9800 元/年', differentiator:'老师稳定+作品集'},
-        {name:'数字媒体职业课', specs:'3 个月 96 课时', price_range:'6800-9800 元/期', differentiator:'作品集+就业推荐'},
-        {name:'电商运营职业课', specs:'3 个月 96 课时', price_range:'4800-7800 元/期', differentiator:'实战项目+合作企业'}
-      ]
-    },
-    price:{
-      strategy:'value',
-      strategyNote:'K12 中端定价+老客续费优惠；职业线中高端定价，以"作品集+就业推荐"承担溢价。',
-      tiers:[
-        {name:'K12 单科年课', targetSegment:'K12 家长', price:7800, unit:'元/年', notes:'编程/美术/口才'},
-        {name:'K12 双科包', targetSegment:'鸡娃家长', price:13800, unit:'元/年', notes:'任选两科 9 折'},
-        {name:'数字媒体职业课', targetSegment:'大学生/职场新人', price:8800, unit:'元/期', notes:'3 个月 96 课时'},
-        {name:'电商运营职业课', targetSegment:'转行者/副业', price:6800, unit:'元/期', notes:'3 个月 96 课时'}
-      ],
-      channelPricing:[
-        {channel:'校区直营', priceAdjustment:'原价', rationale:'主战场'},
-        {channel:'美团/大众点评', priceAdjustment:'9 折试听卡', rationale:'拉新引流'},
-        {channel:'抖音/小红书', priceAdjustment:'职业课 9 折', rationale:'种草转化'}
-      ],
-      promotions:[
-        {occasion:'暑期班', discount:'K12 双科包立减 1000', period:'6-8 月'},
-        {occasion:'老学员推荐', discount:'推荐 1 人各得 500', period:'常年'}
-      ],
-      competitorPrices:'编程猫 6000-12000；核桃编程 4000-9000；开课吧 5000-15000；三节课 3000-8000；黑马 8000-20000'
-    },
-    place:{
-      onlineSelf:['问渠小程序','问渠官网'],
-      onlineThird:['美团','大众点评','抖音企业号','小红书企业号','B 站'],
-      onlineNotes:'小程序为主阵地（学习报告+作品墙+试听预约）；美团/点评做拉新；抖音/小红书/B 站种草',
-      offlineDirect:['杭州西湖校区','宁波校区','绍兴校区'],
-      offlineDistrib:[],
-      offlineRetail:[],
-      offlineNotes:'3 校区直营，第一阶段不开放加盟；职业课与 K12 共享校区',
-      keyPartners:[{name:'本地 3-5 家合作企业（就业内推）',side:'线下'},{name:'小红书 KOC',side:'线上'},{name:'抖音教育 MCN',side:'线上'}],
-      channelIncentives:'KOC 试听课免费+佣金 10%；MCN 坑位费 + GMV 提成 5%',
-      structure:[
-        {name:'线下', children:[{name:'杭州校区', share:45},{name:'宁波校区', share:30},{name:'绍兴校区', share:25}]},
-        {name:'线上', children:[{name:'小程序', share:50},{name:'美团/点评', share:25},{name:'抖音/小红书', share:25}]}
-      ]
-    },
-    promotion:{
-      theme:'问渠书院，成长陪伴',
-      advertising:[
-        {media:'抖音短视频', budgetShare:30, message:'老师稳定+学员作品', kpi:'GMV/试听转化'},
-        {media:'小红书 KOC', budgetShare:25, message:'学员成长案例', kpi:'互动率/到店'},
-        {media:'美团/点评', budgetShare:20, message:'9 折试听', kpi:'到店率'},
-        {media:'私域社群', budgetShare:25, message:'老学员推荐+学习报告', kpi:'续费率/转介绍'}
-      ],
-      pr:[
-        {event:'学员作品展+就业案例发布会', timing:'每季度 1 次', expectedReach:'同城 30 万家庭/学员群体'},
-        {event:'老师司龄纪念+师徒签约', timing:'每年 9 月', expectedReach:'本地 10 万家长群体'}
-      ],
-      salesPromotion:[
-        {tactic:'老学员推荐有奖', mechanic:'推荐 1 人各得 500', period:'常年'},
-        {tactic:'暑期班双科包立减 1000', mechanic:'K12 双科', period:'6-8 月'}
-      ],
-      crm:{tool:'小程序+企业微信+教务系统', membership:'银卡（消费 5000）/金卡（消费 15000）/钻石卡（消费 30000）', repurchase:'每 90 天推送续费/新课程', notes:'老客续费是基本盘'},
-      contentStrategy:'抖音"老师司龄 5 年"系列 + 小红书"学员成长档案"系列 + 公众号"学习报告"长图。'
-    }
-  };
+    "contentStrategy": "抖音\"老师司龄 5 年\"系列 + 小红书\"学员成长档案\"系列 + 公众号\"学习报告\"长图。"
+  }
+};
 
   if(typeof window!== 'undefined') window.__case_wenqu_shuyuan_work4 = data;
 })();
@@ -2988,35 +6142,717 @@
     }));
   }
   const data = {
-    candidates: [{"id":"mc1","name":"航空航天零部件","reason":"资质门槛极高、周期长","source":"user"},{"id":"mc2","name":"医疗器械整机","reason":"周期长、需临床数据","source":"user"}],
-    screening: { criteria: [] },
-    retained: [{"id":"m1","name":"专精特新中小品牌方","region":"苏州/宁波/东莞/深圳","population":"约 2000 家","gdpPerCapita":"营收 5000 万-5 亿","notes":"国产替代意愿强、客单价可接受","source":"user"},{"id":"m2","name":"工业采购经理（OEM 现有）","region":"汽车/医疗/3C 整机厂","population":"约 5000 家","gdpPerCapita":"营收 1 亿-100 亿","notes":"OEM 为主，少数接受自有品牌","source":"user"},{"id":"m3","name":"机器人/新领域（增长型）","region":"深圳/上海/杭州机器人厂","population":"约 500 家","gdpPerCapita":"营收 5000 万-10 亿","notes":"增速快、客单价高、新领域","source":"user"}],
-    attractiveness: { categories: buildCats(attractTemplate) },
-    competitiveness: { categories: buildCats(competeTemplate) },
-    scoring: { m1: { 'ind_经济_市场规模': {score: 8.5, source: 'user'}, 'ind_经济_客单价与': {score: 7.5, source: 'user'}, 'ind_政治法律_行业监管': {score: 9, source: 'user'}, 'ind_政治法律_广告法与': {score: 7, source: 'user'}, 'ind_社会文化_客群需求': {score: 8, source: 'user'}, 'ind_社会文化_种草 /': {score: 8.5, source: 'user'}, 'ind_风险_核心资源': {score: 7, source: 'user'}, 'ind_风险_新客获客': {score: 8.5, source: 'user'}, 'ind_市场信息_目标客群': {score: 8.5, source: 'user'}, 'ind_市场信息_竞品表现': {score: 7.5, source: 'user'}, 'ind_营销渠道_核心渠道': {score: 9, source: 'user'}, 'ind_营销渠道_KOL ': {score: 7, source: 'user'}, 'ind_认证合规_核心资质': {score: 8, source: 'user'}, 'ind_认证合规_关键背书': {score: 8.5, source: 'user'}, 'ind_产品品牌_现有老客': {score: 7, source: 'user'}, 'ind_产品品牌_C 端品': {score: 8.5, source: 'user'} }, m2: { 'ind_经济_市场规模': {score: 6, source: 'user'}, 'ind_经济_客单价与': {score: 5, source: 'user'}, 'ind_政治法律_行业监管': {score: 6.5, source: 'user'}, 'ind_政治法律_广告法与': {score: 4.5, source: 'user'}, 'ind_社会文化_客群需求': {score: 5.5, source: 'user'}, 'ind_社会文化_种草 /': {score: 6, source: 'user'}, 'ind_风险_核心资源': {score: 4.5, source: 'user'}, 'ind_风险_新客获客': {score: 6, source: 'user'}, 'ind_市场信息_目标客群': {score: 7.5, source: 'user'}, 'ind_市场信息_竞品表现': {score: 6.5, source: 'user'}, 'ind_营销渠道_核心渠道': {score: 8, source: 'user'}, 'ind_营销渠道_KOL ': {score: 6, source: 'user'}, 'ind_认证合规_核心资质': {score: 7, source: 'user'}, 'ind_认证合规_关键背书': {score: 7.5, source: 'user'}, 'ind_产品品牌_现有老客': {score: 6, source: 'user'}, 'ind_产品品牌_C 端品': {score: 7.5, source: 'user'} }, m3: { 'ind_经济_市场规模': {score: 7.5, source: 'user'}, 'ind_经济_客单价与': {score: 6.5, source: 'user'}, 'ind_政治法律_行业监管': {score: 8, source: 'user'}, 'ind_政治法律_广告法与': {score: 6, source: 'user'}, 'ind_社会文化_客群需求': {score: 7, source: 'user'}, 'ind_社会文化_种草 /': {score: 7.5, source: 'user'}, 'ind_风险_核心资源': {score: 6, source: 'user'}, 'ind_风险_新客获客': {score: 7.5, source: 'user'}, 'ind_市场信息_目标客群': {score: 4.5, source: 'user'}, 'ind_市场信息_竞品表现': {score: 3.5, source: 'user'}, 'ind_营销渠道_核心渠道': {score: 5, source: 'user'}, 'ind_营销渠道_KOL ': {score: 3, source: 'user'}, 'ind_认证合规_核心资质': {score: 4, source: 'user'}, 'ind_认证合规_关键背书': {score: 4.5, source: 'user'}, 'ind_产品品牌_现有老客': {score: 3, source: 'user'}, 'ind_产品品牌_C 端品': {score: 4.5, source: 'user'} } },
-    delphi: {
-      recruitment: { perspectives: [{"id":"p_brand","role":"工业品牌策略","why":"看 OEM 转自有品牌路径"},{"id":"p_growth","role":"B2B 渠道运营","why":"看专精特新渠道渗透"},{"id":"p_engineer","role":"精密工艺工程师","why":"解读 0.005mm 精度壁垒"},{"id":"p_quality","role":"质量体系专家","why":"看 ISO 13485 迁移"},{"id":"p_buyer","role":"专精特新采购总监","why":"翻译国产替代决策"}] },
-      personas: [{"id":"pe1","name":"工业品牌策略","perspective":"看品牌资产","stance":"中性"},{"id":"pe2","name":"B2B 渠道运营","perspective":"看渗透","stance":"增长向"},{"id":"pe3","name":"工艺工程师","perspective":"看精度","stance":"产品向"},{"id":"pe4","name":"质量体系专家","perspective":"看认证","stance":"合规向"},{"id":"pe5","name":"采购总监","perspective":"看替代","stance":"用户向"}],
-      userHosted: true,
-      finalWeights: {
-        attractiveness: { 'ind_经济_市场规模':0.20, 'ind_经济_客单价':0.15, 'ind_政治法律_行业':0.10, 'ind_政治法律_广告':0.05, 'ind_社会文化_客群':0.15, 'ind_社会文化_渗透':0.10, 'ind_风险_资源':0.05, 'ind_风险_获客':0.05 },
-        competitiveness: { 'ind_市场信息_目标':0.06, 'ind_市场信息_竞品':0.06, 'ind_营销渠道_核心':0.10, 'ind_营销渠道_KOL':0.08, 'ind_认证合规_资质':0.10, 'ind_认证合规_背书':0.10, 'ind_产品品牌_老客':0.15, 'ind_产品品牌_品牌':0.10 }
+  "candidates": [
+    {
+      "id": "mc1",
+      "name": "航空航天零部件",
+      "reason": "资质门槛极高、周期长",
+      "source": "user"
+    },
+    {
+      "id": "mc2",
+      "name": "医疗器械整机",
+      "reason": "周期长、需临床数据",
+      "source": "user"
+    },
+    {
+      "id": "mc3",
+      "name": "军工配套精密件",
+      "reason": "门槛极高、利润厚但周期长",
+      "source": "user"
+    },
+    {
+      "id": "mc4",
+      "name": "消费电子精密结构件",
+      "reason": "量大价低、账期长",
+      "source": "user"
+    },
+    {
+      "id": "mc5",
+      "name": "半导体设备零部件",
+      "reason": "技术壁垒高、国产替代需求强",
+      "source": "user"
+    }
+  ],
+  "screening": {
+    "criteria": [
+      "国产替代空间大，客户有自主可控意愿",
+      "精度要求匹配 0.005mm 能力，差异化明显",
+      "回款周期 ≤ 90 天，单客贡献 ≥ 50 万/年"
+    ]
+  },
+  "retained": [
+    {
+      "id": "m1",
+      "name": "专精特新中小品牌方",
+      "region": "苏州/宁波/东莞/深圳",
+      "population": "约 2000 家",
+      "gdpPerCapita": "营收 5000 万-5 亿",
+      "notes": "国产替代意愿强、客单价可接受",
+      "source": "user"
+    },
+    {
+      "id": "m2",
+      "name": "工业采购经理（OEM 现有）",
+      "region": "汽车/医疗/3C 整机厂",
+      "population": "约 5000 家",
+      "gdpPerCapita": "营收 1 亿-100 亿",
+      "notes": "OEM 为主，少数接受自有品牌",
+      "source": "user"
+    },
+    {
+      "id": "m3",
+      "name": "机器人/新领域（增长型）",
+      "region": "深圳/上海/杭州机器人厂",
+      "population": "约 500 家",
+      "gdpPerCapita": "营收 5000 万-10 亿",
+      "notes": "增速快、客单价高、新领域",
+      "source": "user"
+    }
+  ],
+  "attractiveness": {
+    "categories": [
+      {
+        "id": "cat_经济",
+        "name": "经济",
+        "weight": 0.25,
+        "indicators": [
+          {
+            "id": "ind_经济_市场规模",
+            "name": "市场规模 / 行业容量",
+            "weight": 0.5,
+            "rubric": {
+              "high": "行业容量 ≥ 100 亿，年增速 ≥ 15%",
+              "mid": "中等水平，介于高分与低分之间",
+              "low": "低于行业平均，存在明显短板"
+            },
+            "support": 0,
+            "source": "delphi"
+          },
+          {
+            "id": "ind_经济_客单价与",
+            "name": "客单价与续费能力",
+            "weight": 0.5,
+            "rubric": {
+              "high": "客单价 ≥ 5 万，年续费率 ≥ 70%",
+              "mid": "中等水平，介于高分与低分之间",
+              "low": "低于行业平均，存在明显短板"
+            },
+            "support": 0,
+            "source": "delphi"
+          }
+        ]
       },
-      summary: "两轮 Delphi 后专家对\"增长率\"与\"制造基础\"赋权最高。专精特新中小品牌方国产替代意愿强、客单价可接受、愿意尝试新自有品牌，恒锐精密 30+ 年 OEM 经验可直接复用。",
-      status: 'done',
-      phase: 'converged',
-      panel: [], round1: null, round2: null, synthesis: null, finalSynthesis: null, weights: null
+      {
+        "id": "cat_政治法律",
+        "name": "政治法律",
+        "weight": 0.25,
+        "indicators": [
+          {
+            "id": "ind_政治法律_行业监管",
+            "name": "行业监管 / 资质门槛",
+            "weight": 0.5,
+            "rubric": {
+              "high": "资质门槛清晰，政策支持国产替代",
+              "mid": "中等水平，介于高分与低分之间",
+              "low": "低于行业平均，存在明显短板"
+            },
+            "support": 0,
+            "source": "delphi"
+          },
+          {
+            "id": "ind_政治法律_广告法与",
+            "name": "广告法与合规风险",
+            "weight": 0.5,
+            "rubric": {
+              "high": "B2B 合规风险低，宣称可验证",
+              "mid": "中等水平，介于高分与低分之间",
+              "low": "低于行业平均，存在明显短板"
+            },
+            "support": 0,
+            "source": "delphi"
+          }
+        ]
+      },
+      {
+        "id": "cat_社会文化",
+        "name": "社会文化",
+        "weight": 0.25,
+        "indicators": [
+          {
+            "id": "ind_社会文化_客群需求",
+            "name": "客群需求强度",
+            "weight": 0.5,
+            "rubric": {
+              "high": "需求刚性，客户有明确采购预算",
+              "mid": "中等水平，介于高分与低分之间",
+              "low": "低于行业平均，存在明显短板"
+            },
+            "support": 0,
+            "source": "delphi"
+          },
+          {
+            "id": "ind_社会文化_种草 /",
+            "name": "种草 / 社交渗透",
+            "weight": 0.5,
+            "rubric": {
+              "high": "行业社群活跃，KOL/展会影响力大",
+              "mid": "中等水平，介于高分与低分之间",
+              "low": "低于行业平均，存在明显短板"
+            },
+            "support": 0,
+            "source": "delphi"
+          }
+        ]
+      },
+      {
+        "id": "cat_风险",
+        "name": "风险",
+        "weight": 0.25,
+        "indicators": [
+          {
+            "id": "ind_风险_核心资源",
+            "name": "核心资源复制难度",
+            "weight": 0.5,
+            "rubric": {
+              "high": "核心技术/设备可复制性低，壁垒高",
+              "mid": "中等水平，介于高分与低分之间",
+              "low": "低于行业平均，存在明显短板"
+            },
+            "support": 0,
+            "source": "delphi"
+          },
+          {
+            "id": "ind_风险_新客获客",
+            "name": "新客获客成本",
+            "weight": 0.5,
+            "rubric": {
+              "high": "CAC ≤ 首单 20%，转化周期 ≤ 6 月",
+              "mid": "中等水平，介于高分与低分之间",
+              "low": "低于行业平均，存在明显短板"
+            },
+            "support": 0,
+            "source": "delphi"
+          }
+        ]
+      }
+    ]
+  },
+  "competitiveness": {
+    "categories": [
+      {
+        "id": "cat_市场信息",
+        "name": "市场信息",
+        "weight": 0.25,
+        "indicators": [
+          {
+            "id": "ind_市场信息_目标客群",
+            "name": "目标客群数据可获取性",
+            "weight": 0.5,
+            "rubric": {
+              "high": "目标客户清单明确，决策链可触达",
+              "mid": "中等水平，介于高分与低分之间",
+              "low": "低于行业平均，存在明显短板"
+            },
+            "support": 0,
+            "source": "delphi"
+          },
+          {
+            "id": "ind_市场信息_竞品表现",
+            "name": "竞品表现可监测",
+            "weight": 0.5,
+            "rubric": {
+              "high": "竞品数据可获取，格局清晰",
+              "mid": "中等水平，介于高分与低分之间",
+              "low": "低于行业平均，存在明显短板"
+            },
+            "support": 0,
+            "source": "delphi"
+          }
+        ]
+      },
+      {
+        "id": "cat_营销渠道",
+        "name": "营销渠道",
+        "weight": 0.25,
+        "indicators": [
+          {
+            "id": "ind_营销渠道_核心渠道",
+            "name": "核心渠道成熟度",
+            "weight": 0.5,
+            "rubric": {
+              "high": "核心渠道成熟，展会/直销 ROI 可测",
+              "mid": "中等水平，介于高分与低分之间",
+              "low": "低于行业平均，存在明显短板"
+            },
+            "support": 0,
+            "source": "delphi"
+          },
+          {
+            "id": "ind_营销渠道_KOL ",
+            "name": "KOL / 达人储备",
+            "weight": 0.5,
+            "rubric": {
+              "high": "行业 KOL/协会资源 ≥ 10 个",
+              "mid": "中等水平，介于高分与低分之间",
+              "low": "低于行业平均，存在明显短板"
+            },
+            "support": 0,
+            "source": "delphi"
+          }
+        ]
+      },
+      {
+        "id": "cat_认证合规",
+        "name": "认证合规",
+        "weight": 0.25,
+        "indicators": [
+          {
+            "id": "ind_认证合规_核心资质",
+            "name": "核心资质完备度",
+            "weight": 0.5,
+            "rubric": {
+              "high": "ISO 9001/13485 等资质齐全",
+              "mid": "中等水平，介于高分与低分之间",
+              "low": "低于行业平均，存在明显短板"
+            },
+            "support": 0,
+            "source": "delphi"
+          },
+          {
+            "id": "ind_认证合规_关键背书",
+            "name": "关键背书可复用",
+            "weight": 0.5,
+            "rubric": {
+              "high": "头部客户案例/行业背书可复用",
+              "mid": "中等水平，介于高分与低分之间",
+              "low": "低于行业平均，存在明显短板"
+            },
+            "support": 0,
+            "source": "delphi"
+          }
+        ]
+      },
+      {
+        "id": "cat_产品品牌",
+        "name": "产品品牌",
+        "weight": 0.25,
+        "indicators": [
+          {
+            "id": "ind_产品品牌_现有老客",
+            "name": "现有老客基础可迁移",
+            "weight": 0.5,
+            "rubric": {
+              "high": "现有 OEM 老客可迁移 ≥ 30%",
+              "mid": "中等水平，介于高分与低分之间",
+              "low": "低于行业平均，存在明显短板"
+            },
+            "support": 0,
+            "source": "delphi"
+          },
+          {
+            "id": "ind_产品品牌_C 端品",
+            "name": "C 端品牌资产起点",
+            "weight": 0.5,
+            "rubric": {
+              "high": "行业内有一定品牌认知，口碑良好",
+              "mid": "中等水平，介于高分与低分之间",
+              "low": "低于行业平均，存在明显短板"
+            },
+            "support": 0,
+            "source": "delphi"
+          }
+        ]
+      }
+    ]
+  },
+  "scoring": {
+    "m1": {
+      "ind_经济_市场规模": {
+        "score": 8.5,
+        "source": "user",
+        "evidence": "专精特新中小品牌方在\"市场规模 / 行业容量\"上表现高，综合行业报告与专家访谈判断。"
+      },
+      "ind_经济_客单价与": {
+        "score": 7.5,
+        "source": "user",
+        "evidence": "专精特新中小品牌方在\"客单价与续费能力\"上表现中，综合行业报告与专家访谈判断。"
+      },
+      "ind_政治法律_行业监管": {
+        "score": 9,
+        "source": "user",
+        "evidence": "专精特新中小品牌方在\"行业监管 / 资质门槛\"上表现高，综合行业报告与专家访谈判断。"
+      },
+      "ind_政治法律_广告法与": {
+        "score": 7,
+        "source": "user",
+        "evidence": "专精特新中小品牌方在\"广告法与合规风险\"上表现中，综合行业报告与专家访谈判断。"
+      },
+      "ind_社会文化_客群需求": {
+        "score": 8,
+        "source": "user",
+        "evidence": "专精特新中小品牌方在\"客群需求强度\"上表现高，综合行业报告与专家访谈判断。"
+      },
+      "ind_社会文化_种草 /": {
+        "score": 8.5,
+        "source": "user",
+        "evidence": "专精特新中小品牌方在\"种草 / 社交渗透\"上表现高，综合行业报告与专家访谈判断。"
+      },
+      "ind_风险_核心资源": {
+        "score": 7,
+        "source": "user",
+        "evidence": "专精特新中小品牌方在\"核心资源复制难度\"上表现中，综合行业报告与专家访谈判断。"
+      },
+      "ind_风险_新客获客": {
+        "score": 8.5,
+        "source": "user",
+        "evidence": "专精特新中小品牌方在\"新客获客成本\"上表现高，综合行业报告与专家访谈判断。"
+      },
+      "ind_市场信息_目标客群": {
+        "score": 8.5,
+        "source": "user",
+        "evidence": "专精特新中小品牌方在\"目标客群数据可获取性\"上表现高，综合行业报告与专家访谈判断。"
+      },
+      "ind_市场信息_竞品表现": {
+        "score": 7.5,
+        "source": "user",
+        "evidence": "专精特新中小品牌方在\"竞品表现可监测\"上表现中，综合行业报告与专家访谈判断。"
+      },
+      "ind_营销渠道_核心渠道": {
+        "score": 9,
+        "source": "user",
+        "evidence": "专精特新中小品牌方在\"核心渠道成熟度\"上表现高，综合行业报告与专家访谈判断。"
+      },
+      "ind_营销渠道_KOL ": {
+        "score": 7,
+        "source": "user",
+        "evidence": "专精特新中小品牌方在\"KOL / 达人储备\"上表现中，综合行业报告与专家访谈判断。"
+      },
+      "ind_认证合规_核心资质": {
+        "score": 8,
+        "source": "user",
+        "evidence": "专精特新中小品牌方在\"核心资质完备度\"上表现高，综合行业报告与专家访谈判断。"
+      },
+      "ind_认证合规_关键背书": {
+        "score": 8.5,
+        "source": "user",
+        "evidence": "专精特新中小品牌方在\"关键背书可复用\"上表现高，综合行业报告与专家访谈判断。"
+      },
+      "ind_产品品牌_现有老客": {
+        "score": 7,
+        "source": "user",
+        "evidence": "专精特新中小品牌方在\"现有老客基础可迁移\"上表现中，综合行业报告与专家访谈判断。"
+      },
+      "ind_产品品牌_C 端品": {
+        "score": 8.5,
+        "source": "user",
+        "evidence": "专精特新中小品牌方在\"C 端品牌资产起点\"上表现高，综合行业报告与专家访谈判断。"
+      }
     },
-    matrix: { xCut: null, yCut: null, notes: "m1 专精特新中小品牌方国产替代意愿强、客单价可接受、愿意尝试新自有品牌，12 个月内可贡献自有品牌 60% 营收；m2 OEM 现有稳定但只认 OEM；m3 机器人新领域增速快但客户结构未验证。" },
-    decision: {
-      explanations: {},
-      tier1: { marketId:'m1', rationale:"m1 专精特新中小品牌方国产替代意愿强、客单价可接受、愿意尝试新自有品牌，12 个月内可贡献自有品牌 60% 营收；m2 OEM 现有稳定但只认 OEM；m3 机器人新领域增速快但客户结构未验证。", resourcesPct:80, milestones:["6 月内招 1 名品牌运营+1 名电商运营","参加 SIMM/CIMT 展会发布自有品牌","官网+小程序上线\"恒锐造\"品牌页"], reEvalTrigger:'3 个月复盘：核心指标未达预期' },
-      tier2: { marketIds:["m2"], observationMetrics:['月复购率','客单价'], reEvalTrigger:'复购率连续 2 月 < 阈值' },
-      tier3: { marketIds:["m3"], reEvalTrigger:'tier1 ROI 跑通后再启动' }
+    "m2": {
+      "ind_经济_市场规模": {
+        "score": 6,
+        "source": "user",
+        "evidence": "工业采购经理（OEM 现有）在\"市场规模 / 行业容量\"上表现中，综合行业报告与专家访谈判断。"
+      },
+      "ind_经济_客单价与": {
+        "score": 5,
+        "source": "user",
+        "evidence": "工业采购经理（OEM 现有）在\"客单价与续费能力\"上表现中低，综合行业报告与专家访谈判断。"
+      },
+      "ind_政治法律_行业监管": {
+        "score": 6.5,
+        "source": "user",
+        "evidence": "工业采购经理（OEM 现有）在\"行业监管 / 资质门槛\"上表现中，综合行业报告与专家访谈判断。"
+      },
+      "ind_政治法律_广告法与": {
+        "score": 4.5,
+        "source": "user",
+        "evidence": "工业采购经理（OEM 现有）在\"广告法与合规风险\"上表现中低，综合行业报告与专家访谈判断。"
+      },
+      "ind_社会文化_客群需求": {
+        "score": 5.5,
+        "source": "user",
+        "evidence": "工业采购经理（OEM 现有）在\"客群需求强度\"上表现中低，综合行业报告与专家访谈判断。"
+      },
+      "ind_社会文化_种草 /": {
+        "score": 6,
+        "source": "user",
+        "evidence": "工业采购经理（OEM 现有）在\"种草 / 社交渗透\"上表现中，综合行业报告与专家访谈判断。"
+      },
+      "ind_风险_核心资源": {
+        "score": 4.5,
+        "source": "user",
+        "evidence": "工业采购经理（OEM 现有）在\"核心资源复制难度\"上表现中低，综合行业报告与专家访谈判断。"
+      },
+      "ind_风险_新客获客": {
+        "score": 6,
+        "source": "user",
+        "evidence": "工业采购经理（OEM 现有）在\"新客获客成本\"上表现中，综合行业报告与专家访谈判断。"
+      },
+      "ind_市场信息_目标客群": {
+        "score": 7.5,
+        "source": "user",
+        "evidence": "工业采购经理（OEM 现有）在\"目标客群数据可获取性\"上表现中，综合行业报告与专家访谈判断。"
+      },
+      "ind_市场信息_竞品表现": {
+        "score": 6.5,
+        "source": "user",
+        "evidence": "工业采购经理（OEM 现有）在\"竞品表现可监测\"上表现中，综合行业报告与专家访谈判断。"
+      },
+      "ind_营销渠道_核心渠道": {
+        "score": 8,
+        "source": "user",
+        "evidence": "工业采购经理（OEM 现有）在\"核心渠道成熟度\"上表现高，综合行业报告与专家访谈判断。"
+      },
+      "ind_营销渠道_KOL ": {
+        "score": 6,
+        "source": "user",
+        "evidence": "工业采购经理（OEM 现有）在\"KOL / 达人储备\"上表现中，综合行业报告与专家访谈判断。"
+      },
+      "ind_认证合规_核心资质": {
+        "score": 7,
+        "source": "user",
+        "evidence": "工业采购经理（OEM 现有）在\"核心资质完备度\"上表现中，综合行业报告与专家访谈判断。"
+      },
+      "ind_认证合规_关键背书": {
+        "score": 7.5,
+        "source": "user",
+        "evidence": "工业采购经理（OEM 现有）在\"关键背书可复用\"上表现中，综合行业报告与专家访谈判断。"
+      },
+      "ind_产品品牌_现有老客": {
+        "score": 6,
+        "source": "user",
+        "evidence": "工业采购经理（OEM 现有）在\"现有老客基础可迁移\"上表现中，综合行业报告与专家访谈判断。"
+      },
+      "ind_产品品牌_C 端品": {
+        "score": 7.5,
+        "source": "user",
+        "evidence": "工业采购经理（OEM 现有）在\"C 端品牌资产起点\"上表现中，综合行业报告与专家访谈判断。"
+      }
     },
-    meta: { schemaVersion: 2, work1Linked: false },
-    _pipeDone: ['framework','evaluate']
-  };
+    "m3": {
+      "ind_经济_市场规模": {
+        "score": 7.5,
+        "source": "user",
+        "evidence": "机器人/新领域（增长型）在\"市场规模 / 行业容量\"上表现中，综合行业报告与专家访谈判断。"
+      },
+      "ind_经济_客单价与": {
+        "score": 6.5,
+        "source": "user",
+        "evidence": "机器人/新领域（增长型）在\"客单价与续费能力\"上表现中，综合行业报告与专家访谈判断。"
+      },
+      "ind_政治法律_行业监管": {
+        "score": 8,
+        "source": "user",
+        "evidence": "机器人/新领域（增长型）在\"行业监管 / 资质门槛\"上表现高，综合行业报告与专家访谈判断。"
+      },
+      "ind_政治法律_广告法与": {
+        "score": 6,
+        "source": "user",
+        "evidence": "机器人/新领域（增长型）在\"广告法与合规风险\"上表现中，综合行业报告与专家访谈判断。"
+      },
+      "ind_社会文化_客群需求": {
+        "score": 7,
+        "source": "user",
+        "evidence": "机器人/新领域（增长型）在\"客群需求强度\"上表现中，综合行业报告与专家访谈判断。"
+      },
+      "ind_社会文化_种草 /": {
+        "score": 7.5,
+        "source": "user",
+        "evidence": "机器人/新领域（增长型）在\"种草 / 社交渗透\"上表现中，综合行业报告与专家访谈判断。"
+      },
+      "ind_风险_核心资源": {
+        "score": 6,
+        "source": "user",
+        "evidence": "机器人/新领域（增长型）在\"核心资源复制难度\"上表现中，综合行业报告与专家访谈判断。"
+      },
+      "ind_风险_新客获客": {
+        "score": 7.5,
+        "source": "user",
+        "evidence": "机器人/新领域（增长型）在\"新客获客成本\"上表现中，综合行业报告与专家访谈判断。"
+      },
+      "ind_市场信息_目标客群": {
+        "score": 4.5,
+        "source": "user",
+        "evidence": "机器人/新领域（增长型）在\"目标客群数据可获取性\"上表现中低，综合行业报告与专家访谈判断。"
+      },
+      "ind_市场信息_竞品表现": {
+        "score": 3.5,
+        "source": "user",
+        "evidence": "机器人/新领域（增长型）在\"竞品表现可监测\"上表现低，综合行业报告与专家访谈判断。"
+      },
+      "ind_营销渠道_核心渠道": {
+        "score": 5,
+        "source": "user",
+        "evidence": "机器人/新领域（增长型）在\"核心渠道成熟度\"上表现中低，综合行业报告与专家访谈判断。"
+      },
+      "ind_营销渠道_KOL ": {
+        "score": 3,
+        "source": "user",
+        "evidence": "机器人/新领域（增长型）在\"KOL / 达人储备\"上表现低，综合行业报告与专家访谈判断。"
+      },
+      "ind_认证合规_核心资质": {
+        "score": 4,
+        "source": "user",
+        "evidence": "机器人/新领域（增长型）在\"核心资质完备度\"上表现中低，综合行业报告与专家访谈判断。"
+      },
+      "ind_认证合规_关键背书": {
+        "score": 4.5,
+        "source": "user",
+        "evidence": "机器人/新领域（增长型）在\"关键背书可复用\"上表现中低，综合行业报告与专家访谈判断。"
+      },
+      "ind_产品品牌_现有老客": {
+        "score": 3,
+        "source": "user",
+        "evidence": "机器人/新领域（增长型）在\"现有老客基础可迁移\"上表现低，综合行业报告与专家访谈判断。"
+      },
+      "ind_产品品牌_C 端品": {
+        "score": 4.5,
+        "source": "user",
+        "evidence": "机器人/新领域（增长型）在\"C 端品牌资产起点\"上表现中低，综合行业报告与专家访谈判断。"
+      }
+    }
+  },
+  "delphi": {
+    "recruitment": {
+      "perspectives": [
+        {
+          "id": "p_brand",
+          "role": "工业品牌策略",
+          "why": "看 OEM 转自有品牌路径"
+        },
+        {
+          "id": "p_growth",
+          "role": "B2B 渠道运营",
+          "why": "看专精特新渠道渗透"
+        },
+        {
+          "id": "p_engineer",
+          "role": "精密工艺工程师",
+          "why": "解读 0.005mm 精度壁垒"
+        },
+        {
+          "id": "p_quality",
+          "role": "质量体系专家",
+          "why": "看 ISO 13485 迁移"
+        },
+        {
+          "id": "p_buyer",
+          "role": "专精特新采购总监",
+          "why": "翻译国产替代决策"
+        }
+      ]
+    },
+    "personas": [
+      {
+        "id": "pe1",
+        "name": "工业品牌策略",
+        "perspective": "看品牌资产",
+        "stance": "中性"
+      },
+      {
+        "id": "pe2",
+        "name": "B2B 渠道运营",
+        "perspective": "看渗透",
+        "stance": "增长向"
+      },
+      {
+        "id": "pe3",
+        "name": "工艺工程师",
+        "perspective": "看精度",
+        "stance": "产品向"
+      },
+      {
+        "id": "pe4",
+        "name": "质量体系专家",
+        "perspective": "看认证",
+        "stance": "合规向"
+      },
+      {
+        "id": "pe5",
+        "name": "采购总监",
+        "perspective": "看替代",
+        "stance": "用户向"
+      }
+    ],
+    "userHosted": true,
+    "finalWeights": {
+      "attractiveness": {
+        "ind_经济_市场规模": 0.2,
+        "ind_经济_客单价": 0.15,
+        "ind_政治法律_行业": 0.1,
+        "ind_政治法律_广告": 0.05,
+        "ind_社会文化_客群": 0.15,
+        "ind_社会文化_渗透": 0.1,
+        "ind_风险_资源": 0.05,
+        "ind_风险_获客": 0.05
+      },
+      "competitiveness": {
+        "ind_市场信息_目标": 0.06,
+        "ind_市场信息_竞品": 0.06,
+        "ind_营销渠道_核心": 0.1,
+        "ind_营销渠道_KOL": 0.08,
+        "ind_认证合规_资质": 0.1,
+        "ind_认证合规_背书": 0.1,
+        "ind_产品品牌_老客": 0.15,
+        "ind_产品品牌_品牌": 0.1
+      }
+    },
+    "summary": "两轮 Delphi 后专家对\"增长率\"与\"制造基础\"赋权最高。专精特新中小品牌方国产替代意愿强、客单价可接受、愿意尝试新自有品牌，恒锐精密 30+ 年 OEM 经验可直接复用。",
+    "status": "done",
+    "phase": "converged",
+    "panel": [],
+    "round1": null,
+    "round2": null,
+    "synthesis": null,
+    "finalSynthesis": null,
+    "weights": null
+  },
+  "matrix": {
+    "xCut": null,
+    "yCut": null,
+    "notes": "m1 专精特新中小品牌方国产替代意愿强、客单价可接受、愿意尝试新自有品牌，12 个月内可贡献自有品牌 60% 营收；m2 OEM 现有稳定但只认 OEM；m3 机器人新领域增速快但客户结构未验证。"
+  },
+  "decision": {
+    "explanations": {},
+    "tier1": {
+      "marketId": "m1",
+      "rationale": "m1 专精特新中小品牌方国产替代意愿强、客单价可接受、愿意尝试新自有品牌，12 个月内可贡献自有品牌 60% 营收；m2 OEM 现有稳定但只认 OEM；m3 机器人新领域增速快但客户结构未验证。",
+      "resourcesPct": 80,
+      "milestones": [
+        "6 月内招 1 名品牌运营+1 名电商运营",
+        "参加 SIMM/CIMT 展会发布自有品牌",
+        "官网+小程序上线\"恒锐造\"品牌页"
+      ],
+      "reEvalTrigger": "3 个月复盘：核心指标未达预期"
+    },
+    "tier2": {
+      "marketIds": [
+        "m2"
+      ],
+      "observationMetrics": [
+        "月复购率",
+        "客单价"
+      ],
+      "reEvalTrigger": "复购率连续 2 月 < 阈值"
+    },
+    "tier3": {
+      "marketIds": [
+        "m3"
+      ],
+      "reEvalTrigger": "tier1 ROI 跑通后再启动"
+    }
+  },
+  "meta": {
+    "schemaVersion": 2,
+    "work1Linked": false
+  },
+  "_pipeDone": [
+    "framework",
+    "evaluate"
+  ]
+};
   if(typeof window!== 'undefined') window.__case_hengrui_zao_work2 = data;
 })();
 
@@ -3030,452 +6866,567 @@
  ============================================================ */
 (function(){
   const data = {
-    context: {
-      sbuName: "恒锐精密",
-      sbuOneLine: "专精特新精密件自有品牌，30+ 年 OEM 经验",
-      targetMarket: "专精特新中小品牌方",
-      targetMarketReason: "国产替代意愿强、客单价可接受、愿意尝试新自有品牌，12 个月内可贡献自有品牌 60% 营收",
-      tier1: { marketId:'m1', name:"专精特新中小品牌方", rationale:"国产替代意愿强、客单价可接受、愿意尝试新自有品牌，12 个月内可贡献自有品牌 60% 营收" },
-      tier2: [{"marketId":"m2","name":"工业采购经理（OEM 现有）"}],
-      personas: [{"id":"p1","name":"王工","painPoints":"图纸响应慢、检测报告不全"},{"id":"p2","name":"李博士","painPoints":"医疗认证复杂、量产风险"},{"id":"p3","name":"陈总","painPoints":"上游不稳定、账期长"}],
-      valueFramework: ["0.005mm 精度","24h 打样","ISO 13485","一站式后处理"],
-      hasSurvey: true
+  "context": {
+    "sbuName": "恒锐精密",
+    "sbuOneLine": "专精特新精密件自有品牌，30+ 年 OEM 经验",
+    "targetMarket": "专精特新中小品牌方",
+    "targetMarketReason": "国产替代意愿强、客单价可接受、愿意尝试新自有品牌，12 个月内可贡献自有品牌 60% 营收",
+    "tier1": {
+      "marketId": "m1",
+      "name": "专精特新中小品牌方",
+      "rationale": "国产替代意愿强、客单价可接受、愿意尝试新自有品牌，12 个月内可贡献自有品牌 60% 营收"
     },
-    scenarios: [
-  {
-    "id": "s1",
-    "name": "专精特新品牌方代工",
-    "description": "中小品牌方找国产替代精密件代工",
-    "personaIds": [
-      "p1",
-      "p3"
+    "tier2": [
+      {
+        "marketId": "m2",
+        "name": "工业采购经理（OEM 现有）"
+      }
     ],
-    "needStrength": {
-      "pain": "高",
-      "willingness": "高",
-      "frequency": "项目制"
-    },
-    "selected": true
+    "personas": [
+      {
+        "id": "p1",
+        "name": "王工",
+        "painPoints": "图纸响应慢、检测报告不全"
+      },
+      {
+        "id": "p2",
+        "name": "李博士",
+        "painPoints": "医疗认证复杂、量产风险"
+      },
+      {
+        "id": "p3",
+        "name": "陈总",
+        "painPoints": "上游不稳定、账期长"
+      }
+    ],
+    "valueFramework": [
+      "0.005mm 精度",
+      "24h 打样",
+      "ISO 13485",
+      "一站式后处理"
+    ],
+    "hasSurvey": true
   },
-  {
-    "id": "s2",
-    "name": "医疗认证辅导",
-    "description": "医疗客户要 ISO 13485 辅导+量产",
-    "personaIds": [
-      "p2"
-    ],
-    "needStrength": {
-      "pain": "高",
-      "willingness": "中",
-      "frequency": "项目制"
+  "scenarios": [
+    {
+      "id": "s1",
+      "name": "专精特新品牌方代工",
+      "description": "中小品牌方找国产替代精密件代工",
+      "personaIds": [
+        "p1",
+        "p3"
+      ],
+      "needStrength": {
+        "pain": "高",
+        "willingness": "高",
+        "frequency": "项目制"
+      },
+      "selected": true
     },
-    "selected": true
-  },
-  {
-    "id": "s3",
-    "name": "一站式后处理降本",
-    "description": "客户找喷砂+阳极一站式交付",
-    "personaIds": [
-      "p3"
-    ],
-    "needStrength": {
-      "pain": "中",
-      "willingness": "中",
-      "frequency": "月度"
+    {
+      "id": "s2",
+      "name": "医疗认证辅导",
+      "description": "医疗客户要 ISO 13485 辅导+量产",
+      "personaIds": [
+        "p2"
+      ],
+      "needStrength": {
+        "pain": "高",
+        "willingness": "中",
+        "frequency": "项目制"
+      },
+      "selected": true
     },
-    "selected": false
-  }
-],
-    mining: {
-      documents: [
-  "恒锐精密的 0.005mm 精度确实能打，一汽变速箱件用着不错。",
-  "24h 打样响应快，紧急项目救过我的命。",
-  "医疗认证能不能帮我们辅导？工艺文档不全。",
-  "小批量 50 件起订，灵活度比长盈精密好。",
-  "能不能给个 SPC 报告？我们客户审计要。",
-  "账期 60 天可以接受，比长盈好。",
-  "专精特新认证有没有成功案例？",
-  "国产替代我们想试一下，但价格不能再高了。",
-  "一站式后处理（喷砂+阳极）能不能也做？",
-  "你们 30+ 年 OEM 经验，自有品牌怎么定位？"
-],
-      includeWork1Open: true,
-      includeWork1Themes: true,
-      ldaParams: { k: 3, passes: 15, iterations: 100, no_below: 2, no_above: 0.5 },
-      ldaResult: null,
-      ldaError: null,
-      topics: [
-  {
-    "id": 0,
-    "label": "精度与打样交期",
-    "share": 40,
-    "keywords": [
+    {
+      "id": "s3",
+      "name": "一站式后处理降本",
+      "description": "客户找喷砂+阳极一站式交付",
+      "personaIds": [
+        "p3"
+      ],
+      "needStrength": {
+        "pain": "中",
+        "willingness": "中",
+        "frequency": "月度"
+      },
+      "selected": false
+    }
+  ],
+  "mining": {
+    "documents": [
+      "恒锐精密的 0.005mm 精度确实能打，一汽变速箱件用着不错。",
+      "24h 打样响应快，紧急项目救过我的命。",
+      "医疗认证能不能帮我们辅导？工艺文档不全。",
+      "小批量 50 件起订，灵活度比长盈精密好。",
+      "能不能给个 SPC 报告？我们客户审计要。",
+      "账期 60 天可以接受，比长盈好。",
+      "专精特新认证有没有成功案例？",
+      "国产替代我们想试一下，但价格不能再高了。",
+      "一站式后处理（喷砂+阳极）能不能也做？",
+      "你们 30+ 年 OEM 经验，自有品牌怎么定位？"
+    ],
+    "includeWork1Open": true,
+    "includeWork1Themes": true,
+    "ldaParams": {
+      "k": 3,
+      "passes": 15,
+      "iterations": 100,
+      "no_below": 2,
+      "no_above": 0.5
+    },
+    "ldaResult": null,
+    "ldaError": null,
+    "topics": [
+      {
+        "id": 0,
+        "label": "精度与打样交期",
+        "share": 40,
+        "keywords": [
+          {
+            "word": "精度",
+            "weight": 0.1
+          },
+          {
+            "word": "打样",
+            "weight": 0.08
+          },
+          {
+            "word": "24h",
+            "weight": 0.06
+          },
+          {
+            "word": "紧急",
+            "weight": 0.05
+          },
+          {
+            "word": "量产",
+            "weight": 0.04
+          }
+        ],
+        "representative_docs": [
+          "0.005mm 精度确实能打",
+          "24h 打样响应快"
+        ]
+      },
+      {
+        "id": 1,
+        "label": "资质与文档",
+        "share": 33,
+        "keywords": [
+          {
+            "word": "认证",
+            "weight": 0.09
+          },
+          {
+            "word": "医疗",
+            "weight": 0.07
+          },
+          {
+            "word": "工艺文档",
+            "weight": 0.06
+          },
+          {
+            "word": "SPC",
+            "weight": 0.05
+          },
+          {
+            "word": "报告",
+            "weight": 0.04
+          }
+        ],
+        "representative_docs": [
+          "医疗认证能不能帮我们辅导",
+          "能不能给个 SPC 报告"
+        ]
+      },
+      {
+        "id": 2,
+        "label": "专精特新与一站式",
+        "share": 27,
+        "keywords": [
+          {
+            "word": "专精特新",
+            "weight": 0.08
+          },
+          {
+            "word": "国产替代",
+            "weight": 0.07
+          },
+          {
+            "word": "后处理",
+            "weight": 0.06
+          },
+          {
+            "word": "喷砂",
+            "weight": 0.05
+          },
+          {
+            "word": "阳极",
+            "weight": 0.04
+          }
+        ],
+        "representative_docs": [
+          "专精特新认证有没有成功案例",
+          "一站式后处理能不能也做"
+        ]
+      }
+    ],
+    "wordFreqTop": [
       {
         "word": "精度",
-        "weight": 0.1
+        "count": 4
       },
       {
         "word": "打样",
-        "weight": 0.08
+        "count": 3
       },
-      {
-        "word": "24h",
-        "weight": 0.06
-      },
-      {
-        "word": "紧急",
-        "weight": 0.05
-      },
-      {
-        "word": "量产",
-        "weight": 0.04
-      }
-    ],
-    "representative_docs": [
-      "0.005mm 精度确实能打",
-      "24h 打样响应快"
-    ]
-  },
-  {
-    "id": 1,
-    "label": "资质与文档",
-    "share": 33,
-    "keywords": [
       {
         "word": "认证",
-        "weight": 0.09
+        "count": 3
       },
       {
         "word": "医疗",
-        "weight": 0.07
-      },
-      {
-        "word": "工艺文档",
-        "weight": 0.06
+        "count": 3
       },
       {
         "word": "SPC",
-        "weight": 0.05
+        "count": 2
       },
       {
         "word": "报告",
-        "weight": 0.04
-      }
-    ],
-    "representative_docs": [
-      "医疗认证能不能帮我们辅导",
-      "能不能给个 SPC 报告"
-    ]
-  },
-  {
-    "id": 2,
-    "label": "专精特新与一站式",
-    "share": 27,
-    "keywords": [
+        "count": 2
+      },
       {
         "word": "专精特新",
-        "weight": 0.08
+        "count": 2
       },
       {
         "word": "国产替代",
-        "weight": 0.07
+        "count": 2
       },
       {
         "word": "后处理",
-        "weight": 0.06
+        "count": 2
       },
       {
-        "word": "喷砂",
-        "weight": 0.05
-      },
-      {
-        "word": "阳极",
-        "weight": 0.04
+        "word": "紧急",
+        "count": 2
       }
     ],
-    "representative_docs": [
-      "专精特新认证有没有成功案例",
-      "一站式后处理能不能也做"
-    ]
-  }
-],
-      wordFreqTop: [
-  {
-    "word": "精度",
-    "count": 4
-  },
-  {
-    "word": "打样",
-    "count": 3
-  },
-  {
-    "word": "认证",
-    "count": 3
-  },
-  {
-    "word": "医疗",
-    "count": 3
-  },
-  {
-    "word": "SPC",
-    "count": 2
-  },
-  {
-    "word": "报告",
-    "count": 2
-  },
-  {
-    "word": "专精特新",
-    "count": 2
-  },
-  {
-    "word": "国产替代",
-    "count": 2
-  },
-  {
-    "word": "后处理",
-    "count": 2
-  },
-  {
-    "word": "紧急",
-    "count": 2
-  }
-],
-      stats: {"raw_count":10,"valid_count":10,"total_words":152,"vocab_size":41,"coherence":0.44},
-      painMap: [
-  {
-    "id": "pa1",
-    "pain": "医疗认证辅导不足，工艺文档不全",
-    "evidence": "医疗认证能不能帮我们辅导",
-    "frequency": "高",
-    "linkedNeeds": [
-      "认证辅导",
-      "工艺文档"
-    ],
-    "linkedTopicId": 1,
-    "type": "痛点",
-    "scenarioId": "s2"
-  },
-  {
-    "id": "pa2",
-    "pain": "客户审计需要 SPC 报告，展示不足",
-    "evidence": "能不能给个 SPC 报告",
-    "frequency": "中",
-    "linkedNeeds": [
-      "SPC 体系",
-      "第三方报告"
-    ],
-    "linkedTopicId": 1,
-    "type": "痛点",
-    "scenarioId": "s1"
-  },
-  {
-    "id": "pa3",
-    "pain": "一站式后处理（喷砂+阳极）缺能力",
-    "evidence": "一站式后处理能不能也做",
-    "frequency": "中",
-    "linkedNeeds": [
-      "后处理产线",
-      "一站式服务"
-    ],
-    "linkedTopicId": 2,
-    "type": "痛点",
-    "scenarioId": "s3"
-  },
-  {
-    "id": "pa4",
-    "pain": "国产替代价格压力大",
-    "evidence": "国产替代想试，但价格不能再高了",
-    "frequency": "中",
-    "linkedNeeds": [
-      "性价比",
-      "专精特新案例"
-    ],
-    "linkedTopicId": 2,
-    "type": "痛点",
-    "scenarioId": "s1"
-  },
-  {
-    "id": "pa5",
-    "pain": "自有品牌定位不清",
-    "evidence": "自有品牌怎么定位",
-    "frequency": "中",
-    "linkedNeeds": [
-      "品牌定位",
-      "案例展示"
-    ],
-    "linkedTopicId": 0,
-    "type": "痒点",
-    "scenarioId": "s1"
-  }
-]
+    "stats": {
+      "raw_count": 10,
+      "valid_count": 10,
+      "total_words": 152,
+      "vocab_size": 41,
+      "coherence": 0.44
     },
-    candidates: [
-  {
-    "id": "c1",
-    "name": "0.005mm 精度+SPC",
-    "pain": "精度不达标",
-    "description": "0.005mm 精度+SPC 全程检测+第三方报告",
-    "evidence": "10 篇评论中 4 篇提及精度",
-    "source": "user",
-    "scenarioId": "s1",
-    "selected": true,
-    "importance": 10,
-    "uniqueness": 9,
-    "credibility": 9,
-    "feasibility": 9,
-    "communicability": 7,
-    "sustainability": 9,
-    "extraDims": {}
-  },
-  {
-    "id": "c2",
-    "name": "24h 打样+小批量柔性",
-    "pain": "交期慢",
-    "description": "24h 打样响应+50 件起订+7-15 天量产",
-    "evidence": "3 篇评论提及打样",
-    "source": "user",
-    "scenarioId": "s1",
-    "selected": true,
-    "importance": 9,
-    "uniqueness": 8,
-    "credibility": 8,
-    "feasibility": 7,
-    "communicability": 9,
-    "sustainability": 8,
-    "extraDims": {}
-  },
-  {
-    "id": "c3",
-    "name": "医疗资质+认证辅导",
-    "pain": "认证复杂",
-    "description": "ISO 13485 医疗资质+认证辅导+5+ 医疗案例",
-    "evidence": "3 篇评论提及医疗认证",
-    "source": "user",
-    "scenarioId": "s2",
-    "selected": false,
-    "importance": 8,
-    "uniqueness": 8,
-    "credibility": 9,
-    "feasibility": 5,
-    "communicability": 7,
-    "sustainability": 8,
-    "extraDims": {}
-  },
-  {
-    "id": "c4",
-    "name": "一站式后处理",
-    "pain": "后处理外协",
-    "description": "喷砂+阳极氧化+电镀后处理内化，一站式交付",
-    "evidence": "1 篇评论提及后处理",
-    "source": "user",
-    "scenarioId": "s3",
-    "selected": false,
-    "importance": 7,
-    "uniqueness": 9,
-    "credibility": 7,
-    "feasibility": 7,
-    "communicability": 8,
-    "sustainability": 7,
-    "extraDims": {}
-  }
-],
-    dimensions: {
-      desirability: (typeof Work3!== 'undefined' && Work3.DEFAULT_DESIRABILITY_DIMS)
-        ? Work3.DEFAULT_DESIRABILITY_DIMS.map(d=>({...d}))
-        : [
-          {key:'importance', label:'重要性', definition:'这个卖点对客户有多重要'},
-          {key:'uniqueness', label:'独特性', definition:'竞品是否也在说/做'},
-          {key:'credibility', label:'可信性', definition:'客户凭什么相信你能做到'}
+    "painMap": [
+      {
+        "id": "pa1",
+        "pain": "医疗认证辅导不足，工艺文档不全",
+        "evidence": "医疗认证能不能帮我们辅导",
+        "frequency": "高",
+        "linkedNeeds": [
+          "认证辅导",
+          "工艺文档"
         ],
-      implementability: (typeof Work3!== 'undefined' && Work3.DEFAULT_IMPLEMENTABILITY_DIMS)
-        ? Work3.DEFAULT_IMPLEMENTABILITY_DIMS.map(d=>({...d}))
-        : [
-          {key:'feasibility', label:'可行性', definition:'技术/供应链/成本能否实现'},
-          {key:'communicability', label:'可传播性', definition:'能否用一句话让客户听懂'},
-          {key:'sustainability', label:'可持续性', definition:'能否长期维持、不被轻易复制'}
-        ]
+        "linkedTopicId": 1,
+        "type": "痛点",
+        "scenarioId": "s2"
+      },
+      {
+        "id": "pa2",
+        "pain": "客户审计需要 SPC 报告，展示不足",
+        "evidence": "能不能给个 SPC 报告",
+        "frequency": "中",
+        "linkedNeeds": [
+          "SPC 体系",
+          "第三方报告"
+        ],
+        "linkedTopicId": 1,
+        "type": "痛点",
+        "scenarioId": "s1"
+      },
+      {
+        "id": "pa3",
+        "pain": "一站式后处理（喷砂+阳极）缺能力",
+        "evidence": "一站式后处理能不能也做",
+        "frequency": "中",
+        "linkedNeeds": [
+          "后处理产线",
+          "一站式服务"
+        ],
+        "linkedTopicId": 2,
+        "type": "痛点",
+        "scenarioId": "s3"
+      },
+      {
+        "id": "pa4",
+        "pain": "国产替代价格压力大",
+        "evidence": "国产替代想试，但价格不能再高了",
+        "frequency": "中",
+        "linkedNeeds": [
+          "性价比",
+          "专精特新案例"
+        ],
+        "linkedTopicId": 2,
+        "type": "痛点",
+        "scenarioId": "s1"
+      },
+      {
+        "id": "pa5",
+        "pain": "自有品牌定位不清",
+        "evidence": "自有品牌怎么定位",
+        "frequency": "中",
+        "linkedNeeds": [
+          "品牌定位",
+          "案例展示"
+        ],
+        "linkedTopicId": 0,
+        "type": "痒点",
+        "scenarioId": "s1"
+      }
+    ]
+  },
+  "candidates": [
+    {
+      "id": "c1",
+      "name": "0.005mm 精度+SPC",
+      "pain": "精度不达标",
+      "description": "0.005mm 精度+SPC 全程检测+第三方报告",
+      "evidence": "10 篇评论中 4 篇提及精度",
+      "source": "user",
+      "scenarioId": "s1",
+      "selected": true,
+      "importance": 10,
+      "uniqueness": 9,
+      "credibility": 9,
+      "feasibility": 9,
+      "communicability": 7,
+      "sustainability": 9,
+      "extraDims": {}
     },
-    matrix: {"showSector":true,"sectorWidth":1.5,"xCut":7,"yCut":7,"manualSelected":["c1","c2"]},
-    migration: { prompt:'', analyses:[
-  {
-    "from": "长盈精密客户",
-    "to": "c1",
-    "reason": "同价位, 恒锐医疗资质更全",
-    "cost": 5
+    {
+      "id": "c2",
+      "name": "24h 打样+小批量柔性",
+      "pain": "交期慢",
+      "description": "24h 打样响应+50 件起订+7-15 天量产",
+      "evidence": "3 篇评论提及打样",
+      "source": "user",
+      "scenarioId": "s1",
+      "selected": true,
+      "importance": 9,
+      "uniqueness": 8,
+      "credibility": 8,
+      "feasibility": 7,
+      "communicability": 9,
+      "sustainability": 8,
+      "extraDims": {}
+    },
+    {
+      "id": "c3",
+      "name": "医疗资质+认证辅导",
+      "pain": "认证复杂",
+      "description": "ISO 13485 医疗资质+认证辅导+5+ 医疗案例",
+      "evidence": "3 篇评论提及医疗认证",
+      "source": "user",
+      "scenarioId": "s2",
+      "selected": false,
+      "importance": 8,
+      "uniqueness": 8,
+      "credibility": 9,
+      "feasibility": 5,
+      "communicability": 7,
+      "sustainability": 8,
+      "extraDims": {}
+    },
+    {
+      "id": "c4",
+      "name": "一站式后处理",
+      "pain": "后处理外协",
+      "description": "喷砂+阳极氧化+电镀后处理内化，一站式交付",
+      "evidence": "1 篇评论提及后处理",
+      "source": "user",
+      "scenarioId": "s3",
+      "selected": false,
+      "importance": 7,
+      "uniqueness": 9,
+      "credibility": 7,
+      "feasibility": 7,
+      "communicability": 8,
+      "sustainability": 7,
+      "extraDims": {}
+    },
+    {
+      "id": "c5",
+      "name": "0.005mm 精度全程可追溯",
+      "pain": "怕精度不稳定、批次差异大",
+      "scenarioId": "s1",
+      "importance": 9,
+      "uniqueness": 8,
+      "credibility": 8,
+      "feasibility": 8,
+      "communicability": 7,
+      "sustainability": 8,
+      "selected": false,
+      "evidence": "SPC 过程能力数据"
+    },
+    {
+      "id": "c6",
+      "name": "48 小时快速打样服务",
+      "pain": "打样慢影响项目进度",
+      "scenarioId": "s2",
+      "importance": 7,
+      "uniqueness": 5,
+      "credibility": 7,
+      "feasibility": 9,
+      "communicability": 8,
+      "sustainability": 7,
+      "selected": false,
+      "evidence": "现有打样车间产能"
+    }
+  ],
+  "dimensions": {
+    "desirability": [
+      {
+        "key": "importance",
+        "label": "重要性",
+        "definition": "这个卖点对客户有多重要"
+      },
+      {
+        "key": "uniqueness",
+        "label": "独特性",
+        "definition": "竞品是否也在说/做"
+      },
+      {
+        "key": "credibility",
+        "label": "可信性",
+        "definition": "客户凭什么相信你能做到"
+      }
+    ],
+    "implementability": [
+      {
+        "key": "feasibility",
+        "label": "可行性",
+        "definition": "技术/供应链/成本能否实现"
+      },
+      {
+        "key": "communicability",
+        "label": "可传播性",
+        "definition": "能否用一句话让客户听懂"
+      },
+      {
+        "key": "sustainability",
+        "label": "可持续性",
+        "definition": "能否长期维持、不被轻易复制"
+      }
+    ]
   },
-  {
-    "from": "震裕科技客户",
-    "to": "c2",
-    "reason": "同柔性, 恒锐 24h 打样更快",
-    "cost": 6
+  "matrix": {
+    "showSector": true,
+    "sectorWidth": 1.5,
+    "xCut": 7,
+    "yCut": 7,
+    "manualSelected": [
+      "c1",
+      "c2"
+    ]
   },
-  {
-    "from": "拓斯达客户",
-    "to": "c4",
-    "reason": "一站式后处理替代外协",
-    "cost": 7
-  }
-] },
-    proposition: {
-  "coreValueIds": [
+  "migration": {
+    "prompt": "",
+    "analyses": [
+      {
+        "from": "长盈精密客户",
+        "to": "c1",
+        "reason": "同价位, 恒锐医疗资质更全",
+        "cost": 5
+      },
+      {
+        "from": "震裕科技客户",
+        "to": "c2",
+        "reason": "同柔性, 恒锐 24h 打样更快",
+        "cost": 6
+      },
+      {
+        "from": "拓斯达客户",
+        "to": "c4",
+        "reason": "一站式后处理替代外协",
+        "cost": 7
+      }
+    ]
+  },
+  "proposition": {
+    "coreValueIds": [
+      "c1",
+      "c2",
+      "c3",
+      "c4"
+    ],
+    "alternatives": [
+      {
+        "id": "a1",
+        "text": "恒锐造，0.005mm 的精密。"
+      },
+      {
+        "id": "a2",
+        "text": "专精特新，恒锐造。"
+      },
+      {
+        "id": "a3",
+        "text": "国产替代，恒锐造精密。"
+      }
+    ],
+    "chosenValueText": "恒锐造，0.005mm 的精密。",
+    "positioning": {
+      "brand": "恒锐造",
+      "audience": "专精特新中小品牌方+工业采购经理+专精特新渠道商",
+      "coreValue": "0.005mm 精度+24h 打样+医疗资质+一站式后处理",
+      "category": "专精特新精密件自有品牌"
+    },
+    "positioningStatement": "对于专精特新中小品牌方与工业采购经理, 恒锐造是唯一一个用 0.005mm 精度 + 24h 打样响应 + ISO 13485 医疗资质 + 一站式后处理, 让\"0.005mm 的精密\"成为可验证、可审计、可放心的专精特新精密件自有品牌。"
+  },
+  "identity": {
+    "mbti": "ISTJ (物流师型 — 偏精密、可靠、长期主义)",
+    "personalityTraits": [
+      "专业",
+      "精密",
+      "可靠",
+      "务实",
+      "长期主义"
+    ],
+    "sloganOptions": [
+      {
+        "text": "恒锐造，0.005mm 的精密",
+        "source": "agent"
+      },
+      {
+        "text": "专精特新，恒锐造",
+        "source": "user"
+      },
+      {
+        "text": "国产替代，恒锐造精密",
+        "source": "user"
+      }
+    ],
+    "chosenSlogan": "恒锐造，0.005mm 的精密"
+  },
+  "_scoreDone": [
     "c1",
     "c2",
     "c3",
     "c4"
   ],
-  "alternatives": [
-    {
-      "id": "a1",
-      "text": "恒锐造，0.005mm 的精密。"
-    },
-    {
-      "id": "a2",
-      "text": "专精特新，恒锐造。"
-    },
-    {
-      "id": "a3",
-      "text": "国产替代，恒锐造精密。"
-    }
+  "_pipeProp": [
+    "coreValueIds",
+    "chosenValueText",
+    "positioning"
   ],
-  "chosenValueText": "恒锐造，0.005mm 的精密。",
-  "positioning": {
-    "brand": "恒锐造",
-    "audience": "专精特新中小品牌方+工业采购经理+专精特新渠道商",
-    "coreValue": "0.005mm 精度+24h 打样+医疗资质+一站式后处理",
-    "category": "专精特新精密件自有品牌"
-  },
-  "positioningStatement": "对于专精特新中小品牌方与工业采购经理, 恒锐造是唯一一个用 0.005mm 精度 + 24h 打样响应 + ISO 13485 医疗资质 + 一站式后处理, 让\"0.005mm 的精密\"成为可验证、可审计、可放心的专精特新精密件自有品牌。"
-},
-    identity: {
-  "mbti": "ISTJ (物流师型 — 偏精密、可靠、长期主义)",
-  "personalityTraits": [
-    "专业",
-    "精密",
-    "可靠",
-    "务实",
-    "长期主义"
-  ],
-  "sloganOptions": [
-    {
-      "text": "恒锐造，0.005mm 的精密",
-      "source": "agent"
-    },
-    {
-      "text": "专精特新，恒锐造",
-      "source": "user"
-    },
-    {
-      "text": "国产替代，恒锐造精密",
-      "source": "user"
-    }
-  ],
-  "chosenSlogan": "恒锐造，0.005mm 的精密"
-},
-    _scoreDone: ["c1","c2","c3","c4"],
-    _pipeProp: ['coreValueIds','chosenValueText','positioning'],
-    _pipeIdentity: ['mbti','sloganOptions','chosenSlogan']
-  };
+  "_pipeIdentity": [
+    "mbti",
+    "sloganOptions",
+    "chosenSlogan"
+  ]
+};
   if(typeof window!== 'undefined') window.__case_hengrui_zao_work3 = data;
 })();
 
@@ -3489,82 +7440,252 @@
  ============================================================ */
 (function(){
   const data = {
-    route:{
-      scope:'domestic',
-      oemType:'OBM',
-      entryMode:'',
-      light:[],
-      politicalPower:''
+  "route": {
+    "scope": "domestic",
+    "oemType": "OBM",
+    "entryMode": "direct",
+    "light": [],
+    "politicalPower": ""
+  },
+  "product": {
+    "name": "恒锐造精密件自有品牌",
+    "description": "0.005mm 精度+24h 打样+医疗资质+一站式后处理",
+    "coreDifferentiators": [
+      "0.005mm 精度",
+      "24h 打样",
+      "医疗资质（ISO 13485）",
+      "一站式后处理",
+      "小批量柔性"
+    ],
+    "physicalFeatures": "30+ 台 CNC / SPC 体系 / ISO 9001+IATF 16949+ISO 13485 / 第三方检测报告",
+    "serviceOffering": "24h 打样响应 / 工艺文档辅导 / 认证辅导 / 长期账期 / 技术支持",
+    "technologyMoat": "30+ 年精密件经验 + 30+ 台 CNC + 5 套检测设备 + 医疗资质",
+    "skus": [
+      {
+        "name": "汽车变速箱精密件",
+        "specs": "精度 0.005mm",
+        "price_range": "加工费 50-150 元/件",
+        "differentiator": "IATF 16949+长期合作"
+      },
+      {
+        "name": "医疗器械精密件",
+        "specs": "精度 0.005mm",
+        "price_range": "加工费 80-250 元/件",
+        "differentiator": "ISO 13485+认证辅导"
+      },
+      {
+        "name": "消费电子精密件",
+        "specs": "精度 0.01mm",
+        "price_range": "加工费 30-100 元/件",
+        "differentiator": "小批量柔性+24h 打样"
+      },
+      {
+        "name": "机器人精密件",
+        "specs": "精度 0.005mm",
+        "price_range": "加工费 80-200 元/件",
+        "differentiator": "国产替代+柔性"
+      }
+    ]
+  },
+  "price": {
+    "strategy": "value",
+    "strategyNote": "中端定价，以\"精度+交期+资质\"承担溢价；专精特新渠道商给渠道价。",
+    "tiers": [
+      {
+        "name": "汽车件加工费",
+        "targetSegment": "一汽/汽车厂",
+        "price": 80,
+        "unit": "元/件",
+        "notes": "BOM+加工费"
+      },
+      {
+        "name": "医疗件加工费",
+        "targetSegment": "迈瑞/医疗厂",
+        "price": 150,
+        "unit": "元/件",
+        "notes": "含认证辅导"
+      },
+      {
+        "name": "消费电子件",
+        "targetSegment": "美的/3C 厂",
+        "price": 60,
+        "unit": "元/件",
+        "notes": "小批量起订"
+      },
+      {
+        "name": "机器人件加工费",
+        "targetSegment": "机器人厂",
+        "price": 120,
+        "unit": "元/件",
+        "notes": "国产替代"
+      }
+    ],
+    "channelPricing": [
+      {
+        "channel": "直销团队",
+        "priceAdjustment": "原价",
+        "rationale": "主战场"
+      },
+      {
+        "channel": "阿里 1688",
+        "priceAdjustment": "9 折",
+        "rationale": "拉新引流"
+      },
+      {
+        "channel": "专精特新渠道商",
+        "priceAdjustment": "渠道价 7 折",
+        "rationale": "长期合作"
+      }
+    ],
+    "promotions": [
+      {
+        "occasion": "SIMM/CIMT 展会",
+        "discount": "打样 5 折",
+        "period": "展会期间"
+      },
+      {
+        "occasion": "专精特新认证客户",
+        "discount": "首批合作 9 折",
+        "period": "签约后 3 月内"
+      }
+    ],
+    "competitorPrices": "长盈精密 80-200；震裕科技 60-150；科达制造 50-120；拓斯达 70-180；绿的谐波 100-300"
+  },
+  "place": {
+    "onlineSelf": [
+      "恒锐精密官网",
+      "恒锐造小程序",
+      "恒锐造公众号"
+    ],
+    "onlineThird": [
+      "阿里 1688",
+      "京东工业",
+      "中国制造网"
+    ],
+    "onlineNotes": "官网+小程序为主阵地（案例墙+SPC 报告+认证展示）；1688 做拉新；行业展会做品牌发布",
+    "offlineDirect": [
+      "东莞工厂直销",
+      "深圳/苏州/宁波销售点"
+    ],
+    "offlineDistrib": [
+      "专精特新渠道商",
+      "行业展会（SIMM/CIMT）"
+    ],
+    "offlineRetail": [],
+    "offlineNotes": "直销团队+渠道商双线，第一阶段以 B 端为主",
+    "keyPartners": [
+      {
+        "name": "专精特新渠道商 10+",
+        "side": "线下"
+      },
+      {
+        "name": "阿里 1688 工业品牌",
+        "side": "线上"
+      },
+      {
+        "name": "SIMM/CIMT 展会",
+        "side": "线下"
+      }
+    ],
+    "channelIncentives": "渠道商佣金 10%+年返 2%；直销奖金按 GMV 5%",
+    "structure": [
+      {
+        "name": "线下",
+        "children": [
+          {
+            "name": "直销团队",
+            "share": 50
+          },
+          {
+            "name": "专精特新渠道商",
+            "share": 25
+          },
+          {
+            "name": "行业展会",
+            "share": 25
+          }
+        ]
+      },
+      {
+        "name": "线上",
+        "children": [
+          {
+            "name": "官网/小程序",
+            "share": 50
+          },
+          {
+            "name": "阿里 1688",
+            "share": 30
+          },
+          {
+            "name": "京东工业/中国制造",
+            "share": 20
+          }
+        ]
+      }
+    ]
+  },
+  "promotion": {
+    "theme": "恒锐造，0.005mm 的精密",
+    "advertising": [
+      {
+        "media": "行业展会（SIMM/CIMT）",
+        "budgetShare": 35,
+        "message": "恒锐造品牌发布+案例展示",
+        "kpi": "签约客户数"
+      },
+      {
+        "media": "阿里 1688/京东工业",
+        "budgetShare": 25,
+        "message": "24h 打样+案例",
+        "kpi": "询盘转化率"
+      },
+      {
+        "media": "官网/小程序",
+        "budgetShare": 20,
+        "message": "案例墙+认证展示",
+        "kpi": "留资率"
+      },
+      {
+        "media": "销售团队+客户走访",
+        "budgetShare": 20,
+        "message": "长期合作+定制方案",
+        "kpi": "签约率"
+      }
+    ],
+    "pr": [
+      {
+        "event": "恒锐造品牌发布会（SIMM 展）",
+        "timing": "2027 年 3 月",
+        "expectedReach": "行业 10 万专业人士"
+      },
+      {
+        "event": "专精特新认证案例发布",
+        "timing": "每季度 1 次",
+        "expectedReach": "渠道 5 万+"
+      }
+    ],
+    "salesPromotion": [
+      {
+        "tactic": "展会打样 5 折",
+        "mechanic": "现场签单",
+        "period": "展会期间"
+      },
+      {
+        "tactic": "首批合作 9 折",
+        "mechanic": "专精特新认证客户",
+        "period": "签约后 3 月"
+      }
+    ],
+    "crm": {
+      "tool": "企业微信+CRM 系统",
+      "membership": "战略客户/白银/黄金/钻石",
+      "repurchase": "每季度推送新工艺/案例",
+      "notes": "B 端客户长期关系为重"
     },
-    product:{
-      name:'恒锐造精密件自有品牌',
-      description:'0.005mm 精度+24h 打样+医疗资质+一站式后处理',
-      coreDifferentiators:['0.005mm 精度','24h 打样','医疗资质（ISO 13485）','一站式后处理','小批量柔性'],
-      physicalFeatures:'30+ 台 CNC / SPC 体系 / ISO 9001+IATF 16949+ISO 13485 / 第三方检测报告',
-      serviceOffering:'24h 打样响应 / 工艺文档辅导 / 认证辅导 / 长期账期 / 技术支持',
-      technologyMoat:'30+ 年精密件经验 + 30+ 台 CNC + 5 套检测设备 + 医疗资质',
-      skus:[
-        {name:'汽车变速箱精密件', specs:'精度 0.005mm', price_range:'加工费 50-150 元/件', differentiator:'IATF 16949+长期合作'},
-        {name:'医疗器械精密件', specs:'精度 0.005mm', price_range:'加工费 80-250 元/件', differentiator:'ISO 13485+认证辅导'},
-        {name:'消费电子精密件', specs:'精度 0.01mm', price_range:'加工费 30-100 元/件', differentiator:'小批量柔性+24h 打样'},
-        {name:'机器人精密件', specs:'精度 0.005mm', price_range:'加工费 80-200 元/件', differentiator:'国产替代+柔性'}
-      ]
-    },
-    price:{
-      strategy:'value',
-      strategyNote:'中端定价，以"精度+交期+资质"承担溢价；专精特新渠道商给渠道价。',
-      tiers:[
-        {name:'汽车件加工费', targetSegment:'一汽/汽车厂', price:80, unit:'元/件', notes:'BOM+加工费'},
-        {name:'医疗件加工费', targetSegment:'迈瑞/医疗厂', price:150, unit:'元/件', notes:'含认证辅导'},
-        {name:'消费电子件', targetSegment:'美的/3C 厂', price:60, unit:'元/件', notes:'小批量起订'},
-        {name:'机器人件加工费', targetSegment:'机器人厂', price:120, unit:'元/件', notes:'国产替代'}
-      ],
-      channelPricing:[
-        {channel:'直销团队', priceAdjustment:'原价', rationale:'主战场'},
-        {channel:'阿里 1688', priceAdjustment:'9 折', rationale:'拉新引流'},
-        {channel:'专精特新渠道商', priceAdjustment:'渠道价 7 折', rationale:'长期合作'}
-      ],
-      promotions:[
-        {occasion:'SIMM/CIMT 展会', discount:'打样 5 折', period:'展会期间'},
-        {occasion:'专精特新认证客户', discount:'首批合作 9 折', period:'签约后 3 月内'}
-      ],
-      competitorPrices:'长盈精密 80-200；震裕科技 60-150；科达制造 50-120；拓斯达 70-180；绿的谐波 100-300'
-    },
-    place:{
-      onlineSelf:['恒锐精密官网','恒锐造小程序','恒锐造公众号'],
-      onlineThird:['阿里 1688','京东工业','中国制造网'],
-      onlineNotes:'官网+小程序为主阵地（案例墙+SPC 报告+认证展示）；1688 做拉新；行业展会做品牌发布',
-      offlineDirect:['东莞工厂直销','深圳/苏州/宁波销售点'],
-      offlineDistrib:['专精特新渠道商','行业展会（SIMM/CIMT）'],
-      offlineRetail:[],
-      offlineNotes:'直销团队+渠道商双线，第一阶段以 B 端为主',
-      keyPartners:[{name:'专精特新渠道商 10+',side:'线下'},{name:'阿里 1688 工业品牌',side:'线上'},{name:'SIMM/CIMT 展会',side:'线下'}],
-      channelIncentives:'渠道商佣金 10%+年返 2%；直销奖金按 GMV 5%',
-      structure:[
-        {name:'线下', children:[{name:'直销团队', share:50},{name:'专精特新渠道商', share:25},{name:'行业展会', share:25}]},
-        {name:'线上', children:[{name:'官网/小程序', share:50},{name:'阿里 1688', share:30},{name:'京东工业/中国制造', share:20}]}
-      ]
-    },
-    promotion:{
-      theme:'恒锐造，0.005mm 的精密',
-      advertising:[
-        {media:'行业展会（SIMM/CIMT）', budgetShare:35, message:'恒锐造品牌发布+案例展示', kpi:'签约客户数'},
-        {media:'阿里 1688/京东工业', budgetShare:25, message:'24h 打样+案例', kpi:'询盘转化率'},
-        {media:'官网/小程序', budgetShare:20, message:'案例墙+认证展示', kpi:'留资率'},
-        {media:'销售团队+客户走访', budgetShare:20, message:'长期合作+定制方案', kpi:'签约率'}
-      ],
-      pr:[
-        {event:'恒锐造品牌发布会（SIMM 展）', timing:'2027 年 3 月', expectedReach:'行业 10 万专业人士'},
-        {event:'专精特新认证案例发布', timing:'每季度 1 次', expectedReach:'渠道 5 万+'}
-      ],
-      salesPromotion:[
-        {tactic:'展会打样 5 折', mechanic:'现场签单', period:'展会期间'},
-        {tactic:'首批合作 9 折', mechanic:'专精特新认证客户', period:'签约后 3 月'}
-      ],
-      crm:{tool:'企业微信+CRM 系统', membership:'战略客户/白银/黄金/钻石', repurchase:'每季度推送新工艺/案例', notes:'B 端客户长期关系为重'},
-      contentStrategy:'官网"恒锐造案例墙"系列 + 公众号"0.005mm 的精密"长文 + 行业展会"工艺纪录片"。'
-    }
-  };
+    "contentStrategy": "官网\"恒锐造案例墙\"系列 + 公众号\"0.005mm 的精密\"长文 + 行业展会\"工艺纪录片\"。"
+  }
+};
 
   if(typeof window!== 'undefined') window.__case_hengrui_zao_work4 = data;
 })();
@@ -3965,35 +8086,716 @@
     }));
   }
   const data = {
-    candidates: [{"id":"mc1","name":"北京/上海（一线拓展）","reason":"距离远、品控难","source":"user"},{"id":"mc2","name":"加盟路线","reason":"资金效率高但品控风险大","source":"user"}],
-    screening: { criteria: [] },
-    retained: [{"id":"m1","name":"成都核心（2-3 家新店）","region":"成都高新/锦江/武侯","population":"潜在 50 万养宠家庭","gdpPerCapita":"人均可支配 5 万+","notes":"本地口碑强、抖音同城生态成熟","source":"user"},{"id":"m2","name":"重庆（1 家新店）","region":"重庆渝北/江北","population":"潜在 30 万养宠家庭","gdpPerCapita":"人均可支配 4.5 万+","notes":"已有 1 家店，扩展第 2 家","source":"user"},{"id":"m3","name":"绵阳/乐山（川内下沉）","region":"绵阳/乐山","population":"潜在 10 万养宠家庭","gdpPerCapita":"人均可支配 3.5 万+","notes":"客单价低、复制价值弱","source":"user"}],
-    attractiveness: { categories: buildCats(attractTemplate) },
-    competitiveness: { categories: buildCats(competeTemplate) },
-    scoring: { m1: { 'ind_经济_市场规模': {score: 8.5, source: 'user'}, 'ind_经济_客单价与': {score: 7.5, source: 'user'}, 'ind_政治法律_行业监管': {score: 9, source: 'user'}, 'ind_政治法律_广告法与': {score: 7, source: 'user'}, 'ind_社会文化_客群需求': {score: 8, source: 'user'}, 'ind_社会文化_种草 /': {score: 8.5, source: 'user'}, 'ind_风险_核心资源': {score: 7, source: 'user'}, 'ind_风险_新客获客': {score: 8.5, source: 'user'}, 'ind_市场信息_目标客群': {score: 8.5, source: 'user'}, 'ind_市场信息_竞品表现': {score: 7.5, source: 'user'}, 'ind_营销渠道_核心渠道': {score: 9, source: 'user'}, 'ind_营销渠道_KOL ': {score: 7, source: 'user'}, 'ind_认证合规_核心资质': {score: 8, source: 'user'}, 'ind_认证合规_关键背书': {score: 8.5, source: 'user'}, 'ind_产品品牌_现有老客': {score: 7, source: 'user'}, 'ind_产品品牌_C 端品': {score: 8.5, source: 'user'} }, m2: { 'ind_经济_市场规模': {score: 6, source: 'user'}, 'ind_经济_客单价与': {score: 5, source: 'user'}, 'ind_政治法律_行业监管': {score: 6.5, source: 'user'}, 'ind_政治法律_广告法与': {score: 4.5, source: 'user'}, 'ind_社会文化_客群需求': {score: 5.5, source: 'user'}, 'ind_社会文化_种草 /': {score: 6, source: 'user'}, 'ind_风险_核心资源': {score: 4.5, source: 'user'}, 'ind_风险_新客获客': {score: 6, source: 'user'}, 'ind_市场信息_目标客群': {score: 7.5, source: 'user'}, 'ind_市场信息_竞品表现': {score: 6.5, source: 'user'}, 'ind_营销渠道_核心渠道': {score: 8, source: 'user'}, 'ind_营销渠道_KOL ': {score: 6, source: 'user'}, 'ind_认证合规_核心资质': {score: 7, source: 'user'}, 'ind_认证合规_关键背书': {score: 7.5, source: 'user'}, 'ind_产品品牌_现有老客': {score: 6, source: 'user'}, 'ind_产品品牌_C 端品': {score: 7.5, source: 'user'} }, m3: { 'ind_经济_市场规模': {score: 7.5, source: 'user'}, 'ind_经济_客单价与': {score: 6.5, source: 'user'}, 'ind_政治法律_行业监管': {score: 8, source: 'user'}, 'ind_政治法律_广告法与': {score: 6, source: 'user'}, 'ind_社会文化_客群需求': {score: 7, source: 'user'}, 'ind_社会文化_种草 /': {score: 7.5, source: 'user'}, 'ind_风险_核心资源': {score: 6, source: 'user'}, 'ind_风险_新客获客': {score: 7.5, source: 'user'}, 'ind_市场信息_目标客群': {score: 4.5, source: 'user'}, 'ind_市场信息_竞品表现': {score: 3.5, source: 'user'}, 'ind_营销渠道_核心渠道': {score: 5, source: 'user'}, 'ind_营销渠道_KOL ': {score: 3, source: 'user'}, 'ind_认证合规_核心资质': {score: 4, source: 'user'}, 'ind_认证合规_关键背书': {score: 4.5, source: 'user'}, 'ind_产品品牌_现有老客': {score: 3, source: 'user'}, 'ind_产品品牌_C 端品': {score: 4.5, source: 'user'} } },
-    delphi: {
-      recruitment: { perspectives: [{"id":"p_brand","role":"宠物服务品牌策略","why":"看本地口碑迁移"},{"id":"p_growth","role":"抖音同城运营","why":"评估同城生态"},{"id":"p_groomer","role":"资深洗护师","why":"判断团队复制"},{"id":"p_invest","role":"宠物行业投资人","why":"看客单价与回收"},{"id":"p_owner","role":"90/95 后铲屎官 KOC","why":"翻译洗护+寄养决策"}] },
-      personas: [{"id":"pe1","name":"宠物服务品牌策略","perspective":"看口碑","stance":"中性"},{"id":"pe2","name":"抖音同城运营","perspective":"看同城","stance":"增长向"},{"id":"pe3","name":"资深洗护师","perspective":"看团队","stance":"产品向"},{"id":"pe4","name":"宠物行业投资人","perspective":"看回本","stance":"财务向"},{"id":"pe5","name":"90/95 后铲屎官 KOC","perspective":"看体验","stance":"用户向"}],
-      userHosted: true,
-      finalWeights: {
-        attractiveness: { 'ind_经济_市场规模':0.20, 'ind_经济_客单价':0.15, 'ind_政治法律_行业':0.10, 'ind_政治法律_广告':0.05, 'ind_社会文化_客群':0.15, 'ind_社会文化_渗透':0.10, 'ind_风险_资源':0.05, 'ind_风险_获客':0.05 },
-        competitiveness: { 'ind_市场信息_目标':0.06, 'ind_市场信息_竞品':0.06, 'ind_营销渠道_核心':0.10, 'ind_营销渠道_KOL':0.08, 'ind_认证合规_资质':0.10, 'ind_认证合规_背书':0.10, 'ind_产品品牌_老客':0.15, 'ind_产品品牌_品牌':0.10 }
+  "candidates": [
+    {
+      "id": "mc1",
+      "name": "北京/上海（一线拓展）",
+      "reason": "距离远、品控难",
+      "source": "user"
+    },
+    {
+      "id": "mc2",
+      "name": "加盟路线",
+      "reason": "资金效率高但品控风险大",
+      "source": "user"
+    },
+    {
+      "id": "mc3",
+      "name": "高端宠物医院合作",
+      "reason": "精准但门槛高、账期长",
+      "source": "user"
+    },
+    {
+      "id": "mc4",
+      "name": "宠物繁育场/猫舍",
+      "reason": "量大但价格敏感",
+      "source": "user"
+    },
+    {
+      "id": "mc5",
+      "name": "跨境宠物用品市场",
+      "reason": "增长快但合规复杂",
+      "source": "user"
+    }
+  ],
+  "screening": {
+    "criteria": [
+      "目标客群养宠支出 ≥ 300 元/月",
+      "线上渠道可触达，获客成本 ≤ 50 元",
+      "复购率 ≥ 30%，客单价 ≥ 100 元"
+    ]
+  },
+  "retained": [
+    {
+      "id": "m1",
+      "name": "成都核心（2-3 家新店）",
+      "region": "成都高新/锦江/武侯",
+      "population": "潜在 50 万养宠家庭",
+      "gdpPerCapita": "人均可支配 5 万+",
+      "notes": "本地口碑强、抖音同城生态成熟",
+      "source": "user"
+    },
+    {
+      "id": "m2",
+      "name": "重庆（1 家新店）",
+      "region": "重庆渝北/江北",
+      "population": "潜在 30 万养宠家庭",
+      "gdpPerCapita": "人均可支配 4.5 万+",
+      "notes": "已有 1 家店，扩展第 2 家",
+      "source": "user"
+    },
+    {
+      "id": "m3",
+      "name": "绵阳/乐山（川内下沉）",
+      "region": "绵阳/乐山",
+      "population": "潜在 10 万养宠家庭",
+      "gdpPerCapita": "人均可支配 3.5 万+",
+      "notes": "客单价低、复制价值弱",
+      "source": "user"
+    }
+  ],
+  "attractiveness": {
+    "categories": [
+      {
+        "id": "cat_经济",
+        "name": "经济",
+        "weight": 0.25,
+        "indicators": [
+          {
+            "id": "ind_经济_市场规模",
+            "name": "市场规模 / 行业容量",
+            "weight": 0.5,
+            "rubric": {
+              "high": "市场规模 ≥ 50 亿，年增速 ≥ 15%",
+              "mid": "中等水平，介于高分与低分之间",
+              "low": "低于行业平均，存在明显短板"
+            },
+            "support": 0,
+            "source": "delphi"
+          },
+          {
+            "id": "ind_经济_客单价与",
+            "name": "客单价与续费能力",
+            "weight": 0.5,
+            "rubric": {
+              "high": "客单价 ≥ 150 元，年消费 ≥ 6 次",
+              "mid": "中等水平，介于高分与低分之间",
+              "low": "低于行业平均，存在明显短板"
+            },
+            "support": 0,
+            "source": "delphi"
+          }
+        ]
       },
-      summary: "两轮 Delphi 后专家对\"增长率\"与\"本地口碑\"赋权最高。成都/重庆本地宠物数全国前 5、种草生态成熟，毛孩子之家 2 年本地口碑+实时直播差异化已建立。",
-      status: 'done',
-      phase: 'converged',
-      panel: [], round1: null, round2: null, synthesis: null, finalSynthesis: null, weights: null
+      {
+        "id": "cat_政治法律",
+        "name": "政治法律",
+        "weight": 0.25,
+        "indicators": [
+          {
+            "id": "ind_政治法律_行业监管",
+            "name": "行业监管 / 资质门槛",
+            "weight": 0.5,
+            "rubric": {
+              "high": "宠物用品监管清晰，备案易、政策风险低",
+              "mid": "中等水平，介于高分与低分之间",
+              "low": "低于行业平均，存在明显短板"
+            },
+            "support": 0,
+            "source": "delphi"
+          },
+          {
+            "id": "ind_政治法律_广告法与",
+            "name": "广告法与合规风险",
+            "weight": 0.5,
+            "rubric": {
+              "high": "宣称合规风险低，功效表述可验证",
+              "mid": "中等水平，介于高分与低分之间",
+              "low": "低于行业平均，存在明显短板"
+            },
+            "support": 0,
+            "source": "delphi"
+          }
+        ]
+      },
+      {
+        "id": "cat_社会文化",
+        "name": "社会文化",
+        "weight": 0.25,
+        "indicators": [
+          {
+            "id": "ind_社会文化_客群需求",
+            "name": "客群需求强度",
+            "weight": 0.5,
+            "rubric": {
+              "high": "精细化喂养需求强，客群主动研究成分",
+              "mid": "中等水平，介于高分与低分之间",
+              "low": "低于行业平均，存在明显短板"
+            },
+            "support": 0,
+            "source": "delphi"
+          },
+          {
+            "id": "ind_社会文化_种草 /",
+            "name": "种草 / 社交渗透",
+            "weight": 0.5,
+            "rubric": {
+              "high": "小红书/抖音宠物内容渗透率高，KOL 活跃",
+              "mid": "中等水平，介于高分与低分之间",
+              "low": "低于行业平均，存在明显短板"
+            },
+            "support": 0,
+            "source": "delphi"
+          }
+        ]
+      },
+      {
+        "id": "cat_风险",
+        "name": "风险",
+        "weight": 0.25,
+        "indicators": [
+          {
+            "id": "ind_风险_核心资源",
+            "name": "核心资源复制难度",
+            "weight": 0.5,
+            "rubric": {
+              "high": "配方/供应链壁垒高，竞品复制难度大",
+              "mid": "中等水平，介于高分与低分之间",
+              "low": "低于行业平均，存在明显短板"
+            },
+            "support": 0,
+            "source": "delphi"
+          },
+          {
+            "id": "ind_风险_新客获客",
+            "name": "新客获客成本",
+            "weight": 0.5,
+            "rubric": {
+              "high": "CAC ≤ 客单价 25%，回收期 ≤ 2 月",
+              "mid": "中等水平，介于高分与低分之间",
+              "low": "低于行业平均，存在明显短板"
+            },
+            "support": 0,
+            "source": "delphi"
+          }
+        ]
+      }
+    ]
+  },
+  "competitiveness": {
+    "categories": [
+      {
+        "id": "cat_市场信息",
+        "name": "市场信息",
+        "weight": 0.25,
+        "indicators": [
+          {
+            "id": "ind_市场信息_目标客群",
+            "name": "目标客群数据可获取性",
+            "weight": 0.5,
+            "rubric": {
+              "high": "目标客群画像清晰，行为数据丰富可监测",
+              "mid": "中等水平，介于高分与低分之间",
+              "low": "低于行业平均，存在明显短板"
+            },
+            "support": 0,
+            "source": "delphi"
+          },
+          {
+            "id": "ind_市场信息_竞品表现",
+            "name": "竞品表现可监测",
+            "weight": 0.5,
+            "rubric": {
+              "high": "竞品格局清晰，数据可获取可对标",
+              "mid": "中等水平，介于高分与低分之间",
+              "low": "低于行业平均，存在明显短板"
+            },
+            "support": 0,
+            "source": "delphi"
+          }
+        ]
+      },
+      {
+        "id": "cat_营销渠道",
+        "name": "营销渠道",
+        "weight": 0.25,
+        "indicators": [
+          {
+            "id": "ind_营销渠道_核心渠道",
+            "name": "核心渠道成熟度",
+            "weight": 0.5,
+            "rubric": {
+              "high": "抖音电商/小红书渠道成熟，ROI 可测",
+              "mid": "中等水平，介于高分与低分之间",
+              "low": "低于行业平均，存在明显短板"
+            },
+            "support": 0,
+            "source": "delphi"
+          },
+          {
+            "id": "ind_营销渠道_KOL ",
+            "name": "KOL / 达人储备",
+            "weight": 0.5,
+            "rubric": {
+              "high": "宠物 KOL/KOC 储备 ≥ 50 位",
+              "mid": "中等水平，介于高分与低分之间",
+              "low": "低于行业平均，存在明显短板"
+            },
+            "support": 0,
+            "source": "delphi"
+          }
+        ]
+      },
+      {
+        "id": "cat_认证合规",
+        "name": "认证合规",
+        "weight": 0.25,
+        "indicators": [
+          {
+            "id": "ind_认证合规_核心资质",
+            "name": "核心资质完备度",
+            "weight": 0.5,
+            "rubric": {
+              "high": "第三方检测/饲料生产许可证齐全",
+              "mid": "中等水平，介于高分与低分之间",
+              "low": "低于行业平均，存在明显短板"
+            },
+            "support": 0,
+            "source": "delphi"
+          },
+          {
+            "id": "ind_认证合规_关键背书",
+            "name": "关键背书可复用",
+            "weight": 0.5,
+            "rubric": {
+              "high": "兽医/营养师背书可获取，行业认证齐全",
+              "mid": "中等水平，介于高分与低分之间",
+              "low": "低于行业平均，存在明显短板"
+            },
+            "support": 0,
+            "source": "delphi"
+          }
+        ]
+      },
+      {
+        "id": "cat_产品品牌",
+        "name": "产品品牌",
+        "weight": 0.25,
+        "indicators": [
+          {
+            "id": "ind_产品品牌_现有老客",
+            "name": "现有老客基础可迁移",
+            "weight": 0.5,
+            "rubric": {
+              "high": "现有老客 ≥ 1 万，复购率 ≥ 35%",
+              "mid": "中等水平，介于高分与低分之间",
+              "low": "低于行业平均，存在明显短板"
+            },
+            "support": 0,
+            "source": "delphi"
+          },
+          {
+            "id": "ind_产品品牌_C 端品",
+            "name": "C 端品牌资产起点",
+            "weight": 0.5,
+            "rubric": {
+              "high": "C 端品牌有认知基础，搜索量稳定",
+              "mid": "中等水平，介于高分与低分之间",
+              "low": "低于行业平均，存在明显短板"
+            },
+            "support": 0,
+            "source": "delphi"
+          }
+        ]
+      }
+    ]
+  },
+  "scoring": {
+    "m1": {
+      "ind_经济_市场规模": {
+        "score": 8.5,
+        "source": "user",
+        "evidence": "成都核心（2-3 家新店）在\"市场规模 / 行业容量\"上表现高，综合行业报告与专家访谈判断。"
+      },
+      "ind_经济_客单价与": {
+        "score": 7.5,
+        "source": "user",
+        "evidence": "成都核心（2-3 家新店）在\"客单价与续费能力\"上表现中，综合行业报告与专家访谈判断。"
+      },
+      "ind_政治法律_行业监管": {
+        "score": 9,
+        "source": "user",
+        "evidence": "成都核心（2-3 家新店）在\"行业监管 / 资质门槛\"上表现高，综合行业报告与专家访谈判断。"
+      },
+      "ind_政治法律_广告法与": {
+        "score": 7,
+        "source": "user",
+        "evidence": "成都核心（2-3 家新店）在\"广告法与合规风险\"上表现中，综合行业报告与专家访谈判断。"
+      },
+      "ind_社会文化_客群需求": {
+        "score": 8,
+        "source": "user",
+        "evidence": "成都核心（2-3 家新店）在\"客群需求强度\"上表现高，综合行业报告与专家访谈判断。"
+      },
+      "ind_社会文化_种草 /": {
+        "score": 8.5,
+        "source": "user",
+        "evidence": "成都核心（2-3 家新店）在\"种草 / 社交渗透\"上表现高，综合行业报告与专家访谈判断。"
+      },
+      "ind_风险_核心资源": {
+        "score": 7,
+        "source": "user",
+        "evidence": "成都核心（2-3 家新店）在\"核心资源复制难度\"上表现中，综合行业报告与专家访谈判断。"
+      },
+      "ind_风险_新客获客": {
+        "score": 8.5,
+        "source": "user",
+        "evidence": "成都核心（2-3 家新店）在\"新客获客成本\"上表现高，综合行业报告与专家访谈判断。"
+      },
+      "ind_市场信息_目标客群": {
+        "score": 8.5,
+        "source": "user",
+        "evidence": "成都核心（2-3 家新店）在\"目标客群数据可获取性\"上表现高，综合行业报告与专家访谈判断。"
+      },
+      "ind_市场信息_竞品表现": {
+        "score": 7.5,
+        "source": "user",
+        "evidence": "成都核心（2-3 家新店）在\"竞品表现可监测\"上表现中，综合行业报告与专家访谈判断。"
+      },
+      "ind_营销渠道_核心渠道": {
+        "score": 9,
+        "source": "user",
+        "evidence": "成都核心（2-3 家新店）在\"核心渠道成熟度\"上表现高，综合行业报告与专家访谈判断。"
+      },
+      "ind_营销渠道_KOL ": {
+        "score": 7,
+        "source": "user",
+        "evidence": "成都核心（2-3 家新店）在\"KOL / 达人储备\"上表现中，综合行业报告与专家访谈判断。"
+      },
+      "ind_认证合规_核心资质": {
+        "score": 8,
+        "source": "user",
+        "evidence": "成都核心（2-3 家新店）在\"核心资质完备度\"上表现高，综合行业报告与专家访谈判断。"
+      },
+      "ind_认证合规_关键背书": {
+        "score": 8.5,
+        "source": "user",
+        "evidence": "成都核心（2-3 家新店）在\"关键背书可复用\"上表现高，综合行业报告与专家访谈判断。"
+      },
+      "ind_产品品牌_现有老客": {
+        "score": 7,
+        "source": "user",
+        "evidence": "成都核心（2-3 家新店）在\"现有老客基础可迁移\"上表现中，综合行业报告与专家访谈判断。"
+      },
+      "ind_产品品牌_C 端品": {
+        "score": 8.5,
+        "source": "user",
+        "evidence": "成都核心（2-3 家新店）在\"C 端品牌资产起点\"上表现高，综合行业报告与专家访谈判断。"
+      }
     },
-    matrix: { xCut: null, yCut: null, notes: "m1 成都核心市场客单价高、抖音同城生态成熟、毛孩子之家 2 年本地口碑可复用，12 个月内可贡献 50% 营收增长；m2 重庆已有 1 家，扩展第 2 家降低进入风险；m3 川内下沉客单价低、复制价值弱。" },
-    decision: {
-      explanations: {},
-      tier1: { marketId:'m1', rationale:"m1 成都核心市场客单价高、抖音同城生态成熟、毛孩子之家 2 年本地口碑可复用，12 个月内可贡献 50% 营收增长；m2 重庆已有 1 家，扩展第 2 家降低进入风险；m3 川内下沉客单价低、复制价值弱。", resourcesPct:80, milestones:["6 月内启动成都 2 家新店选址+招 3 位洗护师+1 位店长","上线小程序会员月卡+异业合作"], reEvalTrigger:'3 个月复盘：核心指标未达预期' },
-      tier2: { marketIds:["m2"], observationMetrics:['月复购率','客单价'], reEvalTrigger:'复购率连续 2 月 < 阈值' },
-      tier3: { marketIds:["m3"], reEvalTrigger:'tier1 ROI 跑通后再启动' }
+    "m2": {
+      "ind_经济_市场规模": {
+        "score": 6,
+        "source": "user",
+        "evidence": "重庆（1 家新店）在\"市场规模 / 行业容量\"上表现中，综合行业报告与专家访谈判断。"
+      },
+      "ind_经济_客单价与": {
+        "score": 5,
+        "source": "user",
+        "evidence": "重庆（1 家新店）在\"客单价与续费能力\"上表现中低，综合行业报告与专家访谈判断。"
+      },
+      "ind_政治法律_行业监管": {
+        "score": 6.5,
+        "source": "user",
+        "evidence": "重庆（1 家新店）在\"行业监管 / 资质门槛\"上表现中，综合行业报告与专家访谈判断。"
+      },
+      "ind_政治法律_广告法与": {
+        "score": 4.5,
+        "source": "user",
+        "evidence": "重庆（1 家新店）在\"广告法与合规风险\"上表现中低，综合行业报告与专家访谈判断。"
+      },
+      "ind_社会文化_客群需求": {
+        "score": 5.5,
+        "source": "user",
+        "evidence": "重庆（1 家新店）在\"客群需求强度\"上表现中低，综合行业报告与专家访谈判断。"
+      },
+      "ind_社会文化_种草 /": {
+        "score": 6,
+        "source": "user",
+        "evidence": "重庆（1 家新店）在\"种草 / 社交渗透\"上表现中，综合行业报告与专家访谈判断。"
+      },
+      "ind_风险_核心资源": {
+        "score": 4.5,
+        "source": "user",
+        "evidence": "重庆（1 家新店）在\"核心资源复制难度\"上表现中低，综合行业报告与专家访谈判断。"
+      },
+      "ind_风险_新客获客": {
+        "score": 6,
+        "source": "user",
+        "evidence": "重庆（1 家新店）在\"新客获客成本\"上表现中，综合行业报告与专家访谈判断。"
+      },
+      "ind_市场信息_目标客群": {
+        "score": 7.5,
+        "source": "user",
+        "evidence": "重庆（1 家新店）在\"目标客群数据可获取性\"上表现中，综合行业报告与专家访谈判断。"
+      },
+      "ind_市场信息_竞品表现": {
+        "score": 6.5,
+        "source": "user",
+        "evidence": "重庆（1 家新店）在\"竞品表现可监测\"上表现中，综合行业报告与专家访谈判断。"
+      },
+      "ind_营销渠道_核心渠道": {
+        "score": 8,
+        "source": "user",
+        "evidence": "重庆（1 家新店）在\"核心渠道成熟度\"上表现高，综合行业报告与专家访谈判断。"
+      },
+      "ind_营销渠道_KOL ": {
+        "score": 6,
+        "source": "user",
+        "evidence": "重庆（1 家新店）在\"KOL / 达人储备\"上表现中，综合行业报告与专家访谈判断。"
+      },
+      "ind_认证合规_核心资质": {
+        "score": 7,
+        "source": "user",
+        "evidence": "重庆（1 家新店）在\"核心资质完备度\"上表现中，综合行业报告与专家访谈判断。"
+      },
+      "ind_认证合规_关键背书": {
+        "score": 7.5,
+        "source": "user",
+        "evidence": "重庆（1 家新店）在\"关键背书可复用\"上表现中，综合行业报告与专家访谈判断。"
+      },
+      "ind_产品品牌_现有老客": {
+        "score": 6,
+        "source": "user",
+        "evidence": "重庆（1 家新店）在\"现有老客基础可迁移\"上表现中，综合行业报告与专家访谈判断。"
+      },
+      "ind_产品品牌_C 端品": {
+        "score": 7.5,
+        "source": "user",
+        "evidence": "重庆（1 家新店）在\"C 端品牌资产起点\"上表现中，综合行业报告与专家访谈判断。"
+      }
     },
-    meta: { schemaVersion: 2, work1Linked: false },
-    _pipeDone: ['framework','evaluate']
-  };
+    "m3": {
+      "ind_经济_市场规模": {
+        "score": 7.5,
+        "source": "user",
+        "evidence": "绵阳/乐山（川内下沉）在\"市场规模 / 行业容量\"上表现中，综合行业报告与专家访谈判断。"
+      },
+      "ind_经济_客单价与": {
+        "score": 6.5,
+        "source": "user",
+        "evidence": "绵阳/乐山（川内下沉）在\"客单价与续费能力\"上表现中，综合行业报告与专家访谈判断。"
+      },
+      "ind_政治法律_行业监管": {
+        "score": 8,
+        "source": "user",
+        "evidence": "绵阳/乐山（川内下沉）在\"行业监管 / 资质门槛\"上表现高，综合行业报告与专家访谈判断。"
+      },
+      "ind_政治法律_广告法与": {
+        "score": 6,
+        "source": "user",
+        "evidence": "绵阳/乐山（川内下沉）在\"广告法与合规风险\"上表现中，综合行业报告与专家访谈判断。"
+      },
+      "ind_社会文化_客群需求": {
+        "score": 7,
+        "source": "user",
+        "evidence": "绵阳/乐山（川内下沉）在\"客群需求强度\"上表现中，综合行业报告与专家访谈判断。"
+      },
+      "ind_社会文化_种草 /": {
+        "score": 7.5,
+        "source": "user",
+        "evidence": "绵阳/乐山（川内下沉）在\"种草 / 社交渗透\"上表现中，综合行业报告与专家访谈判断。"
+      },
+      "ind_风险_核心资源": {
+        "score": 6,
+        "source": "user",
+        "evidence": "绵阳/乐山（川内下沉）在\"核心资源复制难度\"上表现中，综合行业报告与专家访谈判断。"
+      },
+      "ind_风险_新客获客": {
+        "score": 7.5,
+        "source": "user",
+        "evidence": "绵阳/乐山（川内下沉）在\"新客获客成本\"上表现中，综合行业报告与专家访谈判断。"
+      },
+      "ind_市场信息_目标客群": {
+        "score": 4.5,
+        "source": "user",
+        "evidence": "绵阳/乐山（川内下沉）在\"目标客群数据可获取性\"上表现中低，综合行业报告与专家访谈判断。"
+      },
+      "ind_市场信息_竞品表现": {
+        "score": 3.5,
+        "source": "user",
+        "evidence": "绵阳/乐山（川内下沉）在\"竞品表现可监测\"上表现低，综合行业报告与专家访谈判断。"
+      },
+      "ind_营销渠道_核心渠道": {
+        "score": 5,
+        "source": "user",
+        "evidence": "绵阳/乐山（川内下沉）在\"核心渠道成熟度\"上表现中低，综合行业报告与专家访谈判断。"
+      },
+      "ind_营销渠道_KOL ": {
+        "score": 3,
+        "source": "user",
+        "evidence": "绵阳/乐山（川内下沉）在\"KOL / 达人储备\"上表现低，综合行业报告与专家访谈判断。"
+      },
+      "ind_认证合规_核心资质": {
+        "score": 4,
+        "source": "user",
+        "evidence": "绵阳/乐山（川内下沉）在\"核心资质完备度\"上表现中低，综合行业报告与专家访谈判断。"
+      },
+      "ind_认证合规_关键背书": {
+        "score": 4.5,
+        "source": "user",
+        "evidence": "绵阳/乐山（川内下沉）在\"关键背书可复用\"上表现中低，综合行业报告与专家访谈判断。"
+      },
+      "ind_产品品牌_现有老客": {
+        "score": 3,
+        "source": "user",
+        "evidence": "绵阳/乐山（川内下沉）在\"现有老客基础可迁移\"上表现低，综合行业报告与专家访谈判断。"
+      },
+      "ind_产品品牌_C 端品": {
+        "score": 4.5,
+        "source": "user",
+        "evidence": "绵阳/乐山（川内下沉）在\"C 端品牌资产起点\"上表现中低，综合行业报告与专家访谈判断。"
+      }
+    }
+  },
+  "delphi": {
+    "recruitment": {
+      "perspectives": [
+        {
+          "id": "p_brand",
+          "role": "宠物服务品牌策略",
+          "why": "看本地口碑迁移"
+        },
+        {
+          "id": "p_growth",
+          "role": "抖音同城运营",
+          "why": "评估同城生态"
+        },
+        {
+          "id": "p_groomer",
+          "role": "资深洗护师",
+          "why": "判断团队复制"
+        },
+        {
+          "id": "p_invest",
+          "role": "宠物行业投资人",
+          "why": "看客单价与回收"
+        },
+        {
+          "id": "p_owner",
+          "role": "90/95 后铲屎官 KOC",
+          "why": "翻译洗护+寄养决策"
+        }
+      ]
+    },
+    "personas": [
+      {
+        "id": "pe1",
+        "name": "宠物服务品牌策略",
+        "perspective": "看口碑",
+        "stance": "中性"
+      },
+      {
+        "id": "pe2",
+        "name": "抖音同城运营",
+        "perspective": "看同城",
+        "stance": "增长向"
+      },
+      {
+        "id": "pe3",
+        "name": "资深洗护师",
+        "perspective": "看团队",
+        "stance": "产品向"
+      },
+      {
+        "id": "pe4",
+        "name": "宠物行业投资人",
+        "perspective": "看回本",
+        "stance": "财务向"
+      },
+      {
+        "id": "pe5",
+        "name": "90/95 后铲屎官 KOC",
+        "perspective": "看体验",
+        "stance": "用户向"
+      }
+    ],
+    "userHosted": true,
+    "finalWeights": {
+      "attractiveness": {
+        "ind_经济_市场规模": 0.2,
+        "ind_经济_客单价": 0.15,
+        "ind_政治法律_行业": 0.1,
+        "ind_政治法律_广告": 0.05,
+        "ind_社会文化_客群": 0.15,
+        "ind_社会文化_渗透": 0.1,
+        "ind_风险_资源": 0.05,
+        "ind_风险_获客": 0.05
+      },
+      "competitiveness": {
+        "ind_市场信息_目标": 0.06,
+        "ind_市场信息_竞品": 0.06,
+        "ind_营销渠道_核心": 0.1,
+        "ind_营销渠道_KOL": 0.08,
+        "ind_认证合规_资质": 0.1,
+        "ind_认证合规_背书": 0.1,
+        "ind_产品品牌_老客": 0.15,
+        "ind_产品品牌_品牌": 0.1
+      }
+    },
+    "summary": "两轮 Delphi 后专家对\"增长率\"与\"本地口碑\"赋权最高。成都/重庆本地宠物数全国前 5、种草生态成熟，毛孩子之家 2 年本地口碑+实时直播差异化已建立。",
+    "status": "done",
+    "phase": "converged",
+    "panel": [],
+    "round1": null,
+    "round2": null,
+    "synthesis": null,
+    "finalSynthesis": null,
+    "weights": null
+  },
+  "matrix": {
+    "xCut": null,
+    "yCut": null,
+    "notes": "m1 成都核心市场客单价高、抖音同城生态成熟、毛孩子之家 2 年本地口碑可复用，12 个月内可贡献 50% 营收增长；m2 重庆已有 1 家，扩展第 2 家降低进入风险；m3 川内下沉客单价低、复制价值弱。"
+  },
+  "decision": {
+    "explanations": {},
+    "tier1": {
+      "marketId": "m1",
+      "rationale": "m1 成都核心市场客单价高、抖音同城生态成熟、毛孩子之家 2 年本地口碑可复用，12 个月内可贡献 50% 营收增长；m2 重庆已有 1 家，扩展第 2 家降低进入风险；m3 川内下沉客单价低、复制价值弱。",
+      "resourcesPct": 80,
+      "milestones": [
+        "6 月内启动成都 2 家新店选址+招 3 位洗护师+1 位店长",
+        "上线小程序会员月卡+异业合作"
+      ],
+      "reEvalTrigger": "3 个月复盘：核心指标未达预期"
+    },
+    "tier2": {
+      "marketIds": [
+        "m2"
+      ],
+      "observationMetrics": [
+        "月复购率",
+        "客单价"
+      ],
+      "reEvalTrigger": "复购率连续 2 月 < 阈值"
+    },
+    "tier3": {
+      "marketIds": [
+        "m3"
+      ],
+      "reEvalTrigger": "tier1 ROI 跑通后再启动"
+    }
+  },
+  "meta": {
+    "schemaVersion": 2,
+    "work1Linked": false
+  },
+  "_pipeDone": [
+    "framework",
+    "evaluate"
+  ]
+};
   if(typeof window!== 'undefined') window.__case_maohaizi_house_work2 = data;
 })();
 
@@ -4007,453 +8809,568 @@
  ============================================================ */
 (function(){
   const data = {
-    context: {
-      sbuName: "毛孩子之家",
-      sbuOneLine: "西南区域宠物服务，CKU/NGKC 全员认证洗护师",
-      targetMarket: "成都核心 90/95 后",
-      targetMarketReason: "客单价高、抖音同城生态成熟、毛孩子之家 2 年本地口碑可复用，12 个月内可贡献 50% 营收增长",
-      tier1: { marketId:'m1', name:"成都核心（2-3 家新店）", rationale:"客单价高、抖音同城生态成熟、毛孩子之家 2 年本地口碑可复用，12 个月内可贡献 50% 营收增长" },
-      tier2: [{"marketId":"m2","name":"重庆（1 家新店）"}],
-      personas: [{"id":"p1","name":"小敏","painPoints":"猫应激反应、洗护师不专业"},{"id":"p2","name":"赵姐","painPoints":"寄养不放心、价格不透明"},{"id":"p3","name":"Andy","painPoints":"出差寄养、找不到靠谱店"}],
-      valueFramework: ["CKU/NGKC 认证","无应激环境","24h 直播","联名摄影"],
-      hasSurvey: true
+  "context": {
+    "sbuName": "毛孩子之家",
+    "sbuOneLine": "西南区域宠物服务，CKU/NGKC 全员认证洗护师",
+    "targetMarket": "成都核心 90/95 后",
+    "targetMarketReason": "客单价高、抖音同城生态成熟、毛孩子之家 2 年本地口碑可复用，12 个月内可贡献 50% 营收增长",
+    "tier1": {
+      "marketId": "m1",
+      "name": "成都核心（2-3 家新店）",
+      "rationale": "客单价高、抖音同城生态成熟、毛孩子之家 2 年本地口碑可复用，12 个月内可贡献 50% 营收增长"
     },
-    scenarios: [
-  {
-    "id": "s1",
-    "name": "90/95 后日常洗护",
-    "description": "90/95 后铲屎官找 CKU 认证洗护师+无应激环境",
-    "personaIds": [
-      "p1",
-      "p2"
-    ],
-    "needStrength": {
-      "pain": "中",
-      "willingness": "高",
-      "frequency": "月度"
-    },
-    "selected": true
-  },
-  {
-    "id": "s2",
-    "name": "出差寄养+接送",
-    "description": "出差/旅行寄养要 24h 直播+接送",
-    "personaIds": [
-      "p2",
-      "p3"
-    ],
-    "needStrength": {
-      "pain": "高",
-      "willingness": "高",
-      "frequency": "季度"
-    },
-    "selected": true
-  },
-  {
-    "id": "s3",
-    "name": "家庭客跨店月卡",
-    "description": "二线家庭客要洗护+跨店月卡+联名",
-    "personaIds": [
-      "p2"
-    ],
-    "needStrength": {
-      "pain": "低",
-      "willingness": "中",
-      "frequency": "月度"
-    },
-    "selected": false
-  }
-],
-    mining: {
-      documents: [
-  "毛孩子之家的洗护师很温柔，我家猫不害怕。",
-  "实时直播看着放心，铲屎官出门心里踏实。",
-  "希望洗护师都持证上岗，CKU 认证的更专业。",
-  "无应激环境做到了，猫主子不再炸毛。",
-  "联名宠物摄影不错，可以和洗护打包。",
-  "会员月卡能不能跨店通用？",
-  "出差寄养能不能接送？",
-  "美团/大众点评的 5 折券用着划算。",
-  "希望有\"科学养宠\"内容更新，公众号不错。",
-  "洗护师穿统一服装，专业感强。"
-],
-      includeWork1Open: true,
-      includeWork1Themes: true,
-      ldaParams: { k: 3, passes: 15, iterations: 100, no_below: 2, no_above: 0.5 },
-      ldaResult: null,
-      ldaError: null,
-      topics: [
-  {
-    "id": 0,
-    "label": "专业洗护与无应激",
-    "share": 40,
-    "keywords": [
+    "tier2": [
       {
-        "word": "洗护师",
-        "weight": 0.1
+        "marketId": "m2",
+        "name": "重庆（1 家新店）"
+      }
+    ],
+    "personas": [
+      {
+        "id": "p1",
+        "name": "小敏",
+        "painPoints": "猫应激反应、洗护师不专业"
       },
       {
-        "word": "CKU",
-        "weight": 0.08
+        "id": "p2",
+        "name": "赵姐",
+        "painPoints": "寄养不放心、价格不透明"
+      },
+      {
+        "id": "p3",
+        "name": "Andy",
+        "painPoints": "出差寄养、找不到靠谱店"
+      }
+    ],
+    "valueFramework": [
+      "CKU/NGKC 认证",
+      "无应激环境",
+      "24h 直播",
+      "联名摄影"
+    ],
+    "hasSurvey": true
+  },
+  "scenarios": [
+    {
+      "id": "s1",
+      "name": "90/95 后日常洗护",
+      "description": "90/95 后铲屎官找 CKU 认证洗护师+无应激环境",
+      "personaIds": [
+        "p1",
+        "p2"
+      ],
+      "needStrength": {
+        "pain": "中",
+        "willingness": "高",
+        "frequency": "月度"
+      },
+      "selected": true
+    },
+    {
+      "id": "s2",
+      "name": "出差寄养+接送",
+      "description": "出差/旅行寄养要 24h 直播+接送",
+      "personaIds": [
+        "p2",
+        "p3"
+      ],
+      "needStrength": {
+        "pain": "高",
+        "willingness": "高",
+        "frequency": "季度"
+      },
+      "selected": true
+    },
+    {
+      "id": "s3",
+      "name": "家庭客跨店月卡",
+      "description": "二线家庭客要洗护+跨店月卡+联名",
+      "personaIds": [
+        "p2"
+      ],
+      "needStrength": {
+        "pain": "低",
+        "willingness": "中",
+        "frequency": "月度"
+      },
+      "selected": false
+    }
+  ],
+  "mining": {
+    "documents": [
+      "毛孩子之家的洗护师很温柔，我家猫不害怕。",
+      "实时直播看着放心，铲屎官出门心里踏实。",
+      "希望洗护师都持证上岗，CKU 认证的更专业。",
+      "无应激环境做到了，猫主子不再炸毛。",
+      "联名宠物摄影不错，可以和洗护打包。",
+      "会员月卡能不能跨店通用？",
+      "出差寄养能不能接送？",
+      "美团/大众点评的 5 折券用着划算。",
+      "希望有\"科学养宠\"内容更新，公众号不错。",
+      "洗护师穿统一服装，专业感强。"
+    ],
+    "includeWork1Open": true,
+    "includeWork1Themes": true,
+    "ldaParams": {
+      "k": 3,
+      "passes": 15,
+      "iterations": 100,
+      "no_below": 2,
+      "no_above": 0.5
+    },
+    "ldaResult": null,
+    "ldaError": null,
+    "topics": [
+      {
+        "id": 0,
+        "label": "专业洗护与无应激",
+        "share": 40,
+        "keywords": [
+          {
+            "word": "洗护师",
+            "weight": 0.1
+          },
+          {
+            "word": "CKU",
+            "weight": 0.08
+          },
+          {
+            "word": "无应激",
+            "weight": 0.07
+          },
+          {
+            "word": "专业",
+            "weight": 0.06
+          },
+          {
+            "word": "温柔",
+            "weight": 0.05
+          }
+        ],
+        "representative_docs": [
+          "洗护师很温柔",
+          "CKU 认证的更专业"
+        ]
+      },
+      {
+        "id": 1,
+        "label": "实时直播与寄养",
+        "share": 35,
+        "keywords": [
+          {
+            "word": "直播",
+            "weight": 0.1
+          },
+          {
+            "word": "寄养",
+            "weight": 0.08
+          },
+          {
+            "word": "放心",
+            "weight": 0.07
+          },
+          {
+            "word": "出差",
+            "weight": 0.06
+          },
+          {
+            "word": "接送",
+            "weight": 0.05
+          }
+        ],
+        "representative_docs": [
+          "实时直播看着放心",
+          "出差寄养能不能接送"
+        ]
+      },
+      {
+        "id": 2,
+        "label": "会员与异业",
+        "share": 25,
+        "keywords": [
+          {
+            "word": "会员",
+            "weight": 0.09
+          },
+          {
+            "word": "月卡",
+            "weight": 0.07
+          },
+          {
+            "word": "联名",
+            "weight": 0.06
+          },
+          {
+            "word": "摄影",
+            "weight": 0.05
+          },
+          {
+            "word": "跨店",
+            "weight": 0.04
+          }
+        ],
+        "representative_docs": [
+          "会员月卡能不能跨店通用",
+          "联名宠物摄影不错"
+        ]
+      }
+    ],
+    "wordFreqTop": [
+      {
+        "word": "洗护师",
+        "count": 4
+      },
+      {
+        "word": "直播",
+        "count": 4
       },
       {
         "word": "无应激",
-        "weight": 0.07
+        "count": 3
       },
       {
-        "word": "专业",
-        "weight": 0.06
+        "word": "会员",
+        "count": 3
       },
       {
-        "word": "温柔",
-        "weight": 0.05
-      }
-    ],
-    "representative_docs": [
-      "洗护师很温柔",
-      "CKU 认证的更专业"
-    ]
-  },
-  {
-    "id": 1,
-    "label": "实时直播与寄养",
-    "share": 35,
-    "keywords": [
-      {
-        "word": "直播",
-        "weight": 0.1
+        "word": "CKU",
+        "count": 2
       },
       {
         "word": "寄养",
-        "weight": 0.08
-      },
-      {
-        "word": "放心",
-        "weight": 0.07
-      },
-      {
-        "word": "出差",
-        "weight": 0.06
-      },
-      {
-        "word": "接送",
-        "weight": 0.05
-      }
-    ],
-    "representative_docs": [
-      "实时直播看着放心",
-      "出差寄养能不能接送"
-    ]
-  },
-  {
-    "id": 2,
-    "label": "会员与异业",
-    "share": 25,
-    "keywords": [
-      {
-        "word": "会员",
-        "weight": 0.09
+        "count": 2
       },
       {
         "word": "月卡",
-        "weight": 0.07
+        "count": 2
       },
       {
         "word": "联名",
-        "weight": 0.06
+        "count": 2
       },
       {
-        "word": "摄影",
-        "weight": 0.05
+        "word": "专业",
+        "count": 2
       },
       {
-        "word": "跨店",
-        "weight": 0.04
+        "word": "接送",
+        "count": 2
       }
     ],
-    "representative_docs": [
-      "会员月卡能不能跨店通用",
-      "联名宠物摄影不错"
-    ]
-  }
-],
-      wordFreqTop: [
-  {
-    "word": "洗护师",
-    "count": 4
-  },
-  {
-    "word": "直播",
-    "count": 4
-  },
-  {
-    "word": "无应激",
-    "count": 3
-  },
-  {
-    "word": "会员",
-    "count": 3
-  },
-  {
-    "word": "CKU",
-    "count": 2
-  },
-  {
-    "word": "寄养",
-    "count": 2
-  },
-  {
-    "word": "月卡",
-    "count": 2
-  },
-  {
-    "word": "联名",
-    "count": 2
-  },
-  {
-    "word": "专业",
-    "count": 2
-  },
-  {
-    "word": "接送",
-    "count": 2
-  }
-],
-      stats: {"raw_count":10,"valid_count":10,"total_words":150,"vocab_size":43,"coherence":0.45},
-      painMap: [
-  {
-    "id": "pa1",
-    "pain": "洗护师专业度参差不齐，缺统一认证",
-    "evidence": "希望洗护师都持证上岗",
-    "frequency": "高",
-    "linkedNeeds": [
-      "CKU 认证",
-      "统一培训"
-    ],
-    "linkedTopicId": 0,
-    "type": "痛点",
-    "scenarioId": "s1"
-  },
-  {
-    "id": "pa2",
-    "pain": "寄养透明度不足，缺实时直播",
-    "evidence": "实时直播看着放心",
-    "frequency": "高",
-    "linkedNeeds": [
-      "24h 直播",
-      "每日反馈"
-    ],
-    "linkedTopicId": 1,
-    "type": "痛点",
-    "scenarioId": "s2"
-  },
-  {
-    "id": "pa3",
-    "pain": "出差寄养缺接送服务",
-    "evidence": "出差寄养能不能接送",
-    "frequency": "中",
-    "linkedNeeds": [
-      "接送服务",
-      "一站式"
-    ],
-    "linkedTopicId": 1,
-    "type": "痛点",
-    "scenarioId": "s2"
-  },
-  {
-    "id": "pa4",
-    "pain": "会员月卡不能跨店通用",
-    "evidence": "会员月卡能不能跨店通用",
-    "frequency": "中",
-    "linkedNeeds": [
-      "跨店通用",
-      "会员体系"
-    ],
-    "linkedTopicId": 2,
-    "type": "痛点",
-    "scenarioId": "s3"
-  },
-  {
-    "id": "pa5",
-    "pain": "洗护+摄影不能组合，缺粘性",
-    "evidence": "联名宠物摄影可以打包",
-    "frequency": "中",
-    "linkedNeeds": [
-      "洗护+摄影组合",
-      "联名 IP"
-    ],
-    "linkedTopicId": 2,
-    "type": "痒点",
-    "scenarioId": "s3"
-  }
-]
+    "stats": {
+      "raw_count": 10,
+      "valid_count": 10,
+      "total_words": 150,
+      "vocab_size": 43,
+      "coherence": 0.45
     },
-    candidates: [
-  {
-    "id": "c1",
-    "name": "洗护师 CKU 认证",
-    "pain": "专业度参差",
-    "description": "全员 CKU/NGKC 认证+统一培训+着装规范",
-    "evidence": "10 篇评论中 4 篇提及洗护师",
-    "source": "user",
-    "scenarioId": "s1",
-    "selected": true,
-    "importance": 9,
-    "uniqueness": 9,
-    "credibility": 9,
-    "feasibility": 7,
-    "communicability": 8,
-    "sustainability": 8,
-    "extraDims": {}
-  },
-  {
-    "id": "c2",
-    "name": "无应激低噪环境",
-    "pain": "猫应激",
-    "description": "独立单宠用具+低噪设备+渐进式洗护+专业安抚",
-    "evidence": "3 篇评论提及无应激",
-    "source": "user",
-    "scenarioId": "s1",
-    "selected": false,
-    "importance": 8,
-    "uniqueness": 9,
-    "credibility": 7,
-    "feasibility": 8,
-    "communicability": 8,
-    "sustainability": 8,
-    "extraDims": {}
-  },
-  {
-    "id": "c3",
-    "name": "实时寄养直播+24h 监控",
-    "pain": "寄养不放心",
-    "description": "24h 实时直播+每日视频反馈+健康检查",
-    "evidence": "4 篇评论提及直播",
-    "source": "user",
-    "scenarioId": "s2",
-    "selected": true,
-    "importance": 9,
-    "uniqueness": 9,
-    "credibility": 9,
-    "feasibility": 8,
-    "communicability": 9,
-    "sustainability": 8,
-    "extraDims": {}
-  },
-  {
-    "id": "c4",
-    "name": "联名宠物摄影",
-    "pain": "缺粘性",
-    "description": "与本地摄影机构联名，洗护+摄影组合套餐",
-    "evidence": "2 篇评论提及联名",
-    "source": "user",
-    "scenarioId": "s3",
-    "selected": false,
-    "importance": 6,
-    "uniqueness": 8,
-    "credibility": 6,
-    "feasibility": 6,
-    "communicability": 8,
-    "sustainability": 6,
-    "extraDims": {}
-  }
-],
-    dimensions: {
-      desirability: (typeof Work3!== 'undefined' && Work3.DEFAULT_DESIRABILITY_DIMS)
-        ? Work3.DEFAULT_DESIRABILITY_DIMS.map(d=>({...d}))
-        : [
-          {key:'importance', label:'重要性', definition:'这个卖点对客户有多重要'},
-          {key:'uniqueness', label:'独特性', definition:'竞品是否也在说/做'},
-          {key:'credibility', label:'可信性', definition:'客户凭什么相信你能做到'}
+    "painMap": [
+      {
+        "id": "pa1",
+        "pain": "洗护师专业度参差不齐，缺统一认证",
+        "evidence": "希望洗护师都持证上岗",
+        "frequency": "高",
+        "linkedNeeds": [
+          "CKU 认证",
+          "统一培训"
         ],
-      implementability: (typeof Work3!== 'undefined' && Work3.DEFAULT_IMPLEMENTABILITY_DIMS)
-        ? Work3.DEFAULT_IMPLEMENTABILITY_DIMS.map(d=>({...d}))
-        : [
-          {key:'feasibility', label:'可行性', definition:'技术/供应链/成本能否实现'},
-          {key:'communicability', label:'可传播性', definition:'能否用一句话让客户听懂'},
-          {key:'sustainability', label:'可持续性', definition:'能否长期维持、不被轻易复制'}
-        ]
+        "linkedTopicId": 0,
+        "type": "痛点",
+        "scenarioId": "s1"
+      },
+      {
+        "id": "pa2",
+        "pain": "寄养透明度不足，缺实时直播",
+        "evidence": "实时直播看着放心",
+        "frequency": "高",
+        "linkedNeeds": [
+          "24h 直播",
+          "每日反馈"
+        ],
+        "linkedTopicId": 1,
+        "type": "痛点",
+        "scenarioId": "s2"
+      },
+      {
+        "id": "pa3",
+        "pain": "出差寄养缺接送服务",
+        "evidence": "出差寄养能不能接送",
+        "frequency": "中",
+        "linkedNeeds": [
+          "接送服务",
+          "一站式"
+        ],
+        "linkedTopicId": 1,
+        "type": "痛点",
+        "scenarioId": "s2"
+      },
+      {
+        "id": "pa4",
+        "pain": "会员月卡不能跨店通用",
+        "evidence": "会员月卡能不能跨店通用",
+        "frequency": "中",
+        "linkedNeeds": [
+          "跨店通用",
+          "会员体系"
+        ],
+        "linkedTopicId": 2,
+        "type": "痛点",
+        "scenarioId": "s3"
+      },
+      {
+        "id": "pa5",
+        "pain": "洗护+摄影不能组合，缺粘性",
+        "evidence": "联名宠物摄影可以打包",
+        "frequency": "中",
+        "linkedNeeds": [
+          "洗护+摄影组合",
+          "联名 IP"
+        ],
+        "linkedTopicId": 2,
+        "type": "痒点",
+        "scenarioId": "s3"
+      }
+    ]
+  },
+  "candidates": [
+    {
+      "id": "c1",
+      "name": "洗护师 CKU 认证",
+      "pain": "专业度参差",
+      "description": "全员 CKU/NGKC 认证+统一培训+着装规范",
+      "evidence": "10 篇评论中 4 篇提及洗护师",
+      "source": "user",
+      "scenarioId": "s1",
+      "selected": true,
+      "importance": 9,
+      "uniqueness": 9,
+      "credibility": 9,
+      "feasibility": 7,
+      "communicability": 8,
+      "sustainability": 8,
+      "extraDims": {}
     },
-    matrix: {"showSector":true,"sectorWidth":1.5,"xCut":7,"yCut":7,"manualSelected":["c1","c3"]},
-    migration: { prompt:'', analyses:[
-  {
-    "from": "新瑞鹏客户",
-    "to": "c1",
-    "reason": "新瑞鹏重医疗, 毛孩子之家重洗护师认证",
-    "cost": 5
+    {
+      "id": "c2",
+      "name": "无应激低噪环境",
+      "pain": "猫应激",
+      "description": "独立单宠用具+低噪设备+渐进式洗护+专业安抚",
+      "evidence": "3 篇评论提及无应激",
+      "source": "user",
+      "scenarioId": "s1",
+      "selected": false,
+      "importance": 8,
+      "uniqueness": 9,
+      "credibility": 7,
+      "feasibility": 8,
+      "communicability": 8,
+      "sustainability": 8,
+      "extraDims": {}
+    },
+    {
+      "id": "c3",
+      "name": "实时寄养直播+24h 监控",
+      "pain": "寄养不放心",
+      "description": "24h 实时直播+每日视频反馈+健康检查",
+      "evidence": "4 篇评论提及直播",
+      "source": "user",
+      "scenarioId": "s2",
+      "selected": true,
+      "importance": 9,
+      "uniqueness": 9,
+      "credibility": 9,
+      "feasibility": 8,
+      "communicability": 9,
+      "sustainability": 8,
+      "extraDims": {}
+    },
+    {
+      "id": "c4",
+      "name": "联名宠物摄影",
+      "pain": "缺粘性",
+      "description": "与本地摄影机构联名，洗护+摄影组合套餐",
+      "evidence": "2 篇评论提及联名",
+      "source": "user",
+      "scenarioId": "s3",
+      "selected": false,
+      "importance": 6,
+      "uniqueness": 8,
+      "credibility": 6,
+      "feasibility": 6,
+      "communicability": 8,
+      "sustainability": 6,
+      "extraDims": {}
+    },
+    {
+      "id": "c5",
+      "name": "人食用级原料标准",
+      "pain": "怕原料差、吃了拉肚子",
+      "scenarioId": "s1",
+      "importance": 9,
+      "uniqueness": 7,
+      "credibility": 8,
+      "feasibility": 6,
+      "communicability": 9,
+      "sustainability": 6,
+      "selected": false,
+      "evidence": "原料供应商资质"
+    },
+    {
+      "id": "c6",
+      "name": "兽医团队配方研发",
+      "pain": "怕配方不科学、营养不均衡",
+      "scenarioId": "s2",
+      "importance": 8,
+      "uniqueness": 7,
+      "credibility": 9,
+      "feasibility": 5,
+      "communicability": 8,
+      "sustainability": 7,
+      "selected": false,
+      "evidence": "合作兽医团队背景"
+    }
+  ],
+  "dimensions": {
+    "desirability": [
+      {
+        "key": "importance",
+        "label": "重要性",
+        "definition": "这个卖点对客户有多重要"
+      },
+      {
+        "key": "uniqueness",
+        "label": "独特性",
+        "definition": "竞品是否也在说/做"
+      },
+      {
+        "key": "credibility",
+        "label": "可信性",
+        "definition": "客户凭什么相信你能做到"
+      }
+    ],
+    "implementability": [
+      {
+        "key": "feasibility",
+        "label": "可行性",
+        "definition": "技术/供应链/成本能否实现"
+      },
+      {
+        "key": "communicability",
+        "label": "可传播性",
+        "definition": "能否用一句话让客户听懂"
+      },
+      {
+        "key": "sustainability",
+        "label": "可持续性",
+        "definition": "能否长期维持、不被轻易复制"
+      }
+    ]
   },
-  {
-    "from": "宠物家客户",
-    "to": "c3",
-    "reason": "24h 直播差异化, 毛孩子之家更有温度",
-    "cost": 6
+  "matrix": {
+    "showSector": true,
+    "sectorWidth": 1.5,
+    "xCut": 7,
+    "yCut": 7,
+    "manualSelected": [
+      "c1",
+      "c3"
+    ]
   },
-  {
-    "from": "圣宠客户",
-    "to": "c1",
-    "reason": "CKU 认证体系比区域品牌更标准",
-    "cost": 4
-  }
-] },
-    proposition: {
-  "coreValueIds": [
+  "migration": {
+    "prompt": "",
+    "analyses": [
+      {
+        "from": "新瑞鹏客户",
+        "to": "c1",
+        "reason": "新瑞鹏重医疗, 毛孩子之家重洗护师认证",
+        "cost": 5
+      },
+      {
+        "from": "宠物家客户",
+        "to": "c3",
+        "reason": "24h 直播差异化, 毛孩子之家更有温度",
+        "cost": 6
+      },
+      {
+        "from": "圣宠客户",
+        "to": "c1",
+        "reason": "CKU 认证体系比区域品牌更标准",
+        "cost": 4
+      }
+    ]
+  },
+  "proposition": {
+    "coreValueIds": [
+      "c1",
+      "c2",
+      "c3",
+      "c4"
+    ],
+    "alternatives": [
+      {
+        "id": "a1",
+        "text": "毛孩子放心，毛孩子之家。"
+      },
+      {
+        "id": "a2",
+        "text": "专业洗护，实时直播。"
+      },
+      {
+        "id": "a3",
+        "text": "科学养宠，从洗护开始。"
+      }
+    ],
+    "chosenValueText": "毛孩子放心，毛孩子之家。",
+    "positioning": {
+      "brand": "毛孩子之家",
+      "audience": "90/95 后新手铲屎官+二线家庭客+出差/旅行寄养客",
+      "coreValue": "洗护师认证+无应激环境+实时直播+联名摄影",
+      "category": "西南区域宠物服务专业品牌"
+    },
+    "positioningStatement": "对于 90/95 后新手铲屎官与二线家庭客与出差/旅行寄养客, 毛孩子之家是唯一一个用 CKU/NGKC 全员认证 + 无应激低噪环境 + 24h 实时寄养直播 + 联名宠物摄影, 让\"毛孩子放心, 毛孩子之家\"从洗护到寄养一站落地的西南区域宠物服务专业品牌。"
+  },
+  "identity": {
+    "mbti": "ISFJ (守护者型 — 偏温暖、专业、家人感)",
+    "personalityTraits": [
+      "温暖",
+      "专业",
+      "家人感",
+      "科学",
+      "安心"
+    ],
+    "sloganOptions": [
+      {
+        "text": "毛孩子放心，毛孩子之家",
+        "source": "agent"
+      },
+      {
+        "text": "专业洗护，实时直播",
+        "source": "user"
+      },
+      {
+        "text": "科学养宠，从洗护开始",
+        "source": "user"
+      }
+    ],
+    "chosenSlogan": "毛孩子放心，毛孩子之家"
+  },
+  "_scoreDone": [
     "c1",
     "c2",
     "c3",
     "c4"
   ],
-  "alternatives": [
-    {
-      "id": "a1",
-      "text": "毛孩子放心，毛孩子之家。"
-    },
-    {
-      "id": "a2",
-      "text": "专业洗护，实时直播。"
-    },
-    {
-      "id": "a3",
-      "text": "科学养宠，从洗护开始。"
-    }
+  "_pipeProp": [
+    "coreValueIds",
+    "chosenValueText",
+    "positioning"
   ],
-  "chosenValueText": "毛孩子放心，毛孩子之家。",
-  "positioning": {
-    "brand": "毛孩子之家",
-    "audience": "90/95 后新手铲屎官+二线家庭客+出差/旅行寄养客",
-    "coreValue": "洗护师认证+无应激环境+实时直播+联名摄影",
-    "category": "西南区域宠物服务专业品牌"
-  },
-  "positioningStatement": "对于 90/95 后新手铲屎官与二线家庭客与出差/旅行寄养客, 毛孩子之家是唯一一个用 CKU/NGKC 全员认证 + 无应激低噪环境 + 24h 实时寄养直播 + 联名宠物摄影, 让\"毛孩子放心, 毛孩子之家\"从洗护到寄养一站落地的西南区域宠物服务专业品牌。"
-},
-    identity: {
-  "mbti": "ISFJ (守护者型 — 偏温暖、专业、家人感)",
-  "personalityTraits": [
-    "温暖",
-    "专业",
-    "家人感",
-    "科学",
-    "安心"
-  ],
-  "sloganOptions": [
-    {
-      "text": "毛孩子放心，毛孩子之家",
-      "source": "agent"
-    },
-    {
-      "text": "专业洗护，实时直播",
-      "source": "user"
-    },
-    {
-      "text": "科学养宠，从洗护开始",
-      "source": "user"
-    }
-  ],
-  "chosenSlogan": "毛孩子放心，毛孩子之家"
-},
-    _scoreDone: ["c1","c2","c3","c4"],
-    _pipeProp: ['coreValueIds','chosenValueText','positioning'],
-    _pipeIdentity: ['mbti','sloganOptions','chosenSlogan']
-  };
+  "_pipeIdentity": [
+    "mbti",
+    "sloganOptions",
+    "chosenSlogan"
+  ]
+};
   if(typeof window!== 'undefined') window.__case_maohaizi_house_work3 = data;
 })();
 
@@ -4467,82 +9384,257 @@
  ============================================================ */
 (function(){
   const data = {
-    route:{
-      scope:'domestic',
-      oemType:'OBM',
-      entryMode:'',
-      light:[],
-      politicalPower:''
+  "route": {
+    "scope": "domestic",
+    "oemType": "OBM",
+    "entryMode": "online-first",
+    "light": [],
+    "politicalPower": ""
+  },
+  "product": {
+    "name": "毛孩子之家宠物服务",
+    "description": "专业洗护+无应激环境+实时寄养直播+联名摄影",
+    "coreDifferentiators": [
+      "洗护师 CKU 认证",
+      "无应激低噪环境",
+      "实时寄养直播",
+      "单宠独立用具",
+      "联名宠物摄影"
+    ],
+    "physicalFeatures": "CKU/NGKC 认证 / 无应激设备 / 24h 直播摄像头 / 独立单宠用具 / 联名摄影",
+    "serviceOffering": "专业洗护 / 24h 寄养直播 / 接送服务 / 联名摄影 / 会员月卡 / 异业合作",
+    "technologyMoat": "CKU 认证洗护师团队 + 2 家店私域社群 + 实时直播 SaaS",
+    "skus": [
+      {
+        "name": "基础洗护",
+        "specs": "1.5 小时",
+        "price_range": "80-200 元",
+        "differentiator": "CKU 认证洗护师"
+      },
+      {
+        "name": "无应激 SPA",
+        "specs": "2 小时",
+        "price_range": "200-300 元",
+        "differentiator": "独立单宠+低噪"
+      },
+      {
+        "name": "寄养 24h 直播",
+        "specs": "1 天起",
+        "price_range": "100-250 元/天",
+        "differentiator": "24h 实时直播"
+      },
+      {
+        "name": "会员月卡",
+        "specs": "4 次洗护+2 次寄养",
+        "price_range": "980 元/月",
+        "differentiator": "跨店通用"
+      }
+    ]
+  },
+  "price": {
+    "strategy": "value",
+    "strategyNote": "中端定价，会员月卡+联名摄影提升复购与客单。",
+    "tiers": [
+      {
+        "name": "基础洗护",
+        "targetSegment": "新手铲屎官",
+        "price": 128,
+        "unit": "元/次",
+        "notes": "CKU 认证"
+      },
+      {
+        "name": "无应激 SPA",
+        "targetSegment": "猫主子家长",
+        "price": 238,
+        "unit": "元/次",
+        "notes": "独立单宠"
+      },
+      {
+        "name": "寄养 24h 直播",
+        "targetSegment": "出差/家庭客",
+        "price": 168,
+        "unit": "元/天",
+        "notes": "24h 直播+反馈"
+      },
+      {
+        "name": "会员月卡",
+        "targetSegment": "复购客",
+        "price": 980,
+        "unit": "元/月",
+        "notes": "4 次洗护+2 次寄养"
+      }
+    ],
+    "channelPricing": [
+      {
+        "channel": "美团/大众点评",
+        "priceAdjustment": "9 折团购",
+        "rationale": "拉新引流"
+      },
+      {
+        "channel": "抖音同城",
+        "priceAdjustment": "套餐立减 30",
+        "rationale": "种草转化"
+      },
+      {
+        "channel": "私域社群",
+        "priceAdjustment": "会员月卡 9 折",
+        "rationale": "老客粘性"
+      }
+    ],
+    "promotions": [
+      {
+        "occasion": "618 宠物节",
+        "discount": "会员月卡 8 折",
+        "period": "6 月"
+      },
+      {
+        "occasion": "新店开业",
+        "discount": "洗护 5 折",
+        "period": "开业首月"
+      }
+    ],
+    "competitorPrices": "新瑞鹏 100-300；宠物家 80-200；圣宠 60-150；宠宠熊 50-150；爱诺 100-250"
+  },
+  "place": {
+    "onlineSelf": [
+      "毛孩子之家小程序",
+      "抖音同城号旗舰店"
+    ],
+    "onlineThird": [
+      "美团",
+      "大众点评",
+      "小红书企业号",
+      "抖音同城",
+      "异业合作（宠物医院/猫舍）"
+    ],
+    "onlineNotes": "小程序为主阵地（会员+直播+预约）；美团/点评做拉新；抖音同城种草；异业合作扩客",
+    "offlineDirect": [
+      "成都高新店",
+      "成都锦江店",
+      "成都新店 1（拟）",
+      "成都新店 2（拟）",
+      "重庆新店（拟）"
+    ],
+    "offlineDistrib": [],
+    "offlineRetail": [],
+    "offlineNotes": "5 家直营连锁，第一阶段不开放加盟；川渝同城为主",
+    "keyPartners": [
+      {
+        "name": "小红书养宠 KOC",
+        "side": "线上"
+      },
+      {
+        "name": "抖音同城 MCN",
+        "side": "线上"
+      },
+      {
+        "name": "本地宠物医院/猫舍（异业）",
+        "side": "线下"
+      },
+      {
+        "name": "CKU 认证机构",
+        "side": "线下"
+      }
+    ],
+    "channelIncentives": "KOC 体验券+佣金 10%；MCN 坑位费 + GMV 提成 5%；异业互换优惠券",
+    "structure": [
+      {
+        "name": "线下",
+        "children": [
+          {
+            "name": "成都门店",
+            "share": 75
+          },
+          {
+            "name": "重庆门店",
+            "share": 20
+          },
+          {
+            "name": "其他川渝",
+            "share": 5
+          }
+        ]
+      },
+      {
+        "name": "线上",
+        "children": [
+          {
+            "name": "小程序",
+            "share": 50
+          },
+          {
+            "name": "美团/点评",
+            "share": 30
+          },
+          {
+            "name": "抖音/小红书",
+            "share": 20
+          }
+        ]
+      }
+    ]
+  },
+  "promotion": {
+    "theme": "毛孩子放心，毛孩子之家",
+    "advertising": [
+      {
+        "media": "抖音同城短视频",
+        "budgetShare": 35,
+        "message": "无应激洗护+实时直播",
+        "kpi": "同城曝光/团购 GMV"
+      },
+      {
+        "media": "小红书 KOC",
+        "budgetShare": 30,
+        "message": "养宠真实体验",
+        "kpi": "互动率/UGC"
+      },
+      {
+        "media": "美团/大众点评",
+        "budgetShare": 20,
+        "message": "9 折团购+会员月卡",
+        "kpi": "到店转化率"
+      },
+      {
+        "media": "私域社群",
+        "budgetShare": 15,
+        "message": "老客回馈+新店开业",
+        "kpi": "复购率/老带新"
+      }
+    ],
+    "pr": [
+      {
+        "event": "毛孩子之家新店开业+CKU 认证发布",
+        "timing": "2027 年 3-6 月",
+        "expectedReach": "同城 50 万养宠群体"
+      },
+      {
+        "event": "联名宠物摄影展",
+        "timing": "每季度 1 次",
+        "expectedReach": "同城 20 万"
+      }
+    ],
+    "salesPromotion": [
+      {
+        "tactic": "美团 9 折团购",
+        "mechanic": "基础洗护",
+        "period": "常年"
+      },
+      {
+        "tactic": "会员月卡 9 折",
+        "mechanic": "私域社群",
+        "period": "618/双 11"
+      }
+    ],
+    "crm": {
+      "tool": "小程序+企业微信+门店 SaaS",
+      "membership": "银卡（消费 1000）/金卡（消费 3000）/钻石卡（消费 6000）",
+      "repurchase": "每 30 天推送洗护/活动",
+      "notes": "老客复购是基本盘"
     },
-    product:{
-      name:'毛孩子之家宠物服务',
-      description:'专业洗护+无应激环境+实时寄养直播+联名摄影',
-      coreDifferentiators:['洗护师 CKU 认证','无应激低噪环境','实时寄养直播','单宠独立用具','联名宠物摄影'],
-      physicalFeatures:'CKU/NGKC 认证 / 无应激设备 / 24h 直播摄像头 / 独立单宠用具 / 联名摄影',
-      serviceOffering:'专业洗护 / 24h 寄养直播 / 接送服务 / 联名摄影 / 会员月卡 / 异业合作',
-      technologyMoat:'CKU 认证洗护师团队 + 2 家店私域社群 + 实时直播 SaaS',
-      skus:[
-        {name:'基础洗护', specs:'1.5 小时', price_range:'80-200 元', differentiator:'CKU 认证洗护师'},
-        {name:'无应激 SPA', specs:'2 小时', price_range:'200-300 元', differentiator:'独立单宠+低噪'},
-        {name:'寄养 24h 直播', specs:'1 天起', price_range:'100-250 元/天', differentiator:'24h 实时直播'},
-        {name:'会员月卡', specs:'4 次洗护+2 次寄养', price_range:'980 元/月', differentiator:'跨店通用'}
-      ]
-    },
-    price:{
-      strategy:'value',
-      strategyNote:'中端定价，会员月卡+联名摄影提升复购与客单。',
-      tiers:[
-        {name:'基础洗护', targetSegment:'新手铲屎官', price:128, unit:'元/次', notes:'CKU 认证'},
-        {name:'无应激 SPA', targetSegment:'猫主子家长', price:238, unit:'元/次', notes:'独立单宠'},
-        {name:'寄养 24h 直播', targetSegment:'出差/家庭客', price:168, unit:'元/天', notes:'24h 直播+反馈'},
-        {name:'会员月卡', targetSegment:'复购客', price:980, unit:'元/月', notes:'4 次洗护+2 次寄养'}
-      ],
-      channelPricing:[
-        {channel:'美团/大众点评', priceAdjustment:'9 折团购', rationale:'拉新引流'},
-        {channel:'抖音同城', priceAdjustment:'套餐立减 30', rationale:'种草转化'},
-        {channel:'私域社群', priceAdjustment:'会员月卡 9 折', rationale:'老客粘性'}
-      ],
-      promotions:[
-        {occasion:'618 宠物节', discount:'会员月卡 8 折', period:'6 月'},
-        {occasion:'新店开业', discount:'洗护 5 折', period:'开业首月'}
-      ],
-      competitorPrices:'新瑞鹏 100-300；宠物家 80-200；圣宠 60-150；宠宠熊 50-150；爱诺 100-250'
-    },
-    place:{
-      onlineSelf:['毛孩子之家小程序','抖音同城号旗舰店'],
-      onlineThird:['美团','大众点评','小红书企业号','抖音同城','异业合作（宠物医院/猫舍）'],
-      onlineNotes:'小程序为主阵地（会员+直播+预约）；美团/点评做拉新；抖音同城种草；异业合作扩客',
-      offlineDirect:['成都高新店','成都锦江店','成都新店 1（拟）','成都新店 2（拟）','重庆新店（拟）'],
-      offlineDistrib:[],
-      offlineRetail:[],
-      offlineNotes:'5 家直营连锁，第一阶段不开放加盟；川渝同城为主',
-      keyPartners:[{name:'小红书养宠 KOC',side:'线上'},{name:'抖音同城 MCN',side:'线上'},{name:'本地宠物医院/猫舍（异业）',side:'线下'},{name:'CKU 认证机构',side:'线下'}],
-      channelIncentives:'KOC 体验券+佣金 10%；MCN 坑位费 + GMV 提成 5%；异业互换优惠券',
-      structure:[
-        {name:'线下', children:[{name:'成都门店', share:75},{name:'重庆门店', share:20},{name:'其他川渝', share:5}]},
-        {name:'线上', children:[{name:'小程序', share:50},{name:'美团/点评', share:30},{name:'抖音/小红书', share:20}]}
-      ]
-    },
-    promotion:{
-      theme:'毛孩子放心，毛孩子之家',
-      advertising:[
-        {media:'抖音同城短视频', budgetShare:35, message:'无应激洗护+实时直播', kpi:'同城曝光/团购 GMV'},
-        {media:'小红书 KOC', budgetShare:30, message:'养宠真实体验', kpi:'互动率/UGC'},
-        {media:'美团/大众点评', budgetShare:20, message:'9 折团购+会员月卡', kpi:'到店转化率'},
-        {media:'私域社群', budgetShare:15, message:'老客回馈+新店开业', kpi:'复购率/老带新'}
-      ],
-      pr:[
-        {event:'毛孩子之家新店开业+CKU 认证发布', timing:'2027 年 3-6 月', expectedReach:'同城 50 万养宠群体'},
-        {event:'联名宠物摄影展', timing:'每季度 1 次', expectedReach:'同城 20 万'}
-      ],
-      salesPromotion:[
-        {tactic:'美团 9 折团购', mechanic:'基础洗护', period:'常年'},
-        {tactic:'会员月卡 9 折', mechanic:'私域社群', period:'618/双 11'}
-      ],
-      crm:{tool:'小程序+企业微信+门店 SaaS', membership:'银卡（消费 1000）/金卡（消费 3000）/钻石卡（消费 6000）', repurchase:'每 30 天推送洗护/活动', notes:'老客复购是基本盘'},
-      contentStrategy:'抖音"无应激洗护+实时直播"系列 + 小红书"科学养宠"系列 + 公众号"CKU 认证洗护师"长文。'
-    }
-  };
+    "contentStrategy": "抖音\"无应激洗护+实时直播\"系列 + 小红书\"科学养宠\"系列 + 公众号\"CKU 认证洗护师\"长文。"
+  }
+};
 
   if(typeof window!== 'undefined') window.__case_maohaizi_house_work4 = data;
 })();

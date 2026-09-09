@@ -869,7 +869,7 @@ Work1.renderSmileCurve = function(){
     concEl.textContent = cap.smileCurve || Work1.smileConclusion();
     wrap.appendChild(capEl);
     wrap.appendChild(el('div', {style:'margin-top:12px;font-size:11px;letter-spacing:.16em;color:var(--color-ink-2)'},
-      '曲线收口 · 自动推导（可编辑，供 Work3 定位 / Work5 策划书引用）'));
+      '曲线收口 · 自动推导（供 Work3 定位 / Work5 策划书引用）'));
     wrap.appendChild(concEl);
     // 拖拽使用提示
     wrap.appendChild(el('div', {style:'font-size:11px;color:var(--color-ink-2);margin-top:6px;letter-spacing:.02em'},

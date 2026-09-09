@@ -202,7 +202,7 @@ Work5.renderStep = function(id){
     Work5.budgetBarBlock(body);
 
     // 4P 详述不占编号：默认折叠（打印/导出全量展开）
-    body.appendChild(Work5.detail('4P 详述（可编辑）',
+    body.appendChild(Work5.detail('4P 详述',
       ...[['product','产品'],['price','价格'],['place','渠道'],['promotion','促销']].map(([k,zh])=>
         el('div',{class:'chapter-text',contenteditable:'true',
           oninput:e=>{m[k]=Work5.readEd(e.target);autosave();}},

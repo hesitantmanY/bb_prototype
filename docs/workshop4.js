@@ -985,7 +985,7 @@ Work4.render.price = function(sec){
     }
   }
   plate.appendChild(UI.field('竞品价格信息（粘贴）',
-    el('textarea',{rows:4,placeholder:'目标竞品的价格 / 定价档位 / 促销价（自动从 Work 1 预填，可编辑覆盖）',oninput:e=>{p.competitorPrices=e.target.value;autosave()}},p.competitorPrices||'')));
+    el('textarea',{rows:4,placeholder:'目标竞品的价格 / 定价档位 / 促销价（自动从 Work 1 预填）',oninput:e=>{p.competitorPrices=e.target.value;autosave()}},p.competitorPrices||'')));
 
   // 跨文化定价 3 块（修复 2026-08-30：每块加 AI 起草按钮 + 从 work2 tier1 预填）
   const xc=el('div',{class:'x-culture'});
