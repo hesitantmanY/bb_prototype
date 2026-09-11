@@ -1321,7 +1321,9 @@ Work1.render.personas = function(sec){
   plate.appendChild(el('div',{class:'row',style:{marginTop:'16px'}},
     el('button',{onclick:()=>{
       d.push({id:uid('p'),name:'',gender:'',age:'',occupation:'',income:'',region:'',values:[],painPoints:'',channels:[],quote:'',traits:''});
-      autosave(); Work1.renderStep('personas');
+      // 2026-09-11：结构性增删必须 rerender——renderStep 有 RENDER_VERSION 守卫，
+      // 已渲染的步只走 refreshDynamic（而它只认 survey），界面会纹丝不动。
+      autosave(); Work1.rerender('personas');
     }},'+ 添加画像')
   ));
 };
@@ -1353,9 +1355,23 @@ Work1.personaCard = function(p, i){
   const nameRow = el('div',{class:'persona-name-row'});
   const nameLabel = el('div',{class:'persona-name-label'}, `画像 #${num}`);
   nameRow.appendChild(nameLabel);
-  const delBtn = el('button',{class:'ghost small persona-del', onclick:()=>{
+  // 2026-09-11：去掉 small——删除是破坏性操作，11px + 一条下划线太小点不中；
+  // 尺寸与轮廓交给 .hallmark-persona .persona-del 的 CSS。
+  const delBtn = el('button',{class:'ghost persona-del', onclick:()=>{
+    // 2026-09-11 修复「删不掉」：原来调 renderStep，被 RENDER_VERSION 守卫拦下
+    // （已渲染只走 refreshDynamic，而它只认 survey）→ 界面不动、数据却已删并随
+    // autosave 落盘，用户以为删除失效还会连点，连点期间状态与界面彻底错位。
+    const linkedSc = (state.work1.scenarios||[]).filter(s=>(s.personaIds||[]).includes(p.id)).length;
+    const respN = (state.work1.survey?.responses||[]).filter(r=>r.personaId===p.id).length;
+    const bits = ['删除画像 #'+num+'？'];
+    if(linkedSc) bits.push(linkedSc+' 个场景会取消对它的关联勾选。');
+    if(respN) bits.push('已完成的 '+respN+' 份调研答卷会失去画像指向（历史答卷保留，不重跑）。');
+    bits.push('剩余画像编号会重排（P1、P2…）。');
+    if(!confirm(bits.join('\n'))) return;
     state.work1.personas = state.work1.personas.filter(x=>x.id!==p.id);
-    autosave(); Work1.renderStep('personas');
+    // 场景里的关联勾选同步清掉，不留悬空 personaId
+    (state.work1.scenarios||[]).forEach(s=>{ s.personaIds=(s.personaIds||[]).filter(x=>x!==p.id); });
+    autosave(); Work1.rerender('personas');
   }}, '删除');
   nameRow.appendChild(delBtn);
   mid.appendChild(nameRow);

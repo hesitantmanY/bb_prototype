@@ -14,6 +14,9 @@ Work2.steps = [
 // 每步的下游步骤；末步（decision）无下游，出口走跨坊 CTA（2026-08-28 统一步间 CTA）
 Work2.NEXT_STEPS = { framework:'evaluate', evaluate:'decision' };
 
+/* 4×2 模板硬上限：每轴 4 个一级，每个一级下 2 个二级。手动新增与 AI 补齐都不得超过。 */
+Work2.MAX_CATS = 4;
+Work2.MAX_INDS = 2;
 /* 4×2 默认指标模板（默认可覆写）。一级默认权重 0.25，二级 = 0.5（一级内归一化）。 */
 Work2.INDICATOR_TEMPLATE = {
   attractiveness: [
@@ -34,6 +37,127 @@ Work2.defaultTemplate = function(axis){
     id: uid('cat'), name, weight: 0.25,
     indicators: inds.map(n=>({id:uid('ind'), name:n, rubric:{high:'',mid:'',low:''}, weight:0.5, support:0, source:'template'}))
   }));
+};
+
+/* 误删自救（2026-09-11）：一级维度只能整块删，删掉后它名下二级指标的锚点、
+   收敛权重与已打的分一起没了，且 id 不可复原。所以删除前把影响面摊开，
+   并给每轴一个「恢复默认 4×2 模板」的兜底入口。 */
+Work2.catImpact = function(cat){
+  const inds = cat.indicators||[];
+  let scored = 0;
+  (state.work2.retained||[]).forEach(m=>{
+    const row = (state.work2.scoring||{})[m.id]||{};
+    inds.forEach(i=>{ if(row[i.id] && row[i.id].score!=null) scored++; });
+  });
+  return {indCount: inds.length, scored};
+};
+Work2.catDeleteMsg = function(cat, axisLabel, leftAfter){
+  const {indCount, scored} = Work2.catImpact(cat);
+  const bits = ['删除「'+axisLabel+'」下的一级维度「'+(cat.name||'未命名')+'」？',
+    '连带删除 '+indCount+' 个二级指标及其高/中/低锚点。'];
+  if(scored) bits.push('已打的 '+scored+' 格评分会失去关联，矩阵图会缺这一块。');
+  if(!leftAfter) bits.push('这是本轴最后一个一级维度——删完本轴为空，评分表与矩阵无轴可比。');
+  bits.push('此操作不可撤销；「恢复默认 4×2 模板」只重建模板文案，你写过的锚点与评分不会回来。');
+  return bits.join('\n');
+};
+// 整轴换回默认模板：指标 id 全变 → persona 赋权与收敛权重失去指向，按「指标变了就重置」
+// 处理（同 AI 推导指标体系）。另一轴的一级/二级指标与存储权重不动。
+Work2.restoreAxisTemplate = function(axis){
+  const axisLabel = axis==='attractiveness'?'市场吸引力':'业务竞争力';
+  const cur = state.work2[axis].categories||[];
+  const filled = cur.filter(c=>(c.name||'').trim() || (c.indicators||[]).some(i=>(i.name||'').trim())).length;
+  const msg = ['把「'+axisLabel+'」整轴换回默认 4×2 模板？',
+    filled ? '当前 '+filled+' 个一级维度会被整体替换：你写过的锚点、手改的一级/二级权重与已打的分都不会回来。'
+           : '本轴现在是空的，恢复后可直接改名、补锚点。',
+    '权重需要重定：persona 赋权与收敛会重置为未运行。'].join('\n');
+  if(!confirm(msg)) return;
+  state.work2[axis].categories = Work2.defaultTemplate(axis);
+  state.work2.delphi.finalWeights = null; state.work2.delphi.personas = [];
+  state.work2.delphi.status = 'idle'; state.work2.delphi.drifted = false;
+  autosave();
+  Work2.rerender('framework');
+  showToast('已恢复「'+axisLabel+'」默认 4×2 模板');
+};
+
+/* AI 只补缺失的一级维度（2026-09-11）。与「重新推导评估体系」的关键区别：
+   那条是 4 单元流水线整组重跑，会换掉保留市场并 scoring={} 清空全部评分；
+   这里只往本轴追加缺的一级，已有一级/二级/锚点/id 全不动，所以已打的评分
+   不会孤儿化，矩阵与评分表照旧可用。 */
+Work2.missingTemplateCats = function(axis){
+  const cur = (state.work2[axis].categories||[]).map(c=>(c.name||'').trim()).filter(Boolean);
+  // 双向包含匹配：用户把「风险」改名成「竞争与合规风险」也算在，不重复补
+  return Work2.INDICATOR_TEMPLATE[axis].filter(([name])=>
+    !cur.some(cn => cn.includes(name) || name.includes(cn)));
+};
+Work2.fillMissingCats = function(axis, button, container){
+  const axisLabel = axis==='attractiveness'?'市场吸引力':'业务竞争力';
+  const missing = Work2.missingTemplateCats(axis);
+  if(!missing.length){
+    showToast('「'+axisLabel+'」的 4 个一级维度都在（'+Work2.INDICATOR_TEMPLATE[axis].map(t=>t[0]).join(' / ')+'），无需补齐');
+    return;
+  }
+  // 有模板缺失但名额已满（用户用自定义一级占了位）：不能再补，先删
+  if((state.work2[axis].categories||[]).length >= Work2.MAX_CATS){
+    showToast('「'+axisLabel+'」已有 '+Work2.MAX_CATS+' 个一级维度（每轴上限 '+Work2.MAX_CATS+' 个）；要补模板维度，请先删掉不用的一级');
+    return;
+  }
+  // 剩余名额内的缺失项才要（已有自定义一级占位时，缺失数可能大于名额）
+  const names = missing.slice(0, Work2.MAX_CATS - (state.work2[axis].categories||[]).length).map(t=>t[0]);
+  // 不弹 confirm（AGENTS.md：AI 生成类按钮直接跑）——本按钮只追加不覆盖，按钮文案已点名要补哪个；
+  // 也永远进不了「已生成 → 重新生成」态：补齐成功后本轴不缺，按钮就不再渲染。
+  const have = () => (state.work2[axis].categories||[]).map(c=>(c.name||'').trim()).filter(Boolean).join(' / ') || '（空）';
+  const sys = '你是营销研究方法专家。为海外市场选择的「'+axisLabel+'」轴补齐缺失的一级维度，每个一级给 2 个二级指标与高/中/低评分锚点。只输出要求补齐的那几个一级维度，已存在的不要输出。';
+  const ins = () => '业务单元：'+(state.work1.sbu?.name||'')
+    + '\n本轴已有的一级维度（不得重复生成）：'+have()
+    + '\n需要补齐的一级维度：'+names.join(' / ')
+    + '\n每个二级指标的 rubric 要可观测、可查证：high = 8-10 分长什么样、mid = 4-7 分、low = 0-3 分。'
+    + '\n输出: {"categories": [{"name": "一级维度名", "indicators": [{"name": "", "rubric": {"high": "", "mid": "", "low": ""}}]}]}';
+  API.aiButton({button, container, label:'AI 补齐一级维度',
+    buildPrompt: ()=> (typeof AiContext!=='undefined')
+      ? AiContext.buildPrompt({workId:'work2', sections:['sbu','environment','competitors'],
+          system:sys, instruction:ins(), fewShot:'work2.indicators'})
+      : [{role:'system',content:sys},{role:'user',content:ins()}],
+    onResult: r=>{
+      const cats = r?.categories;
+      if(!Array.isArray(cats) || !cats.length){ showToast('AI 未返回可补齐的一级维度，已保留原值'); return; }
+      // 只收确实缺的：重名（与现有或本批重复）一律丢弃，防追加出两个「风险」
+      // 名额以结果返回时为准（等待期间可能手动加过一级）
+      const room = Work2.MAX_CATS - (state.work2[axis].categories||[]).length;
+      const accepted = [];
+      cats.forEach(c=>{
+        if(accepted.length >= room) return;
+        const nm = String(c?.name||'').trim();
+        if(!nm) return;
+        const cur = (state.work2[axis].categories||[]).map(x=>(x.name||'').trim());
+        if(cur.some(x=>x===nm || x.includes(nm) || nm.includes(x))) return;
+        if(accepted.some(x=>x.name===nm)) return;
+        const inds = (c.indicators||[]).slice(0,Work2.MAX_INDS);
+        accepted.push({id:uid('cat'), name:nm, weight:0.25,
+          indicators: inds.map(i=>({id:uid('ind'), name:String(i?.name||''),
+            rubric:i?.rubric||{high:'',mid:'',low:''}, weight:1/Math.max(1,inds.length), support:0, source:'ai'}))});
+      });
+      if(!accepted.length){ showToast(room<=0 ? '本轴已有 '+Work2.MAX_CATS+' 个一级维度，AI 结果未采用' : 'AI 返回的一级维度都已存在，未做改动'); return; }
+      state.work2[axis].categories = (state.work2[axis].categories||[]).concat(accepted);
+      // 只增不改：不清 persona（清了要重烧 N 次调用），仅标偏离——与手改一级权重同语义。
+      // 新一级没有 persona 权重，靠存储权重 0.25×(1/n) 参与评分，effectiveWeights 按轴归一化。
+      if(state.work2.delphi.status==='done') state.work2.delphi.drifted = true;
+      autosave();
+      Work2.rerender('framework');
+      showToast('已补齐 '+accepted.length+' 个一级维度：'+accepted.map(c=>c.name).join(' / '));
+    }});
+};
+
+/* 保留市场换过 id（流水线重跑 / 手动删）后，三档决策里的旧 marketId 会悬空：
+   下拉退回「— 必选 —」、矩阵没有选中点、导出写「主战场：未知」，
+   而 MVO 的「tier1 非空」拿到的是旧字符串，依旧假通过。统一消毒。 */
+Work2.pruneStaleTiers = function(){
+  const d = state.work2.decision;
+  if(!d) return false;
+  const snap = () => JSON.stringify({t1:(d.tier1&&d.tier1.marketId)||null,
+    t2:(d.tier2&&d.tier2.marketIds)||[], t3:(d.tier3&&d.tier3.marketIds)||[]});
+  const before = snap();
+  Work2.sanitizeTiers(d, (state.work2.retained||[]).map(m=>m.id));
+  return snap() !== before;
 };
 
 Work2.defaultData = () => ({
@@ -373,7 +497,7 @@ Work2.render.framework = function(sec){
     } else {
       card.appendChild(el('div',{style:{display:'flex',justifyContent:'space-between',alignItems:'center'}},
         el('input',{value:m.name,style:{fontFamily:'var(--font-display)',fontStyle:'normal',fontSize:'16px'},oninput:e=>{m.name=e.target.value;autosave();App.updateSummary()}}),
-        el('button',{class:'ghost small',onclick:()=>{w2.retained.splice(i,1);autosave();Work2.rerender('framework')}},'×')));
+        el('button',{class:'ghost small',onclick:()=>{w2.retained.splice(i,1);Work2.pruneStaleTiers();autosave();Work2.rerender('framework')}},'×')));
       [['region','地区'],['population','人口/规模'],['gdpPerCapita','人均 GDP']].forEach(([k,lb])=>{
         card.appendChild(el('div',{class:'field'},el('label',{},lb),el('input',{value:m[k]||'',oninput:e=>{m[k]=e.target.value;autosave()}})));
       });
@@ -387,14 +511,35 @@ Work2.render.framework = function(sec){
   // 指标体系（可折叠一级 card）
   plate.appendChild(el('h4',{},'指标体系（4×2 模板，默认可覆写）'));
   ['attractiveness','competitiveness'].forEach(axis=>{
-    plate.appendChild(el('h5',{style:'margin:14px 0 6px'}, axis==='attractiveness'?'市场吸引力':'业务竞争力'));
+    const axisLabel = axis==='attractiveness'?'市场吸引力':'业务竞争力';
+    plate.appendChild(el('h5',{style:'margin:14px 0 6px'}, axisLabel));
     (w2[axis].categories||[]).forEach((cat,ci)=>{
       const det = el('details',{open:true,class:'plate',style:'margin-bottom:10px'});
+      // summary 只做展示，名称与一级权重的编辑入口在展开后第一行——
+      // 2026-09-11 修复：原来一级只有 summary 文本，新建的一级维度永远改不了名。
+      const sumName = el('span',{}, cat.name || '（未命名一级维度）');
+      const sumWeight = el('span',{class:'mono',style:'font-size:12px;color:var(--color-ink-2)'},
+        '一级权重 ' + Math.round((cat.weight??0.25)*100) + '%');
       det.appendChild(el('summary',{style:'cursor:pointer;font-family:var(--font-display);font-style:normal;font-size:16px'},
-        cat.name + '（一级权重 ' + Math.round((cat.weight??0.25)*100) + '%）'));
+        sumName, '（', sumWeight, '）'));
+      const refreshEff = [];   // 一级权重手改 → 该一级下所有二级的有效权重要跟着刷
+      det.appendChild(el('div',{style:{display:'flex',gap:'10px',alignItems:'center',flexWrap:'wrap',padding:'10px 0 4px'}},
+        el('span',{class:'mono',style:'font-size:11px'},'一级名称'),
+        el('input',{value:cat.name||'',placeholder:'如：经济 / 政治法律 / 社会文化 / 风险',style:{flex:1,minWidth:'200px'},
+          oninput:e=>{ cat.name=e.target.value; sumName.textContent=cat.name||'（未命名一级维度）'; autosave(); }}),
+        el('span',{class:'mono',style:'font-size:11px'},'一级权重'),
+        el('input',{type:'number',min:0,max:1,step:0.05,value:cat.weight??0.25,style:{width:'70px'},oninput:e=>{
+          cat.weight=parseFloat(e.target.value)||0;
+          if(state.work2.delphi.status==='done') state.work2.delphi.drifted=true;
+          sumWeight.textContent='一级权重 '+Math.round((cat.weight??0)*100)+'%';
+          refreshEff.forEach(fn=>fn());
+          autosave();
+        }})
+      ));
       (cat.indicators||[]).forEach((ind,ii)=>{
         const effPct = () => Math.round(((cat.weight??0.25)*(ind.weight??0.5))*100) + '%';
         const effSpan = el('span',{class:'mono',style:'font-size:11px;color:var(--color-ink-2)',title:'有效权重 = 一级权重 × 二级权重'}, '有效 ' + effPct());
+        refreshEff.push(()=>{ effSpan.textContent='有效 '+effPct(); });
         const row = el('div',{style:{borderTop:'1px solid var(--color-rule)',padding:'10px 0'}},
           el('div',{style:{display:'flex',gap:'10px',alignItems:'center'}},
             el('input',{value:ind.name,style:{flex:1},oninput:e=>{ind.name=e.target.value;autosave()}}),
@@ -418,11 +563,43 @@ Work2.render.framework = function(sec){
         det.appendChild(row);
       });
       det.appendChild(el('div',{class:'row',style:'margin-top:8px'},
-        el('button',{class:'small ghost',onclick:()=>{cat.indicators.push({id:uid('ind'),name:'',rubric:{high:'',mid:'',low:''},weight:0.5,support:0,source:'user'});autosave();Work2.rerender('framework')}},'+ 二级指标'),
-        el('button',{class:'small ghost',onclick:()=>{w2[axis].categories.splice(ci,1);autosave();Work2.rerender('framework')}},'删除整个一级')));
+        // 每个一级下最多 2 个二级（4×2 模板）：满了置灰，handler 再挡一道
+        el('button',{class:'small ghost',
+          disabled: (cat.indicators||[]).length >= Work2.MAX_INDS || null,
+          title: (cat.indicators||[]).length >= Work2.MAX_INDS ? '每个一级维度最多 '+Work2.MAX_INDS+' 个二级指标；要新增请先删除现有指标' : '',
+          onclick:()=>{
+            if((cat.indicators||[]).length >= Work2.MAX_INDS){ showToast('每个一级维度最多 '+Work2.MAX_INDS+' 个二级指标'); return; }
+            cat.indicators.push({id:uid('ind'),name:'',rubric:{high:'',mid:'',low:''},weight:0.5,support:0,source:'user'});
+            autosave();Work2.rerender('framework');
+          }},'+ 二级指标'),
+        el('button',{class:'small ghost',onclick:()=>{
+          if(!confirm(Work2.catDeleteMsg(cat, axisLabel, (w2[axis].categories||[]).length-1))) return;
+          w2[axis].categories.splice(ci,1);autosave();Work2.rerender('framework');
+        }},'删除整个一级')));
       plate.appendChild(det);
     });
-    plate.appendChild(el('button',{class:'small',onclick:()=>{w2[axis].categories.push({id:uid('cat'),name:'新一级维度',weight:0.25,indicators:[]});autosave();Work2.rerender('framework')}},'+ 一级维度'));
+    const footRow = el('div',{class:'row',style:{gap:'8px',flexWrap:'wrap'}});
+    // 每轴硬上限 4 个一级（4×2 模板）：满了按钮置灰，handler 再挡一道
+    const catFull = (w2[axis].categories||[]).length >= Work2.MAX_CATS;
+    footRow.appendChild(el('button',{class:'small',
+      disabled: catFull || null,
+      title: catFull ? '每轴最多 '+Work2.MAX_CATS+' 个一级维度；要新增请先删除现有一级' : '',
+      onclick:()=>{
+        if((w2[axis].categories||[]).length >= Work2.MAX_CATS){ showToast('每轴最多 '+Work2.MAX_CATS+' 个一级维度'); return; }
+        w2[axis].categories.push({id:uid('cat'),name:'',weight:0.25,indicators:[]});autosave();Work2.rerender('framework');
+      }},'+ 一级维度'));
+    // 常显：缺一级时点名要补哪个；不缺时点了只提示无需补齐（不会调 AI）。
+    // 2026-09-11 先做成“只缺才出现”，结果用户找不到入口——按钮得先被看见。
+    const missingCats = Work2.missingTemplateCats(axis);
+    footRow.appendChild(el('button',{class:'small ghost',
+      title: missingCats.length
+        ? '让 AI 只补齐缺的一级维度：'+missingCats.map(t=>t[0]).join(' / ')+'；已有指标、锚点、权重与已打评分都不动'
+        : '本轴 4 个一级维度都在；点了只提示无需补齐，不会调 AI',
+      onclick:e=>Work2.fillMissingCats(axis, e.currentTarget, footRow)},
+      missingCats.length ? 'AI 补齐一级：'+missingCats.map(t=>t[0]).join(' / ') : 'AI 补齐缺失的一级'));
+    footRow.appendChild(el('button',{class:'small ghost',title:'把本轴整轴换回默认模板（另一轴不动）',
+      onclick:()=>Work2.restoreAxisTemplate(axis)},'恢复默认 4×2 模板'));
+    plate.appendChild(footRow);
   });
 
   // 1.5 Hybrid 2 Delphi
@@ -468,18 +645,23 @@ Work2.runFrameworkPipeline = function(button, container, cfg){
       '\n输出: {"retained": [{"name": "清单中的市场名", "reason": "为什么留", "region": "所属地区如 欧洲/东亚", "population": "人口或规模量级如 约 6700 万", "gdpPerCapita": "人均 GDP 量级如 约 4.9 万美元"}]}，region/population/gdpPerCapita 按真实近似值填写，不得留空。',
       r=>{ if(!r?.retained){ showToast('AI 返回缺少保留市场，已保留原值'); return; }
         state.work2.retained = r.retained.slice(0,3).map(m=>({id:uid('m'),name:m.name||'',region:m.region||'',population:m.population||'',gdpPerCapita:m.gdpPerCapita||'',notes:'',reason:m.reason||'',source:'ai'}));
-        state.work2.scoring = {}; autosave(); }),
+        state.work2.scoring = {};
+        // 保留市场换了 id：三档决策里的旧 marketId 当场消毒，不留悬空选择
+        Work2.pruneStaleTiers();
+        autosave(); }),
     mk('fw:indicators','指标体系','work2.indicators',['sbu','environment','competitors'],
       '你是营销研究方法专家。建议 4 一级 × 2 二级 的市场吸引力指标 + 业务竞争力指标。每个指标给高中低评分锚点。请按以下 4×2 模板输出（可微调一级名但不能删一级）：吸引力：经济 / 政治法律 / 社会文化 / 风险；竞争力：市场信息 / 营销渠道 / 认证合规 / 产品品牌。',
       '输出: {"attractiveness": {"categories": [{"name": "", "indicators": [{"name": "", "rubric": {"high": "", "mid": "", "low": ""}}]}]}, "competitiveness": {...}}',
       r=>{ if(!r) return;
         ['attractiveness','competitiveness'].forEach(axis=>{
-          const cats = r[axis]?.categories;
-          if(!Array.isArray(cats) || !cats.length) return;
-          state.work2[axis].categories = cats.map(c=>({
+          const cats = (r[axis]?.categories||[]).slice(0,Work2.MAX_CATS);
+          if(!cats.length) return;
+          state.work2[axis].categories = cats.map(c=>{
+            const inds = (c.indicators||[]).slice(0,Work2.MAX_INDS);
+            return {
             id:uid('cat'), name:c.name||'', weight:1/cats.length,
-            indicators:(c.indicators||[]).map(i=>({id:uid('ind'),name:i.name||'',rubric:i.rubric||{high:'',mid:'',low:''},weight:1/Math.max(1,(c.indicators||[]).length),support:0,source:'ai'}))
-          }));
+            indicators:inds.map(i=>({id:uid('ind'),name:i.name||'',rubric:i.rubric||{high:'',mid:'',low:''},weight:1/Math.max(1,inds.length),support:0,source:'ai'}))
+          };});
         });
         // 指标变了：权重需重定（Delphi 重置）
         state.work2.delphi.finalWeights = null; state.work2.delphi.personas = [];
@@ -577,10 +759,11 @@ Work2.renderDelphi = function(plate){
     ['attractiveness','competitiveness'].forEach(axis=>{
       plate.appendChild(el('h5',{style:'margin:10px 0 4px'}, axis==='attractiveness'?'市场吸引力':'业务竞争力'));
       const items = inds.filter(i=>i.axis===axis)
-        .map(i=>({label:i.name, value:(ew[axis]?.[i.id]||0)*100}))
+        .map(i=>({label:i.name, value:ew[axis]?.[i.id]||0}))
         .sort((a,b)=>b.value-a.value);
       const c = el('section',{class:'plate'});
-      renderBarChart(c, items, {unit:'%'});
+      // 与 persona 赋权表同口径：0–1 归一化权重、两位小数（不用百分比）
+      renderBarChart(c, items, {unit:'', decimals:2});
       plate.appendChild(c);
     });
     if(d.drifted) plate.appendChild(el('div',{class:'callout'},
@@ -886,6 +1069,9 @@ Work2.render.decision = function(sec){
   const plate = sec.querySelector('.plate');
   const d = state.work2.decision;
   const mks = state.work2.retained || [];
+  // 兜底消毒：覆盖导入/迁移/其它改写保留市场的入口——悬空的 tier id 会让
+  // 下拉退回「— 必选 —」而 MVO 仍报 tier1 非空（假通过）。
+  if(Work2.pruneStaleTiers()) autosave();
   const pts = Work2.computeMatrix();
   if(!pts.length){ plate.appendChild(el('div',{class:'warning'},'请先完成候选市场与评分。')); return; }
   const cuts = Work2.matrixCuts();

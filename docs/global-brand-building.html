@@ -1760,7 +1760,17 @@ table.data textarea{font-family:var(--font-body);font-style:normal;font-size:14p
   font-family:var(--font-mono);font-size:11px;letter-spacing:.18em;
   color:var(--color-ink-2);text-transform:uppercase;font-weight:500;
 }
-.hallmark-persona .persona-del{margin-left:auto}
+/* 画像删除：破坏性操作给足点击面积与按钮轮廓（2026-09-11：原来 ghost+small
+   只剩 11px 字 + 一条下划线，太小点不中）。不填色翻转——hover 用 warn 色描边换反馈。 */
+.hallmark-persona .persona-del{
+  margin-left:auto;
+  padding:10px 20px;min-height:40px;
+  border:1px solid var(--color-rule);
+}
+.hallmark-persona .persona-del::after{display:none}
+.hallmark-persona .persona-del:hover{
+  color:var(--color-warn);border-color:var(--color-warn);background:transparent;
+}
 .hallmark-persona .persona-grid{margin-bottom:16px}
 .hallmark-persona .persona-grid input,
 .hallmark-persona .persona-grid select{
@@ -3296,7 +3306,7 @@ function _stepKey(container){
   return w+'/'+step.dataset.step;
 }
 function renderBarChart(container, items, opts={}){
-  const { unit='', max=null, height=14 }=opts;
+  const { unit='', max=null, height=14, decimals=1 }=opts;
   const m=max ?? Math.max(1,...items.map(i=>i.value));
   container.innerHTML='';
   // Bars grow from 0 only the first time a step's results are *visible*.
@@ -3316,7 +3326,7 @@ function renderBarChart(container, items, opts={}){
       style:{background:it.color||'var(--color-accent)',transform:'scaleX('+(reveal?0:frac)+')'}});
     const row=el('div',{class:'bar-row'+(reveal?' anim':'')},
       el('div',{style:{display:'flex','justify-content':'space-between','font-family':'var(--font-mono)','font-size':'11px',marginBottom:'3px'}},
-        el('span',{},it.label), el('span',{},it.value.toFixed(1)+unit)),
+        el('span',{},it.label), el('span',{},it.value.toFixed(decimals)+unit)),
       el('div',{class:'bar-track',style:{height:height+'px'}}, fill)
     );
     container.appendChild(row);
