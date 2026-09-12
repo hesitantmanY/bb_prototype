@@ -4,7 +4,7 @@
    ============================================================ */
 // 构建戳：每次前端有用户可感知改动时递增，summary bar 显示；
 // 刷新后戳不变 = 浏览器在用缓存 JS（需硬刷新）。
-Work1.BUILD = '0912d';
+Work1.BUILD = '0912e';
 
 Work1.steps = [
   {id:'sbu', label:'1. SBU'},
@@ -223,7 +223,9 @@ Work1.mvo = {
   }),
   analysis: () => ({
     checks: [
-      {label:'已生成李克特统计与回填', test:()=>Object.keys(state.work1.analysis.likertStats||{}).length>0},
+      // 至少一题有有效回答（n>0）；AI 受访者 questionId 对不上或值全无法解析时
+      // likertStats 也会有键但 n=0，那种空统计不算回填成功。
+      {label:'已生成李克特统计与回填', test:()=>Object.values(state.work1.analysis.likertStats||{}).some(x=>x.n>0)},
       {label:'写了综合洞察（至少 3 条）', test:()=>(state.work1.analysis.insights||'').trim().length>30},
     ],
     note:'重点看"自评分 vs 实测分偏差 >1.5"的指标——那是认知断点，是价值主张的发力点。'
@@ -2347,7 +2349,8 @@ Work1.render.survey = function(sec){
     el('button',{class:'ghost',onclick:()=>{ if(confirm('清空已有回答？')){s.responses=[];s._doneKeys=[];s.status='idle';
       // BIZ05：统计/主题/实测回填源在 analysis 侧，一并清空并重算（actual 归 null）
       const a=state.work1.analysis||(state.work1.analysis={});a.likertStats={};a.openThemes=[];a.indicatorMeans=[];
-      Work1.backfillScores();autosave();Work1.rerender('survey');}}},'清空回答')
+      Work1.backfillScores();autosave();Work1.rerender('survey');
+      if(typeof App!=='undefined' && App.currentWork===1) App.renderSubtabs(1);}}},'清空回答')
   );
   plate.appendChild(actions);
   if(s.error) plate.appendChild(el('div',{class:'warning'},s.error));
@@ -2478,6 +2481,9 @@ Work1.analyzeResponses = function(){
   // 回填指标实测分（李克特 1-5 → 1-10）并重算 Δ
   Work1.backfillScores();
   autosave();
+  // 子标签「回填 N」角标只在 renderSubtabs（goWork）时计算，留在 W1 跑完
+  // 调研不会自动刷新——这里主动重渲一次子标签栏。
+  if(typeof App!=='undefined' && App.currentWork===1) App.renderSubtabs(1);
 };
 
 /* ---------- STEP 6: ANALYSIS ---------- */
