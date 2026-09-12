@@ -294,7 +294,7 @@
  registerFewShot('work2.candidates', '期望 JSON 形状：\n{"candidates":[{"name":"<国家/地区>","reason":"<1句，含需求/规模/趋势之一>"}]}');
  registerFewShot('work2.criteria', '期望 JSON 形状：\n{"criteria":[{"name":"<可观测标准，如 Hofstede UAI > 80>","source":"<公开数据源名称>"}]}');
  registerFewShot('work2.retained', '期望 JSON 形状：\n{"retained":[{"name":"<清单中的市场名>","reason":"<为什么留>","region":"<地区如 欧洲>","population":"<如 约 6700 万>","gdpPerCapita":"<如 约 4.9 万美元>"}]}');
- registerFewShot('work2.indicators', '期望 JSON 形状：\n{"attractiveness":{"categories":[{"name":"","indicators":[{"name":"","rubric":{"high":"","mid":"","low":""}}]}]},"competitiveness":{"categories":[…]}}');
+ registerFewShot('work2.indicators', '期望 JSON 形状（每次只输出一个轴，恰好 4 个一级、每个恰好 2 个二级）：\n{"categories":[{"name":"<一级维度>","indicators":[{"name":"<二级指标>","rubric":{"high":"<8-10分锚点>","mid":"<4-7分锚点>","low":"<0-3分锚点>"}},{"name":"<二级指标>","rubric":{"high":"","mid":"","low":""}}]}]}');
  registerFewShot('delphi.perspectives', '期望 JSON 形状：\n{"perspectives":[{"name":"<视角名>","rationale":"<为什么重要>","keySignals":["<3-5个该视角最在意的信号>"]}]}');
  registerFewShot('delphi.converge', '期望 JSON 形状：\n{"weights":{"attractiveness":{"<indId>":0.25},"competitiveness":{"<indId>":0.25}},"summary":"<1段>"}');
  registerFewShot('work2.scores', '期望 JSON 形状：\n{"scores":{"<indId>":7.5},"evidence":{"<indId>":"<10-30字依据>"},"sources":{"<indId>":"<可选URL>"}}');

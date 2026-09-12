@@ -53,7 +53,9 @@ function ok(name, cond, detail){
 
 // 启动流水线（此刻 candidates/criteria 为空）
 W2.runFrameworkPipeline({addEventListener(){}}, {}, {});
-ok('pipeline captured 4 units', Array.isArray(capturedUnits) && capturedUnits.length === 4);
+ok('pipeline captured 5 units', Array.isArray(capturedUnits) && capturedUnits.length === 5);
+ok('指标拆成两轴单元', capturedUnits[3].key==='fw:indicators:attractiveness'
+  && capturedUnits[4].key==='fw:indicators:competitiveness');
 
 // 模拟串行执行：单元 1（候选）和 2（标准）已写回 state
 capturedUnits[0].onResult({ candidates: [
@@ -70,6 +72,36 @@ ok('unit3 prompt contains fresh candidates', u3prompt.includes('英国') && u3pr
 ok('unit3 prompt contains fresh criteria', u3prompt.includes('住宅电价高于全美均值'));
 // 2026-09-01：region/population/gdpPerCapita 不得留空——空串占位示例会被模型照抄成空值
 ok('unit3 prompt demands filled region/population/gdp', u3prompt.includes('不得留空'));
+
+// 单元 4/5（指标）：null（典型为超长截断后两次解析失败）必须抛错，
+// pipeline 的 catch 才会降级手动箱且不 markDone——旧逻辑静默 return 却判完成。
+let threw = false;
+try { capturedUnits[3].onResult(null); } catch(e){ threw = true; }
+ok('吸引力单元收到 null 直接抛错（不静默完成）', threw);
+threw = false;
+try { capturedUnits[3].onResult({}); } catch(e){ threw = true; }
+ok('吸引力单元收到缺 categories 的 JSON 也抛错', threw);
+
+// 少给归一化：3 个一级（其中一个只给 1 个二级）→ 补到 4×2
+capturedUnits[3].onResult({ categories: [
+  { name:'经济', indicators:[{name:'市场规模',rubric:{high:'h',mid:'m',low:'l'}},{name:'景气度',rubric:{high:'h',mid:'m',low:'l'}}]},
+  { name:'政治法律', indicators:[{name:'贸易摩擦',rubric:{high:'h',mid:'m',low:'l'}}]},
+  { name:'社会文化', indicators:[{name:'需求强度',rubric:{high:'h',mid:'m',low:'l'}},{name:'文化匹配',rubric:{high:'h',mid:'m',low:'l'}}]}
+]});
+const ac = sandbox.state.work2.attractiveness.categories;
+ok('吸引力补到 4 个一级（缺的「风险」按模板名补）', ac.length===4 && ac[3].name==='风险',
+  JSON.stringify(ac.map(c=>c.name)));
+ok('每个一级恰好 2 个二级、权重 0.25/0.5', ac.every(c=>c.indicators.length===2
+  && Math.abs(c.weight-0.25)<1e-9 && c.indicators.every(i=>Math.abs(i.weight-0.5)<1e-9)));
+ok('缺二级补的是空行（空名 + 空锚点）', ac[1].indicators[1].name===''
+  && ac[1].indicators[1].rubric.mid==='');
+
+// 多给截断：5 一级 × 3 二级 → 4 × 2
+capturedUnits[4].onResult({ categories: Array.from({length:5}, (_,k)=>({
+  name:'C'+k, indicators:[1,2,3].map(j=>({name:'I'+j,rubric:{high:'',mid:'',low:''}}))
+}))});
+const cc = sandbox.state.work2.competitiveness.categories;
+ok('竞争力多给截断为 4×2', cc.length===4 && cc.every(c=>c.indicators.length===2));
 
 console.log(fail ? `\n${fail} FAILED` : `\nall ${pass} passed`);
 process.exit(fail ? 1 : 0);

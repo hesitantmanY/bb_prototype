@@ -3220,7 +3220,9 @@ const API = {
         let parsed=null;
         try{ parsed=JSON.parse(ta.value); }catch{ parsed=this.extractJson(ta.value); }
         if(!parsed){ showToast('未能解析 JSON'); return; }
-        unit.onResult(parsed, ta.value, 'manual');
+        // onResult 抛错（如指标单元收到缺轴的 JSON）：toast 并保留面板，让用户重贴
+        try{ unit.onResult(parsed, ta.value, 'manual'); }
+        catch(e){ showToast(e.message || '填入失败'); return; }
         onDone();
         finish(true);
       }},'解析并填入');

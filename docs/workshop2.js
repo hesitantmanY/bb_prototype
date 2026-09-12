@@ -147,6 +147,51 @@ Work2.fillMissingCats = function(axis, button, container){
     }});
 };
 
+/* AI 指标产物归一化（对齐 Work1.normalizeMetricDims，2026-09-12）。
+   模型常少给：3 个一级、一级下只给 1 个二级、锚点缺字段。缺二级补空行、
+   缺一级按 4×2 模板名补齐，空行留给用户在界面补锚点。返回 {cats, patched}。纯函数。 */
+Work2.normalizeAxisCats = function(axis, rawCats){
+  const blankInd = ()=>({id:uid('ind'),name:'',rubric:{high:'',mid:'',low:''},weight:0.5,support:0,source:'ai'});
+  let patched = 0;
+  const cats = (rawCats||[]).slice(0,Work2.MAX_CATS).map(c=>{
+    const inds = (Array.isArray(c?.indicators)?c.indicators:[]).slice(0,Work2.MAX_INDS).map(i=>({
+      id:uid('ind'), name:String(i?.name||''), rubric:i?.rubric||{high:'',mid:'',low:''},
+      weight:0.5, support:0, source:'ai'}));
+    while(inds.length < Work2.MAX_INDS){ inds.push(blankInd()); patched++; }
+    return {id:uid('cat'), name:String(c?.name||''), weight:0.25, indicators:inds};
+  });
+  if(cats.length < Work2.MAX_CATS){
+    Work2.INDICATOR_TEMPLATE[axis].forEach(([tname])=>{
+      if(cats.length >= Work2.MAX_CATS) return;
+      if(!cats.some(c=>(c.name||'').includes(tname) || tname.includes(c.name||''))){
+        cats.push({id:uid('cat'), name:tname, weight:0.25, indicators:[blankInd(),blankInd()]});
+        patched += Work2.MAX_INDS;
+      }
+    });
+    while(cats.length < Work2.MAX_CATS){
+      cats.push({id:uid('cat'), name:'', weight:0.25, indicators:[blankInd(),blankInd()]});
+      patched += Work2.MAX_INDS;
+    }
+  }
+  return {cats, patched};
+};
+
+/* 流水线指标单元落点（每轴一单元）。空结果直接抛错：pipeline 的 catch 会
+   toast + 降级手动箱且不 markDone。2026-09-12 前 onResult(null) 静默 return，
+   单元却被判完成——「推导完成」但指标体系没生成，根因就在这。 */
+Work2.acceptAxisIndicators = function(axis, r){
+  const axisLabel = axis==='attractiveness'?'市场吸引力':'业务竞争力';
+  if(!r || !Array.isArray(r.categories) || !r.categories.length)
+    throw new Error('AI 未返回「'+axisLabel+'」的有效指标 JSON（输出可能被截断）');
+  const {cats, patched} = Work2.normalizeAxisCats(axis, r.categories);
+  state.work2[axis].categories = cats;
+  // 指标变了：权重需重定（Delphi 重置）
+  state.work2.delphi.finalWeights = null; state.work2.delphi.personas = [];
+  state.work2.delphi.status = 'idle'; state.work2.delphi.drifted = false;
+  autosave();
+  if(patched) showToast('「'+axisLabel+'」AI 少给 '+patched+' 个二级指标，已按 4×2 补空行，请补全');
+};
+
 /* 保留市场换过 id（流水线重跑 / 手动删）后，三档决策里的旧 marketId 会悬空：
    下拉退回「— 必选 —」、矩阵没有选中点、导出写「主战场：未知」，
    而 MVO 的「tier1 非空」拿到的是旧字符串，依旧假通过。统一消毒。 */
@@ -649,24 +694,18 @@ Work2.runFrameworkPipeline = function(button, container, cfg){
         // 保留市场换了 id：三档决策里的旧 marketId 当场消毒，不留悬空选择
         Work2.pruneStaleTiers();
         autosave(); }),
-    mk('fw:indicators','指标体系','work2.indicators',['sbu','environment','competitors'],
-      '你是营销研究方法专家。建议 4 一级 × 2 二级 的市场吸引力指标 + 业务竞争力指标。每个指标给高中低评分锚点。请按以下 4×2 模板输出（可微调一级名但不能删一级）：吸引力：经济 / 政治法律 / 社会文化 / 风险；竞争力：市场信息 / 营销渠道 / 认证合规 / 产品品牌。',
-      '输出: {"attractiveness": {"categories": [{"name": "", "indicators": [{"name": "", "rubric": {"high": "", "mid": "", "low": ""}}]}]}, "competitiveness": {...}}',
-      r=>{ if(!r) return;
-        ['attractiveness','competitiveness'].forEach(axis=>{
-          const cats = (r[axis]?.categories||[]).slice(0,Work2.MAX_CATS);
-          if(!cats.length) return;
-          state.work2[axis].categories = cats.map(c=>{
-            const inds = (c.indicators||[]).slice(0,Work2.MAX_INDS);
-            return {
-            id:uid('cat'), name:c.name||'', weight:1/cats.length,
-            indicators:inds.map(i=>({id:uid('ind'),name:i.name||'',rubric:i.rubric||{high:'',mid:'',low:''},weight:1/Math.max(1,inds.length),support:0,source:'ai'}))
-          };});
-        });
-        // 指标变了：权重需重定（Delphi 重置）
-        state.work2.delphi.finalWeights = null; state.work2.delphi.personas = [];
-        state.work2.delphi.status = 'idle'; state.work2.delphi.drifted = false;
-        autosave(); })
+    // 2026-09-12：指标拆成两单元。原一单元要两轴共 48 段锚点文本，超长被
+    // 截断 → JSON 两次解析失败 → callJson 返回 null，旧 onResult 静默 return
+    // 却仍被 markDone，表现为「推导完成」但指标体系没生成（/ 只剩默认空模板）。
+    // 每轴一单元：payload 减半，单轴失败可断点续跑或粘贴手动箱。
+    mk('fw:indicators:attractiveness','指标体系 · 市场吸引力','work2.indicators',['sbu','environment'],
+      '你是营销研究方法专家。为海外市场选择的「市场吸引力」轴建议指标：严格输出恰好 4 个一级维度，每个一级下恰好 2 个二级指标（不多不少）。一级维度按模板（可微调名称但不得缺失）：经济 / 政治法律 / 社会文化 / 风险。每个二级指标给出 high/mid/low 评分锚点（high=8-10 分长什么样、mid=4-7、low=0-3），锚点要可观测、可查证。',
+      '输出: {"categories": [{"name": "一级维度名", "indicators": [{"name": "二级指标名", "rubric": {"high": "", "mid": "", "low": ""}}, {"name": "同个一级下第 2 个二级", "rubric": {"high": "", "mid": "", "low": ""}}]}, {"name": "共恰好 4 个一级", "indicators": [{"name":"","rubric":{"high":"","mid":"","low":""}},{"name":"","rubric":{"high":"","mid":"","low":""}}]}]}',
+      r=>Work2.acceptAxisIndicators('attractiveness', r)),
+    mk('fw:indicators:competitiveness','指标体系 · 业务竞争力','work2.indicators',['sbu','environment','competitors'],
+      '你是营销研究方法专家。为海外市场选择的「业务竞争力」轴建议指标：严格输出恰好 4 个一级维度，每个一级下恰好 2 个二级指标（不多不少）。一级维度按模板（可微调名称但不得缺失）：市场信息 / 营销渠道 / 认证合规 / 产品品牌。每个二级指标给出 high/mid/low 评分锚点（high=8-10 分长什么样、mid=4-7、low=0-3），锚点要可观测、可查证。',
+      '输出: {"categories": [{"name": "一级维度名", "indicators": [{"name": "二级指标名", "rubric": {"high": "", "mid": "", "low": ""}}, {"name": "同个一级下第 2 个二级", "rubric": {"high": "", "mid": "", "low": ""}}]}, {"name": "共恰好 4 个一级", "indicators": [{"name":"","rubric":{"high":"","mid":"","low":""}},{"name":"","rubric":{"high":"","mid":"","low":""}}]}]}',
+      r=>Work2.acceptAxisIndicators('competitiveness', r))
   ];
   API.aiPipeline({button, container, label:'AI 推导评估体系', units, store:Work2.pipeStore,
     onDone: ()=>Work2.rerender('framework')});

@@ -357,23 +357,32 @@ ok('AI 给 3 个二级 → 只收 2 个，权重均分 0.5',
   riskAgain.indicators.length === 2 && riskAgain.indicators.every(i => Math.abs(i.weight-0.5) < 1e-9),
   JSON.stringify(riskAgain.indicators.map(i => i.name)));
 
-/* ---- 主流水线指标单元：AI 多给 5 一级 × 3 二级 → 截断为 4 × 2，权重正确 ---- */
+/* ---- 主流水线指标单元（2026-09-12 起每轴一个单元）：多给截断 / 少给补齐 ---- */
 let pipeOpts = null;
 sandbox.API.aiPipeline = opts => { pipeOpts = opts; };
 W2.runFrameworkPipeline({}, {}, { sections:['sbu'] });
-const indUnit = pipeOpts.units.find(u => u.key === 'fw:indicators');
-const mkCats = n => ({ categories: Array.from({length:n}, (_,k) => ({
+const attrUnit = pipeOpts.units.find(u => u.key === 'fw:indicators:attractiveness');
+const compUnit = pipeOpts.units.find(u => u.key === 'fw:indicators:competitiveness');
+const mkCats = n => Array.from({length:n}, (_,k) => ({
   name: 'C'+k, indicators: [1,2,3].map(j => ({ name:'I'+j, rubric:{high:'',mid:'',low:''} }))
-}))});
-indUnit.onResult({ attractiveness: mkCats(5), competitiveness: mkCats(5) });
+}));
+// AI 多给 5 一级 × 3 二级 → 截断为 4 × 2，权重 0.25 / 0.5
+attrUnit.onResult({ categories: mkCats(5) });
+compUnit.onResult({ categories: mkCats(5) });
 ok('流水线指标结果截断为 4 个一级', w2.attractiveness.categories.length === 4 && w2.competitiveness.categories.length === 4);
 ok('每个一级截断为 2 个二级，一级权重 0.25 / 二级权重 0.5',
   w2.attractiveness.categories.every(c => c.indicators.length === 2 &&
     Math.abs(c.weight-0.25) < 1e-9 && c.indicators.every(i => Math.abs(i.weight-0.5) < 1e-9)));
-// 只有 2 个一级时按实际数归一化（不被截断逻辑影响）
-indUnit.onResult({ attractiveness: mkCats(2), competitiveness: mkCats(2) });
-ok('AI 只给 2 个一级时权重为 0.5（按实际数归一化）',
-  w2.attractiveness.categories.length === 2 && Math.abs(w2.attractiveness.categories[0].weight-0.5) < 1e-9);
+// AI 只给 2 个一级（自定义名）→ 用模板名补齐到 4，权重统一 0.25
+attrUnit.onResult({ categories: mkCats(2) });
+ok('AI 只给 2 个一级时按 4×2 模板补齐（不再接受残缺轴）',
+  w2.attractiveness.categories.length === 4 &&
+  w2.attractiveness.categories.slice(0,2).every((c,i)=>c.name==='C'+i) &&
+  w2.attractiveness.categories.every(c=>Math.abs(c.weight-0.25)<1e-9),
+  JSON.stringify(w2.attractiveness.categories.map(c=>c.name)));
+// null / 缺 categories → 抛错（pipeline 据此降级手动箱，不 markDone）
+ok('null 结果抛错', (()=>{ try{ attrUnit.onResult(null); return false; }catch(e){ return true; } })());
+ok('空 categories 抛错', (()=>{ try{ attrUnit.onResult({categories:[]}); return false; }catch(e){ return true; } })());
 
 /* ---- 悬空 tier id 消毒（MVO 假通过）---- */
 w2.retained = [{ id:'m1', name:'德国' }, { id:'m2', name:'荷兰' }, { id:'m3', name:'瑞典' }];
