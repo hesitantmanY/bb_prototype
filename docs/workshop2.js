@@ -133,8 +133,8 @@ Work2.fillMissingCats = function(axis, button, container){
         if(accepted.some(x=>x.name===nm)) return;
         const inds = (c.indicators||[]).slice(0,Work2.MAX_INDS);
         accepted.push({id:uid('cat'), name:nm, weight:0.25,
-          indicators: inds.map(i=>({id:uid('ind'), name:String(i?.name||''),
-            rubric:i?.rubric||{high:'',mid:'',low:''}, weight:1/Math.max(1,inds.length), support:0, source:'ai'}))});
+          indicators: inds.map(i=>({id:uid('ind'), name:String(i?.name||'').trim(),
+            rubric:Work2.pickRubric(i), weight:1/Math.max(1,inds.length), support:0, source:'ai'}))});
       });
       if(!accepted.length){ showToast(room<=0 ? '本轴已有 '+Work2.MAX_CATS+' 个一级维度，AI 结果未采用' : 'AI 返回的一级维度都已存在，未做改动'); return; }
       state.work2[axis].categories = (state.work2[axis].categories||[]).concat(accepted);
@@ -147,18 +147,43 @@ Work2.fillMissingCats = function(axis, button, container){
     }});
 };
 
+/* 从 AI 产物里取锚点：模型常不按 rubric 嵌套写——扁平 i.high、中文键、
+   highAnchor/8-10 分 等形态都见过，取不到就静默变空锚点、MVO 假失败。
+   同时兼容 i.rubric 嵌套与扁平字段。纯函数。 */
+Work2.pickRubric = function(i){
+  const groups = [i && i.rubric, i];
+  const pick = keys => {
+    for(const o of groups){
+      if(!o || typeof o!=='object') continue;
+      for(const k of keys){
+        const v = o[k];
+        if(typeof v==='string' && v.trim()) return v.trim();
+      }
+    }
+    return '';
+  };
+  return {
+    high: pick(['high','highAnchor','scoreHigh','高','高分','高分锚点','8-10','8-10分','8~10']),
+    mid:  pick(['mid','middle','medium','midAnchor','scoreMid','中','中分','中分锚点','4-7','4-7分','4~7']),
+    low:  pick(['low','lowAnchor','scoreLow','低','低分','低分锚点','0-3','0-3分','0~3'])
+  };
+};
+
 /* AI 指标产物归一化（对齐 Work1.normalizeMetricDims，2026-09-12）。
-   模型常少给：3 个一级、一级下只给 1 个二级、锚点缺字段。缺二级补空行、
-   缺一级按 4×2 模板名补齐，空行留给用户在界面补锚点。返回 {cats, patched}。纯函数。 */
+   模型常少给：3 个一级、一级下只给 1 个二级、锚点缺字段或换键名。缺二级补空行、
+   缺一级按 4×2 模板名补齐，空行留给用户在界面补锚点。patched=缺名或缺锚点的二级数。纯函数。 */
 Work2.normalizeAxisCats = function(axis, rawCats){
   const blankInd = ()=>({id:uid('ind'),name:'',rubric:{high:'',mid:'',low:''},weight:0.5,support:0,source:'ai'});
   let patched = 0;
   const cats = (rawCats||[]).slice(0,Work2.MAX_CATS).map(c=>{
-    const inds = (Array.isArray(c?.indicators)?c.indicators:[]).slice(0,Work2.MAX_INDS).map(i=>({
-      id:uid('ind'), name:String(i?.name||''), rubric:i?.rubric||{high:'',mid:'',low:''},
-      weight:0.5, support:0, source:'ai'}));
+    const inds = (Array.isArray(c?.indicators)?c.indicators:[]).slice(0,Work2.MAX_INDS).map(raw=>{
+      const rubric = Work2.pickRubric(raw);
+      if(!(String(raw?.name||'').trim()) || !rubric.high || !rubric.mid || !rubric.low) patched++;
+      return {id:uid('ind'), name:String(raw?.name||'').trim(), rubric,
+        weight:0.5, support:0, source:'ai'};
+    });
     while(inds.length < Work2.MAX_INDS){ inds.push(blankInd()); patched++; }
-    return {id:uid('cat'), name:String(c?.name||''), weight:0.25, indicators:inds};
+    return {id:uid('cat'), name:String(c?.name||'').trim(), weight:0.25, indicators:inds};
   });
   if(cats.length < Work2.MAX_CATS){
     Work2.INDICATOR_TEMPLATE[axis].forEach(([tname])=>{
@@ -189,7 +214,7 @@ Work2.acceptAxisIndicators = function(axis, r){
   state.work2.delphi.finalWeights = null; state.work2.delphi.personas = [];
   state.work2.delphi.status = 'idle'; state.work2.delphi.drifted = false;
   autosave();
-  if(patched) showToast('「'+axisLabel+'」AI 少给 '+patched+' 个二级指标，已按 4×2 补空行，请补全');
+  if(patched) showToast('「'+axisLabel+'」有 '+patched+' 个二级指标缺名称或锚点，已按 4×2 补空行，请补全');
 };
 
 /* 保留市场换过 id（流水线重跑 / 手动删）后，三档决策里的旧 marketId 会悬空：
@@ -413,7 +438,13 @@ Work2.mvo = {
       {label:'候选市场 ≥5 个且有入选理由', test:()=>state.work2.candidates.length>=5 && state.work2.candidates.every(c=>(c.reason||'').trim().length>3)},
       {label:'筛选标准 ≥3 个', test:()=>state.work2.screening.criteria.length>=3},
       {label:'保留了 3 个市场', test:()=>state.work2.retained.length===3},
-      {label:'指标体系完整（每个二级有高分锚点）', test:()=>Work2.allIndicators().every(i=>i.rubric&&i.rubric.high)}
+      // 锚点三档缺一不可（打分时三档全用）；空白字符串/纯空格都不算数。
+      // 2026-09-12：原检查只看 high 真值——'   ' 能过、mid/low 缺失也能过，MVO 假通过。
+      {label:'指标体系完整（每个二级有名称 + 高/中/低锚点）', test:()=>{
+        const inds=Work2.allIndicators();
+        return inds.length>0 && inds.every(i=>(i.name||'').trim() && i.rubric
+          && (i.rubric.high||'').trim() && (i.rubric.mid||'').trim() && (i.rubric.low||'').trim());
+      }}
     ],
     note:'评估体系先于打分——没有 rubric（高/中/低锚点）的指标，AI 和你自己打分都会漂移。'
   }),

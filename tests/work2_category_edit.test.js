@@ -384,6 +384,28 @@ ok('AI 只给 2 个一级时按 4×2 模板补齐（不再接受残缺轴）',
 ok('null 结果抛错', (()=>{ try{ attrUnit.onResult(null); return false; }catch(e){ return true; } })());
 ok('空 categories 抛错', (()=>{ try{ attrUnit.onResult({categories:[]}); return false; }catch(e){ return true; } })());
 
+/* ---- AI 锚点换键名/扁平写也要认（否则静默变空锚点、MVO 假失败）---- */
+const full = n => ({ name:'一级'+n, indicators:[
+  { name:'I1', high:'H', mid:'M', low:'L' },                       // 扁平英文键
+  { name:'I2', rubric:{ 高分锚点:'好', 中分锚点:'中', 低分锚点:'差' } } // 中文嵌套键
+]});
+const fullFour = [full(1),full(2),full(3),full(4)];
+attrUnit.onResult({ categories:fullFour });
+compUnit.onResult({ categories:fullFour });
+ok('扁平/中文键锚点都被识别', w2.attractiveness.categories.every(c=>
+  c.indicators.every(i=>i.rubric.high && i.rubric.mid && i.rubric.low)),
+  JSON.stringify(w2.attractiveness.categories[0].indicators.map(i=>i.rubric)));
+ok('锚点值被 trim', w2.attractiveness.categories[0].indicators[0].rubric.high==='H');
+
+/* ---- MVO：名称 + 高/中/低锚点齐全才算完整 ---- */
+const mvoPass = () => W2.mvo.framework().checks[3].test();
+ok('完整体系过 MVO', mvoPass() === true);
+w2.attractiveness.categories[0].indicators[0].rubric.low = '   ';
+ok('纯空格低分锚点不过 MVO（旧检查只看 high 真值会假通过）', mvoPass() === false);
+w2.attractiveness.categories[0].indicators[0].rubric.low = 'L';
+w2.attractiveness.categories[1].indicators[1].name = '';
+ok('缺二级名称不过 MVO', mvoPass() === false);
+
 /* ---- 悬空 tier id 消毒（MVO 假通过）---- */
 w2.retained = [{ id:'m1', name:'德国' }, { id:'m2', name:'荷兰' }, { id:'m3', name:'瑞典' }];
 w2.decision = {
