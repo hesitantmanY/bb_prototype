@@ -379,7 +379,7 @@ Work5.painMapBlock = function(container){
   const pains=mg.painMap||[];
   if(!pains.length){
     container.appendChild(el('div',{class:'warning'},'Work 3 尚未完成卖点挖掘（痛点地图）。',
-      el('button',{class:'ghost small',onclick:()=>{ if(typeof App!=='undefined'&&App.goWork) App.goWork(3); }},'去 Work 3 完成 →')));
+      el('button',{class:'ghost small',onclick:()=>{ App.goWork(3); App.goStep('mining'); }},'去 Work 3 完成 →')));
     return;
   }
   const comp=mg.corpusComposition||{real:(mg.documents||[]).length,simulated:(mg.simulatedDocuments||[]).length};
@@ -611,7 +611,7 @@ Work5.marketMatrixBlock = function(container){
   if(pts.every(p=>!p.x && !p.y)){
     container.appendChild(el('div',{class:'warning'},
       '3.1 显示异常：所有市场评分缺失，散点将全部落在原点。请回 Work 2 完成市场评分（每市场 × 每指标打分）。',
-      el('button',{class:'ghost small',onclick:()=>{ if(typeof App!=='undefined'&&App.goWork) App.goWork(2); }},'去 Work 2 评分 →')));
+      el('button',{class:'ghost small',onclick:()=>{ App.goWork(2); App.goStep('evaluate'); }},'去 Work 2 评分 →')));
   }
   const d=state.work2;
   const plate=el('section',{class:'plate'});
@@ -643,7 +643,7 @@ Work5.sellingPointBlock = function(container){
   if(!pts.length){
     container.appendChild(el('div',{class:'warning'},
       'Work 3 尚未完成卖点评分与矩阵。',
-      el('button',{class:'ghost small',onclick:()=>{ if(typeof App!=='undefined'&&App.goWork) App.goWork(3); }},'去 Work 3 完成 →')
+      el('button',{class:'ghost small',onclick:()=>{ App.goWork(3); App.goStep('matrix'); }},'去 Work 3 完成 →')
     ));
     return;
   }
@@ -653,7 +653,7 @@ Work5.sellingPointBlock = function(container){
   if(pts.every(p=>!p.x && !p.y)){
     container.appendChild(el('div',{class:'warning'},
       '3.4 显示异常：所有卖点维度分缺失，散点将全部落在原点。请回 Work 3 完成卖点评分（合意性 × 可实施性）。',
-      el('button',{class:'ghost small',onclick:()=>{ if(typeof App!=='undefined'&&App.goWork) App.goWork(3); }},'去 Work 3 评分 →')));
+      el('button',{class:'ghost small',onclick:()=>{ App.goWork(3); App.goStep('matrix'); }},'去 Work 3 评分 →')));
   }
   const inSectorSafe=(x,y)=>{ try{ return Work3.isInSector(x,y); }catch(_){ return false; } };
   const sugSafe=(x,y)=>{ try{ return Work3.entrySuggestion(x,y); }catch(_){ return {ok:false,text:''}; } };

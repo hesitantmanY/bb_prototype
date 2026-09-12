@@ -4,7 +4,7 @@
    ============================================================ */
 // 构建戳：每次前端有用户可感知改动时递增，summary bar 显示；
 // 刷新后戳不变 = 浏览器在用缓存 JS（需硬刷新）。
-Work1.BUILD = '0912a';
+Work1.BUILD = '0912d';
 
 Work1.steps = [
   {id:'sbu', label:'1. SBU'},
@@ -1248,13 +1248,7 @@ Work1.render.environment = function(sec){
   plate.appendChild(el('div',{class:'cap-accordion'},
     mkAccStep(4, '第 4 层 · 变量（独立观察）', '关键趋势', '未来 12-24 个月要盯什么？与第 3 层定位方向关联。', isFilled[4], (body) => {
       body.appendChild(capField('3 个值得追踪的方向', 'trends', '例：节气营销、可追溯供应链、KOC 内容种草、私域订阅', 3));
-      // AI 按钮放在第 4 步末尾
-      body.appendChild(el('button',{class:'cap-ai-btn', onclick:()=>{
-        // AI 一键生成：基于 SBU + 5 维 → 3 段 + 收口 + 趋势
-        // 实际 AI 调用在下方 AI 盒子统一处理（防止重复按钮）
-        showToast('请使用顶部"用 AI 起草环境与竞争分析"按钮');
-      }}, '用 AI 起草（基于 5 维 → 生成 3 段 + 收口 + 趋势）'));
-      body.appendChild(el('div',{class:'cap-ai-hint'}, '必须先填第 1 层 5 维，AI 才有素材生成第 2/3/4 层。'));
+      body.appendChild(el('div',{class:'cap-ai-hint'}, 'AI 起草请用本步顶部「起草环境与竞争分析」；必须先填第 1 层 5 维，AI 才有素材生成第 2/3/4 层。'));
     })
   ));
 
@@ -1666,11 +1660,15 @@ Work1.personaDraft.mountInput = function(){
     )
   );
   dlg.appendChild(summary);
-  // 输入字段
-  const productInput = el('input',{type:'text', class:'pd-input', value: Work1.personaDraft.product, placeholder:'产品/服务一句话', oninput:e=>{ Work1.personaDraft.product = e.target.value; }});
-  const audienceInput = el('input',{type:'text', class:'pd-input', value: Work1.personaDraft.audience, placeholder:'目标客群关键词', oninput:e=>{ Work1.personaDraft.audience = e.target.value; }});
-  dlg.appendChild(el('div',{class:'pd-field'}, el('label',{},'产品 / 服务'), productInput));
-  dlg.appendChild(el('div',{class:'pd-field'}, el('label',{},'目标客群'), audienceInput));
+  // 输入字段：SBU 概述已自动带入 prompt，这里仅用于补充/收窄；
+  // 首次打开（无草稿）时从 SBU 预填产品描述，避免用户重复填写。
+  if(!Work1.personaDraft.load()){
+    if(!Work1.personaDraft.product) Work1.personaDraft.product = up.sbuSummary || (up.sbuName && up.sbuCategory ? `${up.sbuName}（${up.sbuCategory}）` : '');
+  }
+  const productInput = el('input',{type:'text', class:'pd-input', value: Work1.personaDraft.product, placeholder:'默认取 SBU 概述，可修改', oninput:e=>{ Work1.personaDraft.product = e.target.value; }});
+  const audienceInput = el('input',{type:'text', class:'pd-input', value: Work1.personaDraft.audience, placeholder:'可选，如：25-35 岁都市女性 / 送礼场景', oninput:e=>{ Work1.personaDraft.audience = e.target.value; }});
+  dlg.appendChild(el('div',{class:'pd-field'}, el('label',{},'产品 / 服务（已从 SBU 带入，可修改）'), productInput));
+  dlg.appendChild(el('div',{class:'pd-field'}, el('label',{},'目标客群（可选，用于收窄画像）'), audienceInput));
   // 按钮组
   const submitBtn = el('button',{class:'primary', onclick:()=>{
     // 拦截：上游数据为空时强制手输
@@ -1915,7 +1913,7 @@ Work1.render.metrics = function(sec){
   // —— 空状态：AI 起草为主，模板点选为辅（不强制）——
   if(!m.dimensions.length){
     const sug=el('div',{class:'metric-empty'});
-    sug.appendChild(el('p',{},'还没有指标体系。点上方「一键生成指标体系」，按 CBBE 4 层（显著性 / 功效 / 形象 / 共鸣）结合你的 SBU、客户画像与场景生成专属测评点，每层 2-4 个；也可点选下面的常用模板作为起点：'));
+    sug.appendChild(el('p',{},'还没有指标体系。点上方「一键生成指标体系」，按 CBBE 4 层（显著性 / 功效 / 形象 / 共鸣）结合你的 SBU、客户画像与场景生成专属测评点，每层 3 个（共 12 个）；也可点选下面的常用模板作为起点：'));
     const chips=el('div',{class:'metric-suggest'});
     Work1.METRIC_TEMPLATES.forEach(t=>{
       chips.appendChild(el('button',{class:'metric-suggest-chip',type:'button',
@@ -2058,7 +2056,7 @@ Work1.render.metrics = function(sec){
 Work1.metricsHeadRow = function(sec){
   const plate = sec.querySelector('.plate');
   const headRow=el('div',{style:{display:'flex',alignItems:'center',justifyContent:'space-between',gap:'12px',marginBottom:'10px'}});
-  headRow.appendChild(el('p',{class:'muted',style:'font-size:13px;margin:0;flex:1'},'按 CBBE 金字塔搭层级指标：显著性 / 功效 / 形象 / 共鸣。每层 2-4 个测评点，每个测评点打 1-10 自评分 + 量化口径；调研后回填实测分并对照偏差。'));
+  headRow.appendChild(el('p',{class:'muted',style:'font-size:13px;margin:0;flex:1'},'按 CBBE 金字塔搭层级指标：显著性 / 功效 / 形象 / 共鸣。每层恰好 3 个测评点（共 12 个），每个测评点打 1-10 自评分 + 量化口径；调研后回填实测分并对照偏差。'));
   const btns=el('div',{style:{display:'flex',gap:'8px',flexShrink:0}});
   const aiBtn=el('button',{class:'primary', onclick:()=>Work1.draftMetrics(aiBtn, sec)},'一键生成指标体系');
   const addBtn=el('button',{class:'ghost',onclick:()=>{ const m=state.work1.metrics; m.dimensions.push({id:uid('m'),name:'',secondaries:[]}); autosave(); Work1.rerender('metrics'); }},'+ 添加一级指标');
@@ -2067,20 +2065,47 @@ Work1.metricsHeadRow = function(sec){
   plate.appendChild(headRow);
 };
 
-// AI 起草 CBBE 4 层指标体系（决策 2：显著性/功效/形象/共鸣，每层 2-4 测评点 + 自评分）
+// AI 产物归一化：mvo 硬门槛是 CBBE 4 层 × 每层 ≥3 测评点，但模型偶尔少给
+//（prompt 写 2-4 时合规返回 2 个）。缺测评点补空行、缺整层补标准模板，
+// 由健康面板继续提示用户填名/打分。返回 {dimensions, patched}。
+Work1.normalizeMetricDims = function(rawDims){
+  const blankSec = ()=>({id:uid('s'),name:'',measure:'',selfScore:null,actual:null});
+  const dimensions=(rawDims||[]).slice(0,4).map(d=>({id:uid('m'),name:String(d.name||''),
+    secondaries:(d.secondaries||[]).map(s=>({id:uid('s'),name:String(s.name||''),measure:s.measure||'',
+      selfScore:s.selfScore!=null?clamp(+s.selfScore,1,10):null,actual:null}))}));
+  let patched=0;
+  dimensions.forEach(dim=>{
+    while(dim.secondaries.length<3){ dim.secondaries.push(blankSec()); patched++; }
+  });
+  if(dimensions.length<4){
+    Work1.METRIC_TEMPLATES.forEach(t=>{
+      if(dimensions.length>=4) return;
+      const key=t.name.replace('品牌',''); // 显著性/功效/形象/共鸣
+      if(!dimensions.some(d=>(d.name||'').includes(key))){
+        dimensions.push({id:uid('m'),name:t.name,
+          secondaries:t.secondaries.map(s=>({id:uid('s'),name:s.name,measure:s.measure,selfScore:null,actual:null}))});
+        patched+=t.secondaries.length;
+      }
+    });
+  }
+  return {dimensions, patched};
+};
+
+// AI 起草 CBBE 4 层指标体系（决策 2：显著性/功效/形象/共鸣，每层恰好 3 测评点 + 自评分）
 // 决策 7：已有内容时二次确认（起草会整体替换）；空白时不打扰
 Work1.draftMetrics = function(btn, container){
   const m=state.work1.metrics;
   const filledCount=(m.dimensions||[]).filter(d=>(d.name||'').trim() || (d.secondaries||[]).some(s=>(s.name||'').trim()||s.selfScore!=null)).length;
   if(filledCount>0 && !confirm('用 AI 起草会整体替换当前指标体系（现有 '+filledCount+' 个一级指标），确定？')) return;
   API.aiButton({button:btn, container,
-    buildPrompt:Work1._ctx(container, ['sbu','personas'], ()=>[{role:'system',content:'你是品牌资产管理专家（CBBE，Keller 1998）。为给定 SBU 设计品牌资产指标体系：4 个一级指标按 CBBE 金字塔——品牌显著性 / 品牌功效 / 品牌形象 / 品牌共鸣，每层 2-4 个二级测评点。每个测评点给出：量化口径（用什么数据衡量、什么算高分）与自评分（1-10，基于前文资料对品牌现状的主观估计；1-3 行业中下游 / 4-6 行业平均 / 7-8 行业前列 / 9-10 品类标杆）。测评点要具体可感知，不用"品质好"这类空话。输出 JSON: {"dimensions":[{"name":"一级指标名","secondaries":[{"name":"测评点","measure":"量化口径","selfScore":6}]}]}'},
+    buildPrompt:Work1._ctx(container, ['sbu','personas'], ()=>[{role:'system',content:'你是品牌资产管理专家（CBBE，Keller 1998）。为给定 SBU 设计品牌资产指标体系：严格输出 4 个一级指标，按 CBBE 金字塔——品牌显著性 / 品牌功效 / 品牌形象 / 品牌共鸣，每层必须恰好 3 个二级测评点（共 12 个，不多不少）。每个测评点给出：量化口径（用什么数据衡量、什么算高分）与自评分（1-10，基于前文资料对品牌现状的主观估计；1-3 行业中下游 / 4-6 行业平均 / 7-8 行业前列 / 9-10 品类标杆）。测评点要具体可感知，不用"品质好"这类空话。输出 JSON: {"dimensions":[{"name":"一级指标名","secondaries":[{"name":"测评点","measure":"量化口径","selfScore":6}]}]}'},
       {role:'user',content:`SBU:${state.work1.sbu.name}\n品类:${state.work1.sbu.category}\n概述:${state.work1.sbu.summary}\n场景短板:\n${(state.work1.scenarios||[]).map(s=>s.name+': '+(s.decisiveGap||'')).join('\n')}\n画像痛点:\n${state.work1.personas.map(p=>p.name+':'+p.painPoints).join('\n')}`}]),
     onResult:r=>{
       if(!r||!Array.isArray(r.dimensions)){showToast('生成失败');return;}
-      m.dimensions=r.dimensions.map(d=>({id:uid('m'),name:d.name||'',
-        secondaries:(d.secondaries||[]).map(s=>({id:uid('s'),name:String(s.name||''),measure:s.measure||'',selfScore:s.selfScore!=null?clamp(+s.selfScore,1,10):null,actual:null}))}));
+      const {dimensions, patched}=Work1.normalizeMetricDims(r.dimensions);
+      m.dimensions=dimensions;
       autosave(); Work1.rerender('metrics');
+      if(patched) showToast('AI 少给了 '+patched+' 个测评点，已按 4×3 结构补空行，请补全名称与评分');
     }});
 };
 

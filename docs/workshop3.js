@@ -359,8 +359,9 @@ Work3.render.mining = function(sec){
       const lines=paste.value.split(/\n\s*\n|\n/).map(s=>s.trim()).filter(Boolean);
       m.documents.push(...lines); paste.value=''; autosave(); renderDocs();
     }},'添加到语料'),
-    el('label',{class:'ghost',style:{display:'inline-flex',alignItems:'center',gap:'6px',cursor:'pointer','font-family':'var(--font-mono)','font-size':'11px','letter-spacing':'.15em','padding':'9px 16px'}},
-      '导入 Excel/CSV',
+    el('label',{class:'ghost',title: backendOnline ? '' : '需要启动本地服务才可导入，当前不可用',
+      style:{display:'inline-flex',alignItems:'center',gap:'6px',cursor: backendOnline ? 'pointer' : 'not-allowed',opacity: backendOnline ? 1 : .5,'font-family':'var(--font-mono)','font-size':'11px','letter-spacing':'.15em','padding':'9px 16px'}},
+      backendOnline ? '导入 Excel/CSV' : '导入 Excel/CSV（需本地服务）',
       el('input',{type:'file',accept:'.xlsx,.xls,.csv,.txt',style:{display:'none'},onchange:e=>Work3.importExcel(e.target.files[0],renderDocs)})
     ),
     el('button',{class:'ghost',onclick:()=>{ if(confirm('清空全部语料？')){m.documents=[];autosave();renderDocs();}}},'清空')

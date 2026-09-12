@@ -874,14 +874,9 @@ Work4.render.product = function(sec){
       )
     ),
     el('button', {class:'ghost small', onclick:()=>{
-      // 切到 work1 步 · sbu（App.goStep + 同步活动 nav）
-      if(typeof App !== 'undefined' && typeof App.goStep === 'function'){
-        App.goStep('work1', 'sbu');
-      } else if(typeof goStep === 'function'){
-        goStep('work1', 'sbu');
-      } else {
-        showToast('请手动切换到 Work 1 · SBU 步修改');
-      }
+      // goStep 只在当前工作坊内切步：先 goWork(1)（会落到首步），再切到 sbu
+      App.goWork(1);
+      App.goStep('sbu');
     }}, '在 Work 1 修改 →')
   );
   plate.appendChild(previewBox);
