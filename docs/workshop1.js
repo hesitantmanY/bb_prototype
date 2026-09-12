@@ -4,7 +4,7 @@
    ============================================================ */
 // 构建戳：每次前端有用户可感知改动时递增，summary bar 显示；
 // 刷新后戳不变 = 浏览器在用缓存 JS（需硬刷新）。
-Work1.BUILD = '0827c';
+Work1.BUILD = '0912a';
 
 Work1.steps = [
   {id:'sbu', label:'1. SBU'},
@@ -364,6 +364,13 @@ function applySBU(s){
 Work1.SBU_SAMPLES = SBU_SAMPLES;
 Work1.applySBU = applySBU;
 
+// 字数提示：与 Work1.mvo.sbu 的 trim().length>=N 门槛保持一致
+function updateCountHint(node, text, min){
+  const n=(text||'').trim().length;
+  node.textContent = n>=min ? `✓ ${n} 字` : `至少 ${min} 字（当前 ${n}）`;
+  node.classList.toggle('is-met', n>=min);
+}
+
 Work1.render.sbu = function(sec){
   const plate = sec.querySelector('.plate');
   const d=state.work1.sbu;
@@ -429,12 +436,15 @@ Work1.render.sbu = function(sec){
   grid.appendChild(countriesField);
 
   // 一句话业务概述（12 列全宽）
+  const summaryHint = el('div', {class:'sbu-count-hint'}, '');
+  const summaryTa = el('textarea', {class:'sbu-textarea', rows:2,
+    placeholder:'用一句话讲清「为谁、解决什么问题、和竞品有何不同」。如：智能温控器 × 美国 C 端 × 中高端品牌',
+    oninput: e => { d.summary = e.target.value; autosave(); updateCountHint(summaryHint, d.summary, 20); }}, d.summary || '');
   grid.appendChild(el('div', {class:'sbu-cell-12 sbu-field'},
     el('span', {class:'sbu-label'}, '一句话业务概述（SBU 声明）'),
-    el('textarea', {class:'sbu-textarea', rows:2,
-      placeholder:'用一句话讲清「为谁、解决什么问题、和竞品有何不同」。如：智能温控器 × 美国 C 端 × 中高端品牌',
-      oninput: e => { d.summary = e.target.value; autosave(); }}, d.summary || '')
+    summaryTa, summaryHint
   ));
+  updateCountHint(summaryHint, d.summary, 20);
 
   // 业务类型（修复 2026-08-30：原 work4 独有重复字段，迁到 work1 单真源）
   if(!d.businessType) d.businessType = 'physical';
@@ -609,15 +619,18 @@ Work1.render.sbu = function(sec){
   });
 
   // === 边界声明 CALLOUT（沿用全局 .callout，新增 .sbu-callout 修饰） ===
+  const boundaryHint = el('div', {class:'sbu-count-hint'}, '');
   const callout = el('div', {class:'callout sbu-callout'},
     el('span', {class:'c-label'}, ' 边界声明'),
     el('p', {class:'c-hint'}, '说明与母公司其他业务在客户、渠道、品牌、损益四维上的隔离点，以及复用/共享的资源（供应链、研发、资质等）。'),
     el('textarea', {
       placeholder:'例：与集团共享华南工厂与模具开发资源，但客户全部为美国 DTC、独立亚马逊店铺、自有品牌 HOTO；损益独立核算，由海外事业部单列 P&L。',
-      oninput: e => { d.boundary = e.target.value; autosave(); }
-    }, d.boundary || '')
+      oninput: e => { d.boundary = e.target.value; autosave(); updateCountHint(boundaryHint, d.boundary, 30); }
+    }, d.boundary || ''),
+    boundaryHint
   );
   plate.appendChild(callout);
+  updateCountHint(boundaryHint, d.boundary, 30);
 
 };
 
